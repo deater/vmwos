@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "atags.h"
 #include "printk.h"
+#include "hardware.h"
 
 /* Original references */
 /* http://www.raspberrypi.org/forums/viewtopic.php?t=10889&p=123721 */
@@ -89,6 +90,137 @@ void dump_atags(uint32_t *atags) {
 		/* Empty tag to end list */
 		case ATAG_NONE:
 			printk("\r\n");
+			return;
+			break;
+
+		default:
+			printk("ERROR! Unknown atag\r\n");
+			break;
+		}
+
+	}
+}
+
+
+void detect_atags(uint32_t *atags) {
+
+	/* each tag has at least 32-bit size and then 32-bit value 	*/
+	/* some tags have multiple values				*/
+
+	int size;
+	int tag_value;
+	uint32_t *tags=atags;
+	char *cmdline;
+
+
+	while(1) {
+		size=tags[0];
+
+		switch (tags[1]) {
+
+		/* Start List */
+		case ATAG_CORE:
+			tags += size;
+			break;
+
+		/* Physical Memory */
+		case ATAG_MEM:
+			tags += size;
+			break;
+
+		/* VGA Text Display */
+		case ATAG_VIDEOTEXT:
+			tags += size;
+			break;
+
+		/* RAMDISK Use */
+		case ATAG_RAMDISK:
+			tags += size;
+			break;
+
+		/* INITRD Ramdisk */
+		case ATAG_INITRD2:
+			tags += size;
+			break;
+
+		/* 64-bit serial number */
+		case ATAG_SERIAL:
+			tags += size;
+			break;
+
+		/* Board Revision */
+		case ATAG_REVISION:
+			tags += size;
+			break;
+
+		/* VESA Framebuffer Info */
+		case ATAG_VIDEOLFB:
+			tags += size;
+			break;
+
+		case ATAG_CMDLINE:
+			printk("  Commandline: ");
+			cmdline = (char *)(&tags[2]);
+
+			int i=0,digit=0,rev=-1;
+			while(1) {
+				if (cmdline[i]==0) break;
+
+				if ((cmdline[i]=='r') &&
+					(cmdline[i+1]=='e') &&
+					(cmdline[i+2]=='v')) {
+
+					digit=cmdline[i+6];
+					if (digit<='9') rev=digit-'0';
+					else rev=(digit-'a')+10;
+
+					if (cmdline[i+7]!=' ') {
+						rev*=16;
+						digit=cmdline[i+7];
+						if (digit<='9') rev+=digit-'0';
+						else rev+=(digit-'a')+10;
+
+					}
+
+					break;
+				}
+
+
+				i++;
+
+			}
+
+			/* http://elinux.org/RPi_HardwareHistory */
+			switch(rev) {
+				case 0x2:
+				case 0x3:
+				case 0x4:
+				case 0x5:
+				case 0x6:
+				case 0xd:
+				case 0xe:
+				case 0xf:	hardware_type=RPI_MODEL_B;
+						break;
+				case 0x7:
+				case 0x8:
+				case 0x9:	hardware_type=RPI_MODEL_A;
+						break;
+				case 0x10:	hardware_type=RPI_MODEL_BPLUS;
+						break;
+				case 0x11:	hardware_type=RPI_COMPUTE_NODE;
+						break;
+				case 0x12:	hardware_type=RPI_MODEL_APLUS;
+						break;
+
+				default:	hardware_type=RPI_UNKNOWN;
+						break;
+			}
+
+			tags += size;
+			break;
+
+		/* Empty tag to end list */
+		case ATAG_NONE:
 			return;
 			break;
 

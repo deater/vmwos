@@ -16,9 +16,71 @@
 /* r2 = start of ATAGS ARM tag boot info (usually 0x100)   */
 
 _start:
-	/* Set up the stack to be right before our entry point	*/
-	/* (it grows down)					*/
+
+	/* Setup the interrupt vectors */
+	/* This code gets copied to address 0x0000 (irq vector table)	*/
+	/* The next instructions jumps us to the "reset" vector		*/
+	/* Where we continued our boot code.				*/
+	ldr	pc, reset_addr
+	ldr	pc, undefined_instruction_addr
+	ldr	pc, software_interrupt_addr
+	ldr	pc, prefetch_abort_addr
+	ldr	pc, data_abort_addr
+        ldr	pc, unused_handler_addr
+        ldr	pc, interrupt_addr
+        ldr	pc, fast_interrupt_addr
+reset_addr:			.word	reset
+undefined_instruction_addr:	.word	reset
+software_interrupt_addr:	.word	swi_handler
+prefetch_abort_addr:		.word	reset
+data_abort_addr:		.word	reset
+unused_handler_addr:		.word	reset
+interrupt_addr:			.word	interrupt_handler
+fast_interrupt_addr:		.word	reset
+	/* Done Interrupt vector block */
+
+	/* Continue with boot code */
+reset:
+
+	/* Set up the Supervisor Mode Stack	*/
+	/* Put it right before the entry point	*/
+	/* (it grows down)			*/
 	mov	sp, #0x8000
+
+.equ	CPSR_MODE_USER,		0x10
+.equ	CPSR_MODE_FIQ,		0x11
+.equ	CPSR_MODE_IRQ,		0x12
+.equ	CPSR_MODE_SVR,		0x13
+.equ	CPSR_MODE_ABORT,	0x17
+.equ	CPSR_MODE_UNDEFINED,	0x1b
+.equ	CPSR_MODE_SYSTEM,	0x1f
+
+.equ	CPSR_MODE_IRQ_DISABLE,	(1<<7)
+.equ	CPSR_MODE_FIQ_DISABLE,	(1<<6)
+
+	/* Set up the Interrupt Mode Stack	*/
+	/* First switch to interrupt mode, then update stack pointer */
+	mov	r3, #(CPSR_MODE_IRQ | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+	mov	sp, #0x4000
+
+	/* Switch back to supervisor mode */
+	mov	r3, #(CPSR_MODE_SVR | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+
+	/* TODO: setup the other stacks?	*/
+
+
+
+	/* copy irq vector2 into place.  Preserve r0,r1,r2 */
+        ldr	r3, =_start
+        mov     r4, #0x0000
+	/* Quick way to copy 256 bytes of memory */
+        ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
+        stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
+        ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
+        stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
+
 
 	/* clear the bss section */
 	/* This has not been optimized */
@@ -31,10 +93,10 @@ clear_bss:
 
 	cmp	r4,r9
 	ble 	clear_bss
- 
+
 	/* Call our main function */
 	/* The values r0 - r2 from bootloader are preserved */
-	ldr r3, =main
+	ldr r3, =kernel_main
 	blx r3
 
 	/* We only reach this if the code we call exits */

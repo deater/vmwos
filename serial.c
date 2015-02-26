@@ -80,11 +80,12 @@ unsigned char uart_getc(void) {
 }
 
 /* write a series of bytes to the serial port */
-void uart_write(const unsigned char* buffer, size_t size) {
+uint32_t uart_write(const unsigned char* buffer, size_t size) {
 
 	size_t i;
 
 	for ( i = 0; i < size; i++ ) {
 		uart_putc(buffer[i]);
 	}
+	return i;
 }

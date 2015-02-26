@@ -1,4 +1,5 @@
 void dump_atags(uint32_t *atags);
+void detect_atags(uint32_t *atags);
 
 #define ATAG_NONE	0x00000000	// 2	Empty tag used to end list
 #define ATAG_CORE	0x54410001	// 5 (2 if empty)	First tag used to start list
