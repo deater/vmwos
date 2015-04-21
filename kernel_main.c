@@ -12,8 +12,9 @@
 #include "syscalls.h"
 #include "hardware.h"
 #include "framebuffer.h"
+#include "framebuffer_console.h"
 
-#define VERSION 6
+#define VERSION 10
 
 static int parse_input(char *string) {
 
@@ -40,7 +41,7 @@ static int parse_input(char *string) {
 		result=syscall1(0,SYSCALL_BLINK);
 	}
 	else if (string[0]=='f') {
-		framebuffer_setfont(string[1]-'0');
+		framebuffer_console_setfont(string[1]-'0');
 	}
 
 	else if ((string[0]=='g') && (string[1]=='r')) {

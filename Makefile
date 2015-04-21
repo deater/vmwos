@@ -15,9 +15,11 @@ kernel.img:	kernel.elf
 
 
 kernel.elf:	kernel_main.o atags.o serial.o boot.o framebuffer.o \
+	framebuffer_console.o \
 	interrupts.o io.o led.o mailbox.o printk.o syscalls.o timer.o 
 	$(CROSS)ld --no-undefined \
 		kernel_main.o atags.o serial.o boot.o framebuffer.o \
+		framebuffer_console.o \
 		interrupts.o io.o led.o mailbox.o printk.o syscalls.o timer.o \
 		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
 
@@ -34,6 +36,9 @@ interrupts.o:	interrupts.c
 
 framebuffer.o:	framebuffer.c
 	$(CROSS)$(CC) $(CFLAGS) -o framebuffer.o -c framebuffer.c
+
+framebuffer_console.o:	framebuffer_console.c
+	$(CROSS)$(CC) $(CFLAGS) -o framebuffer_console.o -c framebuffer_console.c
 
 io.o:	io.c
 	$(CROSS)$(CC) $(CFLAGS) -o io.o -c io.c
