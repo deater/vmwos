@@ -1,11 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "io.h"
 
 #define MAX_PRINT_SIZE 256
 
-int printk(char *string,...) {
+int printf(char *string,...) {
 
 	va_list ap;
 
@@ -55,22 +54,6 @@ int printk(char *string,...) {
 				} while(x!=0);
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
-					buffer_pointer++;
-				}
-			}
-			else if (*string=='c') {
-				string++;
-				x=va_arg(ap, int);
-				buffer[buffer_pointer]=x;
-				buffer_pointer++;
-			}
-			else if (*string=='s') {
-				char *s;
-				string++;
-				s=(char *)va_arg(ap, int);
-				while(*s) {
-					buffer[buffer_pointer]=*s;
-					s++;
 					buffer_pointer++;
 				}
 			}

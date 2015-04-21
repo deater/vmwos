@@ -11,9 +11,9 @@
 #include "mmio.h"
 #include "syscalls.h"
 #include "hardware.h"
+#include "framebuffer.h"
 
-
-#define VERSION 3
+#define VERSION 6
 
 static int parse_input(char *string) {
 
@@ -27,7 +27,10 @@ static int parse_input(char *string) {
 		printk("\r\nTimer: %d %d\r\n",mmio_read(TIMER_VALUE),0);
 	}
 	else if ((string[0]=='w') && (string[1]=='r') && (string[2]=='i')) {
-		result=syscall3(STDOUT,"WRITE SYSCALL TEST\r\n",20,SYSCALL_WRITE);
+		result=syscall3(STDOUT,
+				(int)"WRITE SYSCALL TEST\r\n",
+				20,
+				SYSCALL_WRITE);
 		printk("\r\nSyscall returned %d\r\n",result);
 	}
 	else if ((string[0]=='o') && (string[1]=='n')) {
@@ -35,6 +38,27 @@ static int parse_input(char *string) {
 	}
 	else if ((string[0]=='o') && (string[1]=='f')) {
 		result=syscall1(0,SYSCALL_BLINK);
+	}
+	else if (string[0]=='f') {
+		framebuffer_setfont(string[1]-'0');
+	}
+
+	else if ((string[0]=='g') && (string[1]=='r')) {
+		int y;
+
+//		printk("\r\nFB ADDR = %x\r\n",fb_addr);
+
+		//framebuffer_clear_screen(0xf<<3);
+
+		for(y=0;y<600;y++) {
+			framebuffer_hline(y,0, 799, y);
+		}
+
+//		framebuffer_putchar(0xffffff,'C',10,10);
+
+	}
+	else if ((string[0]=='t') && (string[1]=='b')) {
+		framebuffer_tb1();
 	}
 	else {
 		printk("\r\nUnknown commmand!");
@@ -61,6 +85,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags) {
 	uart_init();
 	led_init();
 	timer_init();
+	framebuffer_init(800,600,24);
+	framebuffer_console_init();
 
 	/* Enable Interrupts */
 	enable_interrupts();
@@ -118,7 +144,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags) {
 
 			input_string[input_pointer]=ch;
 			input_pointer++;
-			uart_putc(ch);
+			printk("%c",ch);
+//			uart_putc(ch);
 		}
 	}
 }

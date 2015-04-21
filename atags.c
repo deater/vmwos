@@ -14,7 +14,7 @@ void dump_atags(uint32_t *atags) {
 	/* some tags have multiple values				*/
 
 	int size;
-	int tag_value;
+//	int tag_value;
 	uint32_t *tags=atags;
 	char *cmdline;
 
@@ -108,7 +108,7 @@ void detect_atags(uint32_t *atags) {
 	/* some tags have multiple values				*/
 
 	int size;
-	int tag_value;
+//	int tag_value;
 	uint32_t *tags=atags;
 	char *cmdline;
 

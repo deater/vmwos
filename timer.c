@@ -16,5 +16,7 @@ int timer_init(void) {
 		TIMER_CONTROL_INT_ENABLE |
 		TIMER_CONTROL_PRESCALE_256);
 
+	return 0;
+
 }
 

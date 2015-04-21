@@ -2,7 +2,7 @@ CROSS = arm-none-eabi-
 CC = gcc
 AS = as
 ASFLAGS = -mcpu=arm1176jzf-s
-CFLAGS = -O2 -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib
+CFLAGS = -O2 -Wall -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib
 
 
 LINKER_SCRIPT = kernel.ld
@@ -14,11 +14,11 @@ kernel.img:	kernel.elf
 
 
 
-kernel.elf:	kernel_main.o atags.o serial.o boot.o interrupts.o \
-	io.o led.o printk.o syscalls.o timer.o
+kernel.elf:	kernel_main.o atags.o serial.o boot.o framebuffer.o \
+	interrupts.o io.o led.o mailbox.o printk.o syscalls.o timer.o 
 	$(CROSS)ld --no-undefined \
-		kernel_main.o atags.o serial.o boot.o \
-		interrupts.o io.o led.o printk.o syscalls.o timer.o \
+		kernel_main.o atags.o serial.o boot.o framebuffer.o \
+		interrupts.o io.o led.o mailbox.o printk.o syscalls.o timer.o \
 		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
 
 
@@ -32,17 +32,26 @@ atags.o:	atags.c
 interrupts.o:	interrupts.c
 	$(CROSS)$(CC) $(CFLAGS) -o interrupts.o -c interrupts.c
 
+framebuffer.o:	framebuffer.c
+	$(CROSS)$(CC) $(CFLAGS) -o framebuffer.o -c framebuffer.c
+
 io.o:	io.c
 	$(CROSS)$(CC) $(CFLAGS) -o io.o -c io.c
 
 led.o:	led.c
 	$(CROSS)$(CC) $(CFLAGS) -o led.o -c led.c
 
+mailbox.o:	mailbox.c
+	$(CROSS)$(CC) $(CFLAGS) -o mailbox.o -c mailbox.c
+
 printk.o:	printk.c
 	$(CROSS)$(CC) $(CFLAGS) -o printk.o -c printk.c
 
 serial.o:	serial.c bcm2835_periph.h
 	$(CROSS)$(CC) $(CFLAGS) -o serial.o -c serial.c
+
+shell.o:	shell.c
+	$(CROSS)$(CC) $(CFLAGS) -o shell.o -c shell.c
 
 syscalls.o:	syscalls.c
 	$(CROSS)$(CC) $(CFLAGS) -o syscalls.o -c syscalls.c

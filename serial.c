@@ -79,6 +79,22 @@ unsigned char uart_getc(void) {
 	return mmio_read(UART0_DR);
 }
 
+unsigned char uart_getc_noblock(void) {
+
+	/* Check Flags Register */
+	/* Wait until Receive FIFO is not empty */
+	if ( mmio_read(UART0_FR) & UART0_FR_RXFE ) {
+		return 0;
+	}
+
+	/* Read and return the received data */
+	/* Note we are ignoring the top 4 error bits */
+
+	return mmio_read(UART0_DR);
+}
+
+
+
 /* write a series of bytes to the serial port */
 uint32_t uart_write(const unsigned char* buffer, size_t size) {
 
