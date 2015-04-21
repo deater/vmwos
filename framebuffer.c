@@ -1,6 +1,9 @@
 /* based on info at https://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/screen01.html */
 /* http://elinux.org/RPi_Framebuffer */
 
+/* Note if you end up with Blue and Red switched */
+/* You need to update the firmware on your Pi    */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -9,6 +12,12 @@
 
 #include "mailbox.h"
 #include "framebuffer.h"
+
+static int framebuffer_initialized=0;
+
+static struct frame_buffer_info_type current_fb;
+static unsigned char offscreen[800*600*3];
+
 
 struct frame_buffer_info_type {
 	int phys_x,phys_y;	/* IN: Physical Width / Height*/
@@ -20,8 +29,12 @@ struct frame_buffer_info_type {
 	int size;		/* OUT: size of the framebuffer */
 };
 
-static struct frame_buffer_info_type current_fb;
 
+int framebuffer_ready(void) {
+
+	return framebuffer_initialized;
+
+}
 
 static void dump_framebuffer_info(struct frame_buffer_info_type *fb) {
 
@@ -79,6 +92,8 @@ char *framebuffer_init(int x, int y, int depth) {
 	current_fb.pitch=fb_info.pitch;
 	current_fb.depth=fb_info.depth;
 
+	framebuffer_initialized=1;
+
 	return (char *)(fb_info.pointer);
 }
 
@@ -87,13 +102,33 @@ int framebuffer_hline(int color, int x0, int x1, int y) {
 	int x;
 	int r,g,b;
 
-	unsigned char *fb=(unsigned char *)current_fb.pointer;
+	unsigned char *fb=offscreen;
 
 	r=(color&0xff0000)>>16;
 	g=(color&0x00ff00)>>8;
 	b=color&0x0000ff;
 
 	for(x=x0;x<x1;x++) {
+		fb[(y*current_fb.pitch)+(x*3)+0]=r;
+		fb[(y*current_fb.pitch)+(x*3)+1]=g;
+		fb[(y*current_fb.pitch)+(x*3)+2]=b;
+	}
+
+	return 0;
+}
+
+int framebuffer_vline(int color, int y0, int y1, int x) {
+
+	int y;
+	int r,g,b;
+
+	unsigned char *fb=offscreen;
+
+	r=(color&0xff0000)>>16;
+	g=(color&0x00ff00)>>8;
+	b=color&0x0000ff;
+
+	for(y=y0;y<y1;y++) {
 		fb[(y*current_fb.pitch)+(x*3)+0]=r;
 		fb[(y*current_fb.pitch)+(x*3)+1]=g;
 		fb[(y*current_fb.pitch)+(x*3)+2]=b;
@@ -117,7 +152,7 @@ int framebuffer_putpixel(int color, int x, int y) {
 
 	int r,g,b;
 
-	unsigned char *fb=(unsigned char *)current_fb.pointer;
+	unsigned char *fb=offscreen;
 
 	r=(color&0xff0000)>>16;
 	g=(color&0x00ff00)>>8;
@@ -131,3 +166,25 @@ int framebuffer_putpixel(int color, int x, int y) {
 
 }
 
+void *memcpy(void *dest, const void *src, size_t n) {
+
+	int i;
+
+	int *d=dest;
+	const int *s=src;
+
+	for(i=0;i<n/4;i++) {
+		*d=*s;
+		d++; s++;
+	}
+
+	return dest;
+}
+
+int framebuffer_push(void) {
+	memcpy((unsigned char *)current_fb.pointer,
+		offscreen,800*600*3);
+
+	return 0;
+
+}

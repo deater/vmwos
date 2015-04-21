@@ -45,17 +45,13 @@ static int parse_input(char *string) {
 	}
 
 	else if ((string[0]=='g') && (string[1]=='r')) {
-		int y;
 
-//		printk("\r\nFB ADDR = %x\r\n",fb_addr);
+		int x;
 
-		//framebuffer_clear_screen(0xf<<3);
-
-		for(y=0;y<600;y++) {
-			framebuffer_hline(y,0, 799, y);
+		for(x=0;x<800;x++) {
+			framebuffer_vline( (x*256)/800, 0, 599, x);
 		}
-
-//		framebuffer_putchar(0xffffff,'C',10,10);
+		framebuffer_push();
 
 	}
 	else if ((string[0]=='t') && (string[1]=='b')) {
