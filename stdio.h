@@ -1,2 +1,0 @@
-int printf(char *string,...);
-

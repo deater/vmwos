@@ -75,7 +75,7 @@ kernel.dis:	kernel.elf
 
 clean:
 	rm -f *~ *.o *.map *.elf kernel.img *.dis
-
+	cd userspace && make clean
 
 submit:
 	tar -czvf hw3_submit.tar.gz *.c *.h *.s *.ld Makefile
