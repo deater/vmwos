@@ -2,6 +2,39 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#include "syscalls.h"
+
+int putchar(int c) {
+
+	return write(1,&c,1);
+}
+
+int getchar(void) {
+
+	int c=0;
+
+	read(0,&c,1);
+
+	return c;
+
+}
+
+
+unsigned int sleep(unsigned int seconds) {
+
+	struct timespec t;
+
+	t.tv_sec=seconds;
+	t.tv_nsec=0;
+
+	nanosleep(&t, NULL);
+
+	return 0;
+}
+
+
+
+
 #define MAX_PRINT_SIZE 256
 
 int printf(char *string,...) {
@@ -57,6 +90,22 @@ int printf(char *string,...) {
 					buffer_pointer++;
 				}
 			}
+			else if (*string=='c') {
+				string++;
+				x=va_arg(ap, int);
+				buffer[buffer_pointer]=x;
+				buffer_pointer++;
+			}
+			else if (*string=='s') {
+				char *s;
+				string++;
+				s=(char *)va_arg(ap, long);
+				while(*s) {
+					buffer[buffer_pointer]=*s;
+					s++;
+					buffer_pointer++;
+				}
+			}
 		}
 		else {
 			buffer[buffer_pointer]=*string;
@@ -73,14 +122,42 @@ int printf(char *string,...) {
 	return buffer_pointer;
 }
 
-#if 0
 
-int main(int argc, char **argv) {
+int strncmp(const char *s1, const char *s2, uint32_t n) {
 
+	int i=0,r;
 
-	printk("Hello %d %x World!\n",4321,0xdec25);
+	while(1) {
+
+		if (i==n) return 0;
+
+		r=s1[i]-s2[i];
+		if (r!=0) return r;
+
+		i++;
+	}
 
 	return 0;
 }
 
-#endif
+void cfmakeraw(struct termios *termios_p) {
+
+	termios_p->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP |INLCR|IGNCR|ICRNL|IXON);
+	termios_p->c_oflag &= ~OPOST;
+	termios_p->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+	termios_p->c_cflag &= ~(CSIZE|PARENB);
+	termios_p->c_cflag |= CS8;
+}
+
+int tcgetattr(int fd, struct termios *termios_p) {
+
+	return ioctl3(fd,TCGETS,termios_p);
+
+}
+
+int tcsetattr(int fd, int optional_actions,
+                     const struct termios *termios_p) {
+
+        return ioctl3(fd,TCSETS,termios_p);
+}
+

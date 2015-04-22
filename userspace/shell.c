@@ -1,11 +1,13 @@
 #include <stddef.h>
 #include <stdint.h>
 //#include "stdio.h"
-//#include "syscalls.h"
+#include "syscalls.h"
+#include "vlibc.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <termios.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <termios.h>
+
 
 
 #define VERSION "4.0"
@@ -57,8 +59,11 @@ int main(int argc, char **argv) {
 
 		while(1) {
 			ch=getchar();
+
+//			printf("VMW: %d\n",ch);
+
 			if ((ch=='\n') || (ch=='\r')) {
-				printf("\r\n");
+
 				input_string[input_pointer]=0;
 				result=parse_input(input_string);
 				if (result==1) done=1;
