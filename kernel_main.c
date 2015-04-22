@@ -9,12 +9,15 @@
 #include "interrupts.h"
 #include "bcm2835_periph.h"
 #include "mmio.h"
+#include "memory.h"
 #include "syscalls.h"
 #include "hardware.h"
 #include "framebuffer.h"
 #include "framebuffer_console.h"
 
 #define VERSION 10
+
+#if 0
 
 static int parse_input(char *string) {
 
@@ -64,19 +67,24 @@ static int parse_input(char *string) {
 	return result;
 }
 
+#endif
+
 /* default, this is over-ridden later */
 int hardware_type=RPI_MODEL_B;
 
-void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags) {
+void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
+		uint32_t memory_kernel) {
 
-	char input_string[256];
-	int input_pointer;
-	int ch;
+//	char input_string[256];
+//	int input_pointer;
+//	int ch;
+
+	unsigned int memory_total;
 
 	(void) r0;	/* Ignore boot method */
 
 	/* Detect Hardware */
-	detect_atags(atags);
+	atags_detect(atags);
 
 	/* Initialize Hardware */
 	uart_init();
@@ -121,11 +129,27 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags) {
 	printk("\r\n");
 
 	/* Print ATAGS */
-	dump_atags(atags);
+	atags_dump(atags);
+
+	printk("\r\n");
+
+	/* Get amount of RAM from ATAGs */
+	memory_total=atags_detect_ram(atags);
+
+	/* Init memory subsystem */
+	memory_init(memory_total,memory_kernel);
+
+	/* Test memory allocation */
+	printk("Allocated 8kB at %x\r\n",
+		memory_allocate(8192));
+
 
 	/* Enter our "shell" */
-	printk("\r\nReady!\r\n");
+	printk("\r\nEntering userspace!\r\n");
 
+	while(1) {
+
+#if 0
 	while (1) {
 		input_pointer=0;
 		printk("] ");
@@ -145,4 +169,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags) {
 //			uart_putc(ch);
 		}
 	}
+#endif
+
+	}
+
 }

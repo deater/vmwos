@@ -8,7 +8,7 @@
 /* http://www.simtec.co.uk/products/SWLINUX/files/booting_article.html */
 
 
-void dump_atags(uint32_t *atags) {
+void atags_dump(uint32_t *atags) {
 
 	/* each tag has at least 32-bit size and then 32-bit value 	*/
 	/* some tags have multiple values				*/
@@ -102,7 +102,7 @@ void dump_atags(uint32_t *atags) {
 }
 
 
-void detect_atags(uint32_t *atags) {
+void atags_detect(uint32_t *atags) {
 
 	/* each tag has at least 32-bit size and then 32-bit value 	*/
 	/* some tags have multiple values				*/
@@ -231,3 +231,42 @@ void detect_atags(uint32_t *atags) {
 
 	}
 }
+
+
+unsigned long atags_detect_ram(uint32_t *atags) {
+
+	int size;
+	uint32_t *tags=atags;
+
+	unsigned long total_ram=0;
+
+	while(1) {
+		size=tags[0];
+
+		switch (tags[1]) {
+
+		/* Physical Memory */
+		case ATAG_MEM:
+			total_ram=tags[2];
+			if (tags[3]!=0) {
+				printk("Warning!  We do not handle memory not starting at zero!\r\n");
+			}
+			return total_ram;
+			tags += size;
+			break;
+
+		/* Empty tag to end list */
+		case ATAG_NONE:
+			printk("\r\n");
+			return 0;
+			break;
+
+		default:
+			tags+=size;
+			break;
+		}
+
+	}
+
+}
+

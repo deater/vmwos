@@ -94,10 +94,13 @@ clear_bss:
 	cmp	r4,r9
 	ble 	clear_bss
 
+	/* Size of the kernel? */
+	ldr	r3, =__bss_end
+
 	/* Call our main function */
 	/* The values r0 - r2 from bootloader are preserved */
-	ldr r3, =kernel_main
-	blx r3
+	ldr r4, =kernel_main
+	blx r4
 
 	/* We only reach this if the code we call exits */
 wait_forever:
