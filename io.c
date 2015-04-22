@@ -4,12 +4,9 @@
 #include "serial.h"
 #include "framebuffer_console.h"
 
-int write(int fd, const void *buf, size_t count) {
+int console_write(const void *buf, size_t count) {
 
 	int result;
-
-	/* Only handle stdout for now */
-	if (fd!=1) return -1;
 
 	/* Write to framebuffer */
 	result=framebuffer_console_write(buf, count);
@@ -18,5 +15,20 @@ int write(int fd, const void *buf, size_t count) {
 	result=uart_write(buf, count);
 
 	return result;
+
+}
+
+
+int console_read(const void *buf, size_t count) {
+
+	int i;
+	unsigned char *buffer=buf;
+
+	/* Read from UART */
+	for(i=0;i<count;i++) {
+		buffer[i]=uart_getc();
+	}
+
+	return i;
 
 }

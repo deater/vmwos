@@ -2,6 +2,7 @@
 #include "bcm2835_periph.h"
 #include "mmio.h"
 #include "led.h"
+#include "printk.h"
 
 /* global variable */
 int blinking_enabled=1;
@@ -31,3 +32,14 @@ void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
 
 }
 
+void __attribute__((interrupt("FIQ"))) fiq_handler(void) {
+	printk("UNHANDLED FIQ\r\n");
+}
+
+void __attribute__((interrupt("ABORT"))) abort_handler(void) {
+	printk("UNHANDLED ABORT\r\n");
+}
+
+void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
+	printk("UNHANDLED UNDEF\r\n");
+}

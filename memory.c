@@ -72,7 +72,7 @@ static int find_free(int num_chunks) {
 				if (memory_test_used(i+j)) break;
 			}
 			if (j==num_chunks) {
-				return i+j;
+				return i;
 			}
 		}
 	}
@@ -84,6 +84,7 @@ void *memory_allocate(int size) {
 
 	int first_chunk;
 	int num_chunks;
+	int i;
 
 //	printk("Allocating memory of size %d bytes\n",size);
 
@@ -96,6 +97,10 @@ void *memory_allocate(int size) {
 	if (first_chunk<0) {
 		printk("Error!  Could not allocate %d of memory!\n",size);
 		return NULL;
+	}
+
+	for(i=0;i<num_chunks;i++) {
+		memory_mark_used(first_chunk+i);
 	}
 
 	return (void *)(first_chunk*CHUNK_SIZE);

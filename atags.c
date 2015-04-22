@@ -159,7 +159,6 @@ void atags_detect(uint32_t *atags) {
 			break;
 
 		case ATAG_CMDLINE:
-			printk("  Commandline: ");
 			cmdline = (char *)(&tags[2]);
 
 			int i=0,digit=0,rev=-1;
@@ -269,4 +268,3 @@ unsigned long atags_detect_ram(uint32_t *atags) {
 	}
 
 }
-

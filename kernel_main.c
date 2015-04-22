@@ -14,6 +14,7 @@
 #include "hardware.h"
 #include "framebuffer.h"
 #include "framebuffer_console.h"
+#include "string.h"
 
 #define VERSION 10
 
@@ -72,12 +73,16 @@ static int parse_input(char *string) {
 /* default, this is over-ridden later */
 int hardware_type=RPI_MODEL_B;
 
+#include "shell.h"
+
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
 
 //	char input_string[256];
 //	int input_pointer;
 //	int ch;
+
+	char *shell_address,*shell_stack;
 
 	unsigned int memory_total;
 
@@ -90,11 +95,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	uart_init();
 	led_init();
 	timer_init();
-	framebuffer_init(800,600,24);
-	framebuffer_console_init();
 
 	/* Enable Interrupts */
 	enable_interrupts();
+	printk("\r\nBooting VMWos...\r\n");
+
+	/* Enable the Framebuffer */
+	framebuffer_init(800,600,24);
+	framebuffer_console_init();
+
 
 	/* Delay to allow time for serial port to settle */
 	/* So we can actually see the output on the terminal */
@@ -139,13 +148,47 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
 
-	/* Test memory allocation */
-	printk("Allocated 8kB at %x\r\n",
-		memory_allocate(8192));
-
 
 	/* Enter our "shell" */
 	printk("\r\nEntering userspace!\r\n");
+
+	/* Load the shell */
+	shell_address=(char *)memory_allocate(8192);
+	shell_stack=(char *)memory_allocate(4096);
+
+	printk("Allocated 8kB at %x and stack at %x\r\n",
+		shell_address,shell_stack);
+
+	memcpy(shell_address,shell_binary,sizeof(shell_binary));
+
+	/* Grows down */
+	shell_stack+=4092;
+
+	/* jump to the shell */
+
+//	void (*shell)(void) = (void *)shell_address;
+
+	/* set user stack */
+	asm volatile(
+		"msr CPSR_c, #0xDF\n" /* System mode, like user but privldg */
+		"mov sp, %[stack]\n"
+		"msr CPSR_c, #0xD3\n" /* Back to Supervisor mode */
+                : /* output */
+                : [stack] "r"(shell_stack) /* input */
+                : "sp", "memory");	/* clobbers */
+
+	/* enter userspace */
+
+	asm volatile(
+                "mov r0, #0x10\n"
+		"msr SPSR, r0\n"
+		"mov lr, %[shell]\n"
+		"movs pc,lr\n"
+                : /* output */
+                : [shell] "r"(shell_address) /* input */
+                : "r0", "lr", "memory");	/* clobbers */
+
+	//shell();
 
 	while(1) {
 

@@ -30,13 +30,13 @@ _start:
         ldr	pc, interrupt_addr
         ldr	pc, fast_interrupt_addr
 reset_addr:			.word	reset
-undefined_instruction_addr:	.word	reset
+undefined_instruction_addr:	.word	undef_handler
 software_interrupt_addr:	.word	swi_handler
-prefetch_abort_addr:		.word	reset
-data_abort_addr:		.word	reset
-unused_handler_addr:		.word	reset
+prefetch_abort_addr:		.word	abort_handler
+data_abort_addr:		.word	abort_handler
+unused_handler_addr:		.word	undef_handler
 interrupt_addr:			.word	interrupt_handler
-fast_interrupt_addr:		.word	reset
+fast_interrupt_addr:		.word	fiq_handler
 	/* Done Interrupt vector block */
 
 	/* Continue with boot code */

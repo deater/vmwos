@@ -85,7 +85,7 @@ int printk(char *string,...) {
 
 	va_end(ap);
 
-	write(1,buffer,buffer_pointer);
+	console_write(buffer,buffer_pointer);
 
 	return buffer_pointer;
 }

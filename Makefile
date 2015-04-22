@@ -15,12 +15,13 @@ kernel.img:	kernel.elf
 
 
 kernel.elf:	kernel_main.o atags.o serial.o boot.o framebuffer.o \
-	framebuffer_console.o \
-	interrupts.o io.o led.o mailbox.o memory.o printk.o syscalls.o timer.o 
+	framebuffer_console.o interrupts.o io.o led.o \
+	mailbox.o memory.o printk.o string.o syscalls.o timer.o 
 	$(CROSS)ld --no-undefined \
 		kernel_main.o atags.o serial.o boot.o framebuffer.o \
 		framebuffer_console.o \
-		interrupts.o io.o led.o mailbox.o memory.o printk.o syscalls.o timer.o \
+		interrupts.o io.o led.o mailbox.o memory.o \
+		printk.o string.o syscalls.o timer.o \
 		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
 
 
@@ -57,6 +58,9 @@ printk.o:	printk.c
 
 serial.o:	serial.c bcm2835_periph.h
 	$(CROSS)$(CC) $(CFLAGS) -o serial.o -c serial.c
+
+string.o:	string.c
+	$(CROSS)$(CC) $(CFLAGS) -o string.o -c string.c
 
 syscalls.o:	syscalls.c
 	$(CROSS)$(CC) $(CFLAGS) -o syscalls.o -c syscalls.c

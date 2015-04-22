@@ -160,4 +160,3 @@ int tcsetattr(int fd, int optional_actions,
 
         return ioctl3(fd,TCSETS,termios_p);
 }
-

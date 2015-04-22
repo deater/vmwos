@@ -13,6 +13,8 @@
 #include "mailbox.h"
 #include "framebuffer.h"
 
+#include "string.h"
+
 static int framebuffer_initialized=0;
 
 static struct frame_buffer_info_type current_fb;
@@ -166,7 +168,7 @@ int framebuffer_putpixel(int color, int x, int y) {
 
 }
 
-void *memcpy(void *dest, const void *src, size_t n) {
+void *int_memcpy(void *dest, const void *src, size_t n) {
 
 	int i;
 
@@ -182,9 +184,19 @@ void *memcpy(void *dest, const void *src, size_t n) {
 }
 
 int framebuffer_push(void) {
-	memcpy((unsigned char *)current_fb.pointer,
+	int_memcpy((unsigned char *)current_fb.pointer,
 		offscreen,800*600*3);
 
 	return 0;
 
+}
+
+int framebuffer_gradient(void) {
+
+	int x;
+
+	for(x=0;x<800;x++) {
+		framebuffer_vline( (x*256)/800, 0, 599, x);
+	}
+	framebuffer_push();
 }
