@@ -144,7 +144,7 @@ int framebuffer_clear_screen(int color) {
 	int y;
 
 	for(y=0;y<current_fb.phys_y;y++) {
-		framebuffer_hline(color,0,current_fb.phys_x-1,y);
+		framebuffer_hline(color,0,current_fb.phys_x,y);
 	}
 
 	return 0;

@@ -16,6 +16,8 @@
 #include "medieval_font.h"
 #include "marie_font.h"
 
+#include "string.h"
+
 #define ANSI_BLACK	0
 #define ANSI_RED	1
 #define ANSI_GREEN	2
@@ -218,6 +220,9 @@ int framebuffer_console_write(const char *buffer, int length) {
 			console_y++;
 		} else if (buffer[i]=='\n') {
 			console_x=0;
+		} else if (buffer[i]=='\b') {
+			console_x--;
+			if (console_x<0) console_x=0;
 		} else if (buffer[i]==27) {
 			/* escape */
 			i++;
@@ -241,6 +246,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 				/* clear screen */
 				if (escape_code[e]=='J') {
 					framebuffer_console_clear();
+					framebuffer_console_home();
 				}
 				/* colors */
 				if (escape_code[e]=='m') {
@@ -263,7 +269,19 @@ int framebuffer_console_write(const char *buffer, int length) {
 		}
 
 		if (console_y>=CONSOLE_Y) {
-			console_y=0;
+			int i;
+			/* scroll up a line */
+			framebuffer_clear_screen(0);
+			memcpy(&text_console[0][0],&text_console[0][1],
+				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
+			memcpy(&text_color[0][0],&text_color[0][1],
+				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
+			for(i=0;i<CONSOLE_X;i++) {
+				text_console[i][CONSOLE_Y-1]=' ';
+				text_color[i][CONSOLE_Y-1]=FORE_GREY|BACK_BLACK;
+
+			}
+			console_y--;
 		}
 	}
 
