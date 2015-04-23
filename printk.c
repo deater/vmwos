@@ -15,7 +15,7 @@ int printk(char *string,...) {
 
 	int buffer_pointer=0;
 	int i;
-	int x;
+	unsigned long x;
 
 	va_start(ap, string);
 
@@ -26,7 +26,13 @@ int printk(char *string,...) {
 			string++;
 			if (*string=='d') {
 				string++;
-				x=va_arg(ap, int);
+				x=va_arg(ap, unsigned long);
+				if (x&0x80000000) {
+					buffer[buffer_pointer]='-';
+					buffer_pointer++;
+					x=~x;
+					x++;
+				}
 				int_pointer=9;
 				do {
 					int_buffer[int_pointer]=(x%10)+'0';
@@ -41,7 +47,7 @@ int printk(char *string,...) {
 			}
 			else if (*string=='x') {
 				string++;
-				x=va_arg(ap, int);
+				x=va_arg(ap, unsigned long);
 				int_pointer=9;
 				do {
 					if ((x%16)<10) {
