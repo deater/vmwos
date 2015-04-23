@@ -5,6 +5,7 @@
 #include "io.h"
 #include "framebuffer.h"
 #include "framebuffer_console.h"
+#include "scheduler.h"
 
 
 extern int blinking_enabled;
@@ -17,7 +18,31 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 	uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3) {
 
 	register long r7 asm ("r7");
+
+#if 0
+
+	long entry_pc,entry_spsr;
+
+	asm volatile(
+		"mov      %[entry_pc], lr\n"
+		: [entry_pc]"=r"(entry_pc)
+		:
+		:
+		);
+
+	asm volatile(
+		"MRS      %[entry_spsr], spsr\n"
+		: [entry_spsr]"=r"(entry_spsr)
+		:
+		:
+		);
+
+	printk("PC=%x SPSR=%x\r\n",entry_pc,entry_spsr);
+#endif
+
 	uint32_t result=0;
+
+//	printk("Starting syscall %d\r\n",r7);
 
 	switch(r7) {
 		case SYSCALL_READ:
@@ -44,8 +69,13 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 			}
 			break;
 
+		case SYSCALL_GETPID:
+			result=process[current_process].pid;
+			break;
+
 		case SYSCALL_IOCTL:
-			printk("UNIMPLEMENTED SYSCALL: IOCTL\r\n");
+			printk("UNIMPLEMENTED SYSCALL: IOCTL %x %x %x\r\n",
+				r0,r1,r2);
 			result=-1;
 			break;
 
@@ -75,34 +105,30 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 
 		case SYSCALL_TB1:
 			result=framebuffer_tb1();
+			break;
 
 		default:
 			printk("Unknown syscall %d\n",r7);
 			break;
 	}
 
-//	printk("Returning from syscall: %x\r\n",result);
-
-#if 0
-	register long *sp __asm__("sp");
-
-	printk("sp=%x\n",sp);
-	printk("lr=%x\n",sp[-0]);
-	printk("ip=%x\n",sp[-1]);
-	printk("r7=%x\n",sp[-2]);
-	printk("r6=%x\n",sp[-3]);
-	printk("r5=%x\n",sp[-4]);
-	printk("r4=%x\n",sp[-5]);
-	printk("r3=%x\n",sp[-6]);
-	printk("r2=%x\n",sp[-7]);
-	printk("r1=%x\n",sp[-8]);
-	printk("r0=%x\n",sp[-9]);
-#endif
 
 	/* The SWI handler code restores all of the registers	*/
 	/* Before returning.  To get our result in r0 we have	*/
 	/* to push it into the place of the saved r0 on the	*/
 	/* stack.						*/
+#if 0
+	asm volatile(
+		"MRS      %[entry_spsr], spsr\n"
+		: [entry_spsr]"=r"(entry_spsr)
+		:
+		:
+		);
+
+	printk("SPSR exit=%x\r\n",entry_spsr);
+#endif
+
+	printk("SYSCALL returning %d\n",result);
 
 	asm volatile(	"pop {r0}\n"
 			"push {%[result]}\n"

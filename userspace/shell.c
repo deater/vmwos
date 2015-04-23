@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 	int input_pointer,result;
 	int ch,done=0;
 
-	static struct termios oldt, newt;
+	struct termios oldt, newt;
 
 	tcgetattr( 0, &oldt);
 	newt = oldt;
@@ -27,9 +27,9 @@ int main(int argc, char **argv) {
 
 	tcsetattr(0, TCSANOW, &newt);
 
-
 	while (1) {
 		input_pointer=0;
+
 		printf("] ");
 
 		while(1) {
@@ -77,6 +77,7 @@ static int print_help(void) {
 	printf("\tcls          - clears the screen\r\n");
 	printf("\techo X       - prints string X\r\n");
 	printf("\tfont X       - sets the font to font #X\r\n");
+	printf("\tgetpid       - print current process ID\r\n");
 	printf("\thelp         - prints this help message\r\n");
 	printf("\trun X        - run program named X\r\n");
 	printf("\tcolor X      - set text to color #X\r\n");
@@ -96,13 +97,16 @@ static int parse_input(char *string) {
 		printf("%s\r\n",string+5);
 	}
 	else if (!strncmp(string,"cls",3)) {
-		printf("\n\r\033[2J\n\r");
+		printf("\n\r\033[2J\r\n");
 	}
 	else if (!strncmp(string,"font ",5)) {
 		vmwos_setfont(string[5]);
 	}
 	else if (!strncmp(string,"gradient",8)) {
 		vmwos_gradient();
+	}
+	else if (!strncmp(string,"getpid",6)) {
+		printf("Current pid: %d\r\n",getpid());
 	}
 	else if (!strncmp(string,"exit",4)) {
 		result=1;

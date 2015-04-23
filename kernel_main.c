@@ -15,60 +15,9 @@
 #include "framebuffer.h"
 #include "framebuffer_console.h"
 #include "string.h"
+#include "scheduler.h"
 
 #define VERSION 10
-
-#if 0
-
-static int parse_input(char *string) {
-
-	int result=0;
-
-	if ((string[0]=='l') && (string[1]=='e') && (string[2]=='d')) {
-		if (string[5]=='n') led_on();
-		if (string[5]=='f') led_off();
-	}
-	else if ((string[0]=='t') && (string[1]=='i') && (string[2]=='m')) {
-		printk("\r\nTimer: %d %d\r\n",mmio_read(TIMER_VALUE),0);
-	}
-	else if ((string[0]=='w') && (string[1]=='r') && (string[2]=='i')) {
-		result=syscall3(STDOUT,
-				(int)"WRITE SYSCALL TEST\r\n",
-				20,
-				SYSCALL_WRITE);
-		printk("\r\nSyscall returned %d\r\n",result);
-	}
-	else if ((string[0]=='o') && (string[1]=='n')) {
-		result=syscall1(1,SYSCALL_BLINK);
-	}
-	else if ((string[0]=='o') && (string[1]=='f')) {
-		result=syscall1(0,SYSCALL_BLINK);
-	}
-	else if (string[0]=='f') {
-		framebuffer_console_setfont(string[1]-'0');
-	}
-
-	else if ((string[0]=='g') && (string[1]=='r')) {
-
-		int x;
-
-		for(x=0;x<800;x++) {
-			framebuffer_vline( (x*256)/800, 0, 599, x);
-		}
-		framebuffer_push();
-
-	}
-	else if ((string[0]=='t') && (string[1]=='b')) {
-		framebuffer_tb1();
-	}
-	else {
-		printk("\r\nUnknown commmand!");
-	}
-
-	return result;
-}
-
-#endif
 
 /* default, this is over-ridden later */
 int hardware_type=RPI_MODEL_B;
@@ -78,13 +27,8 @@ int hardware_type=RPI_MODEL_B;
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
 
-//	char input_string[256];
-//	int input_pointer;
-//	int ch;
-
-	char *shell_address,*shell_stack;
-
 	unsigned int memory_total;
+	int which_process;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -98,6 +42,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Enable Interrupts */
 	enable_interrupts();
+
 	printk("\r\nBooting VMWos...\r\n");
 
 	/* Enable the Framebuffer */
@@ -152,6 +97,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Enter our "shell" */
 	printk("\r\nEntering userspace!\r\n");
 
+	which_process=load_process(shell_binary, sizeof(shell_binary),
+				DEFAULT_STACK_SIZE);
+
+	run_process(which_process);
+
+#if 0
+
+	char *shell_address,*shell_stack;
+
 	/* Load the shell */
 	shell_address=(char *)memory_allocate(8192);
 	shell_stack=(char *)memory_allocate(4096);
@@ -165,8 +119,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	shell_stack+=4092;
 
 	/* jump to the shell */
-
-//	void (*shell)(void) = (void *)shell_address;
 
 	/* set user stack */
 	asm volatile(
@@ -188,32 +140,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
                 : [shell] "r"(shell_address) /* input */
                 : "r0", "lr", "memory");	/* clobbers */
 
+#endif
+
+
 	//shell();
 
 	while(1) {
 
-#if 0
-	while (1) {
-		input_pointer=0;
-		printk("] ");
-
-		while(1) {
-			ch=uart_getc();
-			if ((ch=='\n') || (ch=='\r')) {
-				input_string[input_pointer]=0;
-				parse_input(input_string);
-				printk("\r\n");
-				break;
-			}
-
-			input_string[input_pointer]=ch;
-			input_pointer++;
-			printk("%c",ch);
-//			uart_putc(ch);
-		}
-	}
-#endif
-
+		/* Loop Forever */
+		/* Should probably execute a wfi instruction */
 	}
 
 }

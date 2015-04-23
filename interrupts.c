@@ -9,6 +9,26 @@ int blinking_enabled=1;
 
 void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
 
+#if 0
+	long entry_pc,entry_spsr;
+
+        asm volatile(
+                "mov      %[entry_pc], lr\n"
+                : [entry_pc]"=r"(entry_pc)
+                :
+                :
+                );
+
+        asm volatile(
+                "MRS      %[entry_spsr], spsr\n"
+                : [entry_spsr]"=r"(entry_spsr)
+                :
+                :
+                );
+
+        printk("IRQ PC=%x SPSR=%x\r\n",entry_pc,entry_spsr);
+#endif
+
 	static int lit = 0;
 
 	/* Clear the ARM Timer interrupt		*/

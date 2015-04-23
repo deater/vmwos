@@ -5,6 +5,7 @@
 
 #define __NR_read	3
 #define __NR_write	4
+#define __NR_getpid	20
 #define __NR_ioctl	54
 #define __NR_nanosleep  162
 
@@ -40,6 +41,23 @@ uint32_t write(int fd, const void *buf, uint32_t size) {
 
 	return r0;
 }
+
+
+int getpid(void) {
+
+	register long r7 __asm__("r7") = __NR_getpid;
+	register long r0 __asm__("r0");
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0) /* output */
+		: "r"(r7) /* input */
+		: "memory");
+
+	return r0;
+
+}
+
 
 int nanosleep(const struct timespec *req, struct timespec *rem) {
 

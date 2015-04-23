@@ -47,7 +47,7 @@ int printf(char *string,...) {
 
 	int buffer_pointer=0;
 	int i;
-	int x;
+	unsigned long x;
 
 	va_start(ap, string);
 
@@ -58,7 +58,13 @@ int printf(char *string,...) {
 			string++;
 			if (*string=='d') {
 				string++;
-				x=va_arg(ap, int);
+				x=va_arg(ap, unsigned long);
+				if (x&0x80000000) {
+					x=~x;
+					x+=1;
+					buffer[buffer_pointer]='-';
+					buffer_pointer++;
+				}
 				int_pointer=9;
 				do {
 					int_buffer[int_pointer]=(x%10)+'0';
@@ -73,7 +79,7 @@ int printf(char *string,...) {
 			}
 			else if (*string=='x') {
 				string++;
-				x=va_arg(ap, int);
+				x=va_arg(ap, unsigned long);
 				int_pointer=9;
 				do {
 					if ((x%16)<10) {
@@ -92,7 +98,7 @@ int printf(char *string,...) {
 			}
 			else if (*string=='c') {
 				string++;
-				x=va_arg(ap, int);
+				x=va_arg(ap, unsigned long);
 				buffer[buffer_pointer]=x;
 				buffer_pointer++;
 			}
@@ -151,12 +157,12 @@ void cfmakeraw(struct termios *termios_p) {
 
 int tcgetattr(int fd, struct termios *termios_p) {
 
-	return ioctl3(fd,TCGETS,termios_p);
+	return ioctl3(fd,TCGETS,(long)termios_p);
 
 }
 
 int tcsetattr(int fd, int optional_actions,
                      const struct termios *termios_p) {
 
-        return ioctl3(fd,TCSETS,termios_p);
+        return ioctl3(fd,TCSETS,(long)termios_p);
 }
