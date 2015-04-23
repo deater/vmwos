@@ -199,4 +199,6 @@ int framebuffer_gradient(void) {
 		framebuffer_vline( (x*256)/800, 0, 599, x);
 	}
 	framebuffer_push();
+
+	return 0;
 }

@@ -56,7 +56,7 @@ memory.o:	memory.c
 printk.o:	printk.c
 	$(CROSS)$(CC) $(CFLAGS) -o printk.o -c printk.c
 
-scheduler.o:	scheduler.c bcm2835_periph.h
+scheduler.o:	scheduler.c scheduler.h
 	$(CROSS)$(CC) $(CFLAGS) -o scheduler.o -c scheduler.c
 
 serial.o:	serial.c bcm2835_periph.h

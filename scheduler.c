@@ -7,16 +7,22 @@
 
 
 int current_process=0;
-
 struct process_control_block_type process[MAX_PROCESSES];
-
-
 static int avail_pid=1;
 
 
+int processes_init(void) {
+	int i;
 
+	current_process=0;
+	for(i=0;i<MAX_PROCESSES;i++) {
+		process[i].valid=0;
+	}
 
-int load_process(char *data, int size, unsigned int stack_size) {
+	return 0;
+}
+
+int load_process(unsigned char *data, int size, unsigned int stack_size) {
 
 	char *binary_start;
 	char *stack_start;
@@ -35,6 +41,7 @@ int load_process(char *data, int size, unsigned int stack_size) {
 		return -1;
 	}
 
+	current_process=i;
 	process[i].valid=1;
 
 	/* UNLOCK */
@@ -61,7 +68,7 @@ int load_process(char *data, int size, unsigned int stack_size) {
 	/* UNLOCK */
 
 	/* Initialize register state */
-	for(j=0;j<14;j++) {
+	for(j=0;j<15;j++) {
 		process[i].reg_state.r[j]=0;
 	}
 
