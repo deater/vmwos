@@ -88,3 +88,4 @@ int ioctl3(int d, unsigned long request, unsigned long req2);
 int ioctl4(int d, unsigned long request, unsigned long req2, unsigned long req3);
 
 int getpid(void);
+int sys_time(void);

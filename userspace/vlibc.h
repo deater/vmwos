@@ -4,3 +4,4 @@ int strncmp(const char *s1, const char *s2, uint32_t n);
 int putchar(int c);
 int getchar(void);
 int printf(char *string,...);
+int time(int *time);

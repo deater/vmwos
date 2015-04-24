@@ -3,9 +3,11 @@
 #include "mmio.h"
 #include "led.h"
 #include "printk.h"
+#include "time.h"
 
 /* global variable */
 int blinking_enabled=1;
+int tick_counter=0;
 
 void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
 
@@ -44,6 +46,7 @@ void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
 	/* FIXME: do proper detection of IRQ src	*/
 
 	mmio_write(TIMER_IRQ_CLEAR,0x1);
+	tick_counter++;
 
 	if (!blinking_enabled) return;
 

@@ -10,6 +10,7 @@
 //#define SYSCALL_OPEN		5
 //#define SYSCALL_CLOSE		6
 //#define SYSCALL_EXECVE	11
+#define SYSCALL_TIME		13
 #define SYSCALL_GETPID		20
 #define SYSCALL_IOCTL		54
 #define SYSCALL_NANOSLEEP	162

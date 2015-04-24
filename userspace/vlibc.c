@@ -166,3 +166,15 @@ int tcsetattr(int fd, int optional_actions,
 
         return ioctl3(fd,TCSETS,(long)termios_p);
 }
+
+int time(int *t) {
+
+	int our_time;
+
+	our_time=sys_time();
+
+	if (t!=NULL) *t=our_time;
+
+	return our_time;
+}
+

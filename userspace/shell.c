@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
 	struct termios oldt, newt;
 
-	register long sp asm ("sp");
+//	register long sp asm ("sp");
 
 //	printf("Our sp=%x\r\n",sp);
 
@@ -87,6 +87,7 @@ static int print_help(void) {
 	printf("\tcolor X      - set text to color #X\r\n");
 	printf("\tver          - print version\r\n");
 	printf("\tgradient     - make background look cool\r\n");
+	printf("\time          - print seconds since boot\r\n");
 	printf("\ttb1          - play TB1\r\n");
 	printf("\r\n");
 
@@ -129,6 +130,9 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"ver",3)) {
 		printf("VMWos Shell version %s\r\n",VERSION);
+	}
+	else if (!strncmp(string,"time",4)) {
+		printf("Time since boot: %ds\r\n",time(NULL));
 	}
 	else if (!strncmp(string,"tb1",3)) {
 		vmwos_tb1();

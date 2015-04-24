@@ -6,6 +6,7 @@
 #include "framebuffer.h"
 #include "framebuffer_console.h"
 #include "scheduler.h"
+#include "time.h"
 
 
 extern int blinking_enabled;
@@ -78,6 +79,10 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 			}
 			break;
 
+		case SYSCALL_TIME:
+			result=time_since_boot();
+			break;
+
 		case SYSCALL_GETPID:
 			result=process[current_process].pid;
 			break;
@@ -140,7 +145,7 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 	/* FIXME: This is a hack and fragile */
 	/* Need to get result onto user stack */
 
-	asm volatile("str %[result],[sp,#16]\n"
+	asm volatile("str %[result],[sp,#0]\n"
 		:	/* output */
 		:       [result] "r" (result) /* input */
 		:);	/* clobber */

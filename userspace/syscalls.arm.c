@@ -5,6 +5,7 @@
 
 #define __NR_read	3
 #define __NR_write	4
+#define __NR_time	13
 #define __NR_getpid	20
 #define __NR_ioctl	54
 #define __NR_nanosleep  162
@@ -107,4 +108,20 @@ int ioctl4(int fd, unsigned long request, unsigned long req2, unsigned long req3
 		: "memory");
 
 	return r0;
+}
+
+
+int sys_time(void) {
+
+	register long r7 __asm__("r7") = __NR_time;
+	register long r0 __asm__("r0");
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0) /* output */
+		: "r"(r7) /* input */
+		: "memory");
+
+	return r0;
+
 }

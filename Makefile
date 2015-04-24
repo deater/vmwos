@@ -16,12 +16,13 @@ kernel.img:	kernel.elf
 
 kernel.elf:	kernel_main.o atags.o serial.o boot.o framebuffer.o \
 	framebuffer_console.o idle_task.o interrupts.o io.o led.o \
-	mailbox.o memory.o printk.o scheduler.o string.o syscalls.o timer.o 
+	mailbox.o memory.o printk.o scheduler.o string.o syscalls.o time.o \
+	timer.o 
 	$(CROSS)ld --no-undefined \
 		kernel_main.o atags.o serial.o boot.o framebuffer.o \
 		framebuffer_console.o idle_task.o \
 		interrupts.o io.o led.o mailbox.o memory.o \
-		printk.o scheduler.o string.o syscalls.o timer.o \
+		printk.o scheduler.o string.o syscalls.o time.o timer.o \
 		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
 
 
@@ -70,6 +71,9 @@ string.o:	string.c
 
 syscalls.o:	syscalls.c
 	$(CROSS)$(CC) $(CFLAGS) -o syscalls.o -c syscalls.c
+
+time.o:	time.c time.h
+	$(CROSS)$(CC) $(CFLAGS) -o time.o -c time.c
 
 timer.o:	timer.c
 	$(CROSS)$(CC) $(CFLAGS) -o timer.o -c timer.c
