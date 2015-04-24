@@ -123,7 +123,7 @@ static int parse_input(char *string) {
 		result=print_help();
 	}
 	else if (!strncmp(string,"run ",4)) {
-		result=print_help();
+		result=vmwos_run(string[4]);
 	}
 	else if (!strncmp(string,"color ",6)) {
 		printf("%c[3%cm\r\n",27,string[6]);

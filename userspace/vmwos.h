@@ -2,6 +2,7 @@ int vmwos_blink(int value);
 int vmwos_tb1(void);
 int vmwos_setfont(int which);
 int vmwos_gradient(void);
+int vmwos_run(int which);
 
 #define __NR_blink	8192
 #define __NR_setfont	8193

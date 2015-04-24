@@ -7,6 +7,7 @@
 #include "framebuffer_console.h"
 #include "scheduler.h"
 #include "time.h"
+#include "interrupts.h"
 
 
 extern int blinking_enabled;
@@ -19,6 +20,8 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 	uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3) {
 
 	register long r7 asm ("r7");
+
+	enable_interrupts();
 
 #if 0
 
@@ -115,6 +118,10 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 
 		case SYSCALL_GRADIENT:
 			result=framebuffer_gradient();
+			break;
+
+		case SYSCALL_RUN:
+			process[r0].ready=1;
 			break;
 
 		case SYSCALL_TB1:
