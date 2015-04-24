@@ -21,7 +21,7 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 
 #if 0
 
-	long entry_pc,entry_spsr;
+	long entry_pc,entry_spsr,entry_sp;
 
 	asm volatile(
 		"mov      %[entry_pc], lr\n"
@@ -37,7 +37,16 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 		:
 		);
 
-	printk("PC=%x SPSR=%x\r\n",entry_pc,entry_spsr);
+	asm volatile(
+                "mov      %[entry_sp], sp\n"
+                : [entry_sp]"=r"(entry_sp)
+                :
+                :
+                );
+
+
+        printk("SWI PC=%x SPSR=%x SP=%x\r\n",entry_pc,entry_spsr,entry_sp);
+
 #endif
 
 	uint32_t result=0;
@@ -71,16 +80,6 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 
 		case SYSCALL_GETPID:
 			result=process[current_process].pid;
-			printk("Result before: %d\r\n",result);
-			printk("SYSCALL CP=%d returning "
-				"valid=%x run=%x ready=%x time=%x pid=%x\r\n",
-				current_process,
-				process[current_process].valid,
-				process[current_process].running,
-				process[current_process].ready,
-				process[current_process].time,
-				process[current_process].pid);
-			printk("Result after: %d\r\n",result);
 			break;
 
 		case SYSCALL_IOCTL:
@@ -138,11 +137,13 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 	printk("SPSR exit=%x\r\n",entry_spsr);
 #endif
 
-	asm volatile(	"pop {r0}\n"
-			"push {%[result]}\n"
-		:
-                :       [result] "r" (result)
-		:);
+	/* FIXME: This is a hack and fragile */
+	/* Need to get result onto user stack */
+
+	asm volatile("str %[result],[sp,#16]\n"
+		:	/* output */
+		:       [result] "r" (result) /* input */
+		:);	/* clobber */
 
 	return result;
 

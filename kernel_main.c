@@ -16,6 +16,7 @@
 #include "framebuffer_console.h"
 #include "string.h"
 #include "scheduler.h"
+#include "idle_task.h"
 
 #define VERSION 10
 
@@ -23,12 +24,15 @@
 int hardware_type=RPI_MODEL_B;
 
 #include "shell.h"
+#include "printa.h"
+#include "printb.h"
+
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
 
 	unsigned int memory_total;
-	int which_process;
+	int init_process;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -96,14 +100,25 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
 
+	/* Load the idle thread */
+	load_process("idle",(unsigned char *)&idle_task,8,4096);
 
-	/* Enter our "shell" */
-	printk("\r\nEntering userspace!\r\n");
 
-	which_process=load_process(shell_binary, sizeof(shell_binary),
+	init_process=load_process("shell",shell_binary, sizeof(shell_binary),
 				DEFAULT_STACK_SIZE);
 
-	run_process(which_process);
+	load_process("printa",printa_binary, sizeof(printa_binary),
+				DEFAULT_STACK_SIZE);
+
+	load_process("printb",printb_binary, sizeof(printb_binary),
+				DEFAULT_STACK_SIZE);
+
+
+	/* Enter our "init" process*/
+	printk("\r\nEntering userspace by starting process %d!\r\n",
+		init_process);
+
+	run_process(init_process);
 
 #if 0
 
@@ -144,9 +159,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
                 : "r0", "lr", "memory");	/* clobbers */
 
 #endif
-
-
-	//shell();
 
 	while(1) {
 

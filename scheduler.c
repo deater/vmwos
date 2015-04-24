@@ -8,7 +8,7 @@
 
 int current_process=0;
 struct process_control_block_type process[MAX_PROCESSES];
-static int avail_pid=1;
+static int avail_pid=0;
 
 
 int processes_init(void) {
@@ -22,7 +22,8 @@ int processes_init(void) {
 	return 0;
 }
 
-int load_process(unsigned char *data, int size, unsigned int stack_size) {
+int load_process(char *name,
+		unsigned char *data, int size, unsigned int stack_size) {
 
 	char *binary_start;
 	char *stack_start;
@@ -41,7 +42,6 @@ int load_process(unsigned char *data, int size, unsigned int stack_size) {
 		return -1;
 	}
 
-	current_process=i;
 	process[i].valid=1;
 
 	/* UNLOCK */
@@ -50,13 +50,13 @@ int load_process(unsigned char *data, int size, unsigned int stack_size) {
         binary_start=(char *)memory_allocate(size);
         stack_start=(char *)memory_allocate(stack_size);
 
-        printk("New process allocated %dkB at %x and %dkB stack at %x\r\n",
-		size/1024,binary_start,
-		stack_size/1024,stack_start);
 
 	/* Load executable */
 	printk("Copying %d bytes from %x to %x\r\n",size,data,binary_start);
         memcpy(binary_start,data,size);
+
+	/* Set name */
+	strncpy(process[i].name,name,32);
 
 	/* Set up initial conditions */
 	process[i].running=0;
@@ -74,7 +74,7 @@ int load_process(unsigned char *data, int size, unsigned int stack_size) {
 
 	/* Setup the stack */
 	/* is the -4 needed? */
-	process[i].reg_state.r[13]=((long)stack_start+stack_size)-4;
+	process[i].reg_state.r[13]=((long)stack_start+stack_size);
 
 	/* Setup the entry point */
 	process[i].reg_state.lr=(long)binary_start;
@@ -84,7 +84,14 @@ int load_process(unsigned char *data, int size, unsigned int stack_size) {
 	/* We don't mask 0x80 or 0x40 (IRQ or FIQ) */
 	process[i].reg_state.spsr=0x10;
 
-	return 0;
+        printk("New process %s pid %d "
+		"allocated %dkB at %x and %dkB stack at %x\r\n",
+		name,process[i].pid,
+		size/1024,binary_start,
+		stack_size/1024,stack_start);
+
+
+	return i;
 }
 
 int run_process(int which) {
@@ -97,19 +104,23 @@ int run_process(int which) {
 
 	our_sp=&(process[which].reg_state.r[0]);
 
-	printk("Attempting to run proc %d: PC=%x SPSR=%x save_addr=%x stack=%x\r\n",
-		which,return_pc,our_spsr,our_sp,
+	printk("Attempting to run proc %d (%s pid=%d): "
+		"PC=%x SPSR=%x save_addr=%x stack=%x\r\n",
+		which, process[which].name,process[which].pid,
+		return_pc,our_spsr,our_sp,
 		process[which].reg_state.r[13]);
 
 	/* restore user registers */
 	/* update status */
 	/* jump to saved user PC */
 
+	current_process=which;
+
 	asm volatile(
-		"mov sp, %[our_sp]\n"
+		"mov r0, %[our_sp]\n"
 		"msr SPSR_cxsf, %[our_spsr]\n"
 		"mov lr, %[return_pc]\n"
-		"ldmia sp, {r0 - lr}^\n"	/* the ^ means load user regs */
+		"ldmia r0, {r0 - lr}^\n"	/* the ^ means load user regs */
 		"nop\n"
 		/* Need to reset IRQ stack here or we leak */
 		"movs pc, lr\n"			/* movs with pc changes mode */
@@ -117,7 +128,7 @@ int run_process(int which) {
 		:	[our_sp] "r"(our_sp),
 			[return_pc] "r"(return_pc),
 			[our_spsr] "r"(our_spsr) /* input */
-		: "lr", "sp", "memory" /* clobbers */
+		: "r0", "lr", "sp", "memory" /* clobbers */
 			);
 
 
@@ -144,27 +155,29 @@ int run_process(int which) {
                 : "r0", "lr", "memory");        /* clobbers */
 #endif
 
-	
-
 	return 0;
 }
 
 void schedule(void) {
+
+	int i;
+
+	i=current_process;
 
 	/* save current process state */
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
 	/* That is special cased and just runs wfi?   */
-	current_process++;
+	i++;
 
-	while(!process[current_process].ready) {
-		if (current_process>=MAX_PROCESSES) current_process=0;
-		current_process++;
+	while(!process[i].ready) {
+		if (i>=MAX_PROCESSES) i=0;
+		i++;
 	}
 
 	/* switch to new process */
 
-	run_process(current_process);
+	run_process(i);
 
 }

@@ -20,6 +20,10 @@ int main(int argc, char **argv) {
 
 	struct termios oldt, newt;
 
+	register long sp asm ("sp");
+
+//	printf("Our sp=%x\r\n",sp);
+
 	tcgetattr( 0, &oldt);
 	newt = oldt;
 

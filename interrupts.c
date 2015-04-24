@@ -10,11 +10,18 @@ int blinking_enabled=1;
 void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
 
 #if 0
-	long entry_pc,entry_spsr;
+	long entry_pc,entry_spsr,entry_sp;
 
         asm volatile(
                 "mov      %[entry_pc], lr\n"
                 : [entry_pc]"=r"(entry_pc)
+                :
+                :
+                );
+
+        asm volatile(
+                "mov      %[entry_sp], sp\n"
+                : [entry_sp]"=r"(entry_sp)
                 :
                 :
                 );
@@ -26,7 +33,7 @@ void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
                 :
                 );
 
-        printk("IRQ PC=%x SPSR=%x\r\n",entry_pc,entry_spsr);
+        printk("IRQ PC=%x SPSR=%x SP=%x\r\n",entry_pc,entry_spsr,entry_sp);
 #endif
 
 	static int lit = 0;

@@ -1,7 +1,8 @@
 #define DEFAULT_STACK_SIZE 8192
 #define MAX_PROCESSES 10
 
-int load_process(unsigned char *data, int size, unsigned int stack_size);
+int load_process(char *name,
+		unsigned char *data, int size, unsigned int stack_size);
 void schedule(void);
 int run_process(int which);
 int processes_init(void);
@@ -12,6 +13,7 @@ struct process_control_block_type {
 	int ready;
 	int time;
 	int pid;
+	char name[32];
 
 	struct {
 		long r[15];	/* r0 - r14 */
