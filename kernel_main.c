@@ -32,7 +32,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
 
 	unsigned int memory_total;
-	int init_process;
+	int init_process,idle_process;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -101,7 +101,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	memory_init(memory_total,memory_kernel);
 
 	/* Load the idle thread */
-	load_process("idle",(unsigned char *)&idle_task,8,4096);
+	idle_process=load_process("idle",(unsigned char *)&idle_task,8,4096);
 
 
 	init_process=load_process("shell",shell_binary, sizeof(shell_binary),
@@ -118,47 +118,19 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	printk("\r\nEntering userspace by starting process %d!\r\n",
 		init_process);
 
+	process[idle_process].ready=1;
+	process[init_process].ready=1;
+
+	/* A and B */
+	process[2].ready=1;
+	process[3].ready=1;
+
+	userspace_started=1;
+
+	/* run init and restore stack as we won't return */
 	run_process(init_process);
 
-#if 0
-
-	char *shell_address,*shell_stack;
-
-	/* Load the shell */
-	shell_address=(char *)memory_allocate(8192);
-	shell_stack=(char *)memory_allocate(4096);
-
-	printk("Allocated 8kB at %x and stack at %x\r\n",
-		shell_address,shell_stack);
-
-	memcpy(shell_address,shell_binary,sizeof(shell_binary));
-
-	/* Grows down */
-	shell_stack+=4092;
-
-	/* jump to the shell */
-
-	/* set user stack */
-	asm volatile(
-		"msr CPSR_c, #0xDF\n" /* System mode, like user but privldg */
-		"mov sp, %[stack]\n"
-		"msr CPSR_c, #0xD3\n" /* Back to Supervisor mode */
-                : /* output */
-                : [stack] "r"(shell_stack) /* input */
-                : "sp", "memory");	/* clobbers */
-
-	/* enter userspace */
-
-	asm volatile(
-                "mov r0, #0x10\n"
-		"msr SPSR, r0\n"
-		"mov lr, %[shell]\n"
-		"movs pc,lr\n"
-                : /* output */
-                : [shell] "r"(shell_address) /* input */
-                : "r0", "lr", "memory");	/* clobbers */
-
-#endif
+	/* we should never get here */
 
 	while(1) {
 

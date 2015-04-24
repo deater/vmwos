@@ -3,7 +3,7 @@
 
 int load_process(char *name,
 		unsigned char *data, int size, unsigned int stack_size);
-void schedule(void);
+void schedule(long saved_pc);
 int run_process(int which);
 int processes_init(void);
 
@@ -22,4 +22,5 @@ struct process_control_block_type {
 };
 
 extern int current_process;
+extern int userspace_started;
 extern struct process_control_block_type process[];

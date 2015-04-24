@@ -21,7 +21,8 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 
 	register long r7 asm ("r7");
 
-	enable_interrupts();
+	/* Keep running interrupts while inside of SWI */
+//	enable_interrupts();
 
 #if 0
 

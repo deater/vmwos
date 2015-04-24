@@ -26,7 +26,8 @@ int console_read(void *buf, size_t count) {
 
 	/* Read from UART */
 	for(i=0;i<count;i++) {
-		buffer[i]=uart_getc();
+		buffer[i]=uart_getc_noblock();
+		if (buffer[i]==0) break;
 	}
 
 	return i;

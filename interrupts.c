@@ -4,6 +4,7 @@
 #include "led.h"
 #include "printk.h"
 #include "time.h"
+#include "scheduler.h"
 
 /* global variable */
 int blinking_enabled=1;
@@ -11,8 +12,9 @@ int tick_counter=0;
 
 void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
 
-#if 0
-	long entry_pc,entry_spsr,entry_sp;
+
+	long entry_pc;
+
 
         asm volatile(
                 "mov      %[entry_pc], lr\n"
@@ -20,7 +22,8 @@ void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
                 :
                 :
                 );
-
+#if 0
+	long entry_spsr,entry_sp;
         asm volatile(
                 "mov      %[entry_sp], sp\n"
                 : [entry_sp]"=r"(entry_sp)
@@ -48,17 +51,23 @@ void __attribute__((interrupt("IRQ"))) interrupt_handler(void) {
 	mmio_write(TIMER_IRQ_CLEAR,0x1);
 	tick_counter++;
 
-	if (!blinking_enabled) return;
 
-	/* Flip the LED */
-	if( lit ) {
-		led_off();
-		lit = 0;
+
+	if (blinking_enabled) {
+
+		/* Flip the LED */
+		if( lit ) {
+			led_off();
+			lit = 0;
+		}
+		else {
+			led_on();
+			lit = 1;
+		}
 	}
-	else {
-		led_on();
-		lit = 1;
-	}
+
+	/* Schedule.  We might not return */
+	schedule(entry_pc);
 
 }
 

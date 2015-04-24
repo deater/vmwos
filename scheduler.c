@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "scheduler.h"
 
-
+int userspace_started=0;
 int current_process=0;
 struct process_control_block_type process[MAX_PROCESSES];
 static int avail_pid=0;
@@ -60,7 +60,7 @@ int load_process(char *name,
 
 	/* Set up initial conditions */
 	process[i].running=0;
-	process[i].ready=1;
+	process[i].ready=0;
 	process[i].time=0;
 	/* LOCK */
 	process[i].pid=avail_pid;
@@ -103,17 +103,20 @@ int run_process(int which) {
 	our_spsr=process[which].reg_state.spsr;
 
 	our_sp=&(process[which].reg_state.r[0]);
-
+#if 0
 	printk("Attempting to run proc %d (%s pid=%d): "
 		"PC=%x SPSR=%x save_addr=%x stack=%x\r\n",
 		which, process[which].name,process[which].pid,
 		return_pc,our_spsr,our_sp,
 		process[which].reg_state.r[13]);
+#endif
+
 
 	/* restore user registers */
 	/* update status */
 	/* jump to saved user PC */
 
+	process[which].running=1;
 	current_process=which;
 
 	asm volatile(
@@ -158,26 +161,65 @@ int run_process(int which) {
 	return 0;
 }
 
-void schedule(void) {
+int save_process(int which, int return_pc) {
+
+	long *our_sp;
+	long our_spsr;
+
+
+	/* No longer running */
+	process[which].running=0;
+
+
+	asm volatile(
+		"mrs %[our_spsr], SPSR\n"
+		: [our_spsr]"=r"(our_spsr) /* output */
+		: /* input */
+		: "memory" /* clobbers */
+			);
+
+	process[which].reg_state.spsr=our_spsr;
+	process[which].reg_state.lr=return_pc;
+
+
+	our_sp=&(process[which].reg_state.r[0]);
+
+	asm volatile(
+		"mov r0,%[our_sp]\n"
+		"stmia r0, {r0 - lr}^\n"	/* the ^ means load user regs */
+		: /* output */
+		:	[our_sp] "r"(our_sp) /* input */
+		: "r0", "memory" /* clobbers */
+			);
+
+	return 0;
+}
+
+void schedule(long saved_pc) {
 
 	int i;
+
+	if (!userspace_started) return;
 
 	i=current_process;
 
 	/* save current process state */
 
+	save_process(i,saved_pc);
+
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
 	/* That is special cased and just runs wfi?   */
-	i++;
 
-	while(!process[i].ready) {
-		if (i>=MAX_PROCESSES) i=0;
+	while(1) {
 		i++;
+		if (i>=MAX_PROCESSES) i=0;
+		if ((process[i].valid) && (process[i].ready)) break;
 	}
 
 	/* switch to new process */
 
+	/* IRQ stack */
 	run_process(i);
 
 }

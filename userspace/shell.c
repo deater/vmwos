@@ -37,7 +37,21 @@ int main(int argc, char **argv) {
 		printf("] ");
 
 		while(1) {
-			ch=getchar();
+
+			while(1) {
+				ch=getchar();
+				if (ch) break;
+
+				asm volatile(
+					"mov r1,#65536\n"
+					"a_loop:\n"
+					"subs   r1,r1,#1\n"
+					"bne    a_loop\n"
+					::: "r1", "memory");
+
+			}
+
+			printf("VMW: input %d\n",input_pointer);
 
 //			printf("VMW: %d\n",ch);
 
