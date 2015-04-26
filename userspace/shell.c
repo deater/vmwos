@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
 			}
 
-			printf("VMW: input %d\n",input_pointer);
+//			printf("VMW: input %d\n",input_pointer);
 
 //			printf("VMW: %d\n",ch);
 

@@ -1,8 +1,10 @@
-CROSS = arm-none-eabi-
+CROSS = 
+#arm-none-eabi-
 CC = gcc
 AS = as
 ASFLAGS = -mcpu=arm1176jzf-s
 CFLAGS = -O2 -Wall -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib -fPIC
+OBJCOPYFLAGS = -R .note -R .comment -R .note.gnu.build-id
 
 all:	shell.h printa.h printb.h
 
@@ -22,13 +24,13 @@ printb.h:	printb.img
 	echo "};" >> printb.h
 
 shell.img:	shell
-	$(CROSS)objcopy shell -O binary shell.img
+	$(CROSS)objcopy $(OBJCOPYFLAGS) shell -O binary shell.img
 
 printa.img:	printa
-	$(CROSS)objcopy printa -O binary printa.img
+	$(CROSS)objcopy $(OBJCOPYFLAGS) printa -O binary printa.img
 
 printb.img:	printb
-	$(CROSS)objcopy printb -O binary printb.img
+	$(CROSS)objcopy $(OBJCOPYFLAGS) printb -O binary printb.img
 
 
 shell:	shell.o vlibc.o syscalls.arm.o vmwos.o

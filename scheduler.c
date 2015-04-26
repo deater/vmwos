@@ -131,7 +131,7 @@ int run_process(int which) {
 		:	[our_sp] "r"(our_sp),
 			[return_pc] "r"(return_pc),
 			[our_spsr] "r"(our_spsr) /* input */
-		: "r0", "lr", "sp", "memory" /* clobbers */
+		: "lr", "r0", "memory" /* clobbers */
 			);
 
 
@@ -161,41 +161,27 @@ int run_process(int which) {
 	return 0;
 }
 
-int save_process(int which, int return_pc) {
+int save_process(int which, long *pcb) {
 
-	long *our_sp;
-	long our_spsr;
-
+	int i;
 
 	/* No longer running */
 	process[which].running=0;
 
+	process[which].reg_state.spsr=pcb[15];
+	process[which].reg_state.lr=pcb[16];
+//	printk("SPSR=%x PC=%x",pcb[15],pcb[16]);
 
-	asm volatile(
-		"mrs %[our_spsr], SPSR\n"
-		: [our_spsr]"=r"(our_spsr) /* output */
-		: /* input */
-		: "memory" /* clobbers */
-			);
-
-	process[which].reg_state.spsr=our_spsr;
-	process[which].reg_state.lr=return_pc;
-
-
-	our_sp=&(process[which].reg_state.r[0]);
-
-	asm volatile(
-		"mov r0,%[our_sp]\n"
-		"stmia r0, {r0 - lr}^\n"	/* the ^ means load user regs */
-		: /* output */
-		:	[our_sp] "r"(our_sp) /* input */
-		: "r0", "memory" /* clobbers */
-			);
+	for(i=0;i<15;i++) {
+		process[which].reg_state.r[i]=pcb[i];
+//		printk("r%d=%x ",i,pcb[i]);
+	}
+//	printk("\r\n");
 
 	return 0;
 }
 
-void schedule(long saved_pc) {
+void schedule(long *pcb) {
 
 	int i;
 
@@ -205,7 +191,7 @@ void schedule(long saved_pc) {
 
 	/* save current process state */
 
-	save_process(i,saved_pc);
+	save_process(i,pcb);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */

@@ -6,7 +6,7 @@
 int main(int argc, char **argv) {
 
 	while(1) {
-		printf("A");
+		printf("B");
 		asm volatile(
 			"mov r1,#65536\n"
 			"a_loop:\n"

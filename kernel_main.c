@@ -122,8 +122,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	process[init_process].ready=1;
 
 	/* A and B */
-	process[2].ready=1;
-	process[3].ready=1;
+//	process[2].ready=1;
+//	process[3].ready=1;
 
 	userspace_started=1;
 

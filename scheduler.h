@@ -3,7 +3,7 @@
 
 int load_process(char *name,
 		unsigned char *data, int size, unsigned int stack_size);
-void schedule(long saved_pc);
+void schedule(long *pcb);
 int run_process(int which);
 int processes_init(void);
 

@@ -122,7 +122,15 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 			break;
 
 		case SYSCALL_RUN:
-			process[r0].ready=1;
+			{
+			int which;
+
+			which=r0-'0';
+
+			if ((which>0) && (which<10)) {
+				process[which].ready=1;
+			}
+			}
 			break;
 
 		case SYSCALL_TB1:
