@@ -4,7 +4,7 @@
 int load_process(char *name,
 		unsigned char *data, int size, unsigned int stack_size);
 void schedule(long *pcb);
-int run_process(int which);
+int run_process(int which,long irq_stack);
 int processes_init(void);
 
 struct process_control_block_type {

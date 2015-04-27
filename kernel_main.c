@@ -121,14 +121,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	process[idle_process].ready=1;
 	process[init_process].ready=1;
 
-	/* A and B */
-//	process[2].ready=1;
-//	process[3].ready=1;
-
 	userspace_started=1;
 
 	/* run init and restore stack as we won't return */
-	run_process(init_process);
+	run_process(init_process,0x8000);
 
 	/* we should never get here */
 

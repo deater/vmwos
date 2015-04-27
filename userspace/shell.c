@@ -97,7 +97,8 @@ static int print_help(void) {
 	printf("\tfont X       - sets the font to font #X\r\n");
 	printf("\tgetpid       - print current process ID\r\n");
 	printf("\thelp         - prints this help message\r\n");
-	printf("\trun X        - run program named X\r\n");
+	printf("\trun X        - run program #X\r\n");
+	printf("\tstop X       - stop program #X\r\n");
 	printf("\tcolor X      - set text to color #X\r\n");
 	printf("\tver          - print version\r\n");
 	printf("\tgradient     - make background look cool\r\n");
@@ -138,6 +139,9 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"run ",4)) {
 		result=vmwos_run(string[4]);
+	}
+	else if (!strncmp(string,"stop ",5)) {
+		result=vmwos_stop(string[5]);
 	}
 	else if (!strncmp(string,"color ",6)) {
 		printf("%c[3%cm\r\n",27,string[6]);

@@ -52,7 +52,7 @@ int load_process(char *name,
 
 
 	/* Load executable */
-	printk("Copying %d bytes from %x to %x\r\n",size,data,binary_start);
+//	printk("Copying %d bytes from %x to %x\r\n",size,data,binary_start);
         memcpy(binary_start,data,size);
 
 	/* Set name */
@@ -94,10 +94,12 @@ int load_process(char *name,
 	return i;
 }
 
-int run_process(int which) {
+int run_process(int which, long irq_stack) {
 
 	long *our_sp;
 	long return_pc,our_spsr;
+
+//	printk("Resetting IRQ stack to %x\r\n",irq_stack);
 
 	return_pc=process[which].reg_state.lr;
 	our_spsr=process[which].reg_state.spsr;
@@ -123,6 +125,7 @@ int run_process(int which) {
 		"mov r0, %[our_sp]\n"
 		"msr SPSR_cxsf, %[our_spsr]\n"
 		"mov lr, %[return_pc]\n"
+		"mov sp,%[irq_stack]\n"
 		"ldmia r0, {r0 - lr}^\n"	/* the ^ means load user regs */
 		"nop\n"
 		/* Need to reset IRQ stack here or we leak */
@@ -130,8 +133,9 @@ int run_process(int which) {
 		: /* output */
 		:	[our_sp] "r"(our_sp),
 			[return_pc] "r"(return_pc),
+			[irq_stack] "r"(irq_stack),
 			[our_spsr] "r"(our_spsr) /* input */
-		: "lr", "r0", "memory" /* clobbers */
+		: "lr", "sp", "r0", "memory" /* clobbers */
 			);
 
 
@@ -170,7 +174,7 @@ int save_process(int which, long *pcb) {
 
 	process[which].reg_state.spsr=pcb[15];
 	process[which].reg_state.lr=pcb[16];
-//	printk("SPSR=%x PC=%x",pcb[15],pcb[16]);
+//	printk("SPSR=%x PC=%x IRQ_STACK=%x ",pcb[15],pcb[16],pcb[17]);
 
 	for(i=0;i<15;i++) {
 		process[which].reg_state.r[i]=pcb[i];
@@ -206,6 +210,6 @@ void schedule(long *pcb) {
 	/* switch to new process */
 
 	/* IRQ stack */
-	run_process(i);
+	run_process(i,pcb[17]);
 
 }

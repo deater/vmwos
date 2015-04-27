@@ -133,6 +133,18 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 			}
 			break;
 
+		case SYSCALL_STOP:
+			{
+			int which;
+
+			which=r0-'0';
+
+			if ((which>0) && (which<10)) {
+				process[which].ready=0;
+			}
+			}
+			break;
+
 		case SYSCALL_TB1:
 			result=framebuffer_tb1();
 			break;

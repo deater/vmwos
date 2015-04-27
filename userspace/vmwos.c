@@ -78,3 +78,17 @@ int vmwos_run(int which) {
 
 	return r0;
 }
+
+int vmwos_stop(int which) {
+
+	register long r7 __asm__("r7") = __NR_stop;
+	register long r0 __asm__("r0") = which;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
+		: "memory");
+
+	return r0;
+}
