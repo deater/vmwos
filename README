@@ -60,6 +60,17 @@ Using:
 	run "help" to get a list of supported commands.
 
 
+Compiling user programs:
+~~~~~~~~~~~~~~~~~~~~~~~~
+	See the examples in ./userspace
+
+	Right now you need to create a binary with -fPIC and use
+	objcopy to create a RAW binary.
+	I can't seem to find a working ARM binflt toolchain.
+
+	There is a simple C library included ("vlibc")
+
+
 For more information:
 ~~~~~~~~~~~~~~~~~~~~~
 
