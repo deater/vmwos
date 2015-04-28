@@ -1,5 +1,5 @@
-CROSS = 
-#arm-none-eabi-
+include ../Makefile.inc
+
 CC = gcc
 AS = as
 ASFLAGS = -mcpu=arm1176jzf-s

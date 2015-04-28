@@ -1,0 +1,2 @@
+CROSS = arm-none-eabi-
+
