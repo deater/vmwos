@@ -1,5 +1,4 @@
-CROSS =
-# arm-none-eabi-
+CROSS = arm-none-eabi-
 CC = gcc
 AS = as
 ASFLAGS = -mcpu=arm1176jzf-s
