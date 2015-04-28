@@ -1,0 +1,23 @@
+Kernel routines:
+	way to kill process
+	way to free memory
+	better scheduler (that only runs the idle process at idle)
+	interrupt driven serial port
+	blocking I/O
+
+Systemcalls to add:
+	nanosleep
+	uname
+	open/close
+
+Binary support:
+	ARM binflt support
+
+Filesystem support:
+	romfs
+	fat
+
+Hardware support:
+	PS/2 keyboard over GPIO
+	i2c
+
