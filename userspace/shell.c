@@ -93,17 +93,18 @@ static int print_help(void) {
 	printf("VMWos Shell Version %s\r\n\r\n",VERSION);
 	printf("\tblink on/off - turns on/off heartbeat LED\r\n");
 	printf("\tcls          - clears the screen\r\n");
+	printf("\tcolor X      - set text to color #X\r\n");
 	printf("\techo X       - prints string X\r\n");
 	printf("\tfont X       - sets the font to font #X\r\n");
 	printf("\tgetpid       - print current process ID\r\n");
+	printf("\tgradient     - make background look cool\r\n");
 	printf("\thelp         - prints this help message\r\n");
+	printf("\treset        - reset the machine\r\n");
 	printf("\trun X        - run program #X\r\n");
 	printf("\tstop X       - stop program #X\r\n");
-	printf("\tcolor X      - set text to color #X\r\n");
-	printf("\tver          - print version\r\n");
-	printf("\tgradient     - make background look cool\r\n");
-	printf("\time          - print seconds since boot\r\n");
+	printf("\ttime         - print seconds since boot\r\n");
 	printf("\ttb1          - play TB1\r\n");
+	printf("\tver          - print version\r\n");
 	printf("\r\n");
 
 	return 0;
@@ -151,6 +152,10 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"time",4)) {
 		printf("Time since boot: %ds\r\n",time(NULL));
+	}
+	else if (!strncmp(string,"reset",5)) {
+		printf("Resetting...\r\n");
+		reboot();
 	}
 	else if (!strncmp(string,"tb1",3)) {
 		vmwos_tb1();

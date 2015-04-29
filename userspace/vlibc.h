@@ -5,3 +5,4 @@ int putchar(int c);
 int getchar(void);
 int printf(char *string,...);
 int time(int *time);
+int reboot(void);

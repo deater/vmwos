@@ -178,3 +178,6 @@ int time(int *t) {
 	return our_time;
 }
 
+int reboot(void) {
+	sys_reboot();
+}
