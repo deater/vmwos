@@ -1,10 +1,29 @@
 /* Values from the BCM2835-ARM-Peripherals.pdf manual */
 
+
+/* For BCM2835, this will be different on BCM2836 Pi2 */
+#define IO_BASE	0x20000000
+
+/************/
+/* Watchdog */
+/************/
+
+#define PM_BASE (IO_BASE + 0x100000)
+
+#define PM_RSTC	(PM_BASE + 0x1c)
+#define PM_PASSWORD 			0x5a000000
+#define PM_RSTC_WRCFG_FULL_RESET	0x00000020
+
+#define PM_WDOG (PM_BASE + 0x24)
+
+
+
+
 /********/
 /* GPIO */
 /********/
 
-#define GPIO_BASE	0x20200000
+#define GPIO_BASE	IO_BASE+0x200000
 /* GPFSEL = Function Select Registers */
 /*   Each reg 3 groups of 10 */
 /*   000 = Input, 001 = Output */
@@ -78,7 +97,8 @@
 /**************/
 /* Section 7 */
 			/*7e00b000 */
-#define IRQ_BASE	0x2000b000
+#define IRQ_BASE	IO_BASE+0x00b000
+
 #define IRQ_BASIC_PENDING	(IRQ_BASE+0x200)
 #define IRQ_PENDING1		(IRQ_BASE+0x204)
 #define IRQ_PENDING2		(IRQ_BASE+0x208)
@@ -107,7 +127,8 @@
 /*********/
 /* Section 14 */
 			/*7e00b000 */
-#define TIMER_BASE	0x2000b000
+#define TIMER_BASE	IO_BASE+0x00b000
+
 /* LOAD = Value to Count Down from */
 #define TIMER_LOAD	(TIMER_BASE+0x400)
 /* VALUE = Current timer Value */
@@ -139,7 +160,7 @@
 /********/
 			/*7e00b000 */
 			/*7e201000 */
-#define UART0_BASE	0x20201000
+#define UART0_BASE	IO_BASE+0x201000
 /* DR = Data register */
 /* On write, write 8-bits to send */
 /* On receive, get 12-bits:       */
