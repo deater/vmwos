@@ -1,8 +1,10 @@
 #define DEFAULT_STACK_SIZE 8192
 #define MAX_PROCESSES 10
 
-int load_process(char *name,
-		unsigned char *data, int size, unsigned int stack_size);
+#define PROCESS_FROM_DISK	1
+#define PROCESS_FROM_RAM	2
+
+int load_process(char *name, int type, char *data, int size, int stacksize);
 void schedule(long *pcb);
 int run_process(int which,long irq_stack);
 int processes_init(void);

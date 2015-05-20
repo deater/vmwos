@@ -23,10 +23,8 @@
 /* default, this is over-ridden later */
 int hardware_type=RPI_MODEL_B;
 
-#include "shell.h"
-#include "printa.h"
-#include "printb.h"
-
+/* Initrd hack */
+#include "../userspace/initrd.h"
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
@@ -101,17 +99,17 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	memory_init(memory_total,memory_kernel);
 
 	/* Load the idle thread */
-	idle_process=load_process("idle",(unsigned char *)&idle_task,8,4096);
+	idle_process=load_process("idle",PROCESS_FROM_RAM,
+				(char *)&idle_task,8,4096);
 
+	init_process=load_process("shell",PROCESS_FROM_DISK,
+				NULL,0,8192);
 
-	init_process=load_process("shell",shell_binary, sizeof(shell_binary),
-				DEFAULT_STACK_SIZE);
+	load_process("printa",PROCESS_FROM_DISK,
+				NULL,0,8192);
 
-	load_process("printa",printa_binary, sizeof(printa_binary),
-				DEFAULT_STACK_SIZE);
-
-	load_process("printb",printb_binary, sizeof(printb_binary),
-				DEFAULT_STACK_SIZE);
+	load_process("printb",PROCESS_FROM_DISK,
+				NULL,0,8192);
 
 
 	/* Enter our "init" process*/

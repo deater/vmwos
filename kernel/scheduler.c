@@ -4,6 +4,7 @@
 #include "string.h"
 #include "memory.h"
 #include "scheduler.h"
+#include "romfs.h"
 
 int userspace_started=0;
 int current_process=0;
@@ -22,11 +23,10 @@ int processes_init(void) {
 	return 0;
 }
 
-int load_process(char *name,
-		unsigned char *data, int size, unsigned int stack_size) {
+int load_process(char *name, int type, char *data, int size, int stack_size) {
 
-	char *binary_start;
-	char *stack_start;
+	char *binary_start=NULL;
+	char *stack_start=NULL;
 	int i,j;
 
 	/* LOCK */
@@ -46,14 +46,25 @@ int load_process(char *name,
 
 	/* UNLOCK */
 
-	/* Allocate Memory */
-        binary_start=(char *)memory_allocate(size);
-        stack_start=(char *)memory_allocate(stack_size);
+	if (type==PROCESS_FROM_DISK) {
+		load_romfs(name,binary_start,stack_start,&size,&stack_size);
+	}
+	else if (type==PROCESS_FROM_RAM) {
+		/* Allocate Memory */
+        	binary_start=(char *)memory_allocate(size);
+        	stack_start=(char *)memory_allocate(stack_size);
+
+		/* Load executable */
+		//printk("Copying %d bytes from %x to %x\r\n",size,data,binary_start);
+        	memcpy(binary_start,data,size);
+	}
+	else {
+		printk("Unknown process type!\n");
+		process[i].valid=0;
+		return -1;
+	}
 
 
-	/* Load executable */
-//	printk("Copying %d bytes from %x to %x\r\n",size,data,binary_start);
-        memcpy(binary_start,data,size);
 
 	/* Set name */
 	strncpy(process[i].name,name,32);
