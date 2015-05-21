@@ -47,7 +47,7 @@ int load_process(char *name, int type, char *data, int size, int stack_size) {
 	/* UNLOCK */
 
 	if (type==PROCESS_FROM_DISK) {
-		load_romfs(name,binary_start,stack_start,&size,&stack_size);
+		load_romfs(name,&binary_start,&stack_start,&size,&stack_size);
 	}
 	else if (type==PROCESS_FROM_RAM) {
 		/* Allocate Memory */

@@ -23,9 +23,6 @@
 /* default, this is over-ridden later */
 int hardware_type=RPI_MODEL_B;
 
-/* Initrd hack */
-#include "../userspace/initrd.h"
-
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
 
