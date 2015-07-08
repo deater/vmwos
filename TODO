@@ -21,3 +21,7 @@ Hardware support:
 	PS/2 keyboard over GPIO
 	i2c
 
+Rapsberry Pi 2 support
+	Change I/O offset
+	Interrupt controller is more complex, see
+		[PATCH 4/4] irqchip: Add bcm2836 interrupt controller for Raspberry     Pi 2
