@@ -110,7 +110,20 @@ int gpio_direction_output(int which_one) {
 /* FIXME */
 int gpio_to_irq(int which_one) {
 
-	return 0;
+	/* It turns out the BCM2835 GPIO interrupts are not documented well 
+	this thread
+	https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=67457
+	shows the following
+	GPIO pin:           4    17   30   31   47
+	gpio_irq[0] (49)    Y    Y    Y    Y    N
+	gpio_irq[1] (50)    N    N    Y    Y    N
+	gpio_irq[2] (51)    N    N    N    N    Y
+	gpio_irq[3] (52)    Y    Y    Y    Y    Y
+	*/
+
+	/* I'm going to cheat and just use IRQ49 for the time being */
+
+	return 49;
 }
 
 int gpio_get_value(int which_one) {
@@ -136,7 +149,7 @@ int gpio_get_value(int which_one) {
 
 int gpio_set_value(int which_one, int value) {
 
-	int address_offset,bit;
+	uint32_t address_offset,bit;
 
 	if (which_one>MAX_GPIO) {
 		printk("GPIO%d too big\n",which_one);
@@ -157,4 +170,25 @@ int gpio_set_value(int which_one, int value) {
 	}
 
 	return 0;
+}
+
+
+/* Set that we want interrupts on falling edge */
+int gpio_set_falling(int which_one) {
+
+	uint32_t address_offset,bit,old;
+
+	if (which_one>MAX_GPIO) {
+		printk("GPIO%d too big\n",which_one);
+		return -1;
+	}
+
+	bit=1<<(which_one&0x1f);
+	address_offset=(which_one/32)*4;
+
+	old=mmio_read(GPIO_GPFEN0+address_offset);
+	mmio_write(GPIO_GPFEN0+address_offset,old|bit);
+
+	return 0;
+
 }

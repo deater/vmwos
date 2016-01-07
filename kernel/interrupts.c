@@ -11,6 +11,29 @@ int blinking_enabled=1;
 int tick_counter=0;
 
 
+#define MAX_IRQ	64
+
+int irq_enable(int which_one) {
+
+	uint32_t address_offset,bit,old;
+
+        if (which_one>MAX_IRQ) {
+                printk("IRQ%d too big\n",which_one);
+                return -1;
+        }
+
+        bit=1<<(which_one&0x1f);
+        address_offset=(which_one/32)*4;
+
+        old=mmio_read(IRQ_ENABLE_IRQ1+address_offset);
+        mmio_write(IRQ_ENABLE_IRQ1+address_offset,old|bit);
+
+        return 0;
+
+
+	return 0;
+}
+
 void user_reg_dump(void) {
 
 	unsigned long regs[15];
@@ -59,6 +82,11 @@ void interrupt_handle_timer(void) {
 		}
 	}
 
+}
+
+void interrupt_handle_unknown(void) {
+
+	printk("Unknown interrupt happened!\r\n");
 }
 
 #if 0
