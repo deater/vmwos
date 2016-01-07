@@ -3,7 +3,7 @@
 #include "bcm2835_periph.h"
 #include "mmio.h"
 #include "delay.h"
-
+#include "gpio.h"
 
 void uart_init(void) {
 
@@ -11,6 +11,8 @@ void uart_init(void) {
 	mmio_write(UART0_CR, 0x0);
 
 	/* Setup GPIO pins 14 and 15 */
+	gpio_request(14,"uart_tx");
+	gpio_request(15,"uart_rx");
 
 	/* Disable the pull up/down on pins 14 and 15 */
 	/* See the Peripheral Manual for more info */
