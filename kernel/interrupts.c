@@ -29,9 +29,26 @@ int irq_enable(int which_one) {
         mmio_write(IRQ_ENABLE_IRQ1+address_offset,old|bit);
 
         return 0;
+}
 
 
-	return 0;
+int irq_disable(int which_one) {
+
+	uint32_t address_offset,bit,old;
+
+        if (which_one>MAX_IRQ) {
+                printk("IRQ%d too big\n",which_one);
+                return -1;
+        }
+
+        bit=1<<(which_one&0x1f);
+        address_offset=(which_one/32)*4;
+
+        old=mmio_read(IRQ_DISABLE_IRQ1+address_offset);
+        mmio_write(IRQ_DISABLE_IRQ1+address_offset,old|bit);
+
+        return 0;
+
 }
 
 void user_reg_dump(void) {
@@ -84,9 +101,9 @@ void interrupt_handle_timer(void) {
 
 }
 
-void interrupt_handle_unknown(void) {
+void interrupt_handle_unknown(int which) {
 
-	printk("Unknown interrupt happened!\r\n");
+	printk("Unknown interrupt happened %x!\r\n",which);
 }
 
 #if 0

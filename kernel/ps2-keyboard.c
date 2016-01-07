@@ -15,15 +15,13 @@ static int irq_num;
 int gpio_clk = 23;
 int gpio_data = 24;
 
-
-#if 0
 static unsigned keyup = 0;
 static unsigned escape = 0;
 static unsigned pause = 0;
 
-static struct input_dev *ps2;
-
+#if 0
 static unsigned char translate[256] = {
+
 
 /* Raw SET 2 scancode table */
 
@@ -61,45 +59,39 @@ static unsigned char translate[256] = {
 /* f8 */  KEY_RESERVED, KEY_RESERVED,  KEY_PAGEDOWN,  KEY_RESERVED,  KEY_PRINT,     KEY_PAGEUP,   KEY_RESERVED,  KEY_RESERVED
 
 };
+#endif
 
-module_param(gpio_clk,int,0);
-module_param(gpio_data,int,0);
+/* Handle GPIO interrupt */
 
-/* Handle GPIO interrupt, get keycode, send to event subsystem */
-
-/* Pretty horrible code, not re-entrant although maybe that doesn't */
-/* matter as currently you can only have one device at a time       */
-
-irq_handler_t irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
+int ps2_interrupt_handler(void) {
 
 	static unsigned key;
 
-	int clk_value;
 	int data_value;
 
 	static int parity=0;
 	static int clock_bits=0;
 	static int message=0;
 
-	static unsigned long old_jiffies=0;
+//	static unsigned long old_jiffies=0;
 
 	/* Sanity check clock line is low? */
 //	clk_value=gpio_get_value(gpio_clk);
 
 
-	if (old_jiffies==0) {
-		old_jiffies=jiffies;
-	}
+//	if (old_jiffies==0) {
+//		old_jiffies=jiffies;
+//	}
 
 	/* If it's been too long since an interrupt, clear out the char */
 	/* This probably means we lost an interrupt somehow and got out */
 	/* of sync.							*/
 	/* We use HZ/100 (10ms) as the threedhold.			*/
-	if ((jiffies-old_jiffies) > HZ/100) {
-		clock_bits=0;
-		message=0;
-	}
-	old_jiffies=jiffies;
+//	if ((jiffies-old_jiffies) > HZ/100) {
+//		clock_bits=0;
+//		message=0;
+//	}
+//	old_jiffies=jiffies;
 
 	clock_bits++;
 
@@ -113,7 +105,7 @@ irq_handler_t irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
 
 	/* We haven't received 11 bits, so we're done for now */
 	if (clock_bits!=11) {
-		return 0;
+		goto exit_handler;
 	}
 
 	/* We received our 11 bits */
@@ -137,23 +129,23 @@ irq_handler_t irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
 	/* Key-up events start with 0xf0 */
 	if (key == 0xf0) {
 		keyup = 1;
-		return 0;
+		goto exit_handler;
 	}
 
 	/* Extended events start with 0xe0 */
 	if (key == 0xe0) {
 		escape = 1;
-		return 0;
+		goto exit_handler;
 	}
 
 	/* Crazy pause key starts with 0xe1, has no keyup */
 	if (key == 0xe1) {
 		pause = 2;
-		return 0;
+		goto exit_handler;
 	}
 	if (pause == 2) {
 		pause = 1;
-		return 0;
+		goto exit_handler;
 	}
 	if (pause == 1) {
 		key = 0x88;
@@ -167,23 +159,17 @@ irq_handler_t irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
 	}
 
 	/* Translate using RAW set2 keymap */
-	key = translate[key];
+	//key = translate[key];
 
-	/* Report the keypress to the input layer */
-	if (keyup == 1) {
-		input_report_key(ps2,key,0);
-		keyup = 0;
-	} else {
-		input_report_key(ps2,key,1);
-	}
+	printk("Key: %x\n",key);
 
-	/* Sync things up */
-	input_sync(ps2);
+exit_handler:
+
+	gpio_clear_interrupt(gpio_clk);
 
 	return 0;
 
 }
-#endif
 
 /* Initialize the Module */
 int ps2_keyboard_init(void) {

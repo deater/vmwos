@@ -19,10 +19,23 @@ interrupt_handler:
 	@ check if it's a timer interrupt
 	@ It's in the basic pending register, bit 0
 
-	ldr	r0,=0x2000b200
+	ldr	r0,=0x2000b200		@ IRQ_BASIC_PENDING
 	ldr	r0,[r0]
 	tst	r0,#0x1
 	bne	timer_interrupt
+
+
+	@ Check if GPIO23 (ps2 keyboard)
+
+	ldr	r0,=0x2000b208		@ IRQ_PENDING2
+	ldr	r0,[r0]
+	tst	r0,#0x20000		@ bit 17 (irq49)
+	beq	unknown_interrupt
+
+	bl	ps2_interrupt_handler
+	b	exit_interrupt
+
+unknown_interrupt:
 
 	@ Unknown interrupt
 	bl	interrupt_handle_unknown

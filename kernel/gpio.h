@@ -13,3 +13,4 @@ int gpio_free(int which_one);
 int gpio_get_value(int which_one);
 int gpio_set_value(int which_one, int value);
 int gpio_set_falling(int which_one);
+int gpio_clear_interrupt(int which_one);

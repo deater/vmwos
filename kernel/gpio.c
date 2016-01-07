@@ -192,3 +192,20 @@ int gpio_set_falling(int which_one) {
 	return 0;
 
 }
+
+int gpio_clear_interrupt(int which_one) {
+
+	uint32_t address_offset,bit;
+
+	if (which_one>MAX_GPIO) {
+		printk("GPIO%d too big\n",which_one);
+		return -1;
+	}
+
+	bit=1<<(which_one&0x1f);
+	address_offset=(which_one/32)*4;
+
+	mmio_write(GPIO_GPEDS0+address_offset,bit);
+
+	return 0;
+}
