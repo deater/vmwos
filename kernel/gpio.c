@@ -6,6 +6,7 @@
  *	Modeled on the Linux GPIO interface
  */
 
+
 #include <stdint.h>
 #include "gpio.h"
 #include "printk.h"
@@ -14,15 +15,48 @@
 
 #define MAX_GPIO 54
 
-/* FIXME */
+static uint32_t debug=1;
+
+static uint64_t gpio_reserved;
+
+
+/* Keeps track of all GPIOs so we don't double allocate */
 int gpio_request(int which_one, char *string) {
 
-	/* Should keep track of array of all GPIOs */
-	/* And not double-allocate them */
+	if (which_one>MAX_GPIO) {
+		printk("Invalid GPIO%d\n",which_one);
+		return -1;
+	}
+
+	if ( (1ULL<<which_one) & gpio_reserved) {
+		printk("GPIO%d already in use\n",which_one);
+		return -1;
+	}
+
+	gpio_reserved|=(1ULL<<which_one);
+
+	if (debug) printk("Allocating GPIO%d as %s\n",which_one,string);
 
 	return 0;
 }
 
+/* mark GPIO as being available */
+int gpio_free(int which_one) {
+
+	if (which_one>MAX_GPIO) {
+		printk("Invalid GPIO%d\n",which_one);
+		return -1;
+	}
+
+	gpio_reserved&=~(1ULL<<which_one);
+
+	if (debug) printk("Freeing GPIO%d\n",which_one);
+
+	return 0;
+
+}
+
+/* Set GPIO direction to be an input */
 int gpio_direction_input(int which_one) {
 
 	uint32_t old;
@@ -48,6 +82,7 @@ int gpio_direction_input(int which_one) {
 
 }
 
+/* Set GPIO direction to be an output */
 int gpio_direction_output(int which_one) {
 
 	uint32_t old;
@@ -75,11 +110,6 @@ int gpio_direction_output(int which_one) {
 /* FIXME */
 int gpio_to_irq(int which_one) {
 
-	return 0;
-}
-
-/* FIXME */
-int gpio_free(int which_one) {
 	return 0;
 }
 
