@@ -17,7 +17,7 @@
 
 static uint32_t debug=1;
 
-static uint64_t gpio_reserved;
+static uint64_t gpio_reserved=0;
 
 
 /* Keeps track of all GPIOs so we don't double allocate */
