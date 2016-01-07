@@ -30,6 +30,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	unsigned int memory_total;
 	int init_process,idle_process;
 	struct atag_info_t atag_info;
+	uint32_t framebuffer_width=800,framebuffer_height=600;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -68,9 +69,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	ps2_keyboard_init();
 
 	/* Enable the Framebuffer */
-	framebuffer_init(800,600,24);
-	framebuffer_console_init();
+	if (atag_info.framebuffer_x!=0) {
+		framebuffer_width=atag_info.framebuffer_x;
+	}
+	if (atag_info.framebuffer_y!=0) {
+		framebuffer_height=atag_info.framebuffer_y;
+	}
 
+	framebuffer_init(framebuffer_width,framebuffer_height,24);
+	framebuffer_console_init();
 
 	/* Delay to allow time for serial port to settle */
 	/* So we can actually see the output on the terminal */
