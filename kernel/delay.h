@@ -1,5 +1,8 @@
 /* Inline assembly delay loop */
 
+/* Helpful documetation here: */
+/*  http://www.ethernut.de/en/documents/arm-inline-asm.html */
+
 /* volatile means that the compiler should not optimize your code */
 /* %= is unique identiier? */
 
