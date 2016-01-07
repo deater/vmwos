@@ -173,7 +173,7 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 	/* each tag has at least 32-bit size and then 32-bit value 	*/
 	/* some tags have multiple values				*/
 
-	uint32_t size,total_ram,rev;
+	uint32_t size,total_ram;
 //	int tag_value;
 	uint32_t *tags=atags;
 	char *cmdline;
@@ -234,10 +234,13 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 		case ATAG_CMDLINE:
 			cmdline = (char *)(&tags[2]);
 
-			rev=parse_cmdline_int(cmdline,"rev");
+			info->framebuffer_x=parse_cmdline_int(cmdline,"fbwidth");
+			info->framebuffer_y=parse_cmdline_int(cmdline,"fbhight");
+
+			info->revision=parse_cmdline_int(cmdline,"rev");
 
 			/* http://elinux.org/RPi_HardwareHistory */
-			switch(rev) {
+			switch(info->revision) {
 				case 0x2:
 				case 0x3:
 				case 0x4:
