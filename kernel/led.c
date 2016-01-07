@@ -4,24 +4,27 @@
 #include "mmio.h"
 #include "hardware.h"
 #include "gpio.h"
+#include "printk.h"
 
+/* Default for Model B */
+static uint32_t led_gpio=16;
+static uint32_t led_active_low=1;
+
+/* Enable GPIO for the ACT LED */
 int led_init(void) {
 
-	uint32_t old;
-
-	/* Enable GPIO for the ACT LED */
-	/* On the Model B this is 16, on the B+ this is 47 */
-
+	/* On the Model B this is 16, on the B+/A+ this is 47 */
+	/* Model B is active low, B+/A+ active high */
 	if ((hardware_type==RPI_MODEL_BPLUS) ||
 	 	(hardware_type==RPI_MODEL_APLUS)) {
-		gpio_request(47,"act_led");
-		gpio_direction_output(47);
+		led_gpio=47;
+		led_active_low=0;
 	}
-	else {
-		/* Assume Model B */
-		gpio_request(16,"act_led");
-		gpio_direction_output(16);
-	}
+
+	gpio_request(led_gpio,"act_led");
+	gpio_direction_output(led_gpio);
+
+	printk("Starting heartbeat LED on GPIO%d\n",led_gpio);
 
 	return 0;
 
@@ -29,14 +32,11 @@ int led_init(void) {
 
 int led_on(void) {
 
-	/* LED on MODELB is active low, on BPLUS active high */
-
-	if ((hardware_type==RPI_MODEL_BPLUS) ||
-		(hardware_type==RPI_MODEL_APLUS)) {
-		gpio_set_value(47,1);
+	if (led_active_low) {
+		gpio_set_value(led_gpio,0);
 	}
 	else {
-		gpio_set_value(16,0);
+		gpio_set_value(led_gpio,1);
 	}
 
 	return 0;
@@ -44,14 +44,11 @@ int led_on(void) {
 
 int led_off(void) {
 
-	/* LED on MODELB is active low, on BPLUS active high */
-
-	if ((hardware_type==RPI_MODEL_BPLUS) ||
-		(hardware_type==RPI_MODEL_APLUS)) {
-		gpio_set_value(47,0);
+	if (led_active_low) {
+		gpio_set_value(led_gpio,1);
 	}
 	else {
-		gpio_set_value(16,1);
+		gpio_set_value(led_gpio,0);
 	}
 
 	return 0;
