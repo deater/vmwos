@@ -83,13 +83,15 @@ void atags_dump(uint32_t *atags) {
 			break;
 
 		case ATAG_CMDLINE:
-			printk("  Commandline: ");
 			cmdline = (char *)(&tags[2]);
 			length=strlen(cmdline);
+			printk("  Commandline (%d): ",length);
 
+			/* Get around 256 char printk limit */
 			count=0;
 			while(length>0) {
-				printk("%s",cmdline+(256*count));
+				printk("%s",
+					cmdline+(256*count));
 				length-=256;
 				count++;
 			}
@@ -115,25 +117,46 @@ void atags_dump(uint32_t *atags) {
 
 static int parse_cmdline_int(char *cmdline, char *key) {
 
-	int i=0,digit=0,rev=-1;
+	uint32_t i=0,digit=0,base=10;
+	int32_t result=0;
+	uint32_t cmdline_len,key_len;
+
+	cmdline_len=strlen(cmdline);
+	key_len=strlen(key);
 
 	while(1) {
+
 		if (cmdline[i]==0) break;
+		if (i+key_len>cmdline_len) break;
 
-		if ((cmdline[i]=='r') &&
-			(cmdline[i+1]=='e') &&
-			(cmdline[i+2]=='v')) {
+		if (!strncmp(key,cmdline+i,key_len)) {
 
-			digit=cmdline[i+6];
-			if (digit<='9') rev=digit-'0';
-			else rev=(digit-'a')+10;
+			/* +1 to skip equals sign */
+			i+=key_len;
+			i++;
 
-			if (cmdline[i+7]!=' ') {
-				rev*=16;
-				digit=cmdline[i+7];
-				if (digit<='9') rev+=digit-'0';
-				else rev+=(digit-'a')+10;
+			if ((cmdline[i]=='0') && (cmdline[i+1]=='x')) {
+				base=16;
+				i+=2;
+			}
+			else {
+				base=10;
+			}
 
+			while(1) {
+
+				if (i+key_len>cmdline_len) break;
+
+				digit=cmdline[i];
+
+				if ((digit==' ') || (digit==0)) break;
+
+				result*=base;
+
+				if (digit<='9') result+=(digit-'0');
+				else result+=((digit-'a')+10);
+
+				i++;
 			}
 
 			break;
@@ -142,7 +165,7 @@ static int parse_cmdline_int(char *cmdline, char *key) {
 		i++;
 
 	}
-	return rev;
+	return result;
 }
 
 void atags_detect(uint32_t *atags, struct atag_info_t *info) {
