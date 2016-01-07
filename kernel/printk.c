@@ -30,6 +30,7 @@ int printk(char *string,...) {
 				if (x&0x80000000) {
 					buffer[buffer_pointer]='-';
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
 					x=~x;
 					x++;
 				}
@@ -42,6 +43,7 @@ int printk(char *string,...) {
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
 
 			}
@@ -62,6 +64,7 @@ int printk(char *string,...) {
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
 			}
 			else if (*string=='c') {
@@ -69,6 +72,7 @@ int printk(char *string,...) {
 				x=va_arg(ap, int);
 				buffer[buffer_pointer]=x;
 				buffer_pointer++;
+				if (buffer_pointer==MAX_PRINT_SIZE) break;
 			}
 			else if (*string=='s') {
 				char *s;
@@ -78,15 +82,17 @@ int printk(char *string,...) {
 					buffer[buffer_pointer]=*s;
 					s++;
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
 			}
 		}
 		else {
 			buffer[buffer_pointer]=*string;
 			buffer_pointer++;
+			if (buffer_pointer==MAX_PRINT_SIZE) break;
 			string++;
 		}
-		if (buffer_pointer==MAX_PRINT_SIZE-1) break;
+		if (buffer_pointer==MAX_PRINT_SIZE) break;
 	}
 
 	va_end(ap);
