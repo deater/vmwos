@@ -3,6 +3,7 @@
 #include "led.h"
 #include "mmio.h"
 #include "hardware.h"
+#include "gpio.h"
 
 int led_init(void) {
 
@@ -13,15 +14,13 @@ int led_init(void) {
 
 	if ((hardware_type==RPI_MODEL_BPLUS) ||
 	 	(hardware_type==RPI_MODEL_APLUS)) {
-		old=mmio_read(GPIO_GPFSEL4);
-		old |= (1<<21);
-		mmio_write(GPIO_GPFSEL4, old);
+		gpio_request(47,"act_led");
+		gpio_direction_output(47);
 	}
 	else {
 		/* Assume Model B */
-		old=mmio_read(GPIO_GPFSEL1);
-		old |= (1<<18);
-		mmio_write(GPIO_GPFSEL1, old);
+		gpio_request(16,"act_led");
+		gpio_direction_output(16);
 	}
 
 	return 0;
@@ -34,10 +33,10 @@ int led_on(void) {
 
 	if ((hardware_type==RPI_MODEL_BPLUS) ||
 		(hardware_type==RPI_MODEL_APLUS)) {
-		mmio_write(GPIO_GPSET1, 1 << 15);
+		gpio_set_value(47,1);
 	}
 	else {
-		mmio_write(GPIO_GPCLR0, 1 << 16);
+		gpio_set_value(16,0);
 	}
 
 	return 0;
@@ -49,10 +48,10 @@ int led_off(void) {
 
 	if ((hardware_type==RPI_MODEL_BPLUS) ||
 		(hardware_type==RPI_MODEL_APLUS)) {
-		mmio_write(GPIO_GPCLR1, 1 << 15);
+		gpio_set_value(47,0);
 	}
 	else {
-		mmio_write(GPIO_GPSET0, 1 << 16);
+		gpio_set_value(16,1);
 	}
 
 	return 0;

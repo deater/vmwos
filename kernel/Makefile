@@ -15,16 +15,18 @@ kernel.img:	kernel.elf
 
 
 
-kernel.elf:	kernel_main.o atags.o serial.o boot.o framebuffer.o \
-	framebuffer_console.o idle_task.o interrupts.o io.o irq.o led.o \
-	mailbox.o memory.o printk.o romfs.o \
+kernel.elf:	kernel_main.o \
+	atags.o serial.o boot.o framebuffer.o \
+	framebuffer_console.o gpio.o idle_task.o \
+	interrupts.o io.o irq.o led.o \
+	mailbox.o memory.o printk.o ps2-keyboard.o romfs.o \
 	scheduler.o string.o syscalls.o time.o \
 	timer.o 
 	$(CROSS)ld --no-undefined \
 		kernel_main.o atags.o serial.o boot.o framebuffer.o \
-		framebuffer_console.o idle_task.o \
+		framebuffer_console.o gpio.o idle_task.o \
 		interrupts.o io.o irq.o led.o mailbox.o memory.o \
-		printk.o romfs.o \
+		printk.o ps2-keyboard.o romfs.o \
 		scheduler.o string.o syscalls.o time.o timer.o \
 		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
 
@@ -48,6 +50,9 @@ framebuffer.o:	framebuffer.c
 framebuffer_console.o:	framebuffer_console.c
 	$(CROSS)$(CC) $(CFLAGS) -o framebuffer_console.o -c framebuffer_console.c
 
+gpio.o:	gpio.c
+	$(CROSS)$(CC) $(CFLAGS) -o gpio.o -c gpio.c
+
 io.o:	io.c
 	$(CROSS)$(CC) $(CFLAGS) -o io.o -c io.c
 
@@ -62,6 +67,9 @@ memory.o:	memory.c
 
 printk.o:	printk.c
 	$(CROSS)$(CC) $(CFLAGS) -o printk.o -c printk.c
+
+ps2-keyboard.o:	ps2-keyboard.c
+	$(CROSS)$(CC) $(CFLAGS) -o ps2-keyboard.o -c ps2-keyboard.c
 
 romfs.o:	romfs.c
 	$(CROSS)$(CC) $(CFLAGS) -o romfs.o -c romfs.c

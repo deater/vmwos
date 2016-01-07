@@ -18,7 +18,7 @@
 #include "scheduler.h"
 #include "idle_task.h"
 
-#define VERSION 10
+#define VERSION 11
 
 /* default, this is over-ridden later */
 int hardware_type=RPI_MODEL_B;
