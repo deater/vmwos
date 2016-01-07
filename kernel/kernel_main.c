@@ -29,6 +29,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	unsigned int memory_total;
 	int init_process,idle_process;
+	struct atag_info_t atag_info;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -36,7 +37,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	processes_init();
 
 	/* Detect Hardware */
-	atags_detect(atags);
+	atags_detect(atags,&atag_info);
+	hardware_type=atag_info.hardware_type;
 
 	/* Initialize Hardware */
 
@@ -108,7 +110,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	printk("\r\n");
 
 	/* Get amount of RAM from ATAGs */
-	memory_total=atags_detect_ram(atags);
+	memory_total=atag_info.ramsize;
 
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);

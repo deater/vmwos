@@ -1,6 +1,14 @@
+struct atag_info_t {
+        uint32_t revision;
+        uint32_t ramsize;
+	uint32_t hardware_type;
+        uint32_t framebuffer_x;
+        uint32_t framebuffer_y;
+};
+
+
 void atags_dump(uint32_t *atags);
-void atags_detect(uint32_t *atags);
-unsigned long atags_detect_ram(uint32_t *atags);
+void atags_detect(uint32_t *atags, struct atag_info_t *info);
 
 #define ATAG_NONE	0x00000000	// 2	Empty tag used to end list
 #define ATAG_CORE	0x54410001	// 5 (2 if empty)	First tag used to start list

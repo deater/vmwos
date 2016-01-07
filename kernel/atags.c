@@ -13,7 +13,7 @@ void atags_dump(uint32_t *atags) {
 	/* each tag has at least 32-bit size and then 32-bit value 	*/
 	/* some tags have multiple values				*/
 
-	int size;
+	uint32_t size,i;
 //	int tag_value;
 	uint32_t *tags=atags;
 	char *cmdline;
@@ -83,7 +83,9 @@ void atags_dump(uint32_t *atags) {
 		case ATAG_CMDLINE:
 			printk("  Commandline: ");
 			cmdline = (char *)(&tags[2]);
-			printk(cmdline);
+			for(i=0;i<size;i++) {
+				printk("%c",cmdline[i]);
+			}
 			tags += size;
 			break;
 
@@ -102,16 +104,51 @@ void atags_dump(uint32_t *atags) {
 }
 
 
-void atags_detect(uint32_t *atags) {
+
+static int parse_cmdline_int(char *cmdline, char *key) {
+
+	int i=0,digit=0,rev=-1;
+
+	while(1) {
+		if (cmdline[i]==0) break;
+
+		if ((cmdline[i]=='r') &&
+			(cmdline[i+1]=='e') &&
+			(cmdline[i+2]=='v')) {
+
+			digit=cmdline[i+6];
+			if (digit<='9') rev=digit-'0';
+			else rev=(digit-'a')+10;
+
+			if (cmdline[i+7]!=' ') {
+				rev*=16;
+				digit=cmdline[i+7];
+				if (digit<='9') rev+=digit-'0';
+				else rev+=(digit-'a')+10;
+
+			}
+
+			break;
+		}
+
+		i++;
+
+	}
+	return rev;
+}
+
+void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 
 	/* each tag has at least 32-bit size and then 32-bit value 	*/
 	/* some tags have multiple values				*/
 
-	int size;
+	uint32_t size,total_ram,rev;
 //	int tag_value;
 	uint32_t *tags=atags;
 	char *cmdline;
 
+	/* clear out the info array */
+	memset(info,0,sizeof(struct atag_info_t));
 
 	while(1) {
 		size=tags[0];
@@ -125,6 +162,11 @@ void atags_detect(uint32_t *atags) {
 
 		/* Physical Memory */
 		case ATAG_MEM:
+			total_ram=tags[2];
+			if (tags[3]!=0) {
+				printk("Warning!  We do not handle memory not starting at zero!\r\n");
+			}
+			info->ramsize=total_ram;
 			tags += size;
 			break;
 
@@ -161,33 +203,7 @@ void atags_detect(uint32_t *atags) {
 		case ATAG_CMDLINE:
 			cmdline = (char *)(&tags[2]);
 
-			int i=0,digit=0,rev=-1;
-			while(1) {
-				if (cmdline[i]==0) break;
-
-				if ((cmdline[i]=='r') &&
-					(cmdline[i+1]=='e') &&
-					(cmdline[i+2]=='v')) {
-
-					digit=cmdline[i+6];
-					if (digit<='9') rev=digit-'0';
-					else rev=(digit-'a')+10;
-
-					if (cmdline[i+7]!=' ') {
-						rev*=16;
-						digit=cmdline[i+7];
-						if (digit<='9') rev+=digit-'0';
-						else rev+=(digit-'a')+10;
-
-					}
-
-					break;
-				}
-
-
-				i++;
-
-			}
+			rev=parse_cmdline_int(cmdline,"rev");
 
 			/* http://elinux.org/RPi_HardwareHistory */
 			switch(rev) {
@@ -198,20 +214,20 @@ void atags_detect(uint32_t *atags) {
 				case 0x6:
 				case 0xd:
 				case 0xe:
-				case 0xf:	hardware_type=RPI_MODEL_B;
+				case 0xf:	info->hardware_type=RPI_MODEL_B;
 						break;
 				case 0x7:
 				case 0x8:
-				case 0x9:	hardware_type=RPI_MODEL_A;
+				case 0x9:	info->hardware_type=RPI_MODEL_A;
 						break;
-				case 0x10:	hardware_type=RPI_MODEL_BPLUS;
+				case 0x10:	info->hardware_type=RPI_MODEL_BPLUS;
 						break;
-				case 0x11:	hardware_type=RPI_COMPUTE_NODE;
+				case 0x11:	info->hardware_type=RPI_COMPUTE_NODE;
 						break;
-				case 0x12:	hardware_type=RPI_MODEL_APLUS;
+				case 0x12:	info->hardware_type=RPI_MODEL_APLUS;
 						break;
 
-				default:	hardware_type=RPI_UNKNOWN;
+				default:	info->hardware_type=RPI_UNKNOWN;
 						break;
 			}
 
@@ -232,39 +248,3 @@ void atags_detect(uint32_t *atags) {
 }
 
 
-unsigned long atags_detect_ram(uint32_t *atags) {
-
-	int size;
-	uint32_t *tags=atags;
-
-	unsigned long total_ram=0;
-
-	while(1) {
-		size=tags[0];
-
-		switch (tags[1]) {
-
-		/* Physical Memory */
-		case ATAG_MEM:
-			total_ram=tags[2];
-			if (tags[3]!=0) {
-				printk("Warning!  We do not handle memory not starting at zero!\r\n");
-			}
-			return total_ram;
-			tags += size;
-			break;
-
-		/* Empty tag to end list */
-		case ATAG_NONE:
-			printk("\r\n");
-			return 0;
-			break;
-
-		default:
-			tags+=size;
-			break;
-		}
-
-	}
-
-}
