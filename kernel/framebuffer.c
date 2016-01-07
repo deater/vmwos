@@ -15,11 +15,12 @@
 
 #include "string.h"
 
+static uint32_t debug=1;
+
 static int framebuffer_initialized=0;
 
 static struct frame_buffer_info_type current_fb;
-static unsigned char offscreen[800*600*3];
-
+static unsigned char offscreen[2048*2048*3];
 
 struct frame_buffer_info_type {
 	int phys_x,phys_y;	/* IN: Physical Width / Height*/
@@ -67,9 +68,12 @@ char *framebuffer_init(int x, int y, int depth) {
 	fb_info.pointer=0;
 	fb_info.size=0;
 
-	printk("Attempting to write %x to %x\r\n",
-		&fb_info,MAILBOX_BASE);
-	dump_framebuffer_info(&fb_info);
+	if (debug) {
+		printk("fb: Writing message @%x to mailbox %x\r\n",
+			&fb_info,MAILBOX_BASE);
+		printk("fb: asking for ");
+		dump_framebuffer_info(&fb_info);
+	}
 
 	result=mailbox_write( (unsigned int)(&fb_info)+0x40000000 ,
 		MAILBOX_FRAMEBUFFER);
@@ -81,7 +85,10 @@ char *framebuffer_init(int x, int y, int depth) {
 
 	result=mailbox_read(MAILBOX_FRAMEBUFFER);
 
-	dump_framebuffer_info(&fb_info);
+	if (debug) {
+		printk("fb: we got ");
+		dump_framebuffer_info(&fb_info);
+	}
 
 	if (result==-1) {
 		printk("Mailbox read failed\r\n");
@@ -185,7 +192,7 @@ void *int_memcpy(void *dest, const void *src, size_t n) {
 
 int framebuffer_push(void) {
 	int_memcpy((unsigned char *)current_fb.pointer,
-		offscreen,800*600*3);
+		offscreen,current_fb.phys_x*current_fb.phys_y*3);
 
 	return 0;
 
@@ -195,8 +202,9 @@ int framebuffer_gradient(void) {
 
 	int x;
 
-	for(x=0;x<800;x++) {
-		framebuffer_vline( (x*256)/800, 0, 599, x);
+	for(x=0;x<current_fb.phys_x;x++) {
+		framebuffer_vline( (x*256)/800, /* hardcoded, can't divide? */ 
+				0,current_fb.phys_y-1, x);
 	}
 	framebuffer_push();
 

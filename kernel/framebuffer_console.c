@@ -88,13 +88,19 @@ int framebuffer_console_putchar(int fore_color, int back_color,
 	for(yy=0;yy<font_ysize;yy++) {
 		for(xx=0;xx<8;xx++) {
 			if (current_font[(ch*font_ysize)+yy] & (1<<(7-xx))) {
-				framebuffer_putpixel(fore_color,x+xx,y+yy);
+			//	framebuffer_putpixel(fore_color,x+xx,y+yy);
+				framebuffer_hline(fore_color,
+						(x+xx)*2,(x+xx)*2+1,(y+yy)*2);
+				framebuffer_hline(fore_color,
+						(x+xx)*2,(x+xx)*2+1,((y+yy)*2)+1);
 			}
 			else {
 				/* transparency */
 				if (back_color!=0) {
-					framebuffer_putpixel(back_color,
-						x+xx,y+yy);
+					framebuffer_hline(back_color,
+						(x+xx)*2,(x+xx)*2+1,(y+yy)*2);
+					framebuffer_hline(back_color,
+						(x+xx)*2,(x+xx)*2+1,((y+yy)*2)+1);
 				}
 			}
 		}
