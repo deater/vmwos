@@ -7,6 +7,7 @@
 #include "gpio.h"
 #include "printk.h"
 #include "ps2-keyboard.h"
+#include "interrupts.h"
 
 static int irq_num;
 
@@ -206,15 +207,10 @@ int ps2_keyboard_init(void) {
 	/* FIXME */
 	/* should probe to make sure keyboard actually exists */
 
-#if 0
-	/* Request IRQ */
-	result = request_irq(
-		irq_num,
-		(irq_handler_t)irq_handler,
-		IRQF_TRIGGER_FALLING,
-		"pi-ps2gpio",
-		(void *)irq_handler);
-#endif
+
+	/* Setup IRQ */
+	gpio_set_falling(gpio_clk);
+	irq_enable(irq_num);
 
 	printk("ps2-keyboard using GPIO%d/%d, irq %d\n",
 		gpio_clk,gpio_data,irq_num);
