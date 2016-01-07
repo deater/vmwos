@@ -2,6 +2,7 @@
 #include "atags.h"
 #include "printk.h"
 #include "hardware.h"
+#include "string.h"
 
 /* Original references */
 /* http://www.raspberrypi.org/forums/viewtopic.php?t=10889&p=123721 */
@@ -13,7 +14,8 @@ void atags_dump(uint32_t *atags) {
 	/* each tag has at least 32-bit size and then 32-bit value 	*/
 	/* some tags have multiple values				*/
 
-	uint32_t size,i;
+	uint32_t size,count;
+	int32_t length;
 //	int tag_value;
 	uint32_t *tags=atags;
 	char *cmdline;
@@ -83,9 +85,15 @@ void atags_dump(uint32_t *atags) {
 		case ATAG_CMDLINE:
 			printk("  Commandline: ");
 			cmdline = (char *)(&tags[2]);
-			for(i=0;i<size;i++) {
-				printk("%c",cmdline[i]);
+			length=strlen(cmdline);
+
+			count=0;
+			while(length>0) {
+				printk("%s",cmdline+(256*count));
+				length-=256;
+				count++;
 			}
+			printk("\r\n");
 			tags += size;
 			break;
 
