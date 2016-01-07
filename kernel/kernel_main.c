@@ -39,15 +39,31 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	atags_detect(atags);
 
 	/* Initialize Hardware */
+
+	/* Serial console is most important so do that first */
 	uart_init();
-	led_init();
-	timer_init();
-	ps2_keyboard_init();
 
 	/* Enable Interrupts */
 	enable_interrupts();
 
+	/************************/
+	/* Boot message!	*/
+	/************************/
+
 	printk("\r\nBooting VMWos...\r\n");
+
+	/**************************/
+	/* Device Drivers	  */
+	/**************************/
+
+	/* Set up ACT LED */
+	led_init();
+
+	/* Set up timer */
+	timer_init();
+
+	/* Set up keyboard */
+	ps2_keyboard_init();
 
 	/* Enable the Framebuffer */
 	framebuffer_init(800,600,24);
