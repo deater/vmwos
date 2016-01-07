@@ -5,6 +5,8 @@
 #include "delay.h"
 #include "gpio.h"
 
+static int uart_initialized=0;
+
 void uart_init(void) {
 
 	/* Disable UART */
@@ -55,6 +57,8 @@ void uart_init(void) {
 	mmio_write(UART0_CR, UART0_CR_UARTEN |
 				UART0_CR_TXE |
 				UART0_CR_RXE);
+
+	uart_initialized=1;
 }
 
 void uart_putc(unsigned char byte) {
@@ -101,6 +105,8 @@ unsigned char uart_getc_noblock(void) {
 uint32_t uart_write(const unsigned char* buffer, size_t size) {
 
 	size_t i;
+
+	if (!uart_initialized) return 0;
 
 	for ( i = 0; i < size; i++ ) {
 		uart_putc(buffer[i]);
