@@ -235,7 +235,7 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 			cmdline = (char *)(&tags[2]);
 
 			info->framebuffer_x=parse_cmdline_int(cmdline,"fbwidth");
-			info->framebuffer_y=parse_cmdline_int(cmdline,"fbhight");
+			info->framebuffer_y=parse_cmdline_int(cmdline,"fbheight");
 
 			info->revision=parse_cmdline_int(cmdline,"rev");
 
