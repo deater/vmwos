@@ -3,8 +3,10 @@
  *	by Vince Weaver <vincent.weaver _at_ maine.edu>
  */
 
+#include <stdint.h>
 #include "gpio.h"
 #include "printk.h"
+#include "ps2-keyboard.h"
 
 static int irq_num;
 
@@ -119,13 +121,13 @@ irq_handler_t irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
 	/* Validate our 11-bit packet */
 	/* FIXME: should do something useful (request resend?) if invalid */
 	if (message&0x1) {
-		printk(KERN_INFO "Invalid start bit %x\n",message);
+		printk("Invalid start bit %x\n",message);
 	}
 	if (!(message&0x400)) {
-		printk(KERN_INFO "Invaid stop bit %x\n",message);
+		printk("Invaid stop bit %x\n",message);
 	}
 	if ( ( ((message&0x200>>8)&0x1) + (parity&0x1) ) &0x1) {
-		printk(KERN_INFO "Parity error %x %x\n",message,parity);
+		printk("Parity error %x %x\n",message,parity);
 	}
 
 	key = (message>>1) & 0xff;
@@ -180,14 +182,12 @@ irq_handler_t irq_handler(int irq, void *dev_id, struct pt_regs *regs) {
 	return 0;
 
 }
+#endif
 
 /* Initialize the Module */
+int ps2_keyboard_init(void) {
 
-int init_module(void) {
-
-	static int i, retval;
-
-	int result;
+	uint32_t result;
 
 	/* Allocate data/clock, use GPIO23 and GPIO24 by default */
 	result=gpio_request(gpio_clk, "ps2_clock");
@@ -206,50 +206,30 @@ int init_module(void) {
 	/* FIXME */
 	/* should probe to make sure keyboard actually exists */
 
-	/* Setup input device */
-	ps2=input_allocate_device();
-	ps2->name = "pi-ps2gpio";
-	ps2->phys = "ps2/input0";
-	ps2->id.bustype = BUS_HOST;
-	/* Arbitrary values? */
-	ps2->id.vendor = 0x0001;
-	ps2->id.product = 0x0001;
-	ps2->id.version = 0x0100;
-	ps2->evbit[0] = BIT_MASK(EV_KEY) | BIT_MASK(EV_REP);
-	ps2->keycode = translate;
-	ps2->keycodesize = sizeof(unsigned char);
-	ps2->keycodemax = ARRAY_SIZE(translate);
-	for (i = 1; i < 0x256; i++) set_bit(i,ps2->keybit);
-	retval = input_register_device(ps2);
-
+#if 0
 	/* Request IRQ */
-	retval = request_irq(
+	result = request_irq(
 		irq_num,
 		(irq_handler_t)irq_handler,
 		IRQF_TRIGGER_FALLING,
 		"pi-ps2gpio",
 		(void *)irq_handler);
+#endif
 
-	/* numlock on, should probaby query state first */
-	input_report_key(ps2,KEY_NUMLOCK,1);
-	input_sync(ps2);
-
-	printk(KERN_INFO "pi-ps2gpio installed using GPIO23+24, irq %d\n",
-		irq_num);
+	printk("ps2-keyboard using GPIO%d/%d, irq %d\n",
+		gpio_clk,gpio_data,irq_num);
 
 	return 0;
 
 init_error:
 
-	printk(KERN_INFO "pi-ps2gpio installation failed\n");
+	printk("ps2-keyboard installation failed\n");
 
-	/* FIXME: lookup the proper error code for here */
-
-	return -ENODEV;
+	return -1;
 
 }
 
-#endif
+
 
 /* Remove module */
 void ps2_keyboard_cleanup(void) {
@@ -259,10 +239,7 @@ void ps2_keyboard_cleanup(void) {
 	gpio_free(gpio_data);
 	gpio_free(gpio_clk);
 
-	printk("pi-ps2gpio device removed\n");
-
 	return;
-
 }
 
 

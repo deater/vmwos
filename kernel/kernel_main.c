@@ -17,6 +17,7 @@
 #include "string.h"
 #include "scheduler.h"
 #include "idle_task.h"
+#include "ps2-keyboard.h"
 
 #define VERSION 11
 
@@ -41,6 +42,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	uart_init();
 	led_init();
 	timer_init();
+	ps2_keyboard_init();
 
 	/* Enable Interrupts */
 	enable_interrupts();
