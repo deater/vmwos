@@ -279,11 +279,13 @@ int framebuffer_console_write(const char *buffer, int length) {
 		if (console_y>=CONSOLE_Y) {
 			int i;
 			/* scroll up a line */
+
 			framebuffer_clear_screen(0);
 			memcpy(&text_console[0][0],&text_console[0][1],
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
 			memcpy(&text_color[0][0],&text_color[0][1],
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
+
 			for(i=0;i<CONSOLE_X;i++) {
 				text_console[i][CONSOLE_Y-1]=' ';
 				text_color[i][CONSOLE_Y-1]=FORE_GREY|BACK_BLACK;
@@ -292,6 +294,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 			console_y--;
 		}
 	}
+
 
 	framebuffer_console_push();
 

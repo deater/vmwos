@@ -87,7 +87,7 @@ int console_write(const void *buf, size_t count) {
 	int result;
 
 	/* Write to framebuffer */
-//	result=framebuffer_console_write(buf, count);
+	result=framebuffer_console_write(buf, count);
 
 	/* Write to UART */
 	result=uart_write(buf, count);
