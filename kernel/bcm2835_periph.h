@@ -279,6 +279,8 @@
 /*    1 = CTSMIS = nUARTCTS Masked Status */
 /*    0 = RIMIS (unsupported) */
 #define UART0_MIS	(UART0_BASE + 0x40)
+#define UART0_RXMIS	(1<<4)
+
 /* ICR = Interrupt Clear Register */
 /*   10 = OEIC = Overrun Interrupt Clear */
 /*    9 = BEIC = Break Interrupt Clear */
@@ -292,6 +294,8 @@
 /*    1 = CTSMIC = nUARTCTS status */
 /*    0 = RIMIC (unsupported) */
 #define UART0_ICR	(UART0_BASE + 0x44)
+#define UART0_ICR_RXIC	(1<<4)
+
 /* DMACR = DMA Control Register */
 /*  This is disabled on the BCM2835 */
 #define UART0_DMACR	(UART0_BASE + 0x48)
