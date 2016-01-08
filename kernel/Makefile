@@ -18,14 +18,15 @@ kernel.img:	kernel.elf
 kernel.elf:	kernel_main.o \
 	atags.o serial.o boot.o framebuffer.o \
 	framebuffer_console.o gpio.o idle_task.o \
-	interrupts.o console_io.o irq.o led.o \
+	interrupts.o console_io.o irq.o led.o locks.o \
 	mailbox.o memory.o printk.o ps2-keyboard.o romfs.o \
 	scheduler.o string.o syscalls.o time.o \
 	timer.o 
 	$(CROSS)ld --no-undefined \
 		kernel_main.o atags.o serial.o boot.o framebuffer.o \
 		framebuffer_console.o gpio.o idle_task.o \
-		interrupts.o console_io.o irq.o led.o mailbox.o memory.o \
+		interrupts.o console_io.o irq.o led.o locks.o \
+		mailbox.o memory.o \
 		printk.o ps2-keyboard.o romfs.o \
 		scheduler.o string.o syscalls.o time.o timer.o \
 		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
@@ -98,6 +99,9 @@ boot.o:	boot.s
 
 irq.o:	irq.s
 	$(CROSS)as $(ASFLAGS) -o irq.o irq.s
+
+locks.o:	locks.s
+	$(CROSS)as $(ASFLAGS) -o locks.o locks.s
 
 
 

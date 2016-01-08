@@ -220,6 +220,11 @@ void schedule(long *pcb) {
 
 	/* switch to new process */
 
+	/* ARM documentation says we can put a */
+	/* clrex instruction here */
+	/* to avoid false positives in the mutex handling? */
+	/* if there's any aliasing between new and old process? */
+
 	/* IRQ stack */
 	run_process(i,pcb[17]);
 
