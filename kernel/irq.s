@@ -18,17 +18,30 @@ interrupt_handler:
 
 	mov	r1,#0			@ handled
 
-	@ Check if GPIO23 (ps2 keyboard)
+	@ Check if GPIO23 (ps2 keyboard) (irq49)
 check_gpio:
 	ldr	r0,=0x2000b208		@ IRQ_PENDING2
 	ldr	r0,[r0]
 	tst	r0,#0x20000		@ bit 17 (irq49)
-	beq	check_timer		@ not set, skip to timer
+	beq	check_uart		@ not set, skip to uart
 
 	add	r1,r1,#1		@ handled
 	push	{r1}
 
 	bl	ps2_interrupt_handler
+	pop	{r1}
+
+	@ Check if UART (irq57)
+check_uart:
+
+	ldr	r0,=0x2000b200		@ IRQ_BASIC_PENDING
+	ldr	r0,[r0]
+	tst	r0,#(1<<19)
+	beq	check_timer		@ not set, skip to timer
+
+	add	r1,r1,#1
+	push	{r1}
+	bl	uart_interrupt_handler
 	pop	{r1}
 
 check_timer:
