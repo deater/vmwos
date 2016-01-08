@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "printk.h"
 #include "syscalls.h"
-#include "io.h"
+#include "console_io.h"
 #include "framebuffer.h"
 #include "framebuffer_console.h"
 #include "scheduler.h"
