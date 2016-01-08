@@ -16,14 +16,14 @@ kernel.img:	kernel.elf
 
 
 kernel.elf:	kernel_main.o \
-	atags.o serial.o boot.o framebuffer.o \
+	atags.o uart.o boot.o framebuffer.o \
 	framebuffer_console.o gpio.o idle_task.o \
 	interrupts.o console_io.o irq.o led.o locks.o \
 	mailbox.o memory.o printk.o ps2-keyboard.o romfs.o \
 	scheduler.o string.o syscalls.o time.o \
 	timer.o 
 	$(CROSS)ld --no-undefined \
-		kernel_main.o atags.o serial.o boot.o framebuffer.o \
+		kernel_main.o atags.o uart.o boot.o framebuffer.o \
 		framebuffer_console.o gpio.o idle_task.o \
 		interrupts.o console_io.o irq.o led.o locks.o \
 		mailbox.o memory.o \
@@ -78,8 +78,8 @@ romfs.o:	romfs.c
 scheduler.o:	scheduler.c scheduler.h
 	$(CROSS)$(CC) $(CFLAGS) -o scheduler.o -c scheduler.c
 
-serial.o:	serial.c bcm2835_periph.h
-	$(CROSS)$(CC) $(CFLAGS) -o serial.o -c serial.c
+uart.o:	uart.c bcm2835_periph.h
+	$(CROSS)$(CC) $(CFLAGS) -o uart.o -c uart.c
 
 string.o:	string.c
 	$(CROSS)$(CC) $(CFLAGS) -o string.o -c string.c

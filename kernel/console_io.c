@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "serial.h"
+#include "uart.h"
 #include "framebuffer_console.h"
 #include "locks.h"
 
@@ -25,7 +25,7 @@ int console_insert_char(int ch) {
 	/* and even if we did, if an interrupt got interrupted while */
 	/* the lock was held then we'd end up with deadlock.  hmmm */
 
-	lock_mutex(&console_write_mutex);
+//	lock_mutex(&console_write_mutex);
 
 	new_head=input_buffer_head+1;
 	if (new_head>=INPUT_BUFFER_SIZE) {
@@ -41,14 +41,14 @@ int console_insert_char(int ch) {
 	input_buffer_head=new_head;
 
 	/* RELEASE LOCK */
-	unlock_mutex(&console_write_mutex);
+//	unlock_mutex(&console_write_mutex);
 
 	return 0;
 
 buffer_full:
 
 	/* RELEASE LOCK */
-	unlock_mutex(&console_write_mutex);
+//	unlock_mutex(&console_write_mutex);
 
 	return -1;
 }
@@ -59,7 +59,7 @@ static uint32_t console_get_char(void) {
 	uint32_t result=0;
 
 	/* TAKE LOCK */
-	lock_mutex(&console_read_mutex);
+//	lock_mutex(&console_read_mutex);
 
 	if (input_buffer_head==input_buffer_tail) {
 		result=0;
@@ -74,7 +74,7 @@ static uint32_t console_get_char(void) {
 	}
 
 	/* RELEASE LOCK */
-	unlock_mutex(&console_read_mutex);
+//	unlock_mutex(&console_read_mutex);
 
 	return result;
 
@@ -87,7 +87,7 @@ int console_write(const void *buf, size_t count) {
 	int result;
 
 	/* Write to framebuffer */
-	result=framebuffer_console_write(buf, count);
+//	result=framebuffer_console_write(buf, count);
 
 	/* Write to UART */
 	result=uart_write(buf, count);

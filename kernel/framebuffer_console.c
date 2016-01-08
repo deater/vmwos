@@ -10,7 +10,7 @@
 #include "framebuffer.h"
 #include "framebuffer_console.h"
 
-#include "serial.h"
+#include "uart.h"
 
 #include "tbfont.h"
 #include "medieval_font.h"

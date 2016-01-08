@@ -4,10 +4,14 @@
 #include "mmio.h"
 #include "delay.h"
 #include "gpio.h"
+#include "console_io.h"
+#include "interrupts.h"
 
 static int uart_initialized=0;
 
 void uart_init(void) {
+
+	uint32_t old;
 
 	/* Disable UART */
 	mmio_write(UART0_CR, 0x0);
@@ -57,6 +61,13 @@ void uart_init(void) {
 	mmio_write(UART0_CR, UART0_CR_UARTEN |
 				UART0_CR_TXE |
 				UART0_CR_RXE);
+
+
+	/* Enable receive interrupts */
+	old=mmio_read(UART0_IMSC);
+	old&=~UART0_IMSC_RX;
+	mmio_write(UART0_IMSC,old);
+	irq_enable(57);
 
 	uart_initialized=1;
 }
@@ -112,4 +123,23 @@ uint32_t uart_write(const unsigned char* buffer, size_t size) {
 		uart_putc(buffer[i]);
 	}
 	return i;
+}
+
+int32_t uart_interrupt_handler(void) {
+
+	uint32_t ascii;
+
+	/* read byte */
+	ascii=uart_getc_noblock();
+
+	/* Send to console */
+	if (ascii!=0) {
+		console_insert_char(ascii);
+	}
+
+	/* Clear receive interrupt */
+
+	mmio_write(UART0_ICR,UART0_ICR_RXIC);
+
+	return 0;
 }

@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "serial.h"
+#include "uart.h"
 #include "printk.h"
 #include "atags.h"
 #include "led.h"
