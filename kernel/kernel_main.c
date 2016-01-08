@@ -86,6 +86,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	printk("\r\nWaiting for serial port to be ready (press any key)\r\n");
 	uart_getc();
 
+	uart_enable_interrupts();
+
+
 	/* Clear screen */
 	printk("\n\r\033[2J\n\r\n\r");
 

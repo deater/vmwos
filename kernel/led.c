@@ -24,7 +24,7 @@ int led_init(void) {
 	gpio_request(led_gpio,"act_led");
 	gpio_direction_output(led_gpio);
 
-	printk("Starting heartbeat LED on GPIO%d\n",led_gpio);
+	printk("Starting heartbeat LED on GPIO%d\r\n",led_gpio);
 
 	return 0;
 

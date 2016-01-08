@@ -51,10 +51,8 @@ void uart_init(void) {
 	mmio_write(UART0_LCRH, UART0_LCRH_FEN | UART0_LCRH_WLEN_8BIT);
 
 	/* Mask all interrupts. */
-	mmio_write(UART0_IMSC, UART0_IMSC_CTSMIM | UART0_IMSC_RXIM |
-				UART0_IMSC_TXIM | UART0_IMSC_RTIM |
-				UART0_IMSC_FEIM | UART0_IMSC_PEIM |
-				UART0_IMSC_BEIM | UART0_IMSC_OEIM);
+	/* URGH to mask them "off" write a 0, not a 1 :( */
+	mmio_write(UART0_IMSC, 0);
 
 	/* Enable UART0, receive, and transmit */
 	mmio_write(UART0_CR, UART0_CR_UARTEN |
@@ -69,9 +67,19 @@ void uart_init(void) {
 void uart_enable_interrupts(void) {
 	uint32_t old;
 
+	/* clear pending interrupts */
+	mmio_write(UART0_ICR, 0x7FF);
+
+	/* Set RX fifo length to 1 */
+	old=mmio_read(UART0_IFLS);
+	old&=~(0x7<<3);		/* set to 1/8 RX FIFO */
+	mmio_write(UART0_IFLS,old);
+
 	/* Enable receive interrupts */
 	old=mmio_read(UART0_IMSC);
-	old&=~UART0_IMSC_RXIM;
+	printk("uart: previous IMSC: %x\r\n",old);
+	old|=UART0_IMSC_RTIM;
+	printk("uart: new IMSC: %x\r\n",old);
 	mmio_write(UART0_IMSC,old);
 	irq_enable(57);
 }
@@ -87,7 +95,7 @@ void uart_putc(unsigned char byte) {
 	mmio_write(UART0_DR, byte);
 }
 
-unsigned char uart_getc(void) {
+int32_t uart_getc(void) {
 
 	/* Check Flags Register */
 	/* Wait until Receive FIFO is not empty */
@@ -100,18 +108,19 @@ unsigned char uart_getc(void) {
 	return mmio_read(UART0_DR);
 }
 
-unsigned char uart_getc_noblock(void) {
+int32_t uart_getc_noblock(void) {
 
 	/* Check Flags Register */
-	/* Wait until Receive FIFO is not empty */
+
+	/* Return -1 if Receive FIFO is empty */
 	if ( mmio_read(UART0_FR) & UART0_FR_RXFE ) {
-		return 0;
+		return -1;
 	}
 
 	/* Read and return the received data */
 	/* Note we are ignoring the top 4 error bits */
 
-	return mmio_read(UART0_DR);
+	return (mmio_read(UART0_DR))&0xff;
 }
 
 
@@ -132,23 +141,19 @@ uint32_t uart_write(const unsigned char* buffer, size_t size) {
 int32_t uart_interrupt_handler(void) {
 
 	uint32_t ascii;
-	uint32_t status;
-
-	status=mmio_read(UART0_RIS);
-
-	printk("%x ",status);
 
 	/* read byte */
-	ascii=uart_getc_noblock();
+	while(1) {
+		ascii=uart_getc_noblock();
+		if (ascii==-1) break;
 
-	/* Send to console */
-	if (ascii!=0) {
+		/* Send to console */
 		console_insert_char(ascii);
 	}
 
 	/* Clear receive interrupt */
 
-	mmio_write(UART0_ICR,UART0_ICR_RXIC);
+	mmio_write(UART0_ICR,UART0_ICR_RTIC);
 
 	return 0;
 }

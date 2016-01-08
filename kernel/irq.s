@@ -36,7 +36,7 @@ check_uart:
 
 	ldr	r0,=0x2000b200		@ IRQ_BASIC_PENDING
 	ldr	r0,[r0]
-	tst	r0,#(1<<19)
+	tst	r0,#(1<<19)		@ irq57
 	beq	check_timer		@ not set, skip to timer
 
 	add	r1,r1,#1
