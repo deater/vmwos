@@ -6,12 +6,11 @@
 #include "gpio.h"
 #include "console_io.h"
 #include "interrupts.h"
+#include "printk.h"
 
 static int uart_initialized=0;
 
 void uart_init(void) {
-
-	uint32_t old;
 
 	/* Disable UART */
 	mmio_write(UART0_CR, 0x0);
@@ -52,10 +51,10 @@ void uart_init(void) {
 	mmio_write(UART0_LCRH, UART0_LCRH_FEN | UART0_LCRH_WLEN_8BIT);
 
 	/* Mask all interrupts. */
-	mmio_write(UART0_IMSC, UART0_IMSC_CTS | UART0_IMSC_RX |
-				UART0_IMSC_TX | UART0_IMSC_RT |
-				UART0_IMSC_FE | UART0_IMSC_PE |
-				UART0_IMSC_BE | UART0_IMSC_OE);
+	mmio_write(UART0_IMSC, UART0_IMSC_CTSMIM | UART0_IMSC_RXIM |
+				UART0_IMSC_TXIM | UART0_IMSC_RTIM |
+				UART0_IMSC_FEIM | UART0_IMSC_PEIM |
+				UART0_IMSC_BEIM | UART0_IMSC_OEIM);
 
 	/* Enable UART0, receive, and transmit */
 	mmio_write(UART0_CR, UART0_CR_UARTEN |
@@ -63,13 +62,18 @@ void uart_init(void) {
 				UART0_CR_RXE);
 
 
-	/* Enable receive interrupts */
-	old=mmio_read(UART0_IMSC);
-	old&=~UART0_IMSC_RX;
-	mmio_write(UART0_IMSC,old);
-	irq_enable(57);
 
 	uart_initialized=1;
+}
+
+void uart_enable_interrupts(void) {
+	uint32_t old;
+
+	/* Enable receive interrupts */
+	old=mmio_read(UART0_IMSC);
+	old&=~UART0_IMSC_RXIM;
+	mmio_write(UART0_IMSC,old);
+	irq_enable(57);
 }
 
 void uart_putc(unsigned char byte) {
@@ -128,6 +132,11 @@ uint32_t uart_write(const unsigned char* buffer, size_t size) {
 int32_t uart_interrupt_handler(void) {
 
 	uint32_t ascii;
+	uint32_t status;
+
+	status=mmio_read(UART0_RIS);
+
+	printk("%x ",status);
 
 	/* read byte */
 	ascii=uart_getc_noblock();

@@ -208,6 +208,7 @@
 #define UART0_LCRH_EPS	(1<<2)	/* EPS  = even parity select */
 #define UART0_LCRH_PEN	(1<<1)	/* PEN  = parity enable */
 #define UART0_LCRH_BRK	(1<<0)	/* BRK  = send break after next character */
+
 /* CR = Control Register */
 /*   To enable transmission TXE and UARTEN must be set to 1 */
 /*   To enable reception RXE and UARTEN must be set to 1 */
@@ -234,12 +235,14 @@
 				/*    2 = SIRLP = Unsupported */
 				/*    1 = SIREN = Unsupported */
 #define UART0_CR_UARTEN	(1<<0)	/*    0 = UARTEN = UART Enable */
+
 /* IFLS = FIFO Level Select */
 /*  11 - 9 = RXIFPSEL = Unsupported */
 /*   8 - 6 = TXIFPSEL = Unsupported */
 /*   5 - 3 = RXIFLSEL = 000=1/8, 001=1/4, 010=1/2, 011=3/4 100=7/8 */
 /*   2 - 0 = TXIFLSEL = 000=1/8, 001=1/4, 010=1/2, 011=3/4 100=7/8 */
 #define UART0_IFLS	(UART0_BASE + 0x34)
+
 /* IMSRC = Interrupt Mask Set/Clear */
 /*   10 = OEIM = Overrun Interrupt Mask */
 /*    9 = BEIM = Break Interrupt Mask */
@@ -253,19 +256,34 @@
 /*    1 = CTSMIM = nUARTCTS Mask */
 /*    0 = RIMIM (unsupported) */
 #define UART0_IMSC	(UART0_BASE + 0x38)
-/* RIS = Raw Interrupt Status */
-#define UART0_IMSC_OE	(1<<10) /* OERIS = Overrun Interrupt Raw Status */
-#define UART0_IMSC_BE	(1<<9)  /* BERIS = Break Interrupt Raw Status*/
-#define UART0_IMSC_PE	(1<<8)  /* PERIS = Parity Interrupt Raw Status */
-#define UART0_IMSC_FE	(1<<7)	/* FERIS = Framing Interrupt Raw Status */
-#define UART0_IMSC_RT	(1<<6)	/* RTRIS = Receivce Timeout Raw Status */
-#define UART0_IMSC_TX	(1<<5)  /* TXRIS = Transmit Interrupt Raw Status */
-#define UART0_IMSC_RX	(1<<4)	/* RXRIS = Receive Masked Interrupt Raw Status */
+#define UART0_IMSC_OEIM	(1<<10) /* OERIS = Overrun Interrupt Raw Status */
+#define UART0_IMSC_BEIM	(1<<9)  /* BERIS = Break Interrupt Raw Status*/
+#define UART0_IMSC_PEIM	(1<<8)  /* PERIS = Parity Interrupt Raw Status */
+#define UART0_IMSC_FEIM	(1<<7)	/* FERIS = Framing Interrupt Raw Status */
+#define UART0_IMSC_RTIM	(1<<6)	/* RTRIS = Receivce Timeout Raw Status */
+#define UART0_IMSC_TXIM	(1<<5)  /* TXRIS = Transmit Interrupt Raw Status */
+#define UART0_IMSC_RXIM	(1<<4)	/* RXRIS = Receive Masked Interrupt Raw Status */
 				/*    3 = DSRRIS (unsupported) */
 				/*    2 = DCDRIS (unsupported) */
-#define UART0_IMSC_CTS	(1<<1)	/* CTSRIS = nUARTCTS Raw Status */
+#define UART0_IMSC_CTSMIM	(1<<1)	/* CTSRIS = nUARTCTS Raw Status */
 				/*    0 = RIRIS (unsupported) */
+
+
+/* RIS = Raw Interrupt Status */
 #define UART0_RIS	(UART0_BASE + 0x3C)
+#define UART0_IMSC_OERIS	(1<<10) /* OERIS = Overrun Interrupt Raw Status */
+#define UART0_IMSC_BERIS	(1<<9)  /* BERIS = Break Interrupt Raw Status*/
+#define UART0_IMSC_PERIS	(1<<8)  /* PERIS = Parity Interrupt Raw Status */
+#define UART0_IMSC_FERIS	(1<<7)	/* FERIS = Framing Interrupt Raw Status */
+#define UART0_IMSC_RTRIS	(1<<6)	/* RTRIS = Receivce Timeout Raw Status */
+#define UART0_IMSC_TXRIS	(1<<5)  /* TXRIS = Transmit Interrupt Raw Status */
+#define UART0_IMSC_RXRIS	(1<<4)	/* RXRIS = Receive Masked Interrupt Raw Status */
+				/*    3 = DSRRIS (unsupported) */
+				/*    2 = DCDRIS (unsupported) */
+#define UART0_IMSC_CTSRIS	(1<<1)	/* CTSRIS = nUARTCTS Raw Status */
+				/*    0 = RIRIS (unsupported) */
+
+
 /* MIS = Masked Interrupt Status */
 /*   10 = OEMIS = Overrun Interrupt Masked Status */
 /*    9 = BEMIS = Break Interrupt Masked Status*/
