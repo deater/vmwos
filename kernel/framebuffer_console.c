@@ -226,6 +226,8 @@ int framebuffer_console_write(const char *buffer, int length) {
 			console_y++;
 		} else if (buffer[i]=='\n') {
 			console_x=0;
+		} else if (buffer[i]=='\t') {
+			console_x=(console_x+8)&(~0x7);
 		} else if (buffer[i]=='\b') {
 			console_x--;
 			if (console_x<0) console_x=0;
