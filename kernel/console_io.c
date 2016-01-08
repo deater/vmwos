@@ -11,14 +11,21 @@ static char input_buffer[INPUT_BUFFER_SIZE];
 static uint32_t input_buffer_head=0;
 static uint32_t input_buffer_tail=0;
 
-uint32_t console_mutex = MUTEX_UNLOCKED;
+uint32_t console_write_mutex = MUTEX_UNLOCKED;
+uint32_t console_read_mutex = MUTEX_UNLOCKED;
 
 int console_insert_char(int ch) {
 
 	uint32_t new_head;
 
-	/* TAKE LOCK, we might be re-entrant from an interrupt */
-	lock_mutex(&console_mutex);
+	/* TAKE LOCK */
+	/* Although this is only called from interrupt context */
+	/* and we don't have re-entrant interrupts (check on that) */
+	/* so in theory shouldn't be a problem */
+	/* and even if we did, if an interrupt got interrupted while */
+	/* the lock was held then we'd end up with deadlock.  hmmm */
+
+	lock_mutex(&console_write_mutex);
 
 	new_head=input_buffer_head+1;
 	if (new_head>=INPUT_BUFFER_SIZE) {
@@ -34,14 +41,14 @@ int console_insert_char(int ch) {
 	input_buffer_head=new_head;
 
 	/* RELEASE LOCK */
-	unlock_mutex(&console_mutex);
+	unlock_mutex(&console_write_mutex);
 
 	return 0;
 
 buffer_full:
 
 	/* RELEASE LOCK */
-	unlock_mutex(&console_mutex);
+	unlock_mutex(&console_write_mutex);
 
 	return -1;
 }
@@ -52,7 +59,7 @@ static uint32_t console_get_char(void) {
 	uint32_t result=0;
 
 	/* TAKE LOCK */
-	lock_mutex(&console_mutex);
+	lock_mutex(&console_read_mutex);
 
 	if (input_buffer_head==input_buffer_tail) {
 		result=0;
@@ -67,7 +74,7 @@ static uint32_t console_get_char(void) {
 	}
 
 	/* RELEASE LOCK */
-	unlock_mutex(&console_mutex);
+	unlock_mutex(&console_read_mutex);
 
 	return result;
 
