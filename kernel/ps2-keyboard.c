@@ -65,6 +65,7 @@ static unsigned char translate[256] = {
 };
 #endif
 
+#define K_ESC	0x1b
 #define K_RSV	0x80
 #define K_F1	0x81
 #define K_F2	0x82
@@ -100,7 +101,7 @@ static unsigned char translate[256] = {
 
 static unsigned char translate[256] = {
 /* 00 */  K_RSV,  K_F9,   K_RSV,  K_F5,   K_F3,   K_F1,   K_F2,   K_F12,
-/* 08 */  0x1B,   K_F10,  K_F8,   K_F6,   K_F4,   '\t',   '`',    K_RSV,
+/* 08 */  K_ESC,  K_F10,  K_F8,   K_F6,   K_F4,   '\t',   '`',    K_RSV,
 /* 10 */  K_RSV,  K_ALT,  K_SHFT, K_RSV,  K_CTRL, 'q',    '1',    K_RSV,
 /* 18 */  K_RSV,  K_RSV,  'z',    's',    'a',    'w',    '2',    K_RSV,
 /* 20 */  K_RSV,  'c',    'x',    'd',    'e',    '4',    '3',    K_RSV,
@@ -109,11 +110,11 @@ static unsigned char translate[256] = {
 /* 38 */  K_RSV,  K_ALT,  'm',    'j',    'u',    '7',    '8',    K_RSV,
 /* 40 */  K_RSV,  ',',    'k',    'i',    'o',    '0',    '9',    K_RSV,
 /* 48 */  K_RSV,  '.',    '/',    'l',    ';',    'p',    '-',    K_RSV,
-/* 50 */  K_RSV,  K_RSV,  '\'',   K_RSV,  '{',    '=',    K_RSV,  K_RSV,
-/* 58 */  K_CPSL, K_SHFT, '\r',   '}',    K_RSV,  '\\',   K_RSV,  K_RSV,
+/* 50 */  K_RSV,  K_RSV,  '\'',   K_RSV,  '[',    '=',    K_RSV,  K_RSV,
+/* 58 */  K_CPSL, K_SHFT, '\r',   ']',    K_RSV,  '\\',   K_RSV,  K_RSV,
 /* 60 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  '\b',   K_RSV,
 /* 68 */  K_RSV,  '1',    K_RSV,  '4',    '7',    K_RSV,  K_HOME, K_RSV,
-/* 70 */  '0',    '.',    '2',    '5',    '6',    '8',    0x1b,   K_NMLCK,
+/* 70 */  '0',    '.',    '2',    '5',    '6',    '8',    K_ESC,  K_NMLCK,
 /* 78 */  K_F11,  '+',    '3',    '-',    '*',    '9',    K_SCLCK,K_RSV,
 /* 80 */  K_RSV,  K_RSV,  K_RSV,  K_F7,   K_SYSRQ,K_RSV,  K_RSV,  K_RSV,
 /* 88 */  K_PAUSE,K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
@@ -147,16 +148,19 @@ void translate_key(uint32_t key, int down) {
 	if (ascii==K_ALT) {
 		if (down) alt_state=1;
 		else alt_state=0;
+		return;
 	}
 
 	if (ascii==K_CTRL) {
 		if (down) ctrl_state=1;
 		else ctrl_state=0;
+		return;
 	}
 
 	if (ascii==K_SHFT) {
 		if (down) shift_state=1;
 		else shift_state=0;
+		return;
 	}
 
 	/* For the time being, only report keycodes at release */
@@ -205,9 +209,10 @@ int ps2_interrupt_handler(void) {
 	/* This probably means we lost an interrupt somehow and got out */
 	/* of sync.							*/
 	/* We are only running at 2HZ here */
-	if ((tick_counter-old_ticks) > 1) {
+	if ((tick_counter-old_ticks) > 2) {
 		clock_bits=0;
 		message=0;
+		parity=0;
 	}
 	old_ticks=tick_counter;
 
@@ -243,6 +248,7 @@ int ps2_interrupt_handler(void) {
 
 	key = (message>>1) & 0xff;
 	message=0;
+	parity=0;
 
 	/* Key-up events start with 0xf0 */
 	if (key == 0xf0) {
@@ -278,6 +284,7 @@ int ps2_interrupt_handler(void) {
 
 	/* Translate key and push to console */
 	translate_key(key,!keyup);
+	keyup=0;
 
 	//printk("Key: %x\n",key);
 
