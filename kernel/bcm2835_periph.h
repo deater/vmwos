@@ -313,6 +313,7 @@
 /*    0 = RIMIC (unsupported) */
 #define UART0_ICR	(UART0_BASE + 0x44)
 #define UART0_ICR_RXIC	(1<<4)
+#define UART0_ICR_RTIC	(1<<6)
 
 /* DMACR = DMA Control Register */
 /*  This is disabled on the BCM2835 */
