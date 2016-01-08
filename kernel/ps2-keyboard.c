@@ -4,10 +4,12 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 #include "gpio.h"
 #include "printk.h"
 #include "ps2-keyboard.h"
 #include "interrupts.h"
+#include "console_io.h"
 
 static int irq_num;
 
@@ -20,11 +22,12 @@ static unsigned escape = 0;
 static unsigned pause = 0;
 
 #if 0
-static unsigned char translate[256] = {
-
-
 /* Raw SET 2 scancode table */
 
+/* Some day we might want to be able to return raw keycodes. */
+/* However, today is not that day. */
+
+static unsigned char translate[256] = {
 /* 00 */  KEY_RESERVED, KEY_F9,        KEY_RESERVED,  KEY_F5,        KEY_F3,        KEY_F1,       KEY_F2,        KEY_F12,
 /* 08 */  KEY_ESC,      KEY_F10,       KEY_F8,        KEY_F6,        KEY_F4,        KEY_TAB,      KEY_GRAVE,     KEY_RESERVED,
 /* 10 */  KEY_RESERVED, KEY_LEFTALT,   KEY_LEFTSHIFT, KEY_RESERVED,  KEY_LEFTCTRL,  KEY_Q,        KEY_1,         KEY_RESERVED,
@@ -60,6 +63,119 @@ static unsigned char translate[256] = {
 
 };
 #endif
+
+#define K_RSV	0x80
+#define K_F1	0x81
+#define K_F2	0x82
+#define K_F3	0x83
+#define K_F4	0x84
+#define K_F5	0x85
+#define K_F6	0x86
+#define K_F7	0x87
+#define K_F8	0x88
+#define K_F9	0x89
+#define K_F10	0x8a
+#define K_F11	0xab
+#define K_F12	0x8c
+#define K_ALT	0x8d
+#define K_SHFT	0x8e
+#define K_CTRL	0x8f
+#define K_CPSL	0x90
+#define K_HOME	0x91
+#define K_NMLCK	0x92
+#define K_SCLCK 0x93
+#define K_SYSRQ	0x94
+#define K_PAUSE	0x95
+#define K_END	0x96
+#define K_INSRT	0x97
+#define K_DEL	0x98
+#define K_PRINT	0x99
+#define K_LEFT	0xa0
+#define K_RIGHT	0xa1
+#define K_UP	0xa2
+#define K_DOWN	0xa3
+#define K_PGDN	0xa4
+#define K_PGUP	0xa5
+
+static unsigned char translate[256] = {
+/* 00 */  K_RSV,  K_F9,   K_RSV,  K_F5,   K_F3,   K_F1,   K_F2,   K_F12,
+/* 08 */  0x1B,   K_F10,  K_F8,   K_F6,   K_F4,   '\t',   '`',    K_RSV,
+/* 10 */  K_RSV,  K_ALT,  K_SHFT, K_RSV,  K_CTRL, 'q',    '1',    K_RSV,
+/* 18 */  K_RSV,  K_RSV,  'z',    's',    'a',    'w',    '2',    K_RSV,
+/* 20 */  K_RSV,  'c',    'x',    'd',    'e',    '4',    '3',    K_RSV,
+/* 28 */  K_RSV,  ' ',    'v',    'f',    't',    'r',    '5',    K_RSV,
+/* 30 */  K_RSV,  'n',    'b',    'h',    'g',    'y',    '6',    K_RSV,
+/* 38 */  K_RSV,  K_ALT,  'm',    'j',    'u',    '7',    '8',    K_RSV,
+/* 40 */  K_RSV,  ',',    'k',    'i',    'o',    '0',    '9',    K_RSV,
+/* 48 */  K_RSV,  '.',    '/',    'l',    ';',    'p',    '-',    K_RSV,
+/* 50 */  K_RSV,  K_RSV,  '\'',   K_RSV,  '{',    '=',    K_RSV,  K_RSV,
+/* 58 */  K_CPSL, K_SHFT, '\r',   '}',    K_RSV,  '\\',   K_RSV,  K_RSV,
+/* 60 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  '\b',   K_RSV,
+/* 68 */  K_RSV,  '1',    K_RSV,  '4',    '7',    K_RSV,  K_HOME, K_RSV,
+/* 70 */  '0',    '.',    '2',    '5',    '6',    '8',    0x1b,   K_NMLCK,
+/* 78 */  K_F11,  '+',    '3',    '-',    '*',    '9',    K_SCLCK,K_RSV,
+/* 80 */  K_RSV,  K_RSV,  K_RSV,  K_F7,   K_SYSRQ,K_RSV,  K_RSV,  K_RSV,
+/* 88 */  K_PAUSE,K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* 90 */  K_RSV,  K_ALT,  K_RSV,  K_RSV,  K_CTRL, K_RSV,  K_RSV,  K_RSV,
+/* 98 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* a0 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* a8 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* b0 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* b8 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* c0 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* c8 */  K_RSV,  K_RSV,  '/',    K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* d0 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* d8 */  K_RSV,  K_RSV,  '\r',   K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* e0 */  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,  K_RSV,
+/* e8 */  K_RSV,  K_END,  K_RSV,  K_LEFT, K_HOME, K_RSV,  K_RSV,  K_RSV,
+/* f0 */  K_INSRT,K_DEL,  K_DOWN, K_RSV,  K_RIGHT,K_UP,   K_RSV,  K_RSV,
+/* f8 */  K_RSV,  K_RSV,  K_PGDN, K_RSV,  K_PRINT,K_PGUP, K_RSV,  K_RSV
+};
+
+
+void translate_key(uint32_t key, int down) {
+
+	uint32_t ascii;
+
+	static uint32_t shift_state=0;
+	static uint32_t alt_state=0;
+	static uint32_t ctrl_state=0;
+
+	ascii=translate[key];
+
+	if (ascii==K_ALT) {
+		if (down) alt_state=1;
+		else alt_state=0;
+	}
+
+	if (ascii==K_CTRL) {
+		if (down) ctrl_state=1;
+		else ctrl_state=0;
+	}
+
+	if (ascii==K_SHFT) {
+		if (down) shift_state=1;
+		else shift_state=0;
+	}
+
+	/* For the time being, only report keycodes at release */
+	if (down) return;
+
+	if ((ascii>='a') && (ascii<='z')) {
+
+		/* Convert to control chars */
+		if (ctrl_state) {
+			ascii-=0x60;
+		}
+
+		/* convert to capital letters */
+		if (shift_state) {
+			ascii-=0x20;
+		}
+		console_insert_char(ascii);
+	}
+
+}
 
 /* Handle GPIO interrupt */
 
@@ -158,10 +274,10 @@ int ps2_interrupt_handler(void) {
 		escape = 0;
 	}
 
-	/* Translate using RAW set2 keymap */
-	//key = translate[key];
+	/* Translate key and push to console */
+	translate_key(key,!keyup);
 
-	printk("Key: %x\n",key);
+	//printk("Key: %x\n",key);
 
 exit_handler:
 
