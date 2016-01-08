@@ -10,6 +10,7 @@
 #include "ps2-keyboard.h"
 #include "interrupts.h"
 #include "console_io.h"
+#include "time.h"
 
 static int irq_num;
 
@@ -172,8 +173,9 @@ void translate_key(uint32_t key, int down) {
 		if (shift_state) {
 			ascii-=0x20;
 		}
-		console_insert_char(ascii);
 	}
+
+	console_insert_char(ascii);
 
 }
 
@@ -189,25 +191,25 @@ int ps2_interrupt_handler(void) {
 	static int clock_bits=0;
 	static int message=0;
 
-//	static unsigned long old_jiffies=0;
+	static uint32_t old_ticks=0;
 
 	/* Sanity check clock line is low? */
 //	clk_value=gpio_get_value(gpio_clk);
 
 
-//	if (old_jiffies==0) {
-//		old_jiffies=jiffies;
-//	}
+	if (old_ticks==0) {
+		old_ticks=tick_counter;
+	}
 
 	/* If it's been too long since an interrupt, clear out the char */
 	/* This probably means we lost an interrupt somehow and got out */
 	/* of sync.							*/
-	/* We use HZ/100 (10ms) as the threedhold.			*/
-//	if ((jiffies-old_jiffies) > HZ/100) {
-//		clock_bits=0;
-//		message=0;
-//	}
-//	old_jiffies=jiffies;
+	/* We are only running at 2HZ here */
+	if ((tick_counter-old_ticks) > 1) {
+		clock_bits=0;
+		message=0;
+	}
+	old_ticks=tick_counter;
 
 	clock_bits++;
 
@@ -230,13 +232,13 @@ int ps2_interrupt_handler(void) {
 	/* Validate our 11-bit packet */
 	/* FIXME: should do something useful (request resend?) if invalid */
 	if (message&0x1) {
-		printk("Invalid start bit %x\n",message);
+		printk("Invalid start bit %x\r\n",message);
 	}
 	if (!(message&0x400)) {
-		printk("Invaid stop bit %x\n",message);
+		printk("Invaid stop bit %x\r\n",message);
 	}
 	if ( ( ((message&0x200>>8)&0x1) + (parity&0x1) ) &0x1) {
-		printk("Parity error %x %x\n",message,parity);
+		printk("Parity error %x %x\r\n",message,parity);
 	}
 
 	key = (message>>1) & 0xff;
@@ -314,14 +316,14 @@ int ps2_keyboard_init(void) {
 	gpio_set_falling(gpio_clk);
 	irq_enable(irq_num);
 
-	printk("ps2-keyboard using GPIO%d/%d, irq %d\n",
+	printk("ps2-keyboard using GPIO%d/%d, irq %d\r\n",
 		gpio_clk,gpio_data,irq_num);
 
 	return 0;
 
 init_error:
 
-	printk("ps2-keyboard installation failed\n");
+	printk("ps2-keyboard installation failed\r\n");
 
 	return -1;
 
