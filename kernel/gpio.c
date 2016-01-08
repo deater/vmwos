@@ -24,18 +24,18 @@ static uint64_t gpio_reserved=0;
 int gpio_request(int which_one, char *string) {
 
 	if (which_one>MAX_GPIO) {
-		printk("Invalid GPIO%d\n",which_one);
+		printk("Invalid GPIO%d\r\n",which_one);
 		return -1;
 	}
 
 	if ( (1ULL<<which_one) & gpio_reserved) {
-		printk("GPIO%d already in use\n",which_one);
+		printk("GPIO%d already in use\r\n",which_one);
 		return -1;
 	}
 
 	gpio_reserved|=(1ULL<<which_one);
 
-	if (debug) printk("Allocating GPIO%d as %s\n",which_one,string);
+	if (debug) printk("Allocating GPIO%d as %s\r\n",which_one,string);
 
 	return 0;
 }
@@ -44,13 +44,13 @@ int gpio_request(int which_one, char *string) {
 int gpio_free(int which_one) {
 
 	if (which_one>MAX_GPIO) {
-		printk("Invalid GPIO%d\n",which_one);
+		printk("Invalid GPIO%d\r\n",which_one);
 		return -1;
 	}
 
 	gpio_reserved&=~(1ULL<<which_one);
 
-	if (debug) printk("Freeing GPIO%d\n",which_one);
+	if (debug) printk("Freeing GPIO%d\r\n",which_one);
 
 	return 0;
 
@@ -64,7 +64,7 @@ int gpio_direction_input(int which_one) {
 	uint32_t bit;
 
 	if (which_one>MAX_GPIO) {
-		printk("Invalid GPIO%d\n",which_one);
+		printk("Invalid GPIO%d\r\n",which_one);
 		return -1;
 	}
 
@@ -90,7 +90,7 @@ int gpio_direction_output(int which_one) {
 	uint32_t bit;
 
 	if (which_one>MAX_GPIO) {
-		printk("Invalid GPIO%d\n",which_one);
+		printk("Invalid GPIO%d\r\n",which_one);
 		return -1;
 	}
 
@@ -132,7 +132,7 @@ int gpio_get_value(int which_one) {
 	uint32_t result;
 
 	if (which_one>MAX_GPIO) {
-		printk("GPIO%d too big\n",which_one);
+		printk("GPIO%d too big\r\n",which_one);
 		return -1;
 	}
 
@@ -152,7 +152,7 @@ int gpio_set_value(int which_one, int value) {
 	uint32_t address_offset,bit;
 
 	if (which_one>MAX_GPIO) {
-		printk("GPIO%d too big\n",which_one);
+		printk("GPIO%d too big\r\n",which_one);
 		return -1;
 	}
 
@@ -166,7 +166,7 @@ int gpio_set_value(int which_one, int value) {
 		mmio_write(GPIO_GPCLR0+address_offset,bit);
 	}
 	else {
-		printk("Invalid GPIO value %d\n",value);
+		printk("Invalid GPIO value %d\r\n",value);
 	}
 
 	return 0;
@@ -179,7 +179,7 @@ int gpio_set_falling(int which_one) {
 	uint32_t address_offset,bit,old;
 
 	if (which_one>MAX_GPIO) {
-		printk("GPIO%d too big\n",which_one);
+		printk("GPIO%d too big\r\n",which_one);
 		return -1;
 	}
 
@@ -198,7 +198,7 @@ int gpio_clear_interrupt(int which_one) {
 	uint32_t address_offset,bit;
 
 	if (which_one>MAX_GPIO) {
-		printk("GPIO%d too big\n",which_one);
+		printk("GPIO%d too big\r\n",which_one);
 		return -1;
 	}
 
