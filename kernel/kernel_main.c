@@ -136,15 +136,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		int i;
 		uint32_t before,after;
 
-		before=tick_counter;
+		before=ticks_since_boot();
 
 		for(i=0;i<16;i++) {
 			memset(benchmark,0,BENCH_SIZE);
 		}
-		after=tick_counter;
+		after=ticks_since_boot();
 
-		printk("MEMSPEED: %d MB per %d s\n",
-			16, (after-before)/TIMER_HZ);
+		printk("MEMSPEED: %d MB took %d ticks %dkB/s\r\n",
+			16, (after-before),
+			((after-before)*1000)/64);
 	}
 #endif
 
