@@ -6,4 +6,4 @@
 #define RPI_MODEL_B2		5
 #define RPI_COMPUTE_NODE	6
 
-extern int hardware_type;
+extern uint32_t hardware_type;
