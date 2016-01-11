@@ -1,6 +1,7 @@
+#include <stdint.h>
 #include "time.h"
 
-unsigned int time_since_boot(void) {
+uint32_t time_since_boot(void) {
 
 	return tick_counter/TIMER_HZ;
 

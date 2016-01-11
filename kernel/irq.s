@@ -62,7 +62,7 @@ unknown_interrupt:
 	b	exit_interrupt
 
 timer_interrupt:
-	bl	interrupt_handle_timer
+	bl	timer_interrupt_handler
 
 	mov	r0,sp
 
