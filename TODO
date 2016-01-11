@@ -2,8 +2,11 @@ Kernel routines:
 	way to kill process
 	way to free memory
 	better scheduler (that only runs the idle process at idle)
-	interrupt driven serial port
 	blocking I/O
+
+Performance:
+	MMU/L1 cache support
+	tophalf/bottomhalf IRQ split
 
 Systemcalls to add:
 	nanosleep
@@ -18,8 +21,15 @@ Filesystem support:
 	fat
 
 Hardware support:
-	PS/2 keyboard over GPIO
 	i2c
+	SD card
+	USB ( https://github.com/rsta2/uspi )
+
+Keybaord driver:
+	Properly generate ANSI escape chars for arrows, etc
+
+Annoyances:
+	Have serial console automatically change \n to \r\n
 
 Rapsberry Pi 2 support
 	Change I/O offset
