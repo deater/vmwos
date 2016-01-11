@@ -18,6 +18,7 @@
 #include "scheduler.h"
 #include "idle_task.h"
 #include "ps2-keyboard.h"
+#include "time.h"
 
 #define VERSION 11
 
@@ -133,6 +134,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 #if 1
 	{
 		int i;
+		uint32_t before,after;
 
 		before=tick_counter;
 
