@@ -22,7 +22,11 @@
 #define VERSION 11
 
 /* default, this is over-ridden later */
-int hardware_type=RPI_MODEL_B;
+uint32_t hardware_type=RPI_MODEL_B;
+
+/* For memory benchmark */
+#define BENCH_SIZE (1024*1024)
+uint8_t benchmark[BENCH_SIZE];
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
@@ -124,6 +128,23 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
+
+	/* Memory Benchmark */
+#if 1
+	{
+		int i;
+
+		before=tick_counter;
+
+		for(i=0;i<16;i++) {
+			memset(benchmark,0,BENCH_SIZE);
+		}
+		after=tick_counter;
+
+		printk("MEMSPEED: %d MB per %d s\n",
+			16, (after-before)/TIMER_HZ);
+	}
+#endif
 
 	/* Load the idle thread */
 	idle_process=load_process("idle",PROCESS_FROM_RAM,
