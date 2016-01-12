@@ -19,14 +19,14 @@ kernel.elf:	kernel_main.o \
 	atags.o uart.o boot.o framebuffer.o \
 	framebuffer_console.o gpio.o idle_task.o \
 	interrupts.o console_io.o irq.o led.o locks.o \
-	mailbox.o memory.o printk.o ps2-keyboard.o romfs.o \
+	mailbox.o memory.o mmu.o printk.o ps2-keyboard.o romfs.o \
 	scheduler.o string.o syscalls.o time.o \
-	timer.o 
+	timer.o
 	$(CROSS)ld --no-undefined \
 		kernel_main.o atags.o uart.o boot.o framebuffer.o \
 		framebuffer_console.o gpio.o idle_task.o \
 		interrupts.o console_io.o irq.o led.o locks.o \
-		mailbox.o memory.o \
+		mailbox.o memory.o mmu.o \
 		printk.o ps2-keyboard.o romfs.o \
 		scheduler.o string.o syscalls.o time.o timer.o \
 		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
@@ -65,6 +65,9 @@ mailbox.o:	mailbox.c
 
 memory.o:	memory.c
 	$(CROSS)$(CC) $(CFLAGS) -o memory.o -c memory.c
+
+mmu.o:	mmu.c
+	$(CROSS)$(CC) $(CFLAGS) -o mmu.o -c mmu.c
 
 printk.o:	printk.c
 	$(CROSS)$(CC) $(CFLAGS) -o printk.o -c printk.c
