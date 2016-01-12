@@ -16,7 +16,7 @@ kernel.img:	kernel.elf
 
 
 kernel.elf:	kernel_main.o \
-	atags.o uart.o boot.o framebuffer.o \
+	atags.o uart.o boot.o div.o framebuffer.o \
 	framebuffer_console.o gpio.o idle_task.o \
 	interrupts.o console_io.o irq.o led.o locks.o \
 	mailbox.o memory.o mmu.o printk.o ps2-keyboard.o romfs.o \
@@ -25,7 +25,7 @@ kernel.elf:	kernel_main.o \
 	$(CROSS)ld --no-undefined \
 		kernel_main.o atags.o uart.o boot.o framebuffer.o \
 		framebuffer_console.o gpio.o idle_task.o \
-		interrupts.o console_io.o irq.o led.o locks.o \
+		interrupts.o console_io.o div.o irq.o led.o locks.o \
 		mailbox.o memory.o mmu.o \
 		printk.o ps2-keyboard.o romfs.o \
 		scheduler.o string.o syscalls.o time.o timer.o \
@@ -56,6 +56,9 @@ gpio.o:	gpio.c
 
 console_io.o:	console_io.c
 	$(CROSS)$(CC) $(CFLAGS) -o console_io.o -c console_io.c
+
+div.o:	div.c
+	$(CROSS)$(CC) $(CFLAGS) -o div.o -c div.c
 
 led.o:	led.c
 	$(CROSS)$(CC) $(CFLAGS) -o led.o -c led.c
