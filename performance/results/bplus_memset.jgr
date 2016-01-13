@@ -1,0 +1,55 @@
+(* Begin Graph *)
+newgraph
+
+X 8
+Y 8
+
+(* Legend *)
+(* legend custom x 1 y 5500 defaults fontsize 12 font Helvetica *)
+legend custom
+
+(* Title *)
+title y 8.5 font Helvetica fontsize 14 : memset performance on bplus
+
+
+(* X-Axis *)
+xaxis min 1 max 16777216 log
+size 8
+hash_labels font Helvetica fontsize 11 hjr rotate 45
+label font Helvetica fontsize 11  : size (B)
+
+(* Y-Axis *)
+yaxis min 0
+size 7
+hash_labels font Helvetica fontsize 11 hjr rotate 45
+label font Helvetica fontsize 11  : MB/s
+
+
+newcurve marktype x linetype dotted color 1.0 0.0 0.0
+(* label x 0 y 7 font Helvetical fontsize 11 vjc hjl : System-Wide CPI *)
+pts
+1	5.812872	(* 1.0 bytes, 128 iterations, 0.000021s *)
+2	20.345052	(* 2.0 bytes, 128 iterations, 0.000012s *)
+4	54.253472	(* 4.0 bytes, 128 iterations, 0.000009s *)
+8	97.656250	(* 8.0 bytes, 128 iterations, 0.000010s *)
+16	217.013889	(* 16.0 bytes, 128 iterations, 0.000009s *)
+32	355.113636	(* 32.0 bytes, 128 iterations, 0.000011s *)
+64	558.035714	(* 64.0 bytes, 128 iterations, 0.000014s *)
+128	919.117647	(* 128.0 bytes, 128 iterations, 0.000017s *)
+256	1157.407407	(* 256.0 bytes, 128 iterations, 0.000027s *)
+512	1250.000000	(* 512.0 bytes, 128 iterations, 0.000050s *)
+1024	1086.956522	(* 1.0 kB, 128 iterations, 0.000115s *)
+2048	1404.494382	(* 2.0 kB, 128 iterations, 0.000178s *)
+4096	1445.086705	(* 4.0 kB, 128 iterations, 0.000346s *)
+8192	1424.501425	(* 8.0 kB, 128 iterations, 0.000702s *)
+16384	1344.086022	(* 16.0 kB, 128 iterations, 0.001488s *)
+32768	1439.884809	(* 32.0 kB, 128 iterations, 0.002778s *)
+65536	1370.567072	(* 64.0 kB, 128 iterations, 0.005837s *)
+131072	1417.434444	(* 128.0 kB, 128 iterations, 0.011288s *)
+262144	1425.897870	(* 256.0 kB, 128 iterations, 0.022442s *)
+524288	1400.621526	(* 512.0 kB, 128 iterations, 0.045694s *)
+1048576	1395.871274	(* 1.0 MB, 128 iterations, 0.091699s *)
+2097152	1396.594709	(* 2.0 MB, 128 iterations, 0.183303s *)
+4194304	1396.080613	(* 4.0 MB, 128 iterations, 0.366741s *)
+8388608	1392.590981	(* 8.0 MB, 128 iterations, 0.735320s *)
+16777216	1393.844895	(* 16.0 MB, 128 iterations, 1.469317s *)
