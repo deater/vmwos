@@ -19,6 +19,8 @@
 #include "idle_task.h"
 #include "ps2-keyboard.h"
 #include "time.h"
+#include "mmu.h"
+#include "div.h"
 
 #define VERSION 11
 
@@ -130,6 +132,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
 
+	/* Init the MMU */
+	printk("Initializing MMU and caches\r\n");
+	//enable_mmu(0, memory_total);
+	//l1_data_cache_clear();
+	//l1_data_cache_enable();
+	l1_instruction_cache_enable();
+
+
+
+
 	/* Memory Benchmark */
 #if 1
 	{
@@ -145,7 +157,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 		printk("MEMSPEED: %d MB took %d ticks %dkB/s\r\n",
 			16, (after-before),
-			((after-before)*1000)/64);
+			div32(16*1024,(((after-before)*1000)/64)));
 	}
 #endif
 
