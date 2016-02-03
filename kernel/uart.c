@@ -1,3 +1,9 @@
+/* This is code to drive the BCM2835 PL011 UART				*/
+/* As decribed in Chapter 13 of the BCM2835 ARM Peripherals Manual	*/
+
+/* The code assumes you have a serial connector with TX/RX connected	*/
+/* To GPIO pins 14 and 15						*/
+
 #include <stddef.h>
 #include <stdint.h>
 #include "bcm2835_periph.h"
@@ -47,7 +53,7 @@ void uart_init(void) {
 	mmio_write(UART0_FBRD, 40);
 
 	/* Enable FIFO */
-	/* And 8N1 (8 bits of data, no parity, 1 stop bit */
+	/* Set 8N1 (8 bits of data, no parity, 1 stop bit */
 	mmio_write(UART0_LCRH, UART0_LCRH_FEN | UART0_LCRH_WLEN_8BIT);
 
 	/* Mask all interrupts. */
