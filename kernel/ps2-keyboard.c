@@ -237,13 +237,13 @@ int ps2_interrupt_handler(void) {
 	/* Validate our 11-bit packet */
 	/* FIXME: should do something useful (request resend?) if invalid */
 	if (message&0x1) {
-		printk("Invalid start bit %x\r\n",message);
+		printk("Invalid start bit %x\n",message);
 	}
 	if (!(message&0x400)) {
-		printk("Invaid stop bit %x\r\n",message);
+		printk("Invaid stop bit %x\n",message);
 	}
 	if ( ( ((message&0x200>>8)&0x1) + (parity&0x1) ) &0x1) {
-		printk("Parity error %x %x\r\n",message,parity);
+		printk("Parity error %x %x\n",message,parity);
 	}
 
 	key = (message>>1) & 0xff;
@@ -323,14 +323,14 @@ int ps2_keyboard_init(void) {
 	gpio_set_falling(gpio_clk);
 	irq_enable(irq_num);
 
-	printk("ps2-keyboard using GPIO%d/%d, irq %d\r\n",
+	printk("ps2-keyboard using GPIO%d/%d, irq %d\n",
 		gpio_clk,gpio_data,irq_num);
 
 	return 0;
 
 init_error:
 
-	printk("ps2-keyboard installation failed\r\n");
+	printk("ps2-keyboard installation failed\n");
 
 	return -1;
 

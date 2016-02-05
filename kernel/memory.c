@@ -37,12 +37,12 @@ int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
 	int i;
 
 	if (memory_total>MAX_MEMORY) {
-		printk("Error!  Too much memory!\r\n");
+		printk("Error!  Too much memory!\n");
 		return -1;
 	}
 
 	printk("Initializing %dMB of memory.  "
-		"%dkB used by kernel, %dkB used by memory map\r\n",
+		"%dkB used by kernel, %dkB used by memory map\n",
 		memory_total/1024/1024,
 		memory_kernel/1024,
 		(MAX_MEMORY/CHUNK_SIZE/32)/1024);

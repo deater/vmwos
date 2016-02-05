@@ -41,7 +41,7 @@ int framebuffer_ready(void) {
 
 static void dump_framebuffer_info(struct frame_buffer_info_type *fb) {
 
-	printk("px %d py %d vx %d vy %d pitch %d depth %d x %d y %d ptr %x sz %d\r\n",
+	printk("px %d py %d vx %d vy %d pitch %d depth %d x %d y %d ptr %x sz %d\n",
 		fb->phys_x,fb->phys_y,
 		fb->virt_x,fb->virt_y,
 		fb->pitch,fb->depth,
@@ -69,7 +69,7 @@ char *framebuffer_init(int x, int y, int depth) {
 	fb_info.size=0;
 
 	if (debug) {
-		printk("fb: Writing message @%x to mailbox %x\r\n",
+		printk("fb: Writing message @%x to mailbox %x\n",
 			&fb_info,MAILBOX_BASE);
 		printk("fb: asking for ");
 		dump_framebuffer_info(&fb_info);
@@ -79,7 +79,7 @@ char *framebuffer_init(int x, int y, int depth) {
 		MAILBOX_FRAMEBUFFER);
 
 	if (result<0) {
-		printk("Mailbox write failed\r\n");
+		printk("Mailbox write failed\n");
 		return NULL;
 	}
 
@@ -91,7 +91,7 @@ char *framebuffer_init(int x, int y, int depth) {
 	}
 
 	if (result==-1) {
-		printk("Mailbox read failed\r\n");
+		printk("Mailbox read failed\n");
 		return NULL;
 	}
 

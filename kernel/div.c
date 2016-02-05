@@ -11,7 +11,7 @@ uint32_t div32(uint32_t dividend, uint32_t divisor) {
 	uint32_t new_d;
 
 	if (divisor==0) {
-		printk("Division by zero!\r\n");
+		printk("Division by zero!\n");
 		return 0;
 	}
 

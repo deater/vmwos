@@ -62,17 +62,17 @@ void framebuffer_console_setfont(int which) {
 	if (which==1) {
 		current_font=(unsigned char *)medieval_font;
 		font_ysize=16;
-		printk("Using Medieval font\r\n");
+		printk("Using Medieval font\n");
 	}
 	else if (which==2) {
 		current_font=(unsigned char *)marie_font;
 		font_ysize=16;
-		printk("Using Rune font\r\n");
+		printk("Using Rune font\n");
 	}
 	else {
 		current_font=(unsigned char *)tb1_font;
 		font_ysize=8;
-		printk("Using default font\r\n");
+		printk("Using default font\n");
 	}
 	framebuffer_clear_screen(0);
 	framebuffer_console_push();
@@ -226,6 +226,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 			console_y++;
 		} else if (buffer[i]=='\n') {
 			console_x=0;
+			console_y++;
 		} else if (buffer[i]=='\t') {
 			console_x=(console_x+8)&(~0x7);
 		} else if (buffer[i]=='\b') {
@@ -249,7 +250,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 				escape_code[e]=buffer[i];
 				escape_code[e+1]=0;
 
-//				printk("ESCAPE! %s\r\n",escape_code);
+//				printk("ESCAPE! %s\n",escape_code);
 
 				/* clear screen */
 				if (escape_code[e]=='J') {
@@ -258,7 +259,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 				}
 				/* colors */
 				if (escape_code[e]=='m') {
-//					printk("Parsing %s\r\n",escape_code);
+//					printk("Parsing %s\n",escape_code);
 					ansi_parse_color(escape_code);
 				}
 

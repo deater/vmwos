@@ -90,23 +90,23 @@ int open_romfs_file(char *name,
 	/* Read header */
 	romfs_read(header.magic,&offset,8);
 	if (memcmp(header.magic,"-rom1fs-",8)) {
-		printk("Wrong magic number!\r\n");
+		printk("Wrong magic number!\n");
 		return -1;
 	}
 
-	if (debug) printk("Found romfs filesystem!\r\n");
+	if (debug) printk("Found romfs filesystem!\n");
 
 	/* Read size */
 	romfs_read(&temp_int,&offset,4);
 	header.size=ntohl(temp_int);
 
-	if (debug) printk("Size: %d bytes\r\n",header.size);
+	if (debug) printk("Size: %d bytes\n",header.size);
 
 	/* Read checksum */
 	romfs_read(&temp_int,&offset,4);
 	header.checksum=ntohl(temp_int);
 
-	if (debug) printk("Checksum: %x\r\n",header.size);
+	if (debug) printk("Checksum: %x\n",header.size);
 	/* FIXME: validate checksum */
 
 	/* Read volume name */
@@ -118,7 +118,7 @@ int open_romfs_file(char *name,
 		memcpy(header.volume_name,buffer,16);
 		if (buffer[15]==0) break;	/* NUL terminated */
 	}
-	if (debug) printk("Volume: %s\r\n",header.volume_name);
+	if (debug) printk("Volume: %s\n",header.volume_name);
 
 	while(1) {
 		file->addr=offset;
@@ -155,17 +155,17 @@ int open_romfs_file(char *name,
 		if (debug) {
 			while(1) {
 				romfs_read(&ch,&offset,1);
-				//printk("Read %d at %d\r\n",ch,offset);
+				//printk("Read %d at %d\n",ch,offset);
 				if (ch==0) break;
 				printk("%c",ch);
 			}
 
-			printk("\r\n");
-			printk("\tAddr: 0x%x\r\n",file->addr);
-			printk("\tNext: 0x%x\r\n",file->next);
-			printk("\tType: 0x%x\r\n",file->type);
-			printk("\tSize: %d\r\n",file->size);
-			printk("\tChecksum: %x\r\n",file->checksum);
+			printk("\n");
+			printk("\tAddr: 0x%x\n",file->addr);
+			printk("\tNext: 0x%x\n",file->next);
+			printk("\tType: 0x%x\n",file->type);
+			printk("\tSize: %d\n",file->size);
+			printk("\tChecksum: %x\n",file->checksum);
 		}
 
 		offset=file->next;

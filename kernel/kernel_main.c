@@ -60,7 +60,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Boot message!	*/
 	/************************/
 
-	printk("\r\nBooting VMWos...\r\n");
+	printk("\nBooting VMWos...\n");
 
 	/**************************/
 	/* Device Drivers	  */
@@ -90,24 +90,24 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* So we can actually see the output on the terminal */
 	delay(0x3f0000);
 
-	printk("\r\nWaiting for serial port to be ready (press any key)\r\n");
+	printk("\nWaiting for serial port to be ready (press any key)\n");
 	uart_getc();
 
 	uart_enable_interrupts();
 
 
 	/* Clear screen */
-	printk("\n\r\033[2J\n\r\n\r");
+	printk("\n\033[2J\n\n");
 
 	/* Print boot message */
-	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\r\n");
-	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version 0.%d\r\n\r\n",VERSION);
+	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
+	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version 0.%d\n\n",VERSION);
 
 	/* Print hardware version */
 	printk("Hardware version: %x ",r1);
 	if (r1==0xc42) printk("(Raspberry Pi)");
 	else printk("(Unknown Hardware)");
-	printk("\r\n");
+	printk("\n");
 
 	printk("Detected Model ");
 	switch(hardware_type) {
@@ -119,12 +119,12 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		case RPI_COMPUTE_NODE:	printk("Compute Node"); break;
 		default:		printk("Unknown %x",hardware_type); break;
 	}
-	printk("\r\n");
+	printk("\n");
 
 	/* Print ATAGS */
 	atags_dump(atags);
 
-	printk("\r\n");
+	printk("\n");
 
 	/* Get amount of RAM from ATAGs */
 	memory_total=atag_info.ramsize;
@@ -133,7 +133,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	memory_init(memory_total,memory_kernel);
 
 	/* Init the MMU */
-	printk("Initializing MMU and caches\r\n");
+	printk("Initializing MMU and caches\n");
 	//enable_mmu(0, memory_total);
 	//l1_data_cache_clear();
 	//l1_data_cache_enable();
@@ -155,7 +155,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		}
 		after=ticks_since_boot();
 
-		printk("MEMSPEED: %d MB took %d ticks %dkB/s\r\n",
+		printk("MEMSPEED: %d MB took %d ticks %dkB/s\n",
 			16, (after-before),
 			div32(16*1024,(((after-before)*1000)/64)));
 	}
@@ -176,7 +176,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 
 	/* Enter our "init" process*/
-	printk("\r\nEntering userspace by starting process %d!\r\n",
+	printk("\nEntering userspace by starting process %d!\n",
 		init_process);
 
 	process[idle_process].ready=1;

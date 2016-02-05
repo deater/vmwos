@@ -65,14 +65,14 @@ void user_reg_dump(void) {
 	for(i=0;i<15;i++) {
 		printk("reg%d = %x ",i,regs[i]);
 	}
-	printk("\r\n");
+	printk("\n");
 }
 
 
 
 void interrupt_handle_unknown(int which) {
 
-	printk("Unknown interrupt happened %x!\r\n",which);
+	printk("Unknown interrupt happened %x!\n",which);
 }
 
 #if 0
@@ -117,7 +117,7 @@ void __attribute__((interrupt("IRQ"))) interrupt_handler_old(void) {
                 :
                 );
 
-        printk("IRQ PC=%x SPSR=%x SP=%x\r\n",entry_pc,entry_spsr,entry_sp);
+        printk("IRQ PC=%x SPSR=%x SP=%x\n",entry_pc,entry_spsr,entry_sp);
 	user_reg_dump();
 
 
@@ -150,13 +150,13 @@ void __attribute__((interrupt("IRQ"))) interrupt_handler_old(void) {
 #endif
 
 void __attribute__((interrupt("FIQ"))) fiq_handler(void) {
-	printk("UNHANDLED FIQ\r\n");
+	printk("UNHANDLED FIQ\n");
 }
 
 void __attribute__((interrupt("ABORT"))) abort_handler(void) {
-	printk("UNHANDLED ABORT\r\n");
+	printk("UNHANDLED ABORT\n");
 }
 
 void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
-	printk("UNHANDLED UNDEF\r\n");
+	printk("UNHANDLED UNDEF\n");
 }

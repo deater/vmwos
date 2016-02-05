@@ -20,7 +20,7 @@ void atags_dump(uint32_t *atags) {
 	uint32_t *tags=atags;
 	char *cmdline;
 
-	printk("Dumping ATAGs provied by bootloader:\r\n");
+	printk("Dumping ATAGs provied by bootloader:\n");
 
 	while(1) {
 		size=tags[0];
@@ -30,13 +30,13 @@ void atags_dump(uint32_t *atags) {
 		/* Start List */
 		case ATAG_CORE:
 			printk("  CORE: flags: %x, pagesize: %x, "
-				"rootdev: %x\r\n", tags[2], tags[3], tags[4]);
+				"rootdev: %x\n", tags[2], tags[3], tags[4]);
 			tags += size;
 			break;
 
 		/* Physical Memory */
 		case ATAG_MEM:
-			printk("  MEMORY: size: %x (%dMB), start: %x\r\n",
+			printk("  MEMORY: size: %x (%dMB), start: %x\n",
 				tags[2], tags[2]/1024/1024, tags[3]);
 			tags += size;
 			break;
@@ -44,41 +44,41 @@ void atags_dump(uint32_t *atags) {
 		/* VGA Text Display */
 		case ATAG_VIDEOTEXT:
 			printk("  VIDEOTEXT x,y,video: %x, "
-				"mode,cols, ega: %x, lines, vga, points: %x\r\n",
+				"mode,cols, ega: %x, lines, vga, points: %x\n",
 				tags[2], tags[3], tags[4]);
 			tags += size;
 			break;
 
 		/* RAMDISK Use */
 		case ATAG_RAMDISK:
-			printk("  RAMDISK flags: %x, size: %x, start: %x\r\n",
+			printk("  RAMDISK flags: %x, size: %x, start: %x\n",
 				tags[2], tags[3], tags[4]);
 			tags += size;
 			break;
 
 		/* INITRD Ramdisk */
 		case ATAG_INITRD2:
-			printk("  INITRD size: %x, start: %x\r\n",
+			printk("  INITRD size: %x, start: %x\n",
 				tags[3], tags[2]);
 			tags += size;
 			break;
 
 		/* 64-bit serial number */
 		case ATAG_SERIAL:
-			printk(" SERIAL NUMBER: low: %x, high: %x\r\n",
+			printk(" SERIAL NUMBER: low: %x, high: %x\n",
 				tags[2], tags[3]);
 			tags += size;
 			break;
 
 		/* Board Revision */
 		case ATAG_REVISION:
-			printk(" Board revision: %x\r\n", tags[2]);
+			printk(" Board revision: %x\n", tags[2]);
 			tags += size;
 			break;
 
 		/* VESA Framebuffer Info */
 		case ATAG_VIDEOLFB:
-			printk("  VESA framebuffer\r\n");
+			printk("  VESA framebuffer\n");
 			tags += size;
 			break;
 
@@ -95,18 +95,18 @@ void atags_dump(uint32_t *atags) {
 				length-=256;
 				count++;
 			}
-			printk("\r\n");
+			printk("\n");
 			tags += size;
 			break;
 
 		/* Empty tag to end list */
 		case ATAG_NONE:
-			printk("\r\n");
+			printk("\n");
 			return;
 			break;
 
 		default:
-			printk("ERROR! Unknown atag\r\n");
+			printk("ERROR! Unknown atag\n");
 			break;
 		}
 
@@ -195,7 +195,7 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 		case ATAG_MEM:
 			total_ram=tags[2];
 			if (tags[3]!=0) {
-				printk("Warning!  We do not handle memory not starting at zero!\r\n");
+				printk("Warning!  We do not handle memory not starting at zero!\n");
 			}
 			info->ramsize=total_ram;
 			tags += size;
@@ -274,7 +274,7 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 			break;
 
 		default:
-			printk("ERROR! Unknown atag\r\n");
+			printk("ERROR! Unknown atag\n");
 			break;
 		}
 

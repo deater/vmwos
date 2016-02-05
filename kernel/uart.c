@@ -83,9 +83,9 @@ void uart_enable_interrupts(void) {
 
 	/* Enable receive interrupts */
 	old=mmio_read(UART0_IMSC);
-	printk("uart: previous IMSC: %x\r\n",old);
+	printk("uart: previous IMSC: %x\n",old);
 	old|=UART0_IMSC_RTIM;
-	printk("uart: new IMSC: %x\r\n",old);
+	printk("uart: new IMSC: %x\n",old);
 	mmio_write(UART0_IMSC,old);
 	irq_enable(57);
 }
@@ -139,6 +139,10 @@ uint32_t uart_write(const unsigned char* buffer, size_t size) {
 	if (!uart_initialized) return 0;
 
 	for ( i = 0; i < size; i++ ) {
+		/* Terminal emulators expect \r\n     */
+		/* But we save space by only using \n */
+		if (buffer[i]=='\n') uart_putc('\r');
+
 		uart_putc(buffer[i]);
 	}
 	return i;

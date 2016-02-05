@@ -55,7 +55,7 @@ int load_process(char *name, int type, char *data, int size, int stack_size) {
         	stack_start=(char *)memory_allocate(stack_size);
 
 		/* Load executable */
-		//printk("Copying %d bytes from %x to %x\r\n",size,data,binary_start);
+		//printk("Copying %d bytes from %x to %x\n",size,data,binary_start);
         	memcpy(binary_start,data,size);
 	}
 	else {
@@ -96,7 +96,7 @@ int load_process(char *name, int type, char *data, int size, int stack_size) {
 	process[i].reg_state.spsr=0x10;
 
         printk("New process %s pid %d "
-		"allocated %dkB at %x and %dkB stack at %x\r\n",
+		"allocated %dkB at %x and %dkB stack at %x\n",
 		name,process[i].pid,
 		size/1024,binary_start,
 		stack_size/1024,stack_start);
@@ -110,7 +110,7 @@ int run_process(int which, long irq_stack) {
 	long *our_sp;
 	long return_pc,our_spsr;
 
-//	printk("Resetting IRQ stack to %x\r\n",irq_stack);
+//	printk("Resetting IRQ stack to %x\n",irq_stack);
 
 	return_pc=process[which].reg_state.lr;
 	our_spsr=process[which].reg_state.spsr;
@@ -118,7 +118,7 @@ int run_process(int which, long irq_stack) {
 	our_sp=&(process[which].reg_state.r[0]);
 #if 0
 	printk("Attempting to run proc %d (%s pid=%d): "
-		"PC=%x SPSR=%x save_addr=%x stack=%x\r\n",
+		"PC=%x SPSR=%x save_addr=%x stack=%x\n",
 		which, process[which].name,process[which].pid,
 		return_pc,our_spsr,our_sp,
 		process[which].reg_state.r[13]);
@@ -150,7 +150,7 @@ int run_process(int which, long irq_stack) {
 			);
 
 
-		printk("Should never get here!\r\n");
+		printk("Should never get here!\n");
 #if 0
 	/* set user stack */
         asm volatile(
@@ -191,7 +191,7 @@ int save_process(int which, long *pcb) {
 		process[which].reg_state.r[i]=pcb[i];
 //		printk("r%d=%x ",i,pcb[i]);
 	}
-//	printk("\r\n");
+//	printk("\n");
 
 	return 0;
 }
