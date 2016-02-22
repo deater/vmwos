@@ -77,12 +77,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Set up keyboard */
 	ps2_keyboard_init();
 
-	/* Check temperature */
-	temperature=thermal_read();
-	printk("CPU Temperature: %dC, %dF\n",
-		temperature/1000,
-		((temperature*9)/5000)+32);
-
 	/* Enable the Framebuffer */
 	if (atag_info.framebuffer_x!=0) {
 		framebuffer_width=atag_info.framebuffer_x;
@@ -128,6 +122,12 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		default:		printk("Unknown %x",hardware_type); break;
 	}
 	printk("\n");
+
+	/* Check temperature */
+	temperature=thermal_read();
+	printk("CPU Temperature: %dC, %dF\n",
+		temperature/1000,
+		((temperature*9)/5000)+32);
 
 	/* Print ATAGS */
 	atags_dump(atags);
