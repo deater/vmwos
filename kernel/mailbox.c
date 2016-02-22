@@ -1,5 +1,6 @@
 /* based on info at https://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/screen01.html */
 /* https://github.com/raspberrypi/firmware/wiki/Accessing-mailboxes */
+/* See also arch/arm/mach-bcm2708/vcio.c */
 
 #include <stddef.h>
 #include <stdint.h>

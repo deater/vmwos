@@ -21,6 +21,7 @@
 #include "time.h"
 #include "mmu.h"
 #include "div.h"
+#include "thermal.h"
 
 #define VERSION 11
 
@@ -74,6 +75,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Set up keyboard */
 	ps2_keyboard_init();
+
+	/* Check temperature */
+	thermal_read();
 
 	/* Enable the Framebuffer */
 	if (atag_info.framebuffer_x!=0) {

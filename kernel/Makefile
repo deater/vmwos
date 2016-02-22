@@ -4,7 +4,7 @@ CC = gcc
 AS = as
 ASFLAGS = -mcpu=arm1176jzf-s
 CFLAGS = -O2 -Wall -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib
-
+LFLAGS = --no-undefined -T $(LINKER_SCRIPT)
 
 LINKER_SCRIPT = kernel.ld
 
@@ -20,16 +20,16 @@ kernel.elf:	kernel_main.o \
 	framebuffer_console.o gpio.o idle_task.o \
 	interrupts.o console_io.o irq.o led.o locks.o \
 	mailbox.o memory.o mmu.o printk.o ps2-keyboard.o romfs.o \
-	scheduler.o string.o syscalls.o time.o \
+	scheduler.o string.o syscalls.o thermal.o time.o \
 	timer.o
-	$(CROSS)ld --no-undefined \
+	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o atags.o uart.o boot.o framebuffer.o \
 		framebuffer_console.o gpio.o idle_task.o \
 		interrupts.o console_io.o div.o irq.o led.o locks.o \
 		mailbox.o memory.o mmu.o \
 		printk.o ps2-keyboard.o romfs.o \
-		scheduler.o string.o syscalls.o time.o timer.o \
-		-Map kernel.map -o kernel.elf -T $(LINKER_SCRIPT)
+		scheduler.o string.o syscalls.o thermal.o time.o timer.o \
+		-Map kernel.map -o kernel.elf
 
 
 kernel_main.o:	kernel_main.c
@@ -92,6 +92,9 @@ string.o:	string.c
 
 syscalls.o:	syscalls.c
 	$(CROSS)$(CC) $(CFLAGS) -o syscalls.o -c syscalls.c
+
+thermal.o:	thermal.c thermal.h
+	$(CROSS)$(CC) $(CFLAGS) -o thermal.o -c thermal.c
 
 time.o:	time.c time.h
 	$(CROSS)$(CC) $(CFLAGS) -o time.o -c time.c
