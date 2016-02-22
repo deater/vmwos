@@ -92,3 +92,17 @@ int vmwos_stop(int which) {
 
 	return r0;
 }
+
+int vmwos_get_temp(void) {
+
+	register long r7 __asm__("r7") = __NR_temp;
+	register long r0 __asm__("r0");
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7)
+		: "memory");
+
+	return r0;
+}

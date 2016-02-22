@@ -10,6 +10,7 @@
 #include "interrupts.h"
 #include "bcm2835_periph.h"
 #include "mmio.h"
+#include "thermal.h"
 
 extern int blinking_enabled;
 
@@ -155,6 +156,11 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 			mmio_write(PM_WDOG, PM_PASSWORD | 1);	/* timeout = 1/16th of a second? */
 			mmio_write(PM_RSTC, PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET);
 			result = -1;
+			break;
+
+
+		case SYSCALL_TEMPERATURE:
+			result=thermal_read();
 			break;
 
 		default:
