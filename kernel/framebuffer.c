@@ -76,14 +76,14 @@ char *framebuffer_init(int x, int y, int depth) {
 	}
 
 	result=mailbox_write( (unsigned int)(&fb_info)+0x40000000 ,
-		MAILBOX_FRAMEBUFFER);
+		MAILBOX_CHAN_FRAMEBUFFER);
 
 	if (result<0) {
 		printk("Mailbox write failed\n");
 		return NULL;
 	}
 
-	result=mailbox_read(MAILBOX_FRAMEBUFFER);
+	result=mailbox_read(MAILBOX_CHAN_FRAMEBUFFER);
 
 	if (debug) {
 		printk("fb: we got ");
