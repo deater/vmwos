@@ -53,15 +53,20 @@ int thermal_read(void) {
 	msg.tag.buffer_size = 8;
 
 	/* send the message */
-	result = mailbox_write((unsigned int)(&msg)+0x40000000,
+	result = mailbox_write((unsigned int)(&msg),
 				MAILBOX_CHAN_PROPERTY);
 
+	if (result<0) printk("THERM: Mailbox write problem\n");
+
+	result=mailbox_read(MAILBOX_CHAN_PROPERTY);
+
 	/* check if it was all ok and return the rate in milli degrees C */
-	if (result == 0 && (msg.request_code & 0x80000000)) {
+	if (msg.request_code & 0x80000000) {
 		temp = (uint32_t)msg.tag.val;
 	}
 	else {
-		printk("THERM: Failed to get temperature!\n");
+		printk("THERM: Failed to get temperature! (%d,%x)\n",
+			result,msg.request_code);
 	}
 
 	printk("Temp = %d mC\n",temp);
