@@ -39,6 +39,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	int init_process,idle_process;
 	struct atag_info_t atag_info;
 	uint32_t framebuffer_width=800,framebuffer_height=600;
+	uint32_t temperature;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -77,7 +78,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	ps2_keyboard_init();
 
 	/* Check temperature */
-	thermal_read();
+	temperature=thermal_read();
+	printk("CPU Temperature: %dC, %dF\n",
+		temperature/1000,
+		((temperature*9)/5000)+32);
 
 	/* Enable the Framebuffer */
 	if (atag_info.framebuffer_x!=0) {

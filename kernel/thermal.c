@@ -14,8 +14,8 @@
 #include "string.h"
 
 
-#define VC_TAG_GET_TEMP 0x00030006
-#define VC_TAG_GET_MAX_TEMP 0x0003000A
+#define VC_TAG_GET_TEMP		0x00030006
+#define VC_TAG_GET_MAX_TEMP	0x0003000A
 
 /* tag part of the message */
 struct vc_msg_tag {
@@ -40,8 +40,6 @@ int thermal_read(void) {
 	struct vc_msg msg  __attribute__ ((aligned(16)));
 
 	uint32_t temp=0,result;
-
-	printk("TEMP: trying to read\n");
 
 	/* Clear the struct */
 	memset(&msg, 0, sizeof(msg));
@@ -68,8 +66,6 @@ int thermal_read(void) {
 		printk("THERM: Failed to get temperature! (%d,%x)\n",
 			result,msg.request_code);
 	}
-
-	printk("Temp = %d mC\n",temp);
 
 	return temp;
 }
