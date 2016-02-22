@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
 //	register long sp asm ("sp");
 
-//	printf("Our sp=%x\r\n",sp);
+//	printf("Our sp=%x\n",sp);
 
 	tcgetattr( 0, &oldt);
 	newt = oldt;
@@ -56,17 +56,20 @@ int main(int argc, char **argv) {
 //			printf("VMW: %d\n",ch);
 
 			if ((ch=='\n') || (ch=='\r')) {
-				printf("\r\n");
+				printf("\n");
 				input_string[input_pointer]=0;
 				result=parse_input(input_string);
 				if (result==1) done=1;
 				break;
 			}
+
+			/* ctrl-D? */
 			if (ch==4) {
 				done=1;
 				break;
 			}
 
+			/* Backspace */
 			if ((ch==0x7f) || (ch=='\b')) {
 
 				if (input_pointer>0) {
@@ -90,22 +93,23 @@ int main(int argc, char **argv) {
 
 static int print_help(void) {
 
-	printf("VMWos Shell Version %s\r\n\r\n",VERSION);
-	printf("\tblink on/off - turns on/off heartbeat LED\r\n");
-	printf("\tcls          - clears the screen\r\n");
-	printf("\tcolor X      - set text to color #X\r\n");
-	printf("\techo X       - prints string X\r\n");
-	printf("\tfont X       - sets the font to font #X\r\n");
-	printf("\tgetpid       - print current process ID\r\n");
-	printf("\tgradient     - make background look cool\r\n");
-	printf("\thelp         - prints this help message\r\n");
-	printf("\treset        - reset the machine\r\n");
-	printf("\trun X        - run program #X\r\n");
-	printf("\tstop X       - stop program #X\r\n");
-	printf("\ttime         - print seconds since boot\r\n");
-	printf("\ttb1          - play TB1\r\n");
-	printf("\tver          - print version\r\n");
-	printf("\r\n");
+	printf("VMWos Shell Version %s\n\n",VERSION);
+	printf("\tblink on/off - turns on/off heartbeat LED\n");
+	printf("\tcls          - clears the screen\n");
+	printf("\tcolor X      - set text to color #X\n");
+	printf("\techo X       - prints string X\n");
+	printf("\tfont X       - sets the font to font #X\n");
+	printf("\tgetpid       - print current process ID\n");
+	printf("\tgradient     - make background look cool\n");
+	printf("\thelp         - prints this help message\n");
+	printf("\treset        - reset the machine\n");
+	printf("\trun X        - run program #X\n");
+	printf("\tstop X       - stop program #X\n");
+	printf("\ttemp         - print the temperature\n");
+	printf("\ttime         - print seconds since boot\n");
+	printf("\ttb1          - play TB1\n");
+	printf("\tver          - print version\n");
+	printf("\n");
 
 	return 0;
 }
@@ -115,10 +119,10 @@ static int parse_input(char *string) {
 	int result=0;
 
 	if (!strncmp(string,"echo",4)) {
-		printf("%s\r\n",string+5);
+		printf("%s\n",string+5);
 	}
 	else if (!strncmp(string,"cls",3)) {
-		printf("\n\r\033[2J\r\n");
+		printf("\n\r\033[2J\n");
 	}
 	else if (!strncmp(string,"font ",5)) {
 		vmwos_setfont(string[5]);
@@ -127,7 +131,7 @@ static int parse_input(char *string) {
 		vmwos_gradient();
 	}
 	else if (!strncmp(string,"getpid",6)) {
-		printf("Current pid: %d\r\n",getpid());
+		printf("Current pid: %d\n",getpid());
 	}
 	else if (!strncmp(string,"exit",4)) {
 		result=1;
@@ -145,23 +149,30 @@ static int parse_input(char *string) {
 		result=vmwos_stop(string[5]);
 	}
 	else if (!strncmp(string,"color ",6)) {
-		printf("%c[3%cm\r\n",27,string[6]);
+		printf("%c[3%cm\n",27,string[6]);
 	}
 	else if (!strncmp(string,"ver",3)) {
-		printf("VMWos Shell version %s\r\n",VERSION);
+		printf("VMWos Shell version %s\n",VERSION);
 	}
 	else if (!strncmp(string,"time",4)) {
-		printf("Time since boot: %ds\r\n",time(NULL));
+		printf("Time since boot: %ds\n",time(NULL));
 	}
 	else if (!strncmp(string,"reset",5)) {
-		printf("Resetting...\r\n");
+		printf("Resetting...\n");
 		reboot();
+	}
+	else if (!strncmp(string,"temp",4)) {
+		uint32_t temperature;
+		temperature=vmwos_get_temp();
+		printf("Current temperature %dC, %dF\n",
+			temperature/1000,
+			((temperature*9)/5000)+32);
 	}
 	else if (!strncmp(string,"tb1",3)) {
 		vmwos_tb1();
 	}
 	else {
-		printf("\r\nUnknown commmand: \"%s\"!\r\n",string);
+		printf("\nUnknown commmand: \"%s\"!\n",string);
 	}
 
 	return result;
