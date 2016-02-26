@@ -18,14 +18,14 @@ kernel.img:	kernel.elf
 kernel.elf:	kernel_main.o \
 	atags.o uart.o boot.o div.o framebuffer.o \
 	framebuffer_console.o gpio.o idle_task.o \
-	interrupts.o console_io.o irq.o led.o locks.o \
+	interrupts.o console_io.o irq_handler.o led.o locks.o \
 	mailbox.o memory.o mmu.o printk.o ps2-keyboard.o romfs.o \
 	scheduler.o string.o syscalls.o thermal.o time.o \
 	timer.o
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o atags.o uart.o boot.o framebuffer.o \
 		framebuffer_console.o gpio.o idle_task.o \
-		interrupts.o console_io.o div.o irq.o led.o locks.o \
+		interrupts.o console_io.o div.o irq_handler.o led.o locks.o \
 		mailbox.o memory.o mmu.o \
 		printk.o ps2-keyboard.o romfs.o \
 		scheduler.o string.o syscalls.o thermal.o time.o timer.o \
@@ -106,8 +106,8 @@ timer.o:	timer.c
 boot.o:	boot.s
 	$(CROSS)as $(ASFLAGS) -o boot.o boot.s
 
-irq.o:	irq.s
-	$(CROSS)as $(ASFLAGS) -o irq.o irq.s
+irq_handler.o:	irq_handler.s
+	$(CROSS)as $(ASFLAGS) -o irq_handler.o irq_handler.s
 
 locks.o:	locks.s
 	$(CROSS)as $(ASFLAGS) -o locks.o locks.s
