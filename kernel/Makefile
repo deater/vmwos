@@ -20,7 +20,7 @@ kernel.elf:	kernel_main.o \
 	framebuffer_console.o gpio.o idle_task.o \
 	interrupts.o console_io.o irq_handler.o led.o locks.o \
 	mailbox.o memory.o mmu.o printk.o ps2-keyboard.o romfs.o \
-	scheduler.o string.o syscalls.o thermal.o time.o \
+	scheduler.o string.o swi_handler.o syscalls.o thermal.o time.o \
 	timer.o
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o atags.o uart.o boot.o framebuffer.o \
@@ -28,7 +28,8 @@ kernel.elf:	kernel_main.o \
 		interrupts.o console_io.o div.o irq_handler.o led.o locks.o \
 		mailbox.o memory.o mmu.o \
 		printk.o ps2-keyboard.o romfs.o \
-		scheduler.o string.o syscalls.o thermal.o time.o timer.o \
+		scheduler.o string.o swi_handler.o \
+		syscalls.o thermal.o time.o timer.o \
 		-Map kernel.map -o kernel.elf
 
 
@@ -108,6 +109,9 @@ boot.o:	boot.s
 
 irq_handler.o:	irq_handler.s
 	$(CROSS)as $(ASFLAGS) -o irq_handler.o irq_handler.s
+
+swi_handler.o:	swi_handler.s
+	$(CROSS)as $(ASFLAGS) -o swi_handler.o swi_handler.s
 
 locks.o:	locks.s
 	$(CROSS)as $(ASFLAGS) -o locks.o locks.s

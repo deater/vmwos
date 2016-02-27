@@ -17,8 +17,7 @@ extern int blinking_enabled;
 /* Note!  Do not call a SWI from supervisor mode */
 /* as the svc_lr and svc_spr can get corrupted   */
 
-uint32_t __attribute__((interrupt("SWI"))) swi_handler(
-
+uint32_t swi_handler_c(
 	uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3) {
 
 	register long r7 asm ("r7");
@@ -167,30 +166,6 @@ uint32_t __attribute__((interrupt("SWI"))) swi_handler(
 			printk("Unknown syscall %d\n",r7);
 			break;
 	}
-
-
-	/* The SWI handler code restores all of the registers	*/
-	/* Before returning.  To get our result in r0 we have	*/
-	/* to push it into the place of the saved r0 on the	*/
-	/* stack.						*/
-#if 0
-	asm volatile(
-		"MRS      %[entry_spsr], spsr\n"
-		: [entry_spsr]"=r"(entry_spsr)
-		:
-		:
-		);
-
-	printk("SPSR exit=%x\n",entry_spsr);
-#endif
-
-	/* FIXME: This is a hack and fragile */
-	/* Need to get result onto user stack */
-
-	asm volatile("str %[result],[sp,#0]\n"
-		:	/* output */
-		:       [result] "r" (result) /* input */
-		:);	/* clobber */
 
 	return result;
 
