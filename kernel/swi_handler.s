@@ -9,6 +9,10 @@
 	@ Note: currently do not call swi from SVC mode or things
 	@       will get corrupted
 
+
+	@ Note, because it's a pain to find, the Linux equivelent is in
+	@	entry-armv.S and entry-common.S
+
 swi_handler:
 
 	push    {r0, r1, r2, r3, r4, r7, ip, lr}
