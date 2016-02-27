@@ -9,8 +9,12 @@ History:
 
 Building:
 ~~~~~~~~~
+
 	You will either need to build natively on an ARM
 	machine or cross compile.
+
+	Quickstart Debian:
+		apt-get install genromfs gcc-arm-none-eabi
 
 	To build natively, edit Makefile.inc and make
 	the CROSS variable be empty.
@@ -79,4 +83,4 @@ For more information:
 
 Vince Weaver
 vince@deater.net
-28 April 2015
+27 February 2016

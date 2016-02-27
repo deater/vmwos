@@ -10,6 +10,7 @@ all:	shell printa printb
 
 
 image:	shell printa printb
+	mkdir -p image
 	cp shell printa printb ./image
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
