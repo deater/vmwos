@@ -2,11 +2,11 @@
 #include <stdint.h>
 
 #include "memory.h"
-#include "printk.h"
-#include "string.h"
+#include "lib/printk.h"
+#include "lib/string.h"
 
 /* Initrd hack */
-#include "../userspace/initrd.h"
+#include "../../../userspace/initrd.h"
 
 
 static inline uint32_t htonl(uint32_t x) {

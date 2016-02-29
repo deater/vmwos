@@ -1,16 +1,16 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "printk.h"
+#include "lib/printk.h"
 #include "syscalls.h"
-#include "console_io.h"
-#include "framebuffer.h"
-#include "framebuffer_console.h"
+#include "drivers/console/console_io.h"
+#include "drivers/framebuffer/framebuffer.h"
+#include "drivers/framebuffer/framebuffer_console.h"
 #include "scheduler.h"
 #include "time.h"
 #include "interrupts.h"
 #include "bcm2835_periph.h"
 #include "mmio.h"
-#include "thermal.h"
+#include "drivers/thermal/thermal.h"
 
 extern int blinking_enabled;
 

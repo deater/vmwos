@@ -6,13 +6,14 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
 #include "bcm2835_periph.h"
 #include "mmio.h"
 #include "delay.h"
-#include "gpio.h"
-#include "console_io.h"
+#include "drivers/gpio/gpio.h"
+#include "drivers/console/console_io.h"
 #include "interrupts.h"
-#include "printk.h"
+#include "lib/printk.h"
 
 static int uart_initialized=0;
 

@@ -1,8 +1,9 @@
 #include <stdint.h>
-#include "atags.h"
-#include "printk.h"
+
+#include "boot/atags.h"
+#include "lib/printk.h"
 #include "hardware.h"
-#include "string.h"
+#include "lib/string.h"
 
 /* Original references */
 /* http://www.raspberrypi.org/forums/viewtopic.php?t=10889&p=123721 */

@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "console_io.h"
+#include "drivers/console/console_io.h"
 
 #define MAX_PRINT_SIZE 256
 

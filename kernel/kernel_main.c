@@ -1,29 +1,30 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "uart.h"
-#include "printk.h"
-#include "atags.h"
-#include "led.h"
+
+#include "drivers/serial/pl011_uart.h"
+#include "lib/printk.h"
+#include "boot/atags.h"
+#include "drivers/led/led.h"
 #include "delay.h"
-#include "timer.h"
+#include "drivers/timer/timer.h"
 #include "interrupts.h"
 #include "bcm2835_periph.h"
 #include "mmio.h"
 #include "memory.h"
 #include "syscalls.h"
 #include "hardware.h"
-#include "framebuffer.h"
-#include "framebuffer_console.h"
-#include "string.h"
+#include "drivers/framebuffer/framebuffer.h"
+#include "drivers/framebuffer/framebuffer_console.h"
+#include "lib/string.h"
 #include "scheduler.h"
 #include "idle_task.h"
-#include "ps2-keyboard.h"
+#include "drivers/keyboard/ps2-keyboard.h"
 #include "time.h"
 #include "mmu.h"
-#include "div.h"
-#include "thermal.h"
+#include "lib/div.h"
+#include "drivers/thermal/thermal.h"
 
-#define VERSION 11
+#define VERSION 12
 
 /* default, this is over-ridden later */
 uint32_t hardware_type=RPI_MODEL_B;

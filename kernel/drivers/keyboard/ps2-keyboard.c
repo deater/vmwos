@@ -5,11 +5,11 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "gpio.h"
-#include "printk.h"
-#include "ps2-keyboard.h"
+#include "drivers/gpio/gpio.h"
+#include "lib/printk.h"
+#include "drivers/keyboard/ps2-keyboard.h"
 #include "interrupts.h"
-#include "console_io.h"
+#include "drivers/console/console_io.h"
 #include "time.h"
 
 static int irq_num;
@@ -142,6 +142,8 @@ void translate_key(uint32_t key, int down) {
 	static uint32_t shift_state=0;
 	static uint32_t alt_state=0;
 	static uint32_t ctrl_state=0;
+
+	(void)alt_state;
 
 	ascii=translate[key];
 

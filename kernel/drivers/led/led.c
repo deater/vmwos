@@ -1,10 +1,11 @@
 #include <stdint.h>
+
 #include "bcm2835_periph.h"
-#include "led.h"
+#include "drivers/led/led.h"
 #include "mmio.h"
 #include "hardware.h"
-#include "gpio.h"
-#include "printk.h"
+#include "drivers/gpio/gpio.h"
+#include "lib/printk.h"
 
 /* Default for Model B */
 static uint32_t led_gpio=16;

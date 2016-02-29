@@ -6,12 +6,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "printk.h"
+#include "lib/printk.h"
 #include "mmio.h"
 
-#include "mailbox.h"
+#include "drivers/firmware/mailbox.h"
 
-#include "string.h"
+#include "lib/string.h"
 
 
 #define VC_TAG_GET_TEMP		0x00030006

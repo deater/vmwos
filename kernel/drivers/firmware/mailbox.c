@@ -5,10 +5,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "printk.h"
+#include "lib/printk.h"
 #include "mmio.h"
 
-#include "mailbox.h"
+#include "drivers/firmware/mailbox.h"
 
 int mailbox_write(unsigned int value, unsigned int channel) {
 

@@ -7,13 +7,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "printk.h"
+#include "lib/printk.h"
 #include "mmio.h"
 
-#include "mailbox.h"
-#include "framebuffer.h"
+#include "drivers/firmware/mailbox.h"
+#include "drivers/framebuffer/framebuffer.h"
 
-#include "string.h"
+#include "lib/string.h"
 
 static uint32_t debug=1;
 

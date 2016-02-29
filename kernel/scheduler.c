@@ -1,10 +1,11 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "printk.h"
-#include "string.h"
+
+#include "lib/printk.h"
+#include "lib/string.h"
 #include "memory.h"
 #include "scheduler.h"
-#include "romfs.h"
+#include "fs/romfs.h"
 
 int userspace_started=0;
 int current_process=0;

@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "div.h"
-#include "printk.h"
+#include "lib/div.h"
+#include "lib/printk.h"
 
 /* ARMV6 has no division instruction	*/
 /* calculate  q=(dividend/divisor)	*/

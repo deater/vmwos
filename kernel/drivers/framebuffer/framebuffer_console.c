@@ -4,19 +4,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "printk.h"
+#include "lib/printk.h"
 #include "mmio.h"
 
-#include "framebuffer.h"
-#include "framebuffer_console.h"
+#include "drivers/framebuffer/framebuffer.h"
+#include "drivers/framebuffer/framebuffer_console.h"
 
-#include "uart.h"
+/* Layering violation? */
+#include "drivers/serial/pl011_uart.h"
 
 #include "tbfont.h"
 #include "medieval_font.h"
 #include "marie_font.h"
 
-#include "string.h"
+#include "lib/string.h"
 
 #define ANSI_BLACK	0
 #define ANSI_RED	1

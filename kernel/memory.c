@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "printk.h"
+#include "lib/printk.h"
 
 #define MAX_MEMORY	(1024*1024*1024)
 #define CHUNK_SIZE	4096

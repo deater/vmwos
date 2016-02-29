@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#include "lib/string.h"
 
 int strncmp(const char *s1, const char *s2, uint32_t n) {
 
@@ -38,7 +39,7 @@ int memcmp(const char *s1, const char *s2, uint32_t n) {
 }
 
 
-void *memcpy(void *dest, const void *src, size_t n) {
+void *memcpy(void *dest, const void *src, uint32_t n) {
 
         int i;
 
@@ -53,9 +54,9 @@ void *memcpy(void *dest, const void *src, size_t n) {
         return dest;
 }
 
-char *strncpy(char *dest, const char *src, size_t n) {
+char *strncpy(char *dest, const char *src, uint32_t n) {
 
-	size_t i;
+	uint32_t i;
 
 	for(i=0; i<n; i++) {
 		dest[i]=src[i];

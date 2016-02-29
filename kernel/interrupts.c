@@ -2,13 +2,13 @@
 #include <stdint.h>
 #include "bcm2835_periph.h"
 #include "mmio.h"
-#include "printk.h"
+#include "lib/printk.h"
 #include "time.h"
 #include "scheduler.h"
 
-#include "ps2-keyboard.h"
-#include "uart.h"
-#include "timer.h"
+#include "drivers/keyboard/ps2-keyboard.h"
+#include "drivers/serial/pl011_uart.h"
+#include "drivers/timer/timer.h"
 
 #define MAX_IRQ	64
 

@@ -1,8 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "uart.h"
-#include "framebuffer_console.h"
+
+#include "drivers/serial/pl011_uart.h"
+#include "drivers/framebuffer/framebuffer_console.h"
 #include "locks.h"
 
 #define INPUT_BUFFER_SIZE	256
