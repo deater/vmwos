@@ -50,7 +50,9 @@ int irq_disable(int which_one) {
 
 }
 
-void user_reg_dump(void) {
+#if 0
+
+static void user_reg_dump(void) {
 
 	unsigned long regs[15];
 	unsigned long saved_sp;
@@ -72,12 +74,7 @@ void user_reg_dump(void) {
 	printk("\n");
 }
 
-
-
-void interrupt_handle_unknown(int which) {
-
-	printk("Unknown interrupt happened %x!\n",which);
-}
+#endif
 
 void interrupt_handler_c(uint32_t saved_sp) {
 
@@ -106,7 +103,7 @@ void interrupt_handler_c(uint32_t saved_sp) {
 	}
 	else {
 		if (!handled) {
-			interrupt_handle_unknown(basic_pending);
+			printk("Unknown interrupt happened %x!\n",basic_pending);
 		}
 		return;
 	}
