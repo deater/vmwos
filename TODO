@@ -7,6 +7,7 @@ Kernel routines:
 Performance:
 	MMU/L1 cache support
 	tophalf/bottomhalf IRQ split
+	performance counter driver
 
 Systemcalls to add:
 	nanosleep
