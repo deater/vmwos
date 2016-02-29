@@ -112,7 +112,7 @@ void interrupt_handler_c(uint32_t saved_sp) {
 
 	timer_interrupt_handler();
 
-//	schedule((long *)saved_sp);
+	schedule((long *)saved_sp);
 
 	return;
 }

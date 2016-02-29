@@ -23,6 +23,10 @@ interrupt_handler:
 					@ the scheduler uses this to fix
 					@ stack if we context switch
 
+	mov	r0,sp			@ point to current saved info
+					@ scheduler might use it to
+					@ context switch
+
 	@ Call into the C routine
 
 	bl	interrupt_handler_c
