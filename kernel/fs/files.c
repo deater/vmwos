@@ -8,6 +8,8 @@
 #include "fs/romfs/romfs.h"
 #include "lib/printk.h"
 
+static int debug=1;
+
 #define MAX_FD	32
 
 struct fd_info_t {
@@ -25,6 +27,8 @@ uint32_t fd_allocate(uint32_t inode) {
 
 	uint32_t fd;
 
+	if (debug) printk("Attempting to allocate fd for inode %x\n",inode);
+
 	fd=0;
 	while(1) {
 		if (fd_table[fd].valid==0) {
@@ -39,6 +43,9 @@ uint32_t fd_allocate(uint32_t inode) {
 			break;
 		}
 	}
+
+	if (debug) printk("### Allocated fd %d\n",fd);
+
 	return fd;
 }
 
@@ -57,6 +64,10 @@ uint32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 
 	uint32_t result;
 	uint32_t inode;
+
+	if (debug) {
+		printk("### Trying to open %s\n",pathname);
+	}
 
 	inode=romfs_get_inode(pathname);
 	if (inode<0) {
@@ -108,7 +119,7 @@ uint32_t write(uint32_t fd, void *buf, uint32_t count) {
 	return result;
 }
 
-void fd_table_int(void) {
+void fd_table_init(void) {
 	int i;
 
 	for(i=0;i<MAX_FD;i++) {

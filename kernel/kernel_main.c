@@ -24,6 +24,7 @@
 #include "mmu.h"
 #include "lib/div.h"
 #include "drivers/thermal/thermal.h"
+#include "fs/files.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -153,6 +154,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	//l1_data_cache_enable();
 	l1_instruction_cache_enable();
 
+	/* Init the file descriptor table */
+	fd_table_init();
 
 	/* Initialize the ramdisk */
 	ramdisk_init(initrd_image,sizeof(initrd_image));
