@@ -7,8 +7,7 @@
 #include "drivers/block/ramdisk.h"
 
 struct ramdisk_info_t {
-
-	char *start;
+	unsigned char *start;
 	uint32_t length;
 	uint32_t flags;
 } ramdisk_info;
