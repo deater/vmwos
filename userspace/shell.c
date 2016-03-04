@@ -94,21 +94,22 @@ int main(int argc, char **argv) {
 static int print_help(void) {
 
 	printf("VMWos Shell Version %s\n\n",VERSION);
-	printf("\tblink on/off - turns on/off heartbeat LED\n");
-	printf("\tcls          - clears the screen\n");
-	printf("\tcolor X      - set text to color #X\n");
-	printf("\techo X       - prints string X\n");
-	printf("\tfont X       - sets the font to font #X\n");
-	printf("\tgetpid       - print current process ID\n");
-	printf("\tgradient     - make background look cool\n");
-	printf("\thelp         - prints this help message\n");
-	printf("\treset        - reset the machine\n");
-	printf("\trun X        - run program #X\n");
-	printf("\tstop X       - stop program #X\n");
-	printf("\ttemp         - print the temperature\n");
-	printf("\ttime         - print seconds since boot\n");
-	printf("\ttb1          - play TB1\n");
-	printf("\tver          - print version\n");
+	printf("\tblink on/off	- turns on/off heartbeat LED\n");
+	printf("\tcat X		- dump file to screen\n");
+	printf("\tcls		- clears the screen\n");
+	printf("\tcolor X	- set text to color #X\n");
+	printf("\techo X	- prints string X\n");
+	printf("\tfont X	- sets the font to font #X\n");
+	printf("\tgetpid	- print current process ID\n");
+	printf("\tgradient	- make background look cool\n");
+	printf("\thelp		- prints this help message\n");
+	printf("\treset		- reset the machine\n");
+	printf("\trun X		- run program #X\n");
+	printf("\tstop X	- stop program #X\n");
+	printf("\ttemp		- print the temperature\n");
+	printf("\ttime		- print seconds since boot\n");
+	printf("\ttb1		- play TB1\n");
+	printf("\tver		- print version\n");
 	printf("\n");
 
 	return 0;
@@ -120,6 +121,23 @@ static int parse_input(char *string) {
 
 	if (!strncmp(string,"echo",4)) {
 		printf("%s\n",string+5);
+	}
+	else if (!strncmp(string,"cat",3)) {
+		int fd,st_result;
+		char buffer[128];
+
+		fd=open(string+4,O_RDONLY,0);
+		if (fd<0) {
+			printf("Error opening file %s\n",string+4);
+		}
+		else {
+			while(1) {
+				st_result=read(fd,buffer,128);
+				if (st_result<1) break;
+				write(1,buffer,st_result);
+			}
+			close(fd);
+		}
 	}
 	else if (!strncmp(string,"cls",3)) {
 		printf("\n\r\033[2J\n");

@@ -5,6 +5,8 @@
 
 #define __NR_read	3
 #define __NR_write	4
+#define __NR_open	5
+#define __NR_close	6
 #define __NR_time	13
 #define __NR_getpid	20
 #define __NR_ioctl	54
@@ -39,6 +41,36 @@ uint32_t write(int fd, const void *buf, uint32_t size) {
 		"svc #0\n"
 		: "=r"(r0)
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
+		: "memory");
+
+	return r0;
+}
+
+uint32_t open(char *filename, uint32_t flags, uint32_t mode) {
+
+	register long r7 __asm__("r7") = __NR_open;
+	register long r0 __asm__("r0") = (long)filename;
+	register long r1 __asm__("r1") = flags;
+	register long r2 __asm__("r2") = mode;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
+		: "memory");
+
+	return r0;
+}
+
+uint32_t close(uint32_t fd) {
+
+	register long r7 __asm__("r7") = __NR_open;
+	register long r0 __asm__("r0") = fd;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
 		: "memory");
 
 	return r0;

@@ -5,9 +5,15 @@ struct timespec {
 
 int nanosleep(const struct timespec *req, struct timespec *rem);
 
+/* See /usr/include/bits/fcntl-linux.h */
+#define O_RDONLY             00
+#define O_WRONLY             01
+#define O_RDWR               02
+
 uint32_t write(int fd, const void *buf, uint32_t count);
 uint32_t read(int fd, void *buf, size_t count);
-
+uint32_t open(char *filename, uint32_t flags, uint32_t mode);
+uint32_t close(uint32_t fd);
 
 #define NCCS 32
 
