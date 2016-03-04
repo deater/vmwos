@@ -1,20 +1,22 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "errors.h"
+
 #include "drivers/console/console_io.h"
 #include "fs/files.h"
 #include "lib/printk.h"
 
 uint32_t close(uint32_t fd) {
 
-	return 0;
+	return ENOSYS;
 
 }
 
 
 uint32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 
-	return 0;
+	return ENOSYS;
 
 }
 
