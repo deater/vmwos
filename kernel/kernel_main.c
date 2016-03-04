@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "drivers/block/ramdisk.h"
 #include "drivers/serial/pl011_uart.h"
 #include "lib/printk.h"
 #include "boot/atags.h"
@@ -23,6 +24,10 @@
 #include "mmu.h"
 #include "lib/div.h"
 #include "drivers/thermal/thermal.h"
+
+/* Initrd hack */
+#include "../userspace/initrd.h"
+
 
 #define VERSION 12
 
@@ -149,6 +154,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	l1_instruction_cache_enable();
 
 
+	/* Initialize the ramdisk */
+	ramdisk_init(initrd_image,sizeof(initrd_image));
 
 
 	/* Memory Benchmark */

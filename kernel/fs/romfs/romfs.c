@@ -2,12 +2,14 @@
 #include <stdint.h>
 
 #include "memory.h"
+
 #include "lib/printk.h"
 #include "lib/string.h"
 #include "lib/endian.h"
 
-/* Initrd hack */
-#include "../../../userspace/initrd.h"
+#include "drivers/block/ramdisk.h"
+
+#define MAX_FILENAME_SIZE	256
 
 struct romfs_header_t {
 	char magic[8];
@@ -52,7 +54,9 @@ int load_romfs(char *name,char **binary_start,char **stack_start,
 	*stack_start=(char *)memory_allocate(*stack_size);
 
 	/* Load executable */
-	memcpy(*binary_start,initrd_image+file.data_start,*size);
+	ramdisk_read(file.data_start,*size,*binary_start);
+
+//	memcpy(*binary_start,initrd_image+file.data_start,*size);
 
 	return 0;
 }
@@ -60,7 +64,11 @@ int load_romfs(char *name,char **binary_start,char **stack_start,
 
 int romfs_read(void *buffer, int *offset, int size) {
 
-	memcpy(buffer,initrd_image+*offset,size);
+	/* Read from underlying block layer */
+	/* FIXME: hardcoded to the ramdisk */
+	ramdisk_read(*offset,size,buffer);
+
+	/* Update offset pointer */
 	(*offset)+=size;
 
 	return 0;
@@ -76,6 +84,7 @@ int open_romfs_file(char *name,
 	int offset=0;
 
 	char buffer[16];
+	char filename[MAX_FILENAME_SIZE];
 
 	/* Read header */
 	romfs_read(header.magic,&offset,8);
@@ -138,9 +147,12 @@ int open_romfs_file(char *name,
 
 		offset=file->filename_start;
 
-		if (!strncmp(name,
-			(char *)initrd_image+file->filename_start,
-			strlen(name))) return 0;
+		ramdisk_read_string(file->filename_start,
+				MAX_FILENAME_SIZE,
+				filename);
+
+		/* Match filename */
+		if (!strncmp(name,filename,strlen(name))) return 0;
 
 		if (debug) {
 			while(1) {
