@@ -9,6 +9,8 @@
 
 #include "drivers/block/ramdisk.h"
 
+#include "fs/romfs/romfs.h"
+
 #define MAX_FILENAME_SIZE	256
 
 struct romfs_header_t {

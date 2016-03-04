@@ -5,7 +5,7 @@
 #include "lib/string.h"
 #include "memory.h"
 #include "scheduler.h"
-#include "fs/romfs.h"
+#include "fs/romfs/romfs.h"
 
 int userspace_started=0;
 int current_process=0;
