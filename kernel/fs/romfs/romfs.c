@@ -13,7 +13,10 @@
 
 #define MAX_FILENAME_SIZE	256
 
-int romfs_read(void *buffer, int *offset, int size) {
+/* offset where files start at */
+static uint32_t files_start;
+
+int romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
 
 	/* Read from underlying block layer */
 	/* FIXME: hardcoded to the ramdisk */
@@ -25,6 +28,15 @@ int romfs_read(void *buffer, int *offset, int size) {
 	return 0;
 }
 
+int romfs_read_noinc(void *buffer, uint32_t offset, uint32_t size) {
+
+	/* Read from underlying block layer */
+	/* FIXME: hardcoded to the ramdisk */
+	ramdisk_read(offset,size,buffer);
+
+	return 0;
+}
+
 int open_romfs_file(char *name,
 		struct romfs_file_header_t *file) {
 
@@ -32,7 +44,7 @@ int open_romfs_file(char *name,
 	int temp_int;
 	unsigned char ch;
 	struct romfs_header_t header;
-	int offset=0;
+	uint32_t offset=0;
 
 	char buffer[16];
 	char filename[MAX_FILENAME_SIZE];
@@ -127,4 +139,110 @@ int open_romfs_file(char *name,
 	}
 
 	return -1;
+}
+
+uint32_t romfs_get_inode(const char *name) {
+
+	int temp_int;
+	uint32_t offset=files_start;
+	struct romfs_file_header_t file;
+
+	char buffer[16];
+	char filename[MAX_FILENAME_SIZE];
+
+	while(1) {
+		file.addr=offset;
+
+		/* Next */
+		romfs_read_noinc(&temp_int,offset,4);
+		file.next=ntohl(temp_int)&~0xf;
+
+		offset+=16;
+		file.filename_start=offset;
+		while(1) {
+			romfs_read(buffer,&offset,16);
+			if (buffer[15]==0) break;	/* NUL terminated */
+		}
+
+		offset=file.filename_start;
+
+		ramdisk_read_string(file.filename_start,
+				MAX_FILENAME_SIZE,
+				filename);
+
+		/* Match filename */
+		if (!strncmp(name,filename,strlen(name))) {
+			return offset;
+		}
+
+		offset=file.next;
+
+		if (file.next==0) break;
+	}
+
+	return -1;
+}
+
+
+uint32_t romfs_mount(char *name) {
+
+	int debug=0;
+	int temp_int;
+	struct romfs_header_t header;
+	uint32_t offset=0;
+
+	char buffer[16];
+
+	/* Read header */
+	romfs_read(header.magic,&offset,8);
+	if (memcmp(header.magic,"-rom1fs-",8)) {
+		printk("Wrong magic number!\n");
+		return -1;
+	}
+
+	if (debug) printk("Found romfs filesystem!\n");
+
+	/* Read size */
+	romfs_read(&temp_int,&offset,4);
+	header.size=ntohl(temp_int);
+
+	if (debug) printk("Size: %d bytes\n",header.size);
+
+	/* Read checksum */
+	romfs_read(&temp_int,&offset,4);
+	header.checksum=ntohl(temp_int);
+
+	if (debug) printk("Checksum: %x\n",header.size);
+	/* FIXME: validate checksum */
+
+	/* Read volume name */
+	/* FIXME, various overflow possibilities */
+	/* We only record last 16 bytes in header */
+	/* We really don't care about volume name */
+	while(1) {
+		romfs_read(buffer,&offset,16);
+		memcpy(header.volume_name,buffer,16);
+		if (buffer[15]==0) break;	/* NUL terminated */
+	}
+	if (debug) {
+		printk("Volume: %s Data starts at %x\n",
+			header.volume_name,offset);
+	}
+
+	files_start=offset;
+
+	return 0;
+
+}
+
+
+uint32_t romfs_read_file(uint32_t inode,
+			uint32_t offset,
+			void *buf,uint32_t count) {
+
+	/* FIXME: lots of limit checks */
+
+	memcpy(buf,(void *)inode+offset,count);
+
+	return count;
 }

@@ -2,7 +2,9 @@
 /* /usr/include/asm-generic/errno.h			*/
 /* /usr/include/asm-generic/errno-base.h		*/
 
+#define ENOENT	2	/* File not found..... */
 #define EBADF	9	/* Bad file descriptor */
+#define ENFILE	23	/* Not enough fds..... */
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */
 
