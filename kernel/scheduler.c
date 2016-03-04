@@ -1,11 +1,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "lib/printk.h"
-#include "lib/string.h"
+#include "exec.h"
 #include "memory.h"
 #include "scheduler.h"
-#include "fs/romfs/romfs.h"
+
+#include "lib/printk.h"
+#include "lib/string.h"
+
+
 
 int userspace_started=0;
 int current_process=0;
@@ -48,7 +51,7 @@ int load_process(char *name, int type, char *data, int size, int stack_size) {
 	/* UNLOCK */
 
 	if (type==PROCESS_FROM_DISK) {
-		load_romfs(name,&binary_start,&stack_start,&size,&stack_size);
+		load_exe(name,&binary_start,&stack_start,&size,&stack_size);
 	}
 	else if (type==PROCESS_FROM_RAM) {
 		/* Allocate Memory */

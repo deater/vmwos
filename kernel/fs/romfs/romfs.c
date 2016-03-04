@@ -13,57 +13,6 @@
 
 #define MAX_FILENAME_SIZE	256
 
-struct romfs_header_t {
-	char magic[8];
-	int size;
-	int checksum;
-	char volume_name[17];
-	int first_offset;
-};
-
-struct romfs_file_header_t {
-	int addr;
-	int next;
-	int type;
-	int special;
-	int size;
-	int checksum;
-	int filename_start;
-	int data_start;
-};
-
-
-int open_romfs_file(char *name,
-		struct romfs_file_header_t *file);
-
-
-int load_romfs(char *name,char **binary_start,char **stack_start,
-		int *size, int *stack_size) {
-
-	struct romfs_file_header_t file;
-	int result;
-
-	result=open_romfs_file(name,&file);
-	if (result<0) {
-		return result;
-	}
-
-	*size=file.size;
-	*stack_size=8192;
-
-	/* Allocate Memory */
-	*binary_start=(char *)memory_allocate(*size);
-	*stack_start=(char *)memory_allocate(*stack_size);
-
-	/* Load executable */
-	ramdisk_read(file.data_start,*size,*binary_start);
-
-//	memcpy(*binary_start,initrd_image+file.data_start,*size);
-
-	return 0;
-}
-
-
 int romfs_read(void *buffer, int *offset, int size) {
 
 	/* Read from underlying block layer */
