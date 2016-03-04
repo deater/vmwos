@@ -3,7 +3,9 @@ include ../Makefile_kernel.inc
 
 all:	drivers.a
 
-drivers.a:	console/console.a \
+drivers.a:	\
+		block/block.a \
+		console/console.a \
 		firmware/firmware.a \
 		framebuffer/framebuffer.a \
 		gpio/gpio.a \
@@ -14,6 +16,7 @@ drivers.a:	console/console.a \
 		timer/timer.a
 
 	$(CROSS)$(AR) crsT drivers.a \
+		block/block.a \
 		console/console.a \
 		firmware/firmware.a \
 		framebuffer/framebuffer.a \
@@ -23,6 +26,9 @@ drivers.a:	console/console.a \
 		serial/serial.a \
 		thermal/thermal.a \
 		timer/timer.a
+
+block/block.a:	force_look
+	cd block && make
 
 console/console.a:	force_look
 	cd console && make
@@ -57,6 +63,7 @@ force_look:
 
 clean:
 	rm -f *~ *.o *.a
+	cd block && make clean
 	cd console && make clean
 	cd firmware && make clean
 	cd framebuffer && make clean
