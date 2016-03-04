@@ -5,6 +5,7 @@
 #include "drivers/console/console_io.h"
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
+#include "fs/files.h"
 #include "scheduler.h"
 #include "time.h"
 #include "interrupts.h"
@@ -62,26 +63,21 @@ uint32_t swi_handler_c(
 	switch(r7) {
 		case SYSCALL_READ:
 //			printk("Trying to read: %d %x %d\n",r0,r1,r2);
-			if (r0==0) {
-				result=console_read((char *)r1,(size_t)r2);
-			}
-			else {
-				printk("Attempting to read from unsupported fd %d\n",r0);
-				result=-1;
-			}
+			result=read(r0,(char *)r1,(size_t)r2);
 			break;
 
 		case SYSCALL_WRITE:
 //			printk("Trying to write: %d %x %d\n",
 //				r0,r1,r2);
-			if ((r0==1) || (r0==2)) {
-				result = console_write((char *)r1, (size_t)r2);
-//				printk("After write, result=%d\n",result);
-			}
-			else {
-				printk("Attempting to write unsupported fd %d\n",r0);
-				result=-1;
-			}
+			result=write(r0,(char *)r1,(size_t)r2);
+			break;
+
+		case SYSCALL_OPEN:
+			result=open((char *)r0,r1,r2);
+			break;
+
+		case SYSCALL_CLOSE:
+			result=close(r0);
 			break;
 
 		case SYSCALL_TIME:
