@@ -9,14 +9,14 @@
 
 uint32_t close(uint32_t fd) {
 
-	return ENOSYS;
+	return -ENOSYS;
 
 }
 
 
 uint32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 
-	return ENOSYS;
+	return -ENOSYS;
 
 }
 
@@ -29,7 +29,7 @@ uint32_t read(uint32_t fd, void *buf, uint32_t count) {
 	}
 	else {
 		printk("Attempting to read from unsupported fd %d\n",fd);
-		result=-1;
+		result=-EBADF;
 	}
 	return result;
 }
@@ -43,7 +43,7 @@ uint32_t write(uint32_t fd, void *buf, uint32_t count) {
 	}
 	else {
 		printk("Attempting to write unsupported fd %d\n",fd);
-		result=-1;
+		result=-EBADF;
 	}
 	return result;
 }
