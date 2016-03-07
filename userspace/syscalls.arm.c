@@ -64,7 +64,7 @@ uint32_t open(char *filename, uint32_t flags, uint32_t mode) {
 
 uint32_t close(uint32_t fd) {
 
-	register long r7 __asm__("r7") = __NR_open;
+	register long r7 __asm__("r7") = __NR_close;
 	register long r0 __asm__("r0") = fd;
 
 	asm volatile(
