@@ -11,6 +11,7 @@
 #define __NR_getpid	20
 #define __NR_ioctl	54
 #define __NR_reboot	88
+#define __NR_stat	106
 #define __NR_nanosleep  162
 
 uint32_t read(int fd, void *buf, size_t count) {
@@ -92,6 +93,20 @@ int getpid(void) {
 
 }
 
+uint32_t stat(const char *pathname, void *buf) {
+
+	register long r7 __asm__("r7") = __NR_stat;
+	register long r0 __asm__("r0") = (long)pathname;
+	register long r1 __asm__("r1") = (long)buf;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return r0;
+}
 
 int nanosleep(const struct timespec *req, struct timespec *rem) {
 

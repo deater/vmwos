@@ -14,6 +14,7 @@
 #define SYSCALL_GETPID		20
 #define SYSCALL_IOCTL		54
 #define SYSCALL_REBOOT		88
+#define SYSCALL_STAT		106
 #define SYSCALL_NANOSLEEP	162
 
 /* VMW syscalls */

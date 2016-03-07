@@ -80,6 +80,10 @@ uint32_t swi_handler_c(
 			result=close(r0);
 			break;
 
+		case SYSCALL_STAT:
+			result=stat(r0,r1);
+			break;
+
 		case SYSCALL_TIME:
 			result=time_since_boot();
 			break;
