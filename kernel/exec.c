@@ -8,6 +8,7 @@
 
 #include "drivers/block/ramdisk.h"
 
+#include "fs/files.h"
 #include "fs/romfs/romfs.h"
 
 /* Load raw executable */
@@ -17,15 +18,16 @@ int load_exe(char *name,char **binary_start,char **stack_start,
 
 	int result;
 	int32_t inode;
+	struct stat stat_info;
 
 	inode=romfs_get_inode(name);
 	if (inode<0) {
 		return result;
 	}
 
-	// FIXME: stat
+	result=romfs_stat(inode,&stat_info);
+	*size=stat_info.st_size;
 
-	*size=8192; //file.size;
 	*stack_size=8192;
 
 	/* Allocate Memory */
@@ -34,9 +36,6 @@ int load_exe(char *name,char **binary_start,char **stack_start,
 
 	/* Load executable */
 	romfs_read_file(inode,0,*binary_start,*size);
-//	ramdisk_read(file.data_start,*size,*binary_start);
-
-//	memcpy(*binary_start,initrd_image+file.data_start,*size);
 
 	return 0;
 }
