@@ -23,4 +23,4 @@ int open_romfs_file(char *name,
 uint32_t romfs_get_inode(const char *name);
 uint32_t romfs_read_file(uint32_t inode, uint32_t offset,
 			void *buf,uint32_t count);
-
+uint32_t romfs_mount(void);

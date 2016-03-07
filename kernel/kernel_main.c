@@ -25,6 +25,7 @@
 #include "lib/div.h"
 #include "drivers/thermal/thermal.h"
 #include "fs/files.h"
+#include "fs/romfs/romfs.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -159,7 +160,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Initialize the ramdisk */
 	ramdisk_init(initrd_image,sizeof(initrd_image));
-
+	romfs_mount();
 
 	/* Memory Benchmark */
 #if 1

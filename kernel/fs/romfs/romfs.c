@@ -1,3 +1,12 @@
+/* See linux/Documentation/filesystems/romfs.txt */
+/* structs are on 16-byte boundaries */
+
+/*            01234567 */
+/* Offset: 0: -rom1fs- */
+/*         8: size / checksum */
+/*        16: volumename (multiple of 16-byte chunks) */
+/*        xx: file-headers    */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -13,8 +22,10 @@
 
 #define MAX_FILENAME_SIZE	256
 
+static int debug=1;
+
 /* offset where files start at */
-static uint32_t files_start;
+static uint32_t file_headers_start=0;
 
 int romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
 
@@ -28,7 +39,7 @@ int romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
 	return 0;
 }
 
-int romfs_read_noinc(void *buffer, uint32_t offset, uint32_t size) {
+static int romfs_read_noinc(void *buffer, uint32_t offset, uint32_t size) {
 
 	/* Read from underlying block layer */
 	/* FIXME: hardcoded to the ramdisk */
@@ -141,22 +152,26 @@ int open_romfs_file(char *name,
 	return -1;
 }
 
+/* We cheat and just use the file header offset as the inode */
 uint32_t romfs_get_inode(const char *name) {
 
 	int temp_int;
-	uint32_t offset=files_start;
+	uint32_t offset=file_headers_start;
 	struct romfs_file_header_t file;
 
 	char buffer[16];
 	char filename[MAX_FILENAME_SIZE];
 
+	if (debug) printk("romfs: Trying to get inode for file %s\n",name);
+
 	while(1) {
 		file.addr=offset;
 
-		/* Next */
+		/* Get points to next file */
 		romfs_read_noinc(&temp_int,offset,4);
 		file.next=ntohl(temp_int)&~0xf;
 
+		/* Get current filename, which is in chunks of 16 bytes */
 		offset+=16;
 		file.filename_start=offset;
 		while(1) {
@@ -169,6 +184,8 @@ uint32_t romfs_get_inode(const char *name) {
 		ramdisk_read_string(file.filename_start,
 				MAX_FILENAME_SIZE,
 				filename);
+
+		if (debug) printk("%s is %s? %x\n",name,filename,offset);
 
 		/* Match filename */
 		if (!strncmp(name,filename,strlen(name))) {
@@ -184,9 +201,8 @@ uint32_t romfs_get_inode(const char *name) {
 }
 
 
-uint32_t romfs_mount(char *name) {
+uint32_t romfs_mount(void) {
 
-	int debug=0;
 	int temp_int;
 	struct romfs_header_t header;
 	uint32_t offset=0;
@@ -194,42 +210,44 @@ uint32_t romfs_mount(char *name) {
 	char buffer[16];
 
 	/* Read header */
-	romfs_read(header.magic,&offset,8);
+	romfs_read_noinc(header.magic,offset,8);
 	if (memcmp(header.magic,"-rom1fs-",8)) {
 		printk("Wrong magic number!\n");
 		return -1;
 	}
-
+	offset+=8;
 	if (debug) printk("Found romfs filesystem!\n");
 
 	/* Read size */
-	romfs_read(&temp_int,&offset,4);
+	romfs_read_noinc(&temp_int,offset,4);
 	header.size=ntohl(temp_int);
-
-	if (debug) printk("Size: %d bytes\n",header.size);
+	offset+=4;
+	if (debug) printk("\tSize: %d bytes\n",header.size);
 
 	/* Read checksum */
-	romfs_read(&temp_int,&offset,4);
+	romfs_read_noinc(&temp_int,offset,4);
 	header.checksum=ntohl(temp_int);
-
-	if (debug) printk("Checksum: %x\n",header.size);
+	offset+=4;
 	/* FIXME: validate checksum */
+	if (debug) printk("\tChecksum: %x\n",header.size);
+
 
 	/* Read volume name */
 	/* FIXME, various overflow possibilities */
 	/* We only record last 16 bytes in header */
 	/* We really don't care about volume name */
 	while(1) {
-		romfs_read(buffer,&offset,16);
+		romfs_read_noinc(buffer,offset,16);
 		memcpy(header.volume_name,buffer,16);
+		offset+=16;
 		if (buffer[15]==0) break;	/* NUL terminated */
 	}
 	if (debug) {
-		printk("Volume: %s Data starts at %x\n",
+		printk("\tVolume: %s, file_headers start at %x\n",
 			header.volume_name,offset);
 	}
 
-	files_start=offset;
+	file_headers_start=offset;
 
 	return 0;
 
