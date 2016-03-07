@@ -10,18 +10,22 @@
 
 #include "fs/romfs/romfs.h"
 
+/* Load raw executable */
+/* We don't have a file format yet */
 int load_exe(char *name,char **binary_start,char **stack_start,
 		int *size, int *stack_size) {
 
-	struct romfs_file_header_t file;
 	int result;
+	int32_t inode;
 
-	result=open_romfs_file(name,&file);
-	if (result<0) {
+	inode=romfs_get_inode(name);
+	if (inode<0) {
 		return result;
 	}
 
-	*size=file.size;
+	// FIXME: stat
+
+	*size=8192; //file.size;
 	*stack_size=8192;
 
 	/* Allocate Memory */
@@ -29,7 +33,8 @@ int load_exe(char *name,char **binary_start,char **stack_start,
 	*stack_start=(char *)memory_allocate(*stack_size);
 
 	/* Load executable */
-	ramdisk_read(file.data_start,*size,*binary_start);
+	romfs_read_file(inode,0,*binary_start,*size);
+//	ramdisk_read(file.data_start,*size,*binary_start);
 
 //	memcpy(*binary_start,initrd_image+file.data_start,*size);
 
