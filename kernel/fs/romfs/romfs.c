@@ -290,21 +290,19 @@ int32_t romfs_read_file(uint32_t inode,
 	if (debug) printk("romfs: Attempting to read %d bytes from inode %x offset %d\n",
 			count,inode,file_offset);
 
-	/* 0: Next */
-	header_offset=inode;
 
-	/* 4: type */
-	header_offset+=4;
+	header_offset=inode;		/* 0: Next */
 
-	/* 8: Size */
-	header_offset+=4;
+	header_offset+=4;		/* 4: type */
+
+	header_offset+=4;		/* 8: Size */
 	romfs_read_noinc(&temp_int,header_offset,4);
 	size=ntohl(temp_int);
 
-	/* 12: Checksum */
-	header_offset+=4;
+	header_offset+=4;		/* 12: Checksum */
 
-	/* 16: filename */
+
+	header_offset+=4;		/* 16: filename */
 	name_length=romfs_read_string(header_offset,NULL,0);
 	header_offset+=name_length;
 	if (debug) printk("romfs: inode %d name_length %d header_offset %d\n",

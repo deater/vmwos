@@ -118,8 +118,13 @@ int32_t write(uint32_t fd, void *buf, uint32_t count) {
 	int32_t result;
 
 	if (fd==2) {
+		int i;
 		char *string = (char *)buf;
 		printk("Writing %d bytes, %d\n",count,string[count-1]);
+		for(i=0;i<count;i++) {
+			printk("%x ",string[i]);
+		}
+		printk("\n");
 	}
 
 	if ((fd==1) || (fd==2)) {
