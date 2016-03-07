@@ -7,10 +7,14 @@
 /*        16: volumename (multiple of 16-byte chunks) */
 /*        xx: file-headers    */
 
+/* File header info */
+/* Offset: 0: next / spec.info    --- next is zero if end */
+/*         8: size / checksum */
+/*        16: filename (multiple of 16-byte chunks) */
+/*        xx: file data */
+
 #include <stddef.h>
 #include <stdint.h>
-
-#include "memory.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"
@@ -24,10 +28,58 @@
 
 static int debug=1;
 
-/* offset where files start at */
+/* offset where files start */
 static uint32_t file_headers_start=0;
 
-int romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
+static int32_t romfs_read_noinc(void *buffer, uint32_t offset, uint32_t size) {
+
+	/* Read from underlying block layer */
+	/* FIXME: hardcoded to the ramdisk */
+	ramdisk_read(offset,size,buffer);
+
+	return 0;
+}
+
+/* romfs strings are nul-terminated and come in 16-byte chunks */
+static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
+
+	char temp_buffer[16];
+	int32_t our_offset=offset;
+	int32_t max_stringsize=size;
+	int32_t max_length;
+
+	/* make the output an empty string */
+	buffer[0]=0;
+
+	while(1) {
+		/* read 16-byte chunk from the filesystem */
+		romfs_read_noinc(temp_buffer,our_offset,16);
+
+		/* Make sure to not overrun the buffer		*/
+		/* note, even if our output string is full	*/
+		/* we need to keep iterating so we can		*/
+		/* return the total size of the on-disk string	*/
+		if (max_stringsize>0) {
+			if (max_stringsize>16) {
+				max_length=16;
+			}
+			else {
+				max_length=max_stringsize;
+			}
+			strncpy(buffer,temp_buffer,max_length);
+		}
+
+		/* Only exit if hit the end of the string */
+		if (buffer[15]==0) break;	/* end of ROMfs string */
+
+		/* adjust the pointers */
+		our_offset+=16;
+		max_stringsize-=16;
+	}
+	return our_offset;
+}
+
+int32_t romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
 
 	/* Read from underlying block layer */
 	/* FIXME: hardcoded to the ramdisk */
@@ -39,16 +91,9 @@ int romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
 	return 0;
 }
 
-static int romfs_read_noinc(void *buffer, uint32_t offset, uint32_t size) {
 
-	/* Read from underlying block layer */
-	/* FIXME: hardcoded to the ramdisk */
-	ramdisk_read(offset,size,buffer);
 
-	return 0;
-}
-
-int open_romfs_file(char *name,
+int32_t open_romfs_file(char *name,
 		struct romfs_file_header_t *file) {
 
 	int debug=0;
@@ -153,10 +198,11 @@ int open_romfs_file(char *name,
 }
 
 /* We cheat and just use the file header offset as the inode */
-uint32_t romfs_get_inode(const char *name) {
+int32_t romfs_get_inode(const char *name) {
 
 	int temp_int;
 	uint32_t offset=file_headers_start;
+	int32_t inode=0;
 	struct romfs_file_header_t file;
 
 	char buffer[16];
@@ -165,9 +211,9 @@ uint32_t romfs_get_inode(const char *name) {
 	if (debug) printk("romfs: Trying to get inode for file %s\n",name);
 
 	while(1) {
-		file.addr=offset;
+		inode=offset;
 
-		/* Get points to next file */
+		/* Get pointer to next file */
 		romfs_read_noinc(&temp_int,offset,4);
 		file.next=ntohl(temp_int)&~0xf;
 
@@ -179,17 +225,15 @@ uint32_t romfs_get_inode(const char *name) {
 			if (buffer[15]==0) break;	/* NUL terminated */
 		}
 
-		offset=file.filename_start;
-
 		ramdisk_read_string(file.filename_start,
 				MAX_FILENAME_SIZE,
 				filename);
 
-		if (debug) printk("%s is %s? %x\n",name,filename,offset);
+		if (debug) printk("%s is %s? %x\n",name,filename,inode);
 
 		/* Match filename */
 		if (!strncmp(name,filename,strlen(name))) {
-			return offset;
+			return inode;
 		}
 
 		offset=file.next;
@@ -201,13 +245,12 @@ uint32_t romfs_get_inode(const char *name) {
 }
 
 
-uint32_t romfs_mount(void) {
+int32_t romfs_mount(void) {
 
 	int temp_int;
 	struct romfs_header_t header;
 	uint32_t offset=0;
-
-	char buffer[16];
+	int32_t result=0;
 
 	/* Read header */
 	romfs_read_noinc(header.magic,offset,8);
@@ -233,15 +276,10 @@ uint32_t romfs_mount(void) {
 
 
 	/* Read volume name */
-	/* FIXME, various overflow possibilities */
-	/* We only record last 16 bytes in header */
+	/* FIXME: We ignore anything more than 16-bytes */
 	/* We really don't care about volume name */
-	while(1) {
-		romfs_read_noinc(buffer,offset,16);
-		memcpy(header.volume_name,buffer,16);
-		offset+=16;
-		if (buffer[15]==0) break;	/* NUL terminated */
-	}
+	result=romfs_read_string(offset,header.volume_name,16);
+	offset+=result;
 	if (debug) {
 		printk("\tVolume: %s, file_headers start at %x\n",
 			header.volume_name,offset);
@@ -254,13 +292,70 @@ uint32_t romfs_mount(void) {
 }
 
 
-uint32_t romfs_read_file(uint32_t inode,
+int32_t romfs_read_file(uint32_t inode,
 			uint32_t offset,
 			void *buf,uint32_t count) {
 
+	if (debug) printk("Attempting to read %d bytes from inode %x offset %d\n",
+			count,inode,offset);
+
 	/* FIXME: lots of limit checks */
+#if 0
+	while(1) {
+		file->addr=offset;
 
-	memcpy(buf,(void *)inode+offset,count);
+		/* Next */
+		romfs_read(&temp_int,&offset,4);
+		file->next=ntohl(temp_int)&~0xf;
+		file->type=ntohl(temp_int)&0xf;
 
+		/* Special */
+		romfs_read(&temp_int,&offset,4);
+		file->special=ntohl(temp_int);
+		/* Size */
+		romfs_read(&temp_int,&offset,4);
+		file->size=ntohl(temp_int);
+		/* Checksum */
+		romfs_read(&temp_int,&offset,4);
+		file->checksum=ntohl(temp_int);
+
+		file->filename_start=offset;
+		while(1) {
+			romfs_read(buffer,&offset,16);
+			if (buffer[15]==0) break;	/* NUL terminated */
+		}
+
+		file->data_start=offset;
+
+		offset=file->filename_start;
+
+		ramdisk_read_string(file->filename_start,
+				MAX_FILENAME_SIZE,
+				filename);
+
+		/* Match filename */
+		if (!strncmp(name,filename,strlen(name))) return 0;
+
+		if (debug) {
+			while(1) {
+				romfs_read(&ch,&offset,1);
+				//printk("Read %d at %d\n",ch,offset);
+				if (ch==0) break;
+				printk("%c",ch);
+			}
+
+			printk("\n");
+			printk("\tAddr: 0x%x\n",file->addr);
+			printk("\tNext: 0x%x\n",file->next);
+			printk("\tType: 0x%x\n",file->type);
+			printk("\tSize: %d\n",file->size);
+			printk("\tChecksum: %x\n",file->checksum);
+		}
+
+		offset=file->next;
+
+		if (file->next==0) break;
+	}
+#endif
 	return count;
 }
