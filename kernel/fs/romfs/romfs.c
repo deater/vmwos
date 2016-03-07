@@ -22,6 +22,7 @@
 
 #include "drivers/block/ramdisk.h"
 
+#include "fs/files.h"
 #include "fs/romfs/romfs.h"
 
 #define MAX_FILENAME_SIZE	256
@@ -79,121 +80,31 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 	return our_offset-offset;
 }
 
-int32_t romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
 
-	/* Read from underlying block layer */
-	/* FIXME: hardcoded to the ramdisk */
-	ramdisk_read(*offset,size,buffer);
+int32_t romfs_stat(int32_t inode, struct stat *buf) {
 
-	/* Update offset pointer */
-	(*offset)+=size;
+	int32_t header_offset,size,temp_int,read_count=0;
 
-	return 0;
-}
+	if (debug) printk("romfs: Attempting to stat inode %x\n",inode);
+
+	memset(buf,0,sizeof(struct stat));
+
+	header_offset=inode;		/* 0: Next */
+
+	header_offset+=4;		/* 4: type */
+
+	header_offset+=4;		/* 8: Size */
+	romfs_read_noinc(&temp_int,header_offset,4);
+	size=ntohl(temp_int);
+	buf->st_size=size;
+
+	header_offset+=4;		/* 12: Checksum */
 
 
+	header_offset+=4;		/* 16: filename */
 
-int32_t open_romfs_file(char *name,
-		struct romfs_file_header_t *file) {
+	return read_count;
 
-	int debug=0;
-	int temp_int;
-	unsigned char ch;
-	struct romfs_header_t header;
-	uint32_t offset=0;
-
-	char buffer[16];
-	char filename[MAX_FILENAME_SIZE];
-
-	/* Read header */
-	romfs_read(header.magic,&offset,8);
-	if (memcmp(header.magic,"-rom1fs-",8)) {
-		printk("Wrong magic number!\n");
-		return -1;
-	}
-
-	if (debug) printk("Found romfs filesystem!\n");
-
-	/* Read size */
-	romfs_read(&temp_int,&offset,4);
-	header.size=ntohl(temp_int);
-
-	if (debug) printk("Size: %d bytes\n",header.size);
-
-	/* Read checksum */
-	romfs_read(&temp_int,&offset,4);
-	header.checksum=ntohl(temp_int);
-
-	if (debug) printk("Checksum: %x\n",header.size);
-	/* FIXME: validate checksum */
-
-	/* Read volume name */
-	/* FIXME, various overflow possibilities */
-	/* We only record last 16 bytes in header */
-	/* We really don't care about volume name */
-	while(1) {
-		romfs_read(buffer,&offset,16);
-		memcpy(header.volume_name,buffer,16);
-		if (buffer[15]==0) break;	/* NUL terminated */
-	}
-	if (debug) printk("Volume: %s\n",header.volume_name);
-
-	while(1) {
-		file->addr=offset;
-
-		/* Next */
-		romfs_read(&temp_int,&offset,4);
-		file->next=ntohl(temp_int)&~0xf;
-		file->type=ntohl(temp_int)&0xf;
-
-		/* Special */
-		romfs_read(&temp_int,&offset,4);
-		file->special=ntohl(temp_int);
-		/* Size */
-		romfs_read(&temp_int,&offset,4);
-		file->size=ntohl(temp_int);
-		/* Checksum */
-		romfs_read(&temp_int,&offset,4);
-		file->checksum=ntohl(temp_int);
-
-		file->filename_start=offset;
-		while(1) {
-			romfs_read(buffer,&offset,16);
-			if (buffer[15]==0) break;	/* NUL terminated */
-		}
-
-		file->data_start=offset;
-
-		offset=file->filename_start;
-
-		romfs_read_string(file->filename_start,
-				filename,MAX_FILENAME_SIZE);
-
-		/* Match filename */
-		if (!strncmp(name,filename,strlen(name))) return 0;
-
-		if (debug) {
-			while(1) {
-				romfs_read(&ch,&offset,1);
-				//printk("Read %d at %d\n",ch,offset);
-				if (ch==0) break;
-				printk("%c",ch);
-			}
-
-			printk("\n");
-			printk("\tAddr: 0x%x\n",file->addr);
-			printk("\tNext: 0x%x\n",file->next);
-			printk("\tType: 0x%x\n",file->type);
-			printk("\tSize: %d\n",file->size);
-			printk("\tChecksum: %x\n",file->checksum);
-		}
-
-		offset=file->next;
-
-		if (file->next==0) break;
-	}
-
-	return -1;
 }
 
 /* We cheat and just use the file header offset as the inode */

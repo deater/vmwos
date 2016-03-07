@@ -17,7 +17,6 @@ struct romfs_file_header_t {
 	int data_start;
 };
 
-int32_t romfs_read(void *buffer, uint32_t *offset, uint32_t size);
 int32_t open_romfs_file(char *name,
 		struct romfs_file_header_t *file);
 int32_t romfs_get_inode(const char *name);

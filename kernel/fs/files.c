@@ -137,6 +137,22 @@ int32_t write(uint32_t fd, void *buf, uint32_t count) {
 	return result;
 }
 
+int32_t stat(const char *pathname, struct stat *buf) {
+
+	int32_t inode;
+	int32_t result;
+
+	inode=romfs_get_inode(pathname);
+	if (inode<0) {
+		return -ENOENT;
+	}
+
+	result=romfs_stat(inode, buf);
+
+	return result;
+}
+
+
 void fd_table_init(void) {
 	int i;
 
@@ -152,3 +168,4 @@ void fd_table_init(void) {
 
 	return;
 }
+
