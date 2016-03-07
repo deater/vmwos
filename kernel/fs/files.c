@@ -18,14 +18,14 @@ struct fd_info_t {
 	uint32_t file_ptr;
 } fd_table[MAX_FD];
 
-uint32_t fd_free(uint32_t fd) {
+int32_t fd_free(uint32_t fd) {
 
 	return EBADF;
 }
 
-uint32_t fd_allocate(uint32_t inode) {
+int32_t fd_allocate(uint32_t inode) {
 
-	uint32_t fd;
+	int32_t fd;
 
 	if (debug) printk("Attempting to allocate fd for inode %x\n",inode);
 
@@ -49,9 +49,9 @@ uint32_t fd_allocate(uint32_t inode) {
 	return fd;
 }
 
-uint32_t close(uint32_t fd) {
+int32_t close(uint32_t fd) {
 
-	uint32_t result;
+	int32_t result;
 
 	result=fd_free(fd);
 
@@ -60,10 +60,10 @@ uint32_t close(uint32_t fd) {
 }
 
 
-uint32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
+int32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 
-	uint32_t result;
-	uint32_t inode;
+	int32_t result;
+	int32_t inode;
 
 	if (debug) {
 		printk("### Trying to open %s\n",pathname);
@@ -83,9 +83,9 @@ uint32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 
 }
 
-uint32_t read(uint32_t fd, void *buf, uint32_t count) {
+int32_t read(uint32_t fd, void *buf, uint32_t count) {
 
-	uint32_t result;
+	int32_t result;
 
 	if (fd==0) {
 		result=console_read(buf,count);
@@ -105,9 +105,9 @@ uint32_t read(uint32_t fd, void *buf, uint32_t count) {
 	return result;
 }
 
-uint32_t write(uint32_t fd, void *buf, uint32_t count) {
+int32_t write(uint32_t fd, void *buf, uint32_t count) {
 
-	uint32_t result;
+	int32_t result;
 
 	if ((fd==1) || (fd==2)) {
 		result = console_write(buf, count);
