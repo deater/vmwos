@@ -54,6 +54,7 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 	while(1) {
 		/* read 16-byte chunk from the filesystem */
 		romfs_read_noinc(temp_buffer,our_offset,16);
+		our_offset+=16;
 
 		/* Make sure to not overrun the buffer		*/
 		/* note, even if our output string is full	*/
@@ -70,13 +71,12 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 		}
 
 		/* Only exit if hit the end of the string */
-		if (buffer[15]==0) break;	/* end of ROMfs string */
+		if (temp_buffer[15]==0) break;	/* end of ROMfs string */
 
-		/* adjust the pointers */
-		our_offset+=16;
+		/* adjust the stringsize */
 		max_stringsize-=16;
 	}
-	return our_offset;
+	return our_offset-offset;
 }
 
 int32_t romfs_read(void *buffer, uint32_t *offset, uint32_t size) {
@@ -166,9 +166,8 @@ int32_t open_romfs_file(char *name,
 
 		offset=file->filename_start;
 
-		ramdisk_read_string(file->filename_start,
-				MAX_FILENAME_SIZE,
-				filename);
+		romfs_read_string(file->filename_start,
+				filename,MAX_FILENAME_SIZE);
 
 		/* Match filename */
 		if (!strncmp(name,filename,strlen(name))) return 0;
@@ -201,11 +200,8 @@ int32_t open_romfs_file(char *name,
 int32_t romfs_get_inode(const char *name) {
 
 	int temp_int;
+	int32_t inode=0,next=0;
 	uint32_t offset=file_headers_start;
-	int32_t inode=0;
-	struct romfs_file_header_t file;
-
-	char buffer[16];
 	char filename[MAX_FILENAME_SIZE];
 
 	if (debug) printk("romfs: Trying to get inode for file %s\n",name);
@@ -215,20 +211,12 @@ int32_t romfs_get_inode(const char *name) {
 
 		/* Get pointer to next file */
 		romfs_read_noinc(&temp_int,offset,4);
-		file.next=ntohl(temp_int)&~0xf;
+		next=ntohl(temp_int)&~0xf;
 
 		/* Get current filename, which is in chunks of 16 bytes */
 		offset+=16;
-		file.filename_start=offset;
-		while(1) {
-			romfs_read(buffer,&offset,16);
-			if (buffer[15]==0) break;	/* NUL terminated */
-		}
 
-		ramdisk_read_string(file.filename_start,
-				MAX_FILENAME_SIZE,
-				filename);
-
+		romfs_read_string(offset,filename,MAX_FILENAME_SIZE);
 		if (debug) printk("%s is %s? %x\n",name,filename,inode);
 
 		/* Match filename */
@@ -236,9 +224,9 @@ int32_t romfs_get_inode(const char *name) {
 			return inode;
 		}
 
-		offset=file.next;
+		offset=next;
 
-		if (file.next==0) break;
+		if (next==0) break;
 	}
 
 	return -1;
@@ -293,69 +281,51 @@ int32_t romfs_mount(void) {
 
 
 int32_t romfs_read_file(uint32_t inode,
-			uint32_t offset,
+			uint32_t file_offset,
 			void *buf,uint32_t count) {
 
-	if (debug) printk("Attempting to read %d bytes from inode %x offset %d\n",
-			count,inode,offset);
+	int32_t header_offset,size,temp_int,name_length,read_count=0;
+	int32_t max_count=0;
 
-	/* FIXME: lots of limit checks */
-#if 0
-	while(1) {
-		file->addr=offset;
+	if (debug) printk("romfs: Attempting to read %d bytes from inode %x offset %d\n",
+			count,inode,file_offset);
 
-		/* Next */
-		romfs_read(&temp_int,&offset,4);
-		file->next=ntohl(temp_int)&~0xf;
-		file->type=ntohl(temp_int)&0xf;
+	/* 0: Next */
+	header_offset=inode;
 
-		/* Special */
-		romfs_read(&temp_int,&offset,4);
-		file->special=ntohl(temp_int);
-		/* Size */
-		romfs_read(&temp_int,&offset,4);
-		file->size=ntohl(temp_int);
-		/* Checksum */
-		romfs_read(&temp_int,&offset,4);
-		file->checksum=ntohl(temp_int);
+	/* 4: type */
+	header_offset+=4;
 
-		file->filename_start=offset;
-		while(1) {
-			romfs_read(buffer,&offset,16);
-			if (buffer[15]==0) break;	/* NUL terminated */
-		}
+	/* 8: Size */
+	header_offset+=4;
+	romfs_read_noinc(&temp_int,header_offset,4);
+	size=ntohl(temp_int);
 
-		file->data_start=offset;
+	/* 12: Checksum */
+	header_offset+=4;
 
-		offset=file->filename_start;
+	/* 16: filename */
+	name_length=romfs_read_string(header_offset,NULL,0);
+	header_offset+=name_length;
+	if (debug) printk("romfs: inode %d name_length %d header_offset %d\n",
+			inode,name_length,header_offset);
 
-		ramdisk_read_string(file->filename_start,
-				MAX_FILENAME_SIZE,
-				filename);
+	/* Return data */
+	/* FIXME: copy_to_user() */
 
-		/* Match filename */
-		if (!strncmp(name,filename,strlen(name))) return 0;
-
-		if (debug) {
-			while(1) {
-				romfs_read(&ch,&offset,1);
-				//printk("Read %d at %d\n",ch,offset);
-				if (ch==0) break;
-				printk("%c",ch);
-			}
-
-			printk("\n");
-			printk("\tAddr: 0x%x\n",file->addr);
-			printk("\tNext: 0x%x\n",file->next);
-			printk("\tType: 0x%x\n",file->type);
-			printk("\tSize: %d\n",file->size);
-			printk("\tChecksum: %x\n",file->checksum);
-		}
-
-		offset=file->next;
-
-		if (file->next==0) break;
+	if (debug) printk("romfs: max count %d, size is %d\n",count,size);
+	max_count=count;
+	if (max_count>size-file_offset) {
+		max_count=size-file_offset;
+		if (debug) printk("romfs: count is past end of file, limiting to %d\n",max_count);
 	}
-#endif
-	return count;
+
+	if (debug) printk("romfs: reading %d bytes from %d into %x\n",
+		max_count,header_offset+file_offset,buf);
+
+	read_count=ramdisk_read(header_offset+file_offset,max_count,buf);
+
+	if (debug) printk("romfs: result was %d\n",read_count);
+
+	return read_count;
 }

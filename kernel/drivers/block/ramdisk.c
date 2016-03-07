@@ -1,10 +1,11 @@
 #include <stdint.h>
 
-
 #include "errors.h"
 #include "lib/printk.h"
 #include "lib/string.h"
 #include "drivers/block/ramdisk.h"
+
+static int debug=1;
 
 struct ramdisk_info_t {
 	unsigned char *start;
@@ -16,12 +17,16 @@ int32_t ramdisk_read(uint32_t offset, uint32_t length, char *dest) {
 
 	/* Make sure we are in range */
 	if (offset+length>ramdisk_info.length) {
+		if (debug) {
+			printk("ramdisk: access out of range %d > %d\n",
+				offset+length,ramdisk_info.length);
+		}
 		return -ERANGE;
 	}
 
 	memcpy(dest,ramdisk_info.start+offset,length);
 
-	return 0;
+	return length;
 
 }
 

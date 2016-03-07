@@ -134,7 +134,7 @@ static int parse_input(char *string) {
 			while(1) {
 				st_result=read(fd,buffer,128);
 				if (st_result<1) break;
-				write(1,buffer,st_result);
+				write(2,buffer,st_result);
 			}
 			close(fd);
 		}

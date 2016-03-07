@@ -20,7 +20,7 @@ struct fd_info_t {
 
 int32_t fd_free(uint32_t fd) {
 
-	return EBADF;
+	return -EBADF;
 }
 
 int32_t fd_allocate(uint32_t inode) {
@@ -94,7 +94,7 @@ int32_t read(uint32_t fd, void *buf, uint32_t count) {
 		result=console_read(buf,count);
 	}
 	else if (fd>=MAX_FD) {
-		return ENFILE;
+		return -ENFILE;
 	}
 	else if (fd_table[fd].valid==0) {
 		printk("Attempting to read from unsupported fd %d\n",fd);
@@ -106,6 +106,9 @@ int32_t read(uint32_t fd, void *buf, uint32_t count) {
 		result=romfs_read_file(fd_table[fd].inode,
 					fd_table[fd].file_ptr,
 					buf,count);
+		if (result>0) {
+			fd_table[fd].file_ptr+=result;
+		}
 	}
 	return result;
 }
@@ -113,6 +116,11 @@ int32_t read(uint32_t fd, void *buf, uint32_t count) {
 int32_t write(uint32_t fd, void *buf, uint32_t count) {
 
 	int32_t result;
+
+	if (fd==2) {
+		char *string = (char *)buf;
+		printk("Writing %d bytes, %d\n",count,string[count-1]);
+	}
 
 	if ((fd==1) || (fd==2)) {
 		result = console_write(buf, count);
