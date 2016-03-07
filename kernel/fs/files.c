@@ -79,6 +79,8 @@ int32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 		return result;
 	}
 
+	if (debug) printk("### opened fd %d\n",result);
+
 	return result;
 
 }
@@ -86,6 +88,7 @@ int32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 int32_t read(uint32_t fd, void *buf, uint32_t count) {
 
 	int32_t result;
+
 
 	if (fd==0) {
 		result=console_read(buf,count);
@@ -98,6 +101,8 @@ int32_t read(uint32_t fd, void *buf, uint32_t count) {
 		result=-EBADF;
 	}
 	else {
+		if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
+
 		result=romfs_read_file(fd_table[fd].inode,
 					fd_table[fd].file_ptr,
 					buf,count);
@@ -125,6 +130,12 @@ void fd_table_init(void) {
 	for(i=0;i<MAX_FD;i++) {
 		fd_table[i].valid=0;
 	}
+
+	/* Special case 0/1/2 (stdin/stdout/stderr) */
+	/* FIXME: actually hook them up to be proper fds */
+	fd_table[0].valid=1;
+	fd_table[1].valid=1;
+	fd_table[2].valid=1;
 
 	return;
 }
