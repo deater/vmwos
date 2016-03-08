@@ -4,6 +4,7 @@
 
 #define ENOENT	2	/* File not found..... */
 #define EBADF	9	/* Bad file descriptor */
+#define ENODEV	19	/* No such device..... */
 #define ENFILE	23	/* Not enough fds..... */
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */

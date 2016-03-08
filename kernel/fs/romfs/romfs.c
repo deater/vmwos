@@ -170,7 +170,7 @@ int32_t romfs_get_inode(const char *name) {
 }
 
 
-int32_t romfs_mount(void) {
+int32_t romfs_mount(struct superblock_t *superblock) {
 
 	int temp_int;
 	struct romfs_header_t header;
@@ -214,6 +214,11 @@ int32_t romfs_mount(void) {
 
 	return 0;
 
+}
+
+int32_t romfs_statfs(struct statfs *buf) {
+
+	return 0;
 }
 
 
@@ -264,3 +269,55 @@ int32_t romfs_read_file(uint32_t inode,
 
 	return read_count;
 }
+
+
+int32_t romfs_get_dents(uint32_t inode,
+			void *buf,uint32_t size) {
+
+	int32_t read_count=0;
+#if 0
+	int32_t header_offset,size,temp_int,name_length,read_count=0;
+	int32_t max_count=0;
+
+	if (debug) printk("romfs: Attempting to read %d bytes from inode %x offset %d\n",
+			count,inode,file_offset);
+
+
+	header_offset=inode;		/* 0: Next */
+
+	header_offset+=4;		/* 4: type */
+
+	header_offset+=4;		/* 8: Size */
+	romfs_read_noinc(&temp_int,header_offset,4);
+	size=ntohl(temp_int);
+
+	header_offset+=4;		/* 12: Checksum */
+
+
+	header_offset+=4;		/* 16: filename */
+	name_length=romfs_read_string(header_offset,NULL,0);
+	header_offset+=name_length;
+	if (debug) printk("romfs: inode %d name_length %d header_offset %d\n",
+			inode,name_length,header_offset);
+
+	/* Return data */
+	/* FIXME: copy_to_user() */
+
+	if (debug) printk("romfs: max count %d, size is %d\n",count,size);
+	max_count=count;
+	if (max_count>size-file_offset) {
+		max_count=size-file_offset;
+		if (debug) printk("romfs: count is past end of file, limiting to %d\n",max_count);
+	}
+
+	if (debug) printk("romfs: reading %d bytes from %d into %x\n",
+		max_count,header_offset+file_offset,buf);
+
+	read_count=ramdisk_read(header_offset+file_offset,max_count,buf);
+
+	if (debug) printk("romfs: result was %d\n",read_count);
+#endif
+	return read_count;
+}
+
+

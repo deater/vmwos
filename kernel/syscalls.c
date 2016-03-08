@@ -81,7 +81,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_STAT:
-			result=stat(r0,r1);
+			result=stat((char *)r0,(struct stat *)r1);
 			break;
 
 		case SYSCALL_TIME:

@@ -160,7 +160,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Initialize the ramdisk */
 	ramdisk_init(initrd_image,sizeof(initrd_image));
-	romfs_mount();
+
+	/* Mount the ramdisk */
+	mount("/dev/ramdisk","/","romfs",0,NULL);
 
 	/* Memory Benchmark */
 #if 1

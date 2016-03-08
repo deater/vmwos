@@ -7,6 +7,7 @@
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
 #include "lib/printk.h"
+#include "lib/string.h"
 
 static int debug=1;
 
@@ -148,6 +149,24 @@ int32_t stat(const char *pathname, struct stat *buf) {
 	}
 
 	result=romfs_stat(inode, buf);
+
+	return result;
+}
+
+struct superblock_t superblock_table[8];
+
+int32_t mount(const char *source, const char *target,
+        const char *filesystemtype, uint32_t mountflags,
+        const void *data) {
+
+	int32_t result=0;
+
+	if (!strncmp(filesystemtype,"romfs",5)) {
+		result=romfs_mount(&superblock_table[0]);
+	}
+	else {
+		result=-ENODEV;
+	}
 
 	return result;
 }

@@ -22,7 +22,7 @@ int32_t open_romfs_file(char *name,
 int32_t romfs_get_inode(const char *name);
 int32_t romfs_read_file(uint32_t inode, uint32_t offset,
 			void *buf,uint32_t count);
-int32_t romfs_mount(void);
+int32_t romfs_mount(struct superblock_t *superblock);
 int32_t romfs_stat(int32_t inode, struct stat *buf);
 
 #define ROMFS_TYPE_HARDLINK	0
