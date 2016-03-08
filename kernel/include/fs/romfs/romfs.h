@@ -24,3 +24,14 @@ int32_t romfs_read_file(uint32_t inode, uint32_t offset,
 			void *buf,uint32_t count);
 int32_t romfs_mount(void);
 int32_t romfs_stat(int32_t inode, struct stat *buf);
+
+#define ROMFS_TYPE_HARDLINK	0
+#define ROMFS_TYPE_DIRECTORY	1
+#define ROMFS_TYPE_REGULARFILE	2
+#define ROMFS_TYPE_SYMBOLICLINK	3
+#define ROMFS_TYPE_BLOCKDEV	4
+#define ROMFS_TYPE_CHARDEV	5
+#define ROMFS_TYPE_SOCKET	6
+#define ROMFS_TYPE_FIFO		7
+
+

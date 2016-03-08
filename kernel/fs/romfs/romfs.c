@@ -8,7 +8,10 @@
 /*        xx: file-headers    */
 
 /* File header info */
-/* Offset: 0: next / spec.info    --- next is zero if end */
+/* Offset: 0: next / spec.info    --- next is zero if end		*/
+/*			low 4 bits of next has type info and exec bits	*/
+/*			all files are uid/guid 0 and all are		*/
+/*			globally read/writeable				*/
 /*         8: size / checksum */
 /*        16: filename (multiple of 16-byte chunks) */
 /*        xx: file data */
@@ -84,14 +87,37 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 int32_t romfs_stat(int32_t inode, struct stat *buf) {
 
 	int32_t header_offset,size,temp_int,read_count=0;
+	int32_t spec_info=0,type=0;
 
 	if (debug) printk("romfs: Attempting to stat inode %x\n",inode);
 
+	/* Clear all to zero */
 	memset(buf,0,sizeof(struct stat));
 
-	header_offset=inode;		/* 0: Next */
+	/* Set inode value */
+	buf->st_ino=inode;
 
-	header_offset+=4;		/* 4: type */
+	/* Default mode is global read/write */
+		/* -rw-rw-rw- */
+	buf->st_mode=0666;
+
+
+	header_offset=inode;		/* 0: Next */
+	romfs_read_noinc(&temp_int,header_offset,4);
+	type=ntohl(temp_int);
+
+	/* check if executable */
+	if (type&0x8) {
+		buf->st_mode|=0111;
+	}
+	type&=0x7;
+
+	header_offset+=4;		/* 4: spec.info */
+	romfs_read_noinc(&temp_int,header_offset,4);
+	spec_info=ntohl(temp_int);
+	/* FIXME: set proper fields if it's a char or block device? */
+	(void)spec_info;
+
 
 	header_offset+=4;		/* 8: Size */
 	romfs_read_noinc(&temp_int,header_offset,4);
