@@ -1,0 +1,16 @@
+This OS has been developed on Raspberry Pi Model B/B+/A+.
+
+It should be possible to port to Model 2-B with minimal impact:
+	+ Change mmio base address
+	+ Possibly some IRQ handler changes?
+	+ Cache and other low-level register support?
+	+ Major changes needed to make it SMP capabale
+
+Model 3-B support will be harder:
+	+ ACT LED now on GPIO expander that is hooked to i2c-0
+		and accessible through GPU mailbox
+	+ UART now goes to bluetooth, need to handle mini-UART
+		which lacks features and handles frequency
+		changes poorly
+	+ SD card I/O via different (undocumented?) interface
+	+ Full 64-bit and SMP support will be 
