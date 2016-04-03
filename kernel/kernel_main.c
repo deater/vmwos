@@ -21,7 +21,7 @@
 #include "idle_task.h"
 #include "drivers/keyboard/ps2-keyboard.h"
 #include "time.h"
-#include "mmu.h"
+#include "arm1176-mmu.h"
 #include "lib/div.h"
 #include "drivers/thermal/thermal.h"
 #include "fs/files.h"
