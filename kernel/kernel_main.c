@@ -150,10 +150,11 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Init the MMU */
 	printk("Initializing MMU and caches\n");
-	//enable_mmu(0, memory_total);
-	//l1_data_cache_clear();
-	//l1_data_cache_enable();
-	l1_instruction_cache_enable();
+
+	enable_l1_icache();
+	enable_branch_predictor();
+	enable_mmu(0, memory_total);
+	enable_l1_dcache();
 
 	/* Init the file descriptor table */
 	fd_table_init();
