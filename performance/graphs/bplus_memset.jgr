@@ -2,28 +2,67 @@
 newgraph
 
 X 8
-Y 8
+Y 4
 
 (* Legend *)
 (* legend custom x 1 y 5500 defaults fontsize 12 font Helvetica *)
 legend custom
 
 (* Title *)
-title y 8.5 font Helvetica fontsize 14 : memset performance on bplus
+title y -300  font Helvetica fontsize 14 : Linux memset() performance on pi-bplus
 
 
 (* X-Axis *)
 xaxis min 1 max 16777216 log
-size 8
-hash_labels font Helvetica fontsize 11 hjr rotate 45
-label font Helvetica fontsize 11  : size (B)
-
-(* Y-Axis *)
-yaxis min 0
 size 7
 hash_labels font Helvetica fontsize 11 hjr rotate 45
-label font Helvetica fontsize 11  : MB/s
+label font Helvetica fontsize 11  : size (B)
+no_auto_hash_marks
+no_auto_hash_labels
+hash_at 1
+hash_at 2
+hash_label at 2 : 2
+hash_at 4
+hash_at 8
+hash_label at 8 : 8
+hash_at 16
+hash_at 32
+hash_label at 32 : 32
+hash_at 64
+hash_at 128
+hash_label at 128 : 128
+hash_at 256
+hash_at 512
+hash_label at 512 : 512
+hash_at 1024
+hash_at 2048
+hash_label at 2048 : 2k
+hash_at 4096
+hash_at 8192
+hash_label at 8192 : 8k
+hash_at 16384
+hash_at 32768
+hash_label at 32768 : 32k
+hash_at 65536
+hash_at 131072
+hash_label at 131072 : 128k
+hash_at 262144
+hash_at 524288
+hash_label at 524288 : 512k
+hash_at 1048576
+hash_at 2097152
+hash_label at 2097152 : 2M
+hash_at 4194304
+hash_at 8388608
+hash_label at 8388608 : 8M
+hash_at 16777216
 
+
+(* Y-Axis *)
+yaxis min 0 max 1500
+size 3
+hash_labels font Helvetica fontsize 11 hjr rotate 45
+label font Helvetica fontsize 11  : MB/s
 
 newcurve marktype x linetype dotted color 1.0 0.0 0.0
 (* label x 0 y 7 font Helvetical fontsize 11 vjc hjl : System-Wide CPI *)

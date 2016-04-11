@@ -1,9 +1,0 @@
-Raspberry Pi A+ Memory Benchmarks
-
-1MBx16 memset()
-
-
-+ byte at a time, C
-	default:	11.64 MB/s (88 ticks)
-	icache_enabled:	31.03 MB/s (33 ticks)
-	
