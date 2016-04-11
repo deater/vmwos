@@ -5,6 +5,7 @@
 
 #include "time.h"
 #include "arch/arm1176/arm1176-mmu.h"
+#include "arch/arm1176/arm1176-pmu.h"
 
 #define MEMORY_BENCHMARK 1
 
@@ -194,7 +195,7 @@ static void memset_test(void *addr, int value, int size) {
 
 #define BENCH_SIZE (1024*1024)
 #define BENCH_ITERATIONS 16
-uint8_t benchmark[BENCH_SIZE+16];
+uint8_t __attribute__((aligned(64))) benchmark[BENCH_SIZE+16];
 
 #define OFFSET 0
 
@@ -203,15 +204,15 @@ static void run_memory_benchmark(void) {
 	int i;
 	uint32_t before,after;
 
-	before=ticks_since_boot();
+	before=read_cycle_counter();
 
 	for(i=0;i<BENCH_ITERATIONS;i++) {
 		memset_byte(benchmark+OFFSET,0xfe,BENCH_SIZE);
 	}
 
-	after=ticks_since_boot();
+	after=read_cycle_counter();
 
-	printk("\tMEMSPEED: %d MB took %d ticks\n",
+	printk("\tMEMSPEED: %d MB took %d cycles\n",
 		BENCH_SIZE*BENCH_ITERATIONS,
 		(after-before));
 
@@ -224,15 +225,15 @@ static void run_memory_benchmark32(void) {
 	int i;
 	uint32_t before,after;
 
-	before=ticks_since_boot();
+	before=read_cycle_counter();
 
 	for(i=0;i<BENCH_ITERATIONS;i++) {
 		memset_4byte(benchmark+OFFSET,0xa5,BENCH_SIZE);
 	}
 
-	after=ticks_since_boot();
+	after=read_cycle_counter();
 
-	printk("\tMEMSPEED: %d MB took %d ticks\n",
+	printk("\tMEMSPEED: %d MB took %d cycles\n",
 		BENCH_SIZE*BENCH_ITERATIONS,
 		(after-before));
 
@@ -244,15 +245,15 @@ static void run_memory_benchmark_asm(void) {
 	int i;
 	uint32_t before,after;
 
-	before=ticks_since_boot();
+	before=read_cycle_counter();
 
 	for(i=0;i<BENCH_ITERATIONS;i++) {
 		memset(benchmark+OFFSET,0x78,BENCH_SIZE);
 	}
 
-	after=ticks_since_boot();
+	after=read_cycle_counter();
 
-	printk("\tMEMSPEED: %d MB took %d ticks\n",
+	printk("\tMEMSPEED: %d MB took %d cycles\n",
 		BENCH_SIZE*BENCH_ITERATIONS,
 		(after-before));
 

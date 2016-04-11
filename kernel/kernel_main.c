@@ -23,6 +23,7 @@
 #include "time.h"
 #include "lib/div.h"
 #include "arch/arm1176/arm1176-mmu.h"
+#include "arch/arm1176/arm1176-pmu.h"
 #include "drivers/thermal/thermal.h"
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
@@ -148,6 +149,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
+
+	/* Start HW Perf Counters */
+	arm1176_init_pmu();
 
 	/* Setup Memory Hierarchy */
 #if 1
