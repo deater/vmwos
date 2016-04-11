@@ -77,28 +77,3 @@ int strlen(const char *s1) {
 
 }
 
-void *memset(void *s, int c, uint32_t n) {
-
-	uint32_t i;
-	char *b;
-
-	b=(char *)s;
-
-	for(i=0;i<n;i++) b[i]=c;
-
-	return 0;
-}
-
-
-void *memset32(void *s, int c, uint32_t n) {
-
-	uint32_t i;
-	char *b;
-
-	b=(char *)s;
-
-	for(i=0;i<n;i++) b[i]=c;
-
-	return 0;
-}
-

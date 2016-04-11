@@ -21,11 +21,12 @@
 #include "idle_task.h"
 #include "drivers/keyboard/ps2-keyboard.h"
 #include "time.h"
-#include "arm1176-mmu.h"
 #include "lib/div.h"
+#include "arch/arm1176/arm1176-mmu.h"
 #include "drivers/thermal/thermal.h"
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
+#include "lib/memset.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -148,13 +149,23 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
 
-	/* Init the MMU */
-	printk("Initializing MMU and caches\n");
-
-	enable_l1_icache();
-	enable_branch_predictor();
-	enable_mmu(0, memory_total);
+	/* Setup Memory Hierarchy */
+#if 1
+	memory_benchmark(memory_total);
+#else
+	/* Enable L1 i-cache */
+	printk("Enabling L1 icache\n");
 	enable_l1_dcache();
+
+	/* Enable branch predictor */
+	printk("Enabling branch predictor\n");
+
+	/* Enable L1 d-cache */
+	printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
+	enable_mmu(0,memory_total);
+	printk("Enabling L1 dcache\n");
+	enable_l1_dcache();
+#endif
 
 	/* Init the file descriptor table */
 	fd_table_init();
@@ -164,25 +175,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Mount the ramdisk */
 	mount("/dev/ramdisk","/","romfs",0,NULL);
-
-	/* Memory Benchmark */
-#if 1
-	{
-		int i;
-		uint32_t before,after;
-
-		before=ticks_since_boot();
-
-		for(i=0;i<16;i++) {
-			memset(benchmark,0,BENCH_SIZE);
-		}
-		after=ticks_since_boot();
-
-		printk("MEMSPEED: %d MB took %d ticks %dkB/s\n",
-			16, (after-before),
-			div32(16*1024,(((after-before)*1000)/64)));
-	}
-#endif
 
 	/* Load the idle thread */
 	idle_process=load_process("idle",PROCESS_FROM_RAM,
