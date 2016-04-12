@@ -153,6 +153,27 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Start HW Perf Counters */
 	arm1176_init_pmu();
 
+#if 0
+	asm("nop");
+	asm("nop");
+	asm("nop");
+	asm("nop");
+
+	asm("nop");
+	asm("nop");
+	asm("nop");
+	asm("nop");
+
+	asm("nop");
+	asm("nop");
+	asm("nop");
+	asm("nop");
+
+	asm("nop");
+
+//	printk("Heisenbug!\n");
+#endif
+
 	/* Setup Memory Hierarchy */
 #if 1
 	memory_benchmark(memory_total);
