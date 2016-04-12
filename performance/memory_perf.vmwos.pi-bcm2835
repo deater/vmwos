@@ -1,6 +1,6 @@
-Raspberry Pi A+ Memory Benchmarks
+Raspberry Pi A+/B Memory Benchmarks
 BCM2835 700MHz
-256MB of DRAM
+256MB/512MB of DRAM
 
 1MBx16 memset()
 
@@ -22,3 +22,17 @@ L1-I$+brpred+D$ ASM 64B		  8829849 cycles 0.0126s	1268 MB/s
 
 Theoretical Maximum speed of LPDDR2@400MHZ = 8GB/s
 Linux glibc memset() maxes out around 1400 MB/s	
+
+
+Note that for the No-Cache numbers, the results can vary.  For example
+the no-cache C byte-by-byte is either 7MB/s or 11MB/s.
+
+After much investigation it seems that this happens when the tight inner
+loop (stb/cmp/bne) crosses a 64-byte boundary.  If it straddles the 
+boundary you get 7MB/s, if it fits in a 64-byte page then you get
+11MB/s.  This is quite possibly because with no-cache enabled, we are
+straddling a LPDDR2 DRAM row (where 512bits, or 64-bytes) is a row size,
+and by having to switch back and forth between rows we take a 40% performance
+hit as the row is closed and reopened.
+
+
