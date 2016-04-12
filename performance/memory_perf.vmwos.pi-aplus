@@ -1,24 +1,24 @@
 Raspberry Pi A+ Memory Benchmarks
-BCM2835 600MHz
+BCM2835 700MHz
 256MB of DRAM
 
 1MBx16 memset()
 
-No Cache	C byte-at-time	936754552 cycles 1.56s		  10.2 MB/s
-L1-I$		C byte-at-time	355098645 cycles 0.59s		  27.1 MB/s
-L1-I$+brpred	C byte-at-time	271038891 cycles 0.45s		  35.4 MB/s
-L1-I$+brpred+D$	C byte-at-time	116346597 cycles 0.19s		  82.5 MB/s
+No Cache	C byte-at-time	936754552 cycles 1.338s		  12.0 MB/s
+L1-I$		C byte-at-time	355098645 cycles 0.507s		  31.5 MB/s
+L1-I$+brpred	C byte-at-time	271038891 cycles 0.387s		  41.3 MB/s
+L1-I$+brpred+D$	C byte-at-time	116346597 cycles 0.166s		  96.3 MB/s
 
-No Cache	C 4B-at-time	205749402 cycles 0.3429s	  46.6 MB/s
-L1-I$		C 4B-at-time	 67745267 cycles 0.1129s	 141 MB/s
-L1-I$+brpred	C 4B-at-time	 63533353 cycles 0.1059s	 151 MB/s
-L1-I$+brpred+D$	C 4B-at-time	 28633484 cycles 0.0477s	 335 MB/s
+No Cache	C 4B-at-time	205749402 cycles 0.294s		  54.4 MB/s
+L1-I$		C 4B-at-time	 67745267 cycles 0.097s		 165 MB/s
+L1-I$+brpred	C 4B-at-time	 63533353 cycles 0.091s		 176 MB/s
+L1-I$+brpred+D$	C 4B-at-time	 28633484 cycles 0.041s		 391 MB/s
 
-No Cache	ASM 64B		 23437080 cycles 0.0390s	 409 MB/s
-L1-I$		ASM 64B		 17749501 cycles 0.0296s	 540 MB/s
-L1-I$+brpred	ASM 64B		 18006681 cycles 0.0300s	 533 MB/s
-L1-I$+brpred+D$ ASM 64B		  8829849 cycles 0.0147s	1087 MB/s
+No Cache	ASM 64B		 23437080 cycles 0.0335s	 478 MB/s
+L1-I$		ASM 64B		 17749501 cycles 0.0253s	 631 MB/s
+L1-I$+brpred	ASM 64B		 18006681 cycles 0.0257s	 622 MB/s
+L1-I$+brpred+D$ ASM 64B		  8829849 cycles 0.0126s	1268 MB/s
 
 
 Theoretical Maximum speed of LPDDR2@400MHZ = 8GB/s
-	
+Linux glibc memset() maxes out around 1400 MB/s	
