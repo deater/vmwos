@@ -176,23 +176,8 @@ int framebuffer_putpixel(int color, int x, int y) {
 
 }
 
-void *int_memcpy(void *dest, const void *src, size_t n) {
-
-	int i;
-
-	int *d=dest;
-	const int *s=src;
-
-	for(i=0;i<n/4;i++) {
-		*d=*s;
-		d++; s++;
-	}
-
-	return dest;
-}
-
 int framebuffer_push(void) {
-	int_memcpy((unsigned char *)current_fb.pointer,
+	memcpy((unsigned char *)current_fb.pointer,
 		offscreen,current_fb.phys_x*current_fb.phys_y*3);
 
 	return 0;
