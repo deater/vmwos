@@ -1,73 +1,56 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "lib/printk.h"
 
-#include "time.h"
-#include "arch/arm1176/arm1176-mmu.h"
-#include "arch/arm1176/arm1176-pmu.h"
-#include "lib/div.h"
+#include "lib/memcpy.h"
 
-#define MEMORY_BENCHMARK 1
+void *memcpy_byte(void *dest, const void *src, uint32_t n) {
 
-#if (MEMORY_BENCHMARK==1)
+        int i;
 
-void *memset_byte(void *s, int c, uint32_t n) {
+        char *d=dest;
+        const char *s=src;
 
-	uint32_t i;
-	char *b;
+        for(i=0;i<n;i++) {
+                *d=*s;
+                d++;
+		s++;
+        }
 
-	b=(char *)s;
-
-	for(i=0;i<n;i++) b[i]=c;
-
-	return s;
+        return dest;
 }
 
-
-void *memset_4byte(void *s, int c, uint32_t n) {
+void *memcpy_4byte(void *dest, const void *src, uint32_t n) {
 
 	uint32_t i;
-	uint32_t *b;
-	uint8_t *ch;
-	uint32_t pattern;
-	uint32_t offset;
-	uint32_t count;
+
+	uint32_t *int_dest,*int_src;
+	uint8_t *char_dest,*char_src;
+
+	uint32_t tail;
+
+	tail=n%4;
+
+	int_dest=(uint32_t *)dest;
+	int_src=(uint32_t *)src;
+
+	char_dest=(uint8_t *)dest;
+	char_src=(uint8_t *)src;
 
 
-	pattern=(c&0xff);
-	pattern=pattern|(pattern<<8)|(pattern<<16)|(pattern<<24);
-
-	//printk("Writing %x (4 x %x)\n",pattern,c);
-
-	offset=((uint32_t)s)%4;
-
-	ch=(uint8_t *)s;
-
-	/* Do leading edge if unaligned */
-	if (offset) {
-		for(i=0;i<(4-offset);i++) ch[i]=c;
-		b=(uint32_t *)(ch+(4-offset));
-		count=n-1;
-	}
-	else {
-		b=(uint32_t *)s;
-		count=n;
+	for(i=0;i<((n-tail)/4);i++) {
+		int_dest[i]=int_src[i];
 	}
 
-	/* Do 4-byte chunks */
-	for(i=0;i<(count/4);i++) b[i]=pattern;
-
-	/* Do trailing edge if unaligned */
-	for(i=0;i<offset;i++) {
-//		printk("Tail: setting offset %d\n",(n-offset)+i);
-		ch[(n-offset)+i]=c;
+	/* Do trailing edge */
+	for(i=0;i<tail;i++) {
+		char_dest[i]=char_src[i];
 	}
 
-	return s;
+	return dest;
 }
 
-#endif
+#if 0
 
 /* based on the version in the Linux kernel */
 /* arch/arm/lib/memset.S */
@@ -164,3 +147,6 @@ void *memset(void *s, int c, uint32_t n) {
 
 	return s;
 }
+
+
+#endif

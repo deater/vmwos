@@ -12,6 +12,7 @@
 #include "drivers/firmware/mailbox.h"
 
 #include "lib/string.h"
+#include "lib/memset.h"
 
 
 #define VC_TAG_GET_TEMP		0x00030006

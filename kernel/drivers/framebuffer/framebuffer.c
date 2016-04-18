@@ -14,6 +14,7 @@
 #include "drivers/framebuffer/framebuffer.h"
 
 #include "lib/string.h"
+#include "lib/memcpy.h"
 
 static uint32_t debug=1;
 

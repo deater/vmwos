@@ -21,6 +21,7 @@
 
 #include "lib/printk.h"
 #include "lib/string.h"
+#include "lib/memset.h"
 #include "lib/endian.h"
 
 #include "drivers/block/ramdisk.h"

@@ -28,6 +28,7 @@
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
 #include "lib/memset.h"
+#include "lib/memory_benchmark.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -176,7 +177,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Setup Memory Hierarchy */
 #if 1
-	memory_benchmark(memory_total);
+	memset_benchmark(memory_total);
 #else
 	/* Enable L1 i-cache */
 	printk("Enabling L1 icache\n");

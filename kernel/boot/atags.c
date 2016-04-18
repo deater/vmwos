@@ -4,6 +4,7 @@
 #include "lib/printk.h"
 #include "hardware.h"
 #include "lib/string.h"
+#include "lib/memset.h"
 
 /* Original references */
 /* http://www.raspberrypi.org/forums/viewtopic.php?t=10889&p=123721 */

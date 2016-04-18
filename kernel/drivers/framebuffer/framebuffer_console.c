@@ -18,6 +18,7 @@
 #include "marie_font.h"
 
 #include "lib/string.h"
+#include "lib/memcpy.h"
 
 #define ANSI_BLACK	0
 #define ANSI_RED	1

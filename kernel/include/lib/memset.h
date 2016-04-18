@@ -1,2 +1,5 @@
 void *memset(void *s, int c, uint32_t n);
-void memory_benchmark(uint32_t memory_total);
+void *memset_byte(void *s, int c, uint32_t n);
+void *memset_4byte(void *s, int c, uint32_t n);
+void *memset_asm(void *s, int c, uint32_t n);
+

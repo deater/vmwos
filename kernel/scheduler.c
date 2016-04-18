@@ -7,7 +7,7 @@
 
 #include "lib/printk.h"
 #include "lib/string.h"
-
+#include "lib/memcpy.h"
 
 
 int userspace_started=0;
