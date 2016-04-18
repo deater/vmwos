@@ -5,19 +5,14 @@
 
 #define MAX_PRINT_SIZE 256
 
-int printk(char *string,...) {
+int vsprintf(char *buffer, char *string, va_list ap) {
 
-	va_list ap;
-
-	char buffer[MAX_PRINT_SIZE];
 	char int_buffer[10];
 	int int_pointer=0;
 
 	int buffer_pointer=0;
 	int i;
 	unsigned long x;
-
-	va_start(ap, string);
 
 	while(1) {
 		if (*string==0) break;
@@ -95,11 +90,40 @@ int printk(char *string,...) {
 		if (buffer_pointer==MAX_PRINT_SIZE) break;
 	}
 
-	va_end(ap);
-
-	console_write(buffer,buffer_pointer);
-
 	return buffer_pointer;
+}
+
+int printk(char *string,...) {
+
+	char buffer[MAX_PRINT_SIZE];
+	int result;
+
+	va_list argp;
+	va_start(argp, string);
+
+	result=vsprintf(buffer,string,argp);
+
+	va_end(argp);
+
+	console_write(buffer,result);
+
+	return result;
+
+}
+
+int sprintf(char *string, char *fmt, ...) {
+
+	int result;
+
+	va_list argp;
+	va_start(argp, fmt);
+
+	result=vsprintf(string,fmt,argp);
+
+	va_end(argp);
+
+	return result;
+
 }
 
 #if 0

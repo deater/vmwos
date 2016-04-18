@@ -146,7 +146,8 @@ int framebuffer_console_push(void) {
 			framebuffer_console_putchar(
 				ansi_colors[text_color[x][y]&0xf],
 				ansi_colors[(text_color[x][y]>>4)&0xf],
-				text_console[x][y],x*8,y*font_ysize);
+				text_console[x][y],
+				x*8,y*font_ysize);
 		}
 	}
 
@@ -276,10 +277,16 @@ int framebuffer_console_write(const char *buffer, int length) {
 		}
 
 		if (console_y>=CONSOLE_Y) {
-			int i;
+			int i,result;
+			char string[256];
 			/* scroll up a line */
 
 			refresh_screen=1;
+
+			result=sprintf(string,"\nLength=%d\n",
+				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
+			uart_write(string, result);
+
 //			memset(&text_console[0][0],'Q',
 //				CONSOLE_Y*CONSOLE_X*sizeof(unsigned char));
 			memcpy(&(text_console[0][0]),&(text_console[0][1]),
