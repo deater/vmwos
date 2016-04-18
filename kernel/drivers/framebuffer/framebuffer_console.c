@@ -13,9 +13,7 @@
 /* Layering violation? */
 #include "drivers/serial/pl011_uart.h"
 
-#include "tbfont.h"
-#include "medieval_font.h"
-#include "marie_font.h"
+#include "c_font.h"
 
 #include "lib/string.h"
 #include "lib/memcpy.h"
@@ -27,8 +25,8 @@
 #define ANSI_GREY	7
 
 
-static int font_ysize=8;
-static unsigned char *current_font=(unsigned char *)tb1_font;
+static int font_ysize=16;
+static unsigned char *current_font=(unsigned char *)default_font;
 
 #define CONSOLE_X 80
 #define CONSOLE_Y 35
@@ -61,21 +59,10 @@ static unsigned int ansi_colors[16]={
 
 void framebuffer_console_setfont(int which) {
 
-	if (which==1) {
-		current_font=(unsigned char *)medieval_font;
-		font_ysize=16;
-		printk("Using Medieval font\n");
-	}
-	else if (which==2) {
-		current_font=(unsigned char *)marie_font;
-		font_ysize=16;
-		printk("Using Rune font\n");
-	}
-	else {
-		current_font=(unsigned char *)tb1_font;
-		font_ysize=8;
-		printk("Using default font\n");
-	}
+	current_font=(unsigned char *)default_font;
+	font_ysize=16;
+	printk("Using default font\n");
+
 	framebuffer_clear_screen(0);
 	framebuffer_console_push();
 
@@ -90,19 +77,24 @@ int framebuffer_console_putchar(int fore_color, int back_color,
 	for(yy=0;yy<font_ysize;yy++) {
 		for(xx=0;xx<8;xx++) {
 			if (current_font[(ch*font_ysize)+yy] & (1<<(7-xx))) {
-			//	framebuffer_putpixel(fore_color,x+xx,y+yy);
+				framebuffer_putpixel(fore_color,x+xx,y+yy);
+#if 0
 				framebuffer_hline(fore_color,
 						(x+xx)*2,(x+xx)*2+1,(y+yy)*2);
 				framebuffer_hline(fore_color,
 						(x+xx)*2,(x+xx)*2+1,((y+yy)*2)+1);
+#endif
 			}
 			else {
 				/* transparency */
 				if (back_color!=0) {
+				framebuffer_putpixel(back_color,x+xx,y+yy);
+#if 0
 					framebuffer_hline(back_color,
 						(x+xx)*2,(x+xx)*2+1,(y+yy)*2);
 					framebuffer_hline(back_color,
 						(x+xx)*2,(x+xx)*2+1,((y+yy)*2)+1);
+#endif
 				}
 			}
 		}
