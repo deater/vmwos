@@ -29,8 +29,8 @@ static unsigned char *current_font=(unsigned char *)default_font;
 #define CONSOLE_X 80
 #define CONSOLE_Y 35
 
-static unsigned char text_console[CONSOLE_X][CONSOLE_Y];
-static unsigned char text_color[CONSOLE_X][CONSOLE_Y];
+static unsigned char text_console[CONSOLE_X*CONSOLE_Y];
+static unsigned char text_color[CONSOLE_X*CONSOLE_Y];
 static int console_x=0;
 static int console_y=0;
 static int console_fore_color=0xffffff;
@@ -109,8 +109,8 @@ int framebuffer_console_clear(void) {
 
 	for(y=0;y<CONSOLE_Y;y++) {
 		for(x=0;x<CONSOLE_X;x++) {
-			text_console[x][y]=' ';
-			text_color[x][y]=FORE_GREY|BACK_BLACK;
+			text_console[x+(y*CONSOLE_X)]=' ';
+			text_color[x+(y*CONSOLE_X)]=FORE_GREY|BACK_BLACK;
 		}
 	}
 
@@ -144,9 +144,9 @@ int framebuffer_console_push(void) {
 	for(x=0;x<CONSOLE_X;x++) {
 		for(y=0;y<CONSOLE_Y;y++) {
 			framebuffer_console_putchar(
-				ansi_colors[text_color[x][y]&0xf],
-				ansi_colors[(text_color[x][y]>>4)&0xf],
-				text_console[x][y],
+				ansi_colors[text_color[x+(y*CONSOLE_X)]&0xf],
+				ansi_colors[(text_color[x+(y*CONSOLE_X)]>>4)&0xf],
+				text_console[x+(y*CONSOLE_X)],
 				x*8,y*font_ysize);
 		}
 	}
@@ -261,11 +261,11 @@ int framebuffer_console_write(const char *buffer, int length) {
 			}
 		} else {
 			/* If overwriting previous char, need to refresh */
-			if (text_console[console_x][console_y]!=' ') {
+			if (text_console[console_x+(console_y*CONSOLE_X)]!=' ') {
 				refresh_screen=1;
 			}
-			text_console[console_x][console_y]=buffer[i];
-			text_color[console_x][console_y]=
+			text_console[console_x+(console_y*CONSOLE_X)]=buffer[i];
+			text_color[console_x+(console_y*CONSOLE_X)]=
 				(console_back_color<<4 |
 				(console_fore_color&0xf));
 			console_x++;
@@ -277,26 +277,20 @@ int framebuffer_console_write(const char *buffer, int length) {
 		}
 
 		if (console_y>=CONSOLE_Y) {
-			int i,result;
-			char string[256];
+			int i;
+
 			/* scroll up a line */
 
 			refresh_screen=1;
 
-			result=sprintf(string,"\nLength=%d\n",
+			memcpy(&(text_console[0]),&(text_console[CONSOLE_X]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
-			uart_write(string, result);
-
-//			memset(&text_console[0][0],'Q',
-//				CONSOLE_Y*CONSOLE_X*sizeof(unsigned char));
-			memcpy(&(text_console[0][0]),&(text_console[0][1]),
-				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
-			memcpy(&(text_color[0][0]),&(text_color[0][1]),
+			memcpy(&(text_color[0]),&(text_color[CONSOLE_X]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
 
 			for(i=0;i<CONSOLE_X;i++) {
-				text_console[i][CONSOLE_Y-1]=' ';
-				text_color[i][CONSOLE_Y-1]=FORE_GREY|BACK_BLACK;
+				text_console[i+(CONSOLE_Y-1)*CONSOLE_X]=' ';
+				text_color[i+(CONSOLE_Y-1)*CONSOLE_X]=FORE_GREY|BACK_BLACK;
 			}
 			console_y--;
 		}
@@ -316,7 +310,7 @@ int framebuffer_console_val(int x, int y) {
 	if (x>=CONSOLE_X) return -1;
 	if (y>=CONSOLE_Y) return -1;
 
-	return text_console[x][y];
+	return text_console[x+(y*CONSOLE_X)];
 
 }
 
@@ -438,8 +432,8 @@ int framebuffer_tb1(void) {
 				explosions[i].out=EXPLOSION_LENGTH;
 				explosions[i].x=missiles[i].x;
 				explosions[i].y=missiles[i].y;
-				text_console[missiles[i].x/8]
-						[missiles[i].y/16]=' ';
+				text_console[(missiles[i].x/8)+
+						(missiles[i].y/16)*CONSOLE_X]=' ';
 			}
 
 			}
