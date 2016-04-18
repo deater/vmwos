@@ -4,7 +4,8 @@
 
 #include "lib/memcpy.h"
 
-void *memcpy_byte(void *dest, const void *src, uint32_t n) {
+//void *memcpy_byte(void *dest, const void *src, uint32_t n) {
+void *memcpy(void *dest, const void *src, uint32_t n) {
 
         int i;
 

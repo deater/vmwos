@@ -38,22 +38,6 @@ int memcmp(const char *s1, const char *s2, uint32_t n) {
 	return 0;
 }
 
-
-void *memcpy(void *dest, const void *src, uint32_t n) {
-
-        int i;
-
-        char *d=dest;
-        const char *s=src;
-
-        for(i=0;i<n;i++) {
-                *d=*s;
-                d++; s++;
-        }
-
-        return dest;
-}
-
 char *strncpy(char *dest, const char *src, uint32_t n) {
 
 	uint32_t i;
