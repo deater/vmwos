@@ -1,6 +1,3 @@
-/* based on info at https://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/screen01.html */
-/* http://elinux.org/RPi_Framebuffer */
-
 #include <stddef.h>
 #include <stdint.h>
 
@@ -17,6 +14,7 @@
 
 #include "lib/string.h"
 #include "lib/memcpy.h"
+#include "lib/memset.h"
 
 #define ANSI_BLACK	0
 #define ANSI_RED	1
@@ -213,6 +211,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 	char escape_code[20];
 
 	int i,e;
+	int refresh_screen=0;
 
 	for(i=0;i<length;i++) {
 
@@ -226,6 +225,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 		} else if (buffer[i]=='\b') {
 			console_x--;
 			if (console_x<0) console_x=0;
+			refresh_screen=1;
 		} else if (buffer[i]==27) {
 			/* escape */
 			i++;
@@ -259,6 +259,10 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 			}
 		} else {
+			/* If overwriting previous char, need to refresh */
+			if (text_console[console_x][console_y]!=' ') {
+				refresh_screen=1;
+			}
 			text_console[console_x][console_y]=buffer[i];
 			text_color[console_x][console_y]=
 				(console_back_color<<4 |
@@ -275,21 +279,25 @@ int framebuffer_console_write(const char *buffer, int length) {
 			int i;
 			/* scroll up a line */
 
-			framebuffer_clear_screen(0);
-			memcpy(&text_console[0][0],&text_console[0][1],
+			refresh_screen=1;
+//			memset(&text_console[0][0],'Q',
+//				CONSOLE_Y*CONSOLE_X*sizeof(unsigned char));
+			memcpy(&(text_console[0][0]),&(text_console[0][1]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
-			memcpy(&text_color[0][0],&text_color[0][1],
+			memcpy(&(text_color[0][0]),&(text_color[0][1]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
 
 			for(i=0;i<CONSOLE_X;i++) {
 				text_console[i][CONSOLE_Y-1]=' ';
 				text_color[i][CONSOLE_Y-1]=FORE_GREY|BACK_BLACK;
-
 			}
 			console_y--;
 		}
 	}
 
+	if (refresh_screen) {
+		framebuffer_clear_screen(0);
+	}
 
 	framebuffer_console_push();
 
