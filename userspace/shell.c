@@ -8,6 +8,9 @@
 //#include <string.h>
 //#include <termios.h>
 
+/* remove when we make this a separate program */
+int ls(char *path);
+
 static int parse_input(char *string);
 
 #define VERSION "10.0"
@@ -188,6 +191,9 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"tb1",3)) {
 		vmwos_tb1();
+	}
+	else if (!strncmp(string,"ls",2)) {
+		ls(".");
 	}
 	else {
 		printf("\nUnknown commmand: \"%s\"!\n",string);

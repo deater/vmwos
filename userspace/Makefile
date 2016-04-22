@@ -27,8 +27,8 @@ printb:	printb.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) printb.elf -O binary printb
 
 
-shell.elf:	shell.o vlibc.o syscalls.arm.o vmwos.o
-	$(CROSS)$(CC) $(CFLAGS) -o shell.elf shell.o vlibc.o syscalls.arm.o vmwos.o
+shell.elf:	shell.o vlibc.o syscalls.arm.o vmwos.o ls.o
+	$(CROSS)$(CC) $(CFLAGS) -o shell.elf shell.o vlibc.o syscalls.arm.o vmwos.o ls.o
 
 printa.elf:	printa.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) -o printa.elf printa.o vlibc.o syscalls.arm.o
@@ -46,6 +46,9 @@ printb.o:	printb.c
 
 shell.o:	shell.c
 	$(CROSS)$(CC) $(CFLAGS) -c shell.c
+
+ls.o:	ls.c
+	$(CROSS)$(CC) $(CFLAGS) -c ls.c
 
 vmwos.o:	vmwos.c
 	$(CROSS)$(CC) $(CFLAGS) -c vmwos.c
