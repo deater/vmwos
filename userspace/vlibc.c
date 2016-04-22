@@ -206,3 +206,9 @@ uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor) {
 
 	return q;
 }
+
+static char strerror_string[]="Error!";
+
+char *strerror(int errnum) {
+	return strerror_string;
+}
