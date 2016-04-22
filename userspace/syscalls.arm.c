@@ -16,7 +16,7 @@
 #define __NR_getdents	141
 #define __NR_nanosleep  162
 
-uint32_t read(int fd, void *buf, size_t count) {
+int32_t read(int fd, void *buf, size_t count) {
 
 	register long r7 __asm__("r7") = __NR_read;
 	register long r0 __asm__("r0") = fd;
@@ -33,7 +33,7 @@ uint32_t read(int fd, void *buf, size_t count) {
 }
 
 
-uint32_t write(int fd, const void *buf, uint32_t size) {
+int32_t write(int fd, const void *buf, uint32_t size) {
 
 	register long r7 __asm__("r7") = __NR_write;
 	register long r0 __asm__("r0") = fd;
@@ -49,7 +49,7 @@ uint32_t write(int fd, const void *buf, uint32_t size) {
 	return r0;
 }
 
-uint32_t open(char *filename, uint32_t flags, uint32_t mode) {
+int32_t open(char *filename, uint32_t flags, uint32_t mode) {
 
 	register long r7 __asm__("r7") = __NR_open;
 	register long r0 __asm__("r0") = (long)filename;
@@ -65,7 +65,7 @@ uint32_t open(char *filename, uint32_t flags, uint32_t mode) {
 	return r0;
 }
 
-uint32_t close(uint32_t fd) {
+int32_t close(uint32_t fd) {
 
 	register long r7 __asm__("r7") = __NR_close;
 	register long r0 __asm__("r0") = fd;
@@ -95,7 +95,7 @@ int getpid(void) {
 
 }
 
-uint32_t stat(const char *pathname, struct stat *buf) {
+int32_t stat(const char *pathname, struct stat *buf) {
 
 	register long r7 __asm__("r7") = __NR_stat;
 	register long r0 __asm__("r0") = (long)pathname;
@@ -110,7 +110,7 @@ uint32_t stat(const char *pathname, struct stat *buf) {
 	return r0;
 }
 
-uint32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
+int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 
 	register long r7 __asm__("r7") = __NR_getdents;
 	register long r0 __asm__("r0") = (long)fd;

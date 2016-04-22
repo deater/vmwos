@@ -23,7 +23,7 @@ struct stat {
 	uint32_t	st_ctime;	/* last status change time */
 };
 
-uint32_t stat(const char *pathname, struct stat *buf);
+int32_t stat(const char *pathname, struct stat *buf);
 
 
 struct vmwos_dirent {
@@ -33,7 +33,7 @@ struct vmwos_dirent {
 	char		d_name[];
 };
 
-uint32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
+int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
 
 struct timespec {
 	uint32_t tv_sec;        /* seconds */
@@ -47,10 +47,10 @@ int nanosleep(const struct timespec *req, struct timespec *rem);
 #define O_WRONLY             01
 #define O_RDWR               02
 
-uint32_t write(int fd, const void *buf, uint32_t count);
-uint32_t read(int fd, void *buf, size_t count);
-uint32_t open(char *filename, uint32_t flags, uint32_t mode);
-uint32_t close(uint32_t fd);
+int32_t write(int fd, const void *buf, uint32_t count);
+int32_t read(int fd, void *buf, size_t count);
+int32_t open(char *filename, uint32_t flags, uint32_t mode);
+int32_t close(uint32_t fd);
 
 #define NCCS 32
 
