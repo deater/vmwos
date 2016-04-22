@@ -29,6 +29,8 @@
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
 
+#include "errors.h"
+
 #define MAX_FILENAME_SIZE	256
 
 static int debug=1;
@@ -82,6 +84,54 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 		max_stringsize-=16;
 	}
 	return our_offset-offset;
+}
+
+/* romfs strings are nul-terminated and come in 16-byte chunks */
+static int32_t romfs_string_length(int32_t offset) {
+
+	char temp_buffer[16];
+	int32_t our_offset=offset;
+	int32_t max_length=0;
+
+	while(1) {
+		/* read 16-byte chunk from the filesystem */
+		romfs_read_noinc(temp_buffer,our_offset,16);
+		our_offset+=16;
+
+		/* Only exit if hit the end of the string */
+		if (temp_buffer[15]==0) {
+			max_length+=strlen(temp_buffer);
+			break;	/* end of ROMfs string */
+		}
+
+		/* adjust the stringsize */
+		max_length+=16;
+	}
+	return max_length;
+}
+
+/* romfs strings are nul-terminated and come in 16-byte chunks */
+static int32_t romfs_string_length_chunks(int32_t offset) {
+
+	char temp_buffer[16];
+	int32_t our_offset=offset;
+	int32_t max_length=0;
+
+	while(1) {
+		/* read 16-byte chunk from the filesystem */
+		romfs_read_noinc(temp_buffer,our_offset,16);
+		our_offset+=16;
+
+		/* Only exit if hit the end of the string */
+		if (temp_buffer[15]==0) {
+			max_length+=16;
+			break;	/* end of ROMfs string */
+		}
+
+		/* adjust the stringsize */
+		max_length+=16;
+	}
+	return max_length;
 }
 
 
@@ -142,7 +192,7 @@ int32_t romfs_get_inode(const char *name) {
 	uint32_t offset=file_headers_start;
 	char filename[MAX_FILENAME_SIZE];
 
-	if (debug) printk("romfs: Trying to get inode for file %s\n",name);
+//	if (debug) printk("romfs_get_inode: Trying to get inode for file %s\n",name);
 
 	while(1) {
 		inode=offset;
@@ -155,7 +205,7 @@ int32_t romfs_get_inode(const char *name) {
 		offset+=16;
 
 		romfs_read_string(offset,filename,MAX_FILENAME_SIZE);
-		if (debug) printk("%s is %s? %x\n",name,filename,inode);
+//		if (debug) printk("romfs_get_inode: %s is %s? %x\n",name,filename,inode);
 
 		/* Match filename */
 		if (!strncmp(name,filename,strlen(name))) {
@@ -246,7 +296,7 @@ int32_t romfs_read_file(uint32_t inode,
 
 
 	header_offset+=4;		/* 16: filename */
-	name_length=romfs_read_string(header_offset,NULL,0);
+	name_length=romfs_string_length_chunks(header_offset);
 	header_offset+=name_length;
 	if (debug) printk("romfs: inode %d name_length %d header_offset %d\n",
 			inode,name_length,header_offset);
@@ -272,53 +322,88 @@ int32_t romfs_read_file(uint32_t inode,
 }
 
 
-int32_t romfs_get_dents(uint32_t inode,
+int32_t romfs_getdents(uint32_t dir_inode,
+			uint32_t *current_inode,
 			void *buf,uint32_t size) {
 
-	int32_t read_count=0;
-#if 0
-	int32_t header_offset,size,temp_int,name_length,read_count=0;
-	int32_t max_count=0;
+	struct vmwos_dirent *dirent_ptr;
 
-	if (debug) printk("romfs: Attempting to read %d bytes from inode %x offset %d\n",
-			count,inode,file_offset);
+	int32_t header_offset,temp_int,name_length,mode,next_header;
+	uint32_t inode=*current_inode;
+	int32_t num_entries=0,current_length=0,total_length=0;
 
+	dirent_ptr=(struct vmwos_dirent *)buf;
 
-	header_offset=inode;		/* 0: Next */
+	if (debug) {
+		printk("romfs_getdents: dir_inode %x current_inode %x\n",
+			dir_inode,inode);
+	}
+	if (*current_inode==0xffffffff) return 0;
 
-	header_offset+=4;		/* 4: type */
-
-	header_offset+=4;		/* 8: Size */
-	romfs_read_noinc(&temp_int,header_offset,4);
-	size=ntohl(temp_int);
-
-	header_offset+=4;		/* 12: Checksum */
-
-
-	header_offset+=4;		/* 16: filename */
-	name_length=romfs_read_string(header_offset,NULL,0);
-	header_offset+=name_length;
-	if (debug) printk("romfs: inode %d name_length %d header_offset %d\n",
-			inode,name_length,header_offset);
-
-	/* Return data */
-	/* FIXME: copy_to_user() */
-
-	if (debug) printk("romfs: max count %d, size is %d\n",count,size);
-	max_count=count;
-	if (max_count>size-file_offset) {
-		max_count=size-file_offset;
-		if (debug) printk("romfs: count is past end of file, limiting to %d\n",max_count);
+	/* We are the entry itself? */
+	if (*current_inode==0) {
+		header_offset=dir_inode;	/* 0: Next */
+		romfs_read_noinc(&temp_int,header_offset,4);
+		mode=ntohl(temp_int)&0x7;
+		/* Check to be sure it's a directory */
+		if ( mode!=1) {
+			printk("romfs_getdents: offset %x inode %x not a directory!\n",
+				header_offset,temp_int);
+			return -ENOTDIR;
+		}
+		/* Get inode of first file */
+		header_offset+=4;		/* 4: type */
+		romfs_read_noinc(&temp_int,header_offset,4);
+		inode=ntohl(temp_int);
 	}
 
-	if (debug) printk("romfs: reading %d bytes from %d into %x\n",
-		max_count,header_offset+file_offset,buf);
+	while(1) {
 
-	read_count=ramdisk_read(header_offset+file_offset,max_count,buf);
+		header_offset=inode;		/* 0: Next */
+		romfs_read_noinc(&temp_int,header_offset,4);
+		next_header=ntohl(temp_int)&~0xf;
+		header_offset+=4;		/* 4: type */
+		header_offset+=4;		/* 8: Size */
+		header_offset+=4;		/* 12: Checksum */
+		header_offset+=4;		/* 16: filename */
 
-	if (debug) printk("romfs: result was %d\n",read_count);
-#endif
-	return read_count;
+		name_length=romfs_string_length(header_offset);
+
+		if (debug) {
+			printk("romfs_getdents: inode %d next %d\n",
+				inode,next_header);
+		}
+
+		/* NULL terminated */
+		current_length=(sizeof(uint32_t)*3)+name_length+1;
+		/* pad to integer boundary */
+		if (current_length%4) {
+			current_length+=4-(current_length%4);
+		}
+
+		if (current_length+total_length>size) break;
+		if (inode==0) {
+			inode=0xffffffff;
+			break;
+		}
+		dirent_ptr->d_ino=inode;
+		dirent_ptr->d_off=current_length;
+		dirent_ptr->d_reclen=current_length;
+		romfs_read_string(header_offset,dirent_ptr->d_name,name_length);
+		dirent_ptr->d_name[name_length+1]=0;
+		num_entries++;
+		printk("romfs_getdents: added %s namelen %d reclen %d\n",
+			dirent_ptr->d_name,name_length,dirent_ptr->d_reclen);
+		inode=next_header;
+		total_length+=current_length;
+		dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
+	}
+
+	*current_inode=inode;
+
+	printk("romfs_getdents: num_entries %d\n",num_entries);
+
+	return total_length;
 }
 
 

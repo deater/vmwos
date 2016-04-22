@@ -190,7 +190,25 @@ void fd_table_init(void) {
 
 int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 
+	int result;
 
-	return 0;
+	if (fd>=MAX_FD) {
+		return -ENFILE;
+	}
+	else if (fd_table[fd].valid==0) {
+		printk("Attempting to getdents from unsupported fd %d\n",fd);
+		result=-EBADF;
+	}
+	/* FIXME: check if it's a directory fd */
+	else {
+		if (debug) {
+		}
+
+		result=	romfs_getdents(fd_table[fd].inode,
+					&(fd_table[fd].file_ptr),
+					dirp,count);
+	}
+	return result;
+
 }
 
