@@ -7,3 +7,4 @@ int printf(char *string,...);
 int time(int *time);
 int reboot(void);
 char *strerror(int errnum);
+int errno;
