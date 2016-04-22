@@ -188,3 +188,9 @@ void fd_table_init(void) {
 	return;
 }
 
+int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
+
+
+	return 0;
+}
+

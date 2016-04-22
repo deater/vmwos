@@ -14,9 +14,9 @@ struct stat {
 	uint32_t	st_size;	/* total size, bytes */
 	uint32_t	st_blksize;     /* I/O blocksize */
 	uint32_t	st_blocks;      /* number of blocks allocated */
-	struct timespec	st_atim;	/* access time */
-	struct timespec	st_mtim;	/* modification time */
-	struct timespec	st_ctim;	/* status change time */
+	uint32_t	st_atime;	/* access time */
+	uint32_t	st_mtime;	/* modification time */
+	uint32_t	st_ctime;	/* status change time */
 };
 
 struct statfs {
@@ -36,6 +36,14 @@ struct superblock_t {
 	uint32_t free;
 };
 
+struct vmwos_dirent {
+	uint32_t        d_ino;
+	uint32_t        d_off;
+	uint32_t        d_reclen;
+	char            d_name[];
+};
+
+
 int32_t close(uint32_t fd);
 int32_t open(const char *pathname, uint32_t flags, uint32_t mode);
 int32_t read(uint32_t fd, void *buf, uint32_t count);
@@ -45,6 +53,7 @@ int32_t statfs(const char *path, struct statfs *buf);
 int32_t mount(const char *source, const char *target,
 	const char *filesystemtype, uint32_t mountflags,
 	const void *data);
+int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
 
 void fd_table_init(void);
 

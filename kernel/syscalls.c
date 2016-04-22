@@ -98,6 +98,10 @@ uint32_t swi_handler_c(
 			result=-1;
 			break;
 
+		case SYSCALL_GETDENTS:
+			result=getdents(r0,(struct vmwos_dirent *)r1,r2);
+			break;
+
 		case SYSCALL_NANOSLEEP:
 			printk("UNIMPLEMENTED SYSCALL: NANOSLEEP\n");
 			result=-1;
