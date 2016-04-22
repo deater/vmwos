@@ -1,3 +1,40 @@
+
+#define S_IFSOCK	0140000   /* socket		*/
+#define S_IFLNK		0120000   /* symbolic link	*/
+#define S_IFREG		0100000   /* regular file	*/
+#define S_IFBLK		0060000   /* block device	*/
+#define S_IFDIR		0040000   /* directory		*/
+#define S_IFCHR		0020000   /* character device	*/
+#define S_IFIFO		0010000   /* FIFO		*/
+
+struct stat {
+	uint32_t	st_dev;		/* ID of dev containing file */
+	uint32_t	st_ino;		/* inode */
+	uint32_t	st_mode;	/* file type and mode */
+	uint32_t	st_nlink;	/* number of hard links */
+	uint32_t	st_uid;		/* user ID of owner */
+	uint32_t	st_gid;		/* group ID of owner */
+	uint32_t	st_rdev;	/* device ID for special file */
+	uint32_t	st_size;	/* file size, in bytes */
+	uint32_t	st_blksize;	/* blocksize for file I/O */
+	uint32_t	st_blocks;	/* number of 512B blocks */
+	uint32_t	st_atime;	/* last access time */
+	uint32_t	st_mtime;	/* last modify time */
+	uint32_t	st_ctime;	/* last status change time */
+};
+
+uint32_t stat(const char *pathname, struct stat *buf);
+
+
+struct vmwos_dirent {
+	uint32_t	d_ino;
+	uint32_t	d_off;
+	uint32_t	d_reclen;
+	char		d_name[];
+};
+
+uint32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
+
 struct timespec {
 	uint32_t tv_sec;        /* seconds */
 	long   tv_nsec;       /* nanoseconds */

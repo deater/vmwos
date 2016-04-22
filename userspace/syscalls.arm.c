@@ -3,6 +3,7 @@
 
 #include "syscalls.h"
 
+/* From Linux kernel, arch/arm/include/uapi/asm/unistd.h */
 #define __NR_read	3
 #define __NR_write	4
 #define __NR_open	5
@@ -12,6 +13,7 @@
 #define __NR_ioctl	54
 #define __NR_reboot	88
 #define __NR_stat	106
+#define __NR_getdents	141
 #define __NR_nanosleep  162
 
 uint32_t read(int fd, void *buf, size_t count) {
@@ -93,7 +95,7 @@ int getpid(void) {
 
 }
 
-uint32_t stat(const char *pathname, void *buf) {
+uint32_t stat(const char *pathname, struct stat *buf) {
 
 	register long r7 __asm__("r7") = __NR_stat;
 	register long r0 __asm__("r0") = (long)pathname;
@@ -106,6 +108,24 @@ uint32_t stat(const char *pathname, void *buf) {
 		: "memory");
 
 	return r0;
+}
+
+uint32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
+
+	register long r7 __asm__("r7") = __NR_getdents;
+	register long r0 __asm__("r0") = (long)fd;
+	register long r1 __asm__("r1") = (long)dirp;
+	register long r2 __asm__("r2") = (long)count;
+
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
+		: "memory");
+
+	return r0;
+
 }
 
 int nanosleep(const struct timespec *req, struct timespec *rem) {
