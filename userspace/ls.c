@@ -143,7 +143,7 @@ int ls(char *path) {
 //			printf("Inode: %ld\n",d->d_ino);
 			stat(d->d_name,&stat_buf);
 			print_permissions(stat_buf.st_mode);
-			printf(" %ld %d %d %ld ",
+			printf(" %d %d %d %d ",
 				stat_buf.st_nlink,
 				stat_buf.st_uid,
 				stat_buf.st_gid,
