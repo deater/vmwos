@@ -12,6 +12,7 @@
 #include "bcm2835_periph.h"
 #include "mmio.h"
 #include "drivers/thermal/thermal.h"
+#include "drivers/random/bcm2835_rng.h"
 
 extern int blinking_enabled;
 
@@ -164,6 +165,10 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_TEMPERATURE:
 			result=thermal_read();
+			break;
+
+		case SYSCALL_RANDOM:
+			result=bcm2835_rng_read((uint32_t *)r0);
 			break;
 
 		default:

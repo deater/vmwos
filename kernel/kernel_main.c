@@ -29,6 +29,7 @@
 #include "fs/romfs/romfs.h"
 #include "lib/memset.h"
 #include "lib/memory_benchmark.h"
+#include "drivers/random/bcm2835_rng.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -65,6 +66,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Serial console is most important so do that first */
 	uart_init();
+
+	/* Enable HW random number generator */
+	bcm2835_rng_init();
 
 	/* Enable Interrupts */
 	enable_interrupts();
