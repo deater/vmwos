@@ -3,6 +3,7 @@
 #include <stdarg.h>
 
 #include "syscalls.h"
+#include "vmwos.h"
 
 int putchar(int c) {
 
@@ -212,4 +213,19 @@ int errno=0;
 
 char *strerror(int errnum) {
 	return strerror_string;
+}
+
+int32_t rand(void) {
+
+	uint32_t buffer;
+	int32_t result;
+
+	result=vmwos_random(&buffer);
+
+	if (result<4) {
+		printf("Error!\n");
+		return -1;
+	}
+
+	return buffer;
 }

@@ -106,6 +106,8 @@ static int print_help(void) {
 	printf("\tgetpid	- print current process ID\n");
 	printf("\tgradient	- make background look cool\n");
 	printf("\thelp		- prints this help message\n");
+	printf("\tls		- list files\n");
+	printf("\trandom	- print random number\n");
 	printf("\treset		- reset the machine\n");
 	printf("\trun X		- run program #X\n");
 	printf("\tstop X	- stop program #X\n");
@@ -194,6 +196,9 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"ls",2)) {
 		ls(".");
+	}
+	else if (!strncmp(string,"random",6)) {
+		printf("%d\n",rand());
 	}
 	else {
 		printf("\nUnknown commmand: \"%s\"!\n",string);

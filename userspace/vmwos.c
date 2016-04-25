@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "vmwos.h"
 
 int vmwos_blink(int value) {
@@ -102,6 +104,20 @@ int vmwos_get_temp(void) {
 		"svc #0\n"
 		: "=r"(r0)
 		: "r"(r7)
+		: "memory");
+
+	return r0;
+}
+
+int vmwos_random(uint32_t *buffer) {
+
+	register long r7 __asm__("r7") = __NR_random;
+	register long r0 __asm__("r0") = (long)buffer;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
 		: "memory");
 
 	return r0;

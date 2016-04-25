@@ -31,10 +31,10 @@ shell.elf:	shell.o vlibc.o syscalls.arm.o vmwos.o ls.o
 	$(CROSS)$(CC) $(CFLAGS) -o shell.elf shell.o vlibc.o syscalls.arm.o vmwos.o ls.o
 
 printa.elf:	printa.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) -o printa.elf printa.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) -o printa.elf printa.o vlibc.o syscalls.arm.o vmwos.o
 
 printb.elf:	printb.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) -o printb.elf printb.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) -o printb.elf printb.o vlibc.o syscalls.arm.o vmwos.o
 
 ####
 

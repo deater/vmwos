@@ -8,3 +8,4 @@ int time(int *time);
 int reboot(void);
 char *strerror(int errnum);
 int errno;
+int32_t rand(void);

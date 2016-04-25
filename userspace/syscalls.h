@@ -133,3 +133,5 @@ int ioctl4(int d, unsigned long request, unsigned long req2, unsigned long req3)
 int getpid(void);
 int sys_time(void);
 int sys_reboot(void);
+
+int32_t sys_random(uint32_t *buffer);
