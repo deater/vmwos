@@ -4,6 +4,7 @@
 /* For BCM2835, this will be different on BCM2836 Pi2 */
 #define IO_BASE	0x20000000
 
+
 /************/
 /* Watchdog */
 /************/
@@ -17,13 +18,22 @@
 #define PM_WDOG (PM_BASE + 0x24)
 
 
+/***************************/
+/* Random Number Generator */
+/***************************/
+
+#define RNG_BASE		(IO_BASE+0x104000)
+#define RNG_CTRL		(RNG_BASE+0x0)
+#define RNG_STATUS		(RNG_BASE+0x4)
+#define RNG_DATA		(RNG_BASE+0x8)
+#define RNG_FF_THRESHOLD	(RNG_BASE+0xc)
 
 
 /********/
 /* GPIO */
 /********/
 
-#define GPIO_BASE	IO_BASE+0x200000
+#define GPIO_BASE	(IO_BASE+0x200000)
 /* GPFSEL = Function Select Registers */
 /*   Each reg 3 groups of 10 */
 /*   000 = Input, 001 = Output */

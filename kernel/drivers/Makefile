@@ -11,6 +11,7 @@ drivers.a:	\
 		gpio/gpio.a \
 		keyboard/keyboard.a \
 		led/led.a \
+		random/random.a \
 		serial/serial.a \
 		thermal/thermal.a \
 		timer/timer.a
@@ -23,6 +24,7 @@ drivers.a:	\
 		gpio/gpio.a \
 		keyboard/keyboard.a \
 		led/led.a \
+		random/random.a \
 		serial/serial.a \
 		thermal/thermal.a \
 		timer/timer.a
@@ -48,6 +50,9 @@ keyboard/keyboard.a:	force_look
 led/led.a:	force_look
 	cd led && make
 
+random/random.a:	force_look
+	cd random && make
+
 serial/serial.a:	force_look
 	cd serial && make
 
@@ -70,6 +75,7 @@ clean:
 	cd gpio && make clean
 	cd keyboard && make clean
 	cd led && make clean
+	cd random && make clean
 	cd serial && make clean
 	cd thermal && make clean
 	cd timer && make clean
