@@ -390,7 +390,7 @@ int32_t romfs_getdents(uint32_t dir_inode,
 		dirent_ptr->d_off=current_length;
 		dirent_ptr->d_reclen=current_length;
 		romfs_read_string(header_offset,dirent_ptr->d_name,name_length);
-		dirent_ptr->d_name[name_length+1]=0;
+		dirent_ptr->d_name[name_length]=0;
 		num_entries++;
 		if (debug) printk("romfs_getdents: added %s namelen %d reclen %d\n",
 			dirent_ptr->d_name,name_length,dirent_ptr->d_reclen);
