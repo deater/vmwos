@@ -103,12 +103,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	framebuffer_init(framebuffer_width,framebuffer_height,24);
 	framebuffer_console_init();
 
+#if 0
 	/* Delay to allow time for serial port to settle */
 	/* So we can actually see the output on the terminal */
 	delay(0x3f0000);
 
 	printk("\nWaiting for serial port to be ready (press any key)\n");
 	uart_getc();
+#endif
 
 	uart_enable_interrupts();
 
