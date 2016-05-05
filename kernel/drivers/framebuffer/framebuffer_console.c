@@ -7,6 +7,7 @@
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 
+
 /* Layering violation? */
 #include "drivers/serial/pl011_uart.h"
 
@@ -205,7 +206,71 @@ static void ansi_parse_color(char *code) {
 	}
 }
 
+static int ansi_parse_amount(char *code) {
 
+	int p=0;
+	int amount=0;
+
+	/* if no number, then default to 1 */
+	if (code[p]>='A') return 1;
+
+	while(code[p]!=0) {
+
+		if (code[p]>='A') break;
+		amount*=10;
+		amount+=(code[p]-'0');
+		p++;
+	}
+
+	return amount;
+}
+
+static void ansi_parse_pair(char *code, int *x, int *y) {
+
+	int p=0;
+	int amount=0;
+
+	/* Could probably factor this into the previous function */
+	/* Being lazy */
+
+	/* if no number, then default to 1 */
+	if (code[p]>=';') {
+		*y=1;
+	}
+	else {
+		while(code[p]!=0) {
+
+			if (code[p]>=';') break;
+			amount*=10;
+			amount+=(code[p]-'0');
+			p++;
+		}
+		*y=amount;
+	}
+	p++;
+	amount=0;
+
+	/* if no number, then default to 1 */
+	if (code[p]>=';') {
+		*x=1;
+	}
+	else {
+		while(code[p]!=0) {
+
+			if (code[p]>=';') break;
+			amount*=10;
+			amount+=(code[p]-'0');
+			p++;
+		}
+		*x=amount;
+	}
+	p++;
+	amount=0;
+
+}
+
+
+/* FIXME: re-write as state machine */
 
 int framebuffer_console_write(const char *buffer, int length) {
 
@@ -213,6 +278,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 	int i,e;
 	int refresh_screen=0;
+	int distance,newx,newy;
 
 	for(i=0;i<length;i++) {
 
@@ -247,15 +313,54 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 //				printk("ESCAPE! %s\n",escape_code);
 
-				/* clear screen */
-				if (escape_code[e]=='J') {
-					framebuffer_console_clear();
-					framebuffer_console_home();
-				}
-				/* colors */
-				if (escape_code[e]=='m') {
-//					printk("Parsing %s\n",escape_code);
-					ansi_parse_color(escape_code);
+//				sprintf(debug_buffer,"\nESCAPE! %s\n",escape_code);
+//				uart_write(debug_buffer,strlen(debug_buffer));
+
+				switch(escape_code[e]) {
+					case 'A':
+						/* cursor up */
+						distance=ansi_parse_amount(escape_code);
+						console_y-=distance;
+						break;
+					case 'B':
+						/* cursor down */
+						distance=ansi_parse_amount(escape_code);
+						console_y+=distance;
+						break;
+					case 'C':
+						/* cursor forward */
+						distance=ansi_parse_amount(escape_code);
+						console_x+=distance;
+						break;
+					case 'D':
+						/* cursor backward */
+						distance=ansi_parse_amount(escape_code);
+						console_x-=distance;
+						break;
+					case 'H':
+						/* GotoXY */
+						ansi_parse_pair(escape_code,&newx,&newy);
+						/* ansi co-ords are 1-based */
+						console_x=newx-1;
+						console_y=newy-1;
+						break;
+					case 'J':
+						/* clear screen */
+						framebuffer_console_clear();
+						framebuffer_console_home();
+						break;
+					case 'm':
+						/* colors */
+	//					printk("Parsing %s\n",escape_code);
+						ansi_parse_color(escape_code);
+						break;
+					default:
+//						sprintf(debug_buffer,"ERROR! %s\n",escape_code);
+//						uart_write(debug_buffer,strlen(debug_buffer));
+
+						printk("Unknown code sequence \'%s\'",
+							escape_code);
+						break;
 				}
 
 			}
@@ -270,6 +375,10 @@ int framebuffer_console_write(const char *buffer, int length) {
 				(console_fore_color&0xf));
 			console_x++;
 		}
+
+		if (console_x<0) console_x=0;
+
+		if (console_y<0) console_y=0;
 
 		if (console_x>=CONSOLE_X) {
 			console_x=0;
@@ -333,7 +442,7 @@ struct explosion_type {
 
 int framebuffer_tb1(void) {
 
-	int ch;
+	char ch;
 	int x=400,y=550;
 	int xspeed=0;
 	int i;
