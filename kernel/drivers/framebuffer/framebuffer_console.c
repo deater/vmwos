@@ -272,50 +272,110 @@ static void ansi_parse_pair(char *code, int *x, int *y) {
 
 /* FIXME: re-write as state machine */
 
+/* Arbitrary, can't find a spec although more than 3 shouldn't be necessary */
+#define ANSI_MAX_NUMBERS 10
+
+#define ANSI_STATE_NORMAL	0
+#define ANSI_STATE_ESCAPE	1
+#define ANSI_STATE_NUMBER	2
+#define ANSI_STATE_COMPLETE	3
+
+static int numbers[ANSI_MAX_NUMBERS];
+static int which_number=0;
+static int ansi_state=ANSI_STATE_NORMAL;
+
 int framebuffer_console_write(const char *buffer, int length) {
 
 	char escape_code[20];
 
-	int i,e;
+	int i=0,e;
 	int refresh_screen=0;
 	int distance,newx,newy;
 
-	for(i=0;i<length;i++) {
+	while(1) {
+		if (ansi_state==ANSI_STATE_NORMAL) {
+			if (buffer[i]=='\r') {
+				console_y++;
+			} else if (buffer[i]=='\n') {
+				console_x=0;
+				console_y++;
+			} else if (buffer[i]=='\t') {
+				console_x=(console_x+8)&(~0x7);
+			} else if (buffer[i]=='\b') {
+				console_x--;
+				if (console_x<0) console_x=0;
+				refresh_screen=1;
+			} else if (buffer[i]==27) {
+				ansi_state=ANSI_STATE_ESCAPE;
+			}
 
-		if (buffer[i]=='\r') {
-			console_y++;
-		} else if (buffer[i]=='\n') {
+			else {
+				/* Write out the characters */
+				/* If overwriting previous char, need to refresh */
+				if (text_console[console_x+(console_y*CONSOLE_X)]!=' ') {
+					refresh_screen=1;
+				}
+				text_console[console_x+(console_y*CONSOLE_X)]=buffer[i];
+				text_color[console_x+(console_y*CONSOLE_X)]=
+					(console_back_color<<4 |
+					(console_fore_color&0xf));
+				console_x++;
+			}
+
+
+
+		}
+		else if (ansi_state==ANSI_STATE_ESCAPE) {
+			if (buffer[i]=='[') {
+				ansi_state=ANSI_STATE_NUMBER;
+			}
+			else {
+				ansi_state=ANSI_STATE_NORMAL;
+			}
+		}
+		else if (ansi_state==ANSI_STATE_NUMBER) {
+			ansi_state=ANSI_STATE_COMPLETE;
+		}
+		else if (ansi_state==ANSI_STATE_COMPLETE) {
+			ansi_state=ANSI_STATE_NORMAL;
+		}
+
+		/* Bounds check */
+		if (console_x<0) console_x=0;
+
+		if (console_y<0) console_y=0;
+
+		if (console_x>=CONSOLE_X) {
 			console_x=0;
 			console_y++;
-		} else if (buffer[i]=='\t') {
-			console_x=(console_x+8)&(~0x7);
-		} else if (buffer[i]=='\b') {
-			console_x--;
-			if (console_x<0) console_x=0;
+		}
+
+		if (console_y>=CONSOLE_Y) {
+			int i;
+
+			/* scroll up a line */
+
 			refresh_screen=1;
-		} else if (buffer[i]==27) {
-			/* escape */
-			i++;
-			if (buffer[i]=='[') {
-				i++;
 
-				/* Read in the command */
-				e=0;
+			memcpy(&(text_console[0]),&(text_console[CONSOLE_X]),
+				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
+			memcpy(&(text_color[0]),&(text_color[CONSOLE_X]),
+				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
 
-				while (!isalpha(buffer[i])) {
-					escape_code[e]=buffer[i];
-					e++;
-					i++;
-				}
+			for(i=0;i<CONSOLE_X;i++) {
+				text_console[i+(CONSOLE_Y-1)*CONSOLE_X]=' ';
+				text_color[i+(CONSOLE_Y-1)*CONSOLE_X]=FORE_GREY|BACK_BLACK;
+			}
+			console_y--;
+		}
 
-				escape_code[e]=buffer[i];
-				escape_code[e+1]=0;
+		/* Go to next character */
+		i++;
+		if (i==length) break;
 
-//				printk("ESCAPE! %s\n",escape_code);
+	}
 
-//				sprintf(debug_buffer,"\nESCAPE! %s\n",escape_code);
-//				uart_write(debug_buffer,strlen(debug_buffer));
-
+#if 0
 				switch(escape_code[e]) {
 					case 'A':
 						/* cursor up */
@@ -365,45 +425,8 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 			}
 		} else {
-			/* If overwriting previous char, need to refresh */
-			if (text_console[console_x+(console_y*CONSOLE_X)]!=' ') {
-				refresh_screen=1;
-			}
-			text_console[console_x+(console_y*CONSOLE_X)]=buffer[i];
-			text_color[console_x+(console_y*CONSOLE_X)]=
-				(console_back_color<<4 |
-				(console_fore_color&0xf));
-			console_x++;
 		}
-
-		if (console_x<0) console_x=0;
-
-		if (console_y<0) console_y=0;
-
-		if (console_x>=CONSOLE_X) {
-			console_x=0;
-			console_y++;
-		}
-
-		if (console_y>=CONSOLE_Y) {
-			int i;
-
-			/* scroll up a line */
-
-			refresh_screen=1;
-
-			memcpy(&(text_console[0]),&(text_console[CONSOLE_X]),
-				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
-			memcpy(&(text_color[0]),&(text_color[CONSOLE_X]),
-				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
-
-			for(i=0;i<CONSOLE_X;i++) {
-				text_console[i+(CONSOLE_Y-1)*CONSOLE_X]=' ';
-				text_color[i+(CONSOLE_Y-1)*CONSOLE_X]=FORE_GREY|BACK_BLACK;
-			}
-			console_y--;
-		}
-	}
+#endif
 
 	if (refresh_screen) {
 		framebuffer_clear_screen(0);
