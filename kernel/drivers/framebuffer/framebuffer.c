@@ -119,9 +119,9 @@ int framebuffer_hline(int color, int x0, int x1, int y) {
 	b=color&0x0000ff;
 
 	for(x=x0;x<x1;x++) {
-		fb[(y*current_fb.pitch)+(x*3)+0]=r;
+		fb[(y*current_fb.pitch)+(x*3)+0]=b;
 		fb[(y*current_fb.pitch)+(x*3)+1]=g;
-		fb[(y*current_fb.pitch)+(x*3)+2]=b;
+		fb[(y*current_fb.pitch)+(x*3)+2]=r;
 	}
 
 	return 0;
@@ -139,9 +139,9 @@ int framebuffer_vline(int color, int y0, int y1, int x) {
 	b=color&0x0000ff;
 
 	for(y=y0;y<y1;y++) {
-		fb[(y*current_fb.pitch)+(x*3)+0]=r;
+		fb[(y*current_fb.pitch)+(x*3)+0]=b;
 		fb[(y*current_fb.pitch)+(x*3)+1]=g;
-		fb[(y*current_fb.pitch)+(x*3)+2]=b;
+		fb[(y*current_fb.pitch)+(x*3)+2]=r;
 	}
 
 	return 0;
@@ -168,9 +168,9 @@ int framebuffer_putpixel(int color, int x, int y) {
 	g=(color&0x00ff00)>>8;
 	b=color&0x0000ff;
 
-	fb[(y*current_fb.pitch)+(x*3)+0]=r;
+	fb[(y*current_fb.pitch)+(x*3)+0]=b;
 	fb[(y*current_fb.pitch)+(x*3)+1]=g;
-	fb[(y*current_fb.pitch)+(x*3)+2]=b;
+	fb[(y*current_fb.pitch)+(x*3)+2]=r;
 
 	return 0;
 
