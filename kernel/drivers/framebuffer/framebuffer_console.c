@@ -334,6 +334,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 						}
 						if (numbers[c]==1) {
 							console_fore_bright=1;
+							console_fore_color|=(1<<3);
 						}
 
 						/* Foreground Colors */
