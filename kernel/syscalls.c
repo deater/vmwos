@@ -85,6 +85,14 @@ uint32_t swi_handler_c(
 			result=close(r0);
 			break;
 
+		case SYSCALL_WAITPID:
+			printk("Unsupported waitpid on %d\n",r0);
+			break;
+
+		case SYSCALL_EXECVE:
+			printk("Trying to exec %s\n",(char *)r0);
+			break;
+
 		case SYSCALL_STAT:
 			result=stat((char *)r0,(struct stat *)r1);
 			break;
