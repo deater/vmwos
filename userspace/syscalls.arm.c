@@ -9,6 +9,8 @@
 #define __NR_write	4
 #define __NR_open	5
 #define __NR_close	6
+#define __NR_waitpid	7
+#define __NR_execve	11
 #define __NR_time	13
 #define __NR_getpid	20
 #define __NR_ioctl	54
@@ -95,6 +97,42 @@ int32_t close(uint32_t fd) {
 	return r0;
 }
 
+int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
+
+	register long r7 __asm__("r7") = __NR_waitpid;
+	register long r0 __asm__("r0") = (long)pid;
+	register long r1 __asm__("r1") = (long)wstatus;
+	register long r2 __asm__("r2") = (long)options;
+
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
+		: "memory");
+
+	return r0;
+
+}
+
+int32_t execve(const char *filename, char *const argv[],
+		char *const envp[]) {
+
+	register long r7 __asm__("r7") = __NR_execve;
+	register long r0 __asm__("r0") = (long)filename;
+	register long r1 __asm__("r1") = (long)argv;
+	register long r2 __asm__("r2") = (long)envp;
+
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
+		: "memory");
+
+	return r0;
+
+}
 
 int32_t getpid(void) {
 

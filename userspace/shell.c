@@ -200,6 +200,18 @@ static int parse_input(char *string) {
 	else if (!strncmp(string,"random",6)) {
 		printf("%d\n",rand());
 	}
+	else if (!strncmp(string,"hello",5)) {
+		int32_t pid,status;
+
+		pid=vfork();
+		if (pid==0) {
+			execve("hello",NULL,NULL);
+		}
+		else {
+			waitpid(pid,&status,0);
+			printf("Child exited with %d\n",status);
+		}
+	}
 	else {
 		printf("\nUnknown commmand: \"%s\"!\n",string);
 	}

@@ -135,5 +135,8 @@ int32_t ioctl4(int d, unsigned long request, unsigned long req2, unsigned long r
 int32_t getpid(void);
 int32_t sys_time(void);
 int32_t sys_reboot(void);
+int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options);
+int32_t execve(const char *filename, char *const argv[], char *const envp[]);
+
 
 int32_t sys_random(uint32_t *buffer);
