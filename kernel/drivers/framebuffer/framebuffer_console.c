@@ -36,6 +36,7 @@ static int console_x=0;
 static int console_y=0;
 static int console_fore_color=0xffffff;
 static int console_back_color=0;
+static int console_fore_bright=0;
 
 static unsigned int ansi_colors[16]={
 	0x000000, /* black */
@@ -157,120 +158,6 @@ int framebuffer_console_push(void) {
 	return 0;
 }
 
-static int isalpha(int ch) {
-
-	if ((ch>='A') && (ch<='Z')) return 1;
-	if ((ch>='a') && (ch<='z')) return 1;
-
-	return 0;
-
-}
-
-static void ansi_parse_color(char *code) {
-
-	int p=0;
-	int number=0;
-
-//	printk("Parsing: %s\n",code);
-
-	while(code[p]!=0) {
-
-		if ((code[p]==';') || (code[p]=='m')) {
-
-//			printk("Setting color %d\n",number);
-
-			if (number==0) {
-				console_fore_color=ANSI_GREY;
-				console_back_color=ANSI_BLACK;
-			}
-
-			/* Foreground Colors */
-			if ((number>=30)&&(number<=37)) {
-				console_fore_color=number-30;
-			}
-
-			/* FIXME Color 38 used for 24-bit color support */
-
-			/* Background Colors */
-			if ((number>=40)&&(number<=47)) {
-				console_back_color=number-40;
-			}
-			number=0;
-		}
-		else {
-			number*=10;
-			number+=(code[p]-'0');
-		}
-
-		p++;
-	}
-}
-
-static int ansi_parse_amount(char *code) {
-
-	int p=0;
-	int amount=0;
-
-	/* if no number, then default to 1 */
-	if (code[p]>='A') return 1;
-
-	while(code[p]!=0) {
-
-		if (code[p]>='A') break;
-		amount*=10;
-		amount+=(code[p]-'0');
-		p++;
-	}
-
-	return amount;
-}
-
-static void ansi_parse_pair(char *code, int *x, int *y) {
-
-	int p=0;
-	int amount=0;
-
-	/* Could probably factor this into the previous function */
-	/* Being lazy */
-
-	/* if no number, then default to 1 */
-	if (code[p]>=';') {
-		*y=1;
-	}
-	else {
-		while(code[p]!=0) {
-
-			if (code[p]>=';') break;
-			amount*=10;
-			amount+=(code[p]-'0');
-			p++;
-		}
-		*y=amount;
-	}
-	p++;
-	amount=0;
-
-	/* if no number, then default to 1 */
-	if (code[p]>=';') {
-		*x=1;
-	}
-	else {
-		while(code[p]!=0) {
-
-			if (code[p]>=';') break;
-			amount*=10;
-			amount+=(code[p]-'0');
-			p++;
-		}
-		*x=amount;
-	}
-	p++;
-	amount=0;
-
-}
-
-
-/* FIXME: re-write as state machine */
 
 /* Arbitrary, can't find a spec although more than 3 shouldn't be necessary */
 #define ANSI_MAX_NUMBERS 10
@@ -280,17 +167,20 @@ static void ansi_parse_pair(char *code, int *x, int *y) {
 #define ANSI_STATE_NUMBER	2
 #define ANSI_STATE_COMPLETE	3
 
-static int numbers[ANSI_MAX_NUMBERS];
-static int which_number=0;
-static int ansi_state=ANSI_STATE_NORMAL;
+#define ANSI_DEFAULT		0xffffffff
+
+static uint32_t numbers[ANSI_MAX_NUMBERS];
+static int32_t which_number=-1;
+static uint32_t ansi_state=ANSI_STATE_NORMAL;
+static uint32_t ansi_command;
 
 int framebuffer_console_write(const char *buffer, int length) {
 
-	char escape_code[20];
-
-	int i=0,e;
+	int i=0;
 	int refresh_screen=0;
-	int distance,newx,newy;
+	int distance;
+	int x;
+	int c;
 
 	while(1) {
 		if (ansi_state==ANSI_STATE_NORMAL) {
@@ -334,9 +224,135 @@ int framebuffer_console_write(const char *buffer, int length) {
 			}
 		}
 		else if (ansi_state==ANSI_STATE_NUMBER) {
-			ansi_state=ANSI_STATE_COMPLETE;
+			int val;
+			val=buffer[i];
+
+			/* If not a number */
+			if ((val<'0') || (val>'9')) {
+				/* ; separated list, move to next number */
+				if (val==';') {
+					which_number++;
+					if (which_number==ANSI_MAX_NUMBERS) {
+						ansi_state=ANSI_STATE_NORMAL;
+						printk("ANSI: Too many numbers!\n");
+						break;
+					}
+					numbers[which_number]=0;
+				}
+				else {
+					which_number++;
+					ansi_command=val;
+					ansi_state=ANSI_STATE_COMPLETE;
+				}
+			}
+
+			else {
+				if (which_number==-1) {
+					which_number=0;
+					numbers[0]=0;
+				}
+				numbers[which_number]*=10;
+				numbers[which_number]+=val-'0';
+			}
 		}
-		else if (ansi_state==ANSI_STATE_COMPLETE) {
+
+		if (ansi_state==ANSI_STATE_COMPLETE) {
+
+			switch(ansi_command) {
+				case 'A':
+					/* cursor up */
+					if (numbers[0]==ANSI_DEFAULT) distance=1;
+					else distance=numbers[0];
+					console_y-=distance;
+					break;
+				case 'B':
+					/* cursor down */
+					if (numbers[0]==ANSI_DEFAULT) distance=1;
+					else distance=numbers[0];
+					console_y+=distance;
+					break;
+				case 'C':
+					/* cursor forward */
+					if (numbers[0]==ANSI_DEFAULT) distance=1;
+					else distance=numbers[0];
+					console_x+=distance;
+					break;
+				case 'D':
+					/* cursor backward */
+					if (numbers[0]==ANSI_DEFAULT) distance=1;
+					else distance=numbers[0];
+					console_x-=distance;
+					break;
+				case 'H':
+					/* GotoXY */
+					if (numbers[0]==ANSI_DEFAULT) {
+						console_x=0;
+						console_y=0;
+					}
+					else if (which_number==0) {
+						/* 1-based */
+						console_x=numbers[0]-1;
+					}
+					else {
+						/* 1-based */
+						console_x=numbers[0]-1;
+						console_y=numbers[1]-1;
+
+					}
+					break;
+				case 'J':
+					switch(numbers[0]) {
+
+					case 0:
+					case ANSI_DEFAULT:
+						/* clear to end of screen */
+					case 1:
+						/* clear to beginning of screen */
+					default:
+						printk("ANSI: unknown clear %d\n",numbers[0]);
+						break;
+					case 2:
+						/* clear all of screen */
+						framebuffer_console_clear();
+						framebuffer_console_home();
+						break;
+					}
+					break;
+				case 'm':
+					/* colors */
+					for(c=0;c<which_number;c++) {
+						if ((numbers[c]==0) ||
+							(numbers[c]==ANSI_DEFAULT)) {
+
+							console_fore_color=ANSI_GREY;
+							console_back_color=ANSI_BLACK;
+							console_fore_bright=0;
+						}
+						if (numbers[c]==1) {
+							console_fore_bright=1;
+						}
+
+						/* Foreground Colors */
+						if ((numbers[c]>=30)&&(numbers[c]<=37)) {
+							console_fore_color=(numbers[c]-30)|(console_fore_bright<<3);
+						}
+
+						/* FIXME Color 38 used for 24-bit color support */
+
+						/* Background Colors */
+						if ((numbers[c]>=40)&&(numbers[c]<=47)) {
+							console_back_color=numbers[c]-40;
+						}
+					}
+					break;
+				default:
+					printk("Unknown ansi command \'%c\'",
+							ansi_command);
+						break;
+			}
+
+			/* reset state */
+			which_number=-1;
 			ansi_state=ANSI_STATE_NORMAL;
 		}
 
@@ -346,12 +362,12 @@ int framebuffer_console_write(const char *buffer, int length) {
 		if (console_y<0) console_y=0;
 
 		if (console_x>=CONSOLE_X) {
-			console_x=0;
+			console_x=console_x%CONSOLE_X;
 			console_y++;
 		}
 
 		if (console_y>=CONSOLE_Y) {
-			int i;
+
 
 			/* scroll up a line */
 
@@ -362,9 +378,9 @@ int framebuffer_console_write(const char *buffer, int length) {
 			memcpy(&(text_color[0]),&(text_color[CONSOLE_X]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
 
-			for(i=0;i<CONSOLE_X;i++) {
-				text_console[i+(CONSOLE_Y-1)*CONSOLE_X]=' ';
-				text_color[i+(CONSOLE_Y-1)*CONSOLE_X]=FORE_GREY|BACK_BLACK;
+			for(x=0;x<CONSOLE_X;x++) {
+				text_console[x+(CONSOLE_Y-1)*CONSOLE_X]=' ';
+				text_color[x+(CONSOLE_Y-1)*CONSOLE_X]=FORE_GREY|BACK_BLACK;
 			}
 			console_y--;
 		}
@@ -374,59 +390,6 @@ int framebuffer_console_write(const char *buffer, int length) {
 		if (i==length) break;
 
 	}
-
-#if 0
-				switch(escape_code[e]) {
-					case 'A':
-						/* cursor up */
-						distance=ansi_parse_amount(escape_code);
-						console_y-=distance;
-						break;
-					case 'B':
-						/* cursor down */
-						distance=ansi_parse_amount(escape_code);
-						console_y+=distance;
-						break;
-					case 'C':
-						/* cursor forward */
-						distance=ansi_parse_amount(escape_code);
-						console_x+=distance;
-						break;
-					case 'D':
-						/* cursor backward */
-						distance=ansi_parse_amount(escape_code);
-						console_x-=distance;
-						break;
-					case 'H':
-						/* GotoXY */
-						ansi_parse_pair(escape_code,&newx,&newy);
-						/* ansi co-ords are 1-based */
-						console_x=newx-1;
-						console_y=newy-1;
-						break;
-					case 'J':
-						/* clear screen */
-						framebuffer_console_clear();
-						framebuffer_console_home();
-						break;
-					case 'm':
-						/* colors */
-	//					printk("Parsing %s\n",escape_code);
-						ansi_parse_color(escape_code);
-						break;
-					default:
-//						sprintf(debug_buffer,"ERROR! %s\n",escape_code);
-//						uart_write(debug_buffer,strlen(debug_buffer));
-
-						printk("Unknown code sequence \'%s\'",
-							escape_code);
-						break;
-				}
-
-			}
-		} else {
-		}
-#endif
 
 	if (refresh_screen) {
 		framebuffer_clear_screen(0);
