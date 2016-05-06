@@ -62,6 +62,10 @@ uint32_t swi_handler_c(
 //	printk("Starting syscall %d\n",r7);
 
 	switch(r7) {
+		case SYSCALL_EXIT:
+			printk("Process exiting with %d\n",r0);
+			break;
+
 		case SYSCALL_READ:
 //			printk("Trying to read: %d %x %d\n",r0,r1,r2);
 			result=read(r0,(char *)r1,(size_t)r2);
@@ -106,6 +110,11 @@ uint32_t swi_handler_c(
 		case SYSCALL_NANOSLEEP:
 			printk("UNIMPLEMENTED SYSCALL: NANOSLEEP\n");
 			result=-1;
+			break;
+
+		case SYSCALL_VFORK:
+			printk("Trying to vfork\n");
+			//result=vfork();
 			break;
 
 		case SYSCALL_BLINK:

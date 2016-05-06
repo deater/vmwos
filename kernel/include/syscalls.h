@@ -3,7 +3,8 @@
 #define STDERR	2
 
 /* Same as Linux for compatibility */
-//#define SYSCALL_EXIT		1
+/* arch/arm/include/uapi/asm/unistd.h */
+#define SYSCALL_EXIT		1
 //#define SYSCALL_FORK		2
 #define SYSCALL_READ		3
 #define SYSCALL_WRITE		4
@@ -17,6 +18,7 @@
 #define SYSCALL_STAT		106
 #define SYSCALL_GETDENTS	141
 #define SYSCALL_NANOSLEEP	162
+#define SYSCALL_VFORK		190
 
 /* VMW syscalls */
 #define SYSCALL_BLINK		8192
