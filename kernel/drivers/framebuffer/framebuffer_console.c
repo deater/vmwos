@@ -221,13 +221,14 @@ int framebuffer_console_write(const char *buffer, int length) {
 		}
 		else if (ansi_state==ANSI_STATE_ESCAPE) {
 			if (buffer[i]=='[') {
+				which_number=-1;
+				numbers[0]=ANSI_DEFAULT;
 				ansi_state=ANSI_STATE_NUMBER;
 			}
 			else {
 				ansi_state=ANSI_STATE_NORMAL;
 			}
-		}
-		else if (ansi_state==ANSI_STATE_NUMBER) {
+		} else if (ansi_state==ANSI_STATE_NUMBER) {
 			int val;
 			val=buffer[i];
 
@@ -277,8 +278,12 @@ int framebuffer_console_write(const char *buffer, int length) {
 					break;
 				case 'C':
 					/* cursor forward */
-					if (numbers[0]==ANSI_DEFAULT) distance=1;
-					else distance=numbers[0];
+					if (numbers[0]==ANSI_DEFAULT) {
+						distance=1;
+					}
+					else {
+						distance=numbers[0];
+					}
 					console_x+=distance;
 					break;
 				case 'D':
@@ -295,12 +300,12 @@ int framebuffer_console_write(const char *buffer, int length) {
 					}
 					else if (which_number==0) {
 						/* 1-based */
-						console_x=numbers[0]-1;
+						console_y=numbers[0]-1;
 					}
 					else {
 						/* 1-based */
-						console_x=numbers[0]-1;
-						console_y=numbers[1]-1;
+						console_y=numbers[0]-1;
+						console_x=numbers[1]-1;
 
 					}
 					break;
