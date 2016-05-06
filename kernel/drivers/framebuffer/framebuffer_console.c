@@ -185,8 +185,12 @@ int framebuffer_console_write(const char *buffer, int length) {
 	while(1) {
 		if (ansi_state==ANSI_STATE_NORMAL) {
 			if (buffer[i]=='\r') {
-				console_y++;
+				/* Carriage Return */
+				/* console_x=0; */
+				/* we ignore and hope a \r is always */
+				/* followed by a \n */
 			} else if (buffer[i]=='\n') {
+				/* Linefeed */
 				console_x=0;
 				console_y++;
 			} else if (buffer[i]=='\t') {
@@ -361,6 +365,8 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 		if (console_y<0) console_y=0;
 
+		/* FIXME: should we wrap multiple lines if console_x */
+		/* is way longer than a line? */
 		if (console_x>=CONSOLE_X) {
 			console_x=console_x%CONSOLE_X;
 			console_y++;
