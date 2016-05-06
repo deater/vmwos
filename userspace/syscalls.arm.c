@@ -4,6 +4,7 @@
 #include "syscalls.h"
 
 /* From Linux kernel, arch/arm/include/uapi/asm/unistd.h */
+#define __NR_exit	1
 #define __NR_read	3
 #define __NR_write	4
 #define __NR_open	5
@@ -15,6 +16,21 @@
 #define __NR_stat	106
 #define __NR_getdents	141
 #define __NR_nanosleep  162
+#define __NR_vfork	190
+
+int32_t exit(int32_t status) {
+
+	register long r7 __asm__("r7") = __NR_exit;
+	register long r0 __asm__("r0") = status;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
+		: "memory");
+
+	return r0;
+}
 
 int32_t read(int fd, void *buf, size_t count) {
 
@@ -80,7 +96,7 @@ int32_t close(uint32_t fd) {
 }
 
 
-int getpid(void) {
+int32_t getpid(void) {
 
 	register long r7 __asm__("r7") = __NR_getpid;
 	register long r0 __asm__("r0");
@@ -128,7 +144,7 @@ int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 
 }
 
-int nanosleep(const struct timespec *req, struct timespec *rem) {
+int32_t nanosleep(const struct timespec *req, struct timespec *rem) {
 
 	register long r7 __asm__("r7") = __NR_nanosleep;
 	register long r0 __asm__("r0") = (long)req;
@@ -145,7 +161,22 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
 
 }
 
-int ioctl3(int fd, unsigned long request, unsigned long req2) {
+int32_t vfork(void) {
+
+	register long r7 __asm__("r7") = __NR_vfork;
+	register long r0 __asm__("r0");
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0) /* output */
+		: "r"(r7) /* input */
+		: "memory");
+
+	return r0;
+
+}
+
+int32_t ioctl3(int fd, unsigned long request, unsigned long req2) {
 
 	register long r7 __asm__("r7") = __NR_ioctl;
 	register long r0 __asm__("r0") = fd;
@@ -161,7 +192,7 @@ int ioctl3(int fd, unsigned long request, unsigned long req2) {
 	return r0;
 }
 
-int ioctl4(int fd, unsigned long request, unsigned long req2, unsigned long req3) {
+int32_t ioctl4(int fd, unsigned long request, unsigned long req2, unsigned long req3) {
 
 	register long r7 __asm__("r7") = __NR_ioctl;
 	register long r0 __asm__("r0") = fd;
@@ -179,7 +210,7 @@ int ioctl4(int fd, unsigned long request, unsigned long req2, unsigned long req3
 }
 
 
-int sys_time(void) {
+int32_t sys_time(void) {
 
 	register long r7 __asm__("r7") = __NR_time;
 	register long r0 __asm__("r0");
@@ -195,7 +226,7 @@ int sys_time(void) {
 }
 
 
-int sys_reboot(void) {
+int32_t sys_reboot(void) {
 
 	register long r7 __asm__("r7") = __NR_reboot;
 	register long r0 __asm__("r0");

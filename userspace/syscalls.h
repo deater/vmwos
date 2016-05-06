@@ -40,7 +40,7 @@ struct timespec {
 	long   tv_nsec;       /* nanoseconds */
 };
 
-int nanosleep(const struct timespec *req, struct timespec *rem);
+int32_t nanosleep(const struct timespec *req, struct timespec *rem);
 
 /* See /usr/include/bits/fcntl-linux.h */
 #define O_RDONLY             00
@@ -51,6 +51,8 @@ int32_t write(int fd, const void *buf, uint32_t count);
 int32_t read(int fd, void *buf, size_t count);
 int32_t open(char *filename, uint32_t flags, uint32_t mode);
 int32_t close(uint32_t fd);
+int32_t vfork(void);
+int32_t exit(int32_t status);
 
 #define NCCS 32
 
@@ -127,11 +129,11 @@ int tcsetattr(int fd, int optional_actions,
 #define TCSETS 0x5402
 #define TCGETS 0x5401
 
-int ioctl3(int d, unsigned long request, unsigned long req2);
-int ioctl4(int d, unsigned long request, unsigned long req2, unsigned long req3);
+int32_t ioctl3(int d, unsigned long request, unsigned long req2);
+int32_t ioctl4(int d, unsigned long request, unsigned long req2, unsigned long req3);
 
-int getpid(void);
-int sys_time(void);
-int sys_reboot(void);
+int32_t getpid(void);
+int32_t sys_time(void);
+int32_t sys_reboot(void);
 
 int32_t sys_random(uint32_t *buffer);
