@@ -33,7 +33,7 @@ int32_t vfork(void) {
 	process[child].text=NULL;
 
 	/* put parent to sleep */
-	process[parent].ready=0;
+	process[parent].status=PROCESS_STATUS_SLEEPING;
 	process[parent].running=0;
 
 	/* call the scheduler */

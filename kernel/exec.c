@@ -32,7 +32,7 @@ int32_t execve(const char *filename, char *const argv, char *const envp) {
 	size=stat_info.st_size;
 
 	/* TODO: get from executable */
-	stack_size=8192;
+	stack_size=DEFAULT_STACK_SIZE;
 
 	/* Allocate Memory */
 	binary_start=memory_allocate(size);

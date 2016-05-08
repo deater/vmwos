@@ -4,12 +4,17 @@
 #define PROCESS_FROM_DISK	1
 #define PROCESS_FROM_RAM	2
 
+#define PROCESS_STATUS_SLEEPING	0
+#define PROCESS_STATUS_READY	1
+#define PROCESS_STATUS_EXITED	2
+
 struct process_control_block_type {
-	int valid;
-	int running;
-	int ready;
-	int time;
-	int pid;
+	int32_t valid;
+	int32_t running;
+	int32_t status;
+	int32_t time;
+	int32_t pid;
+	int32_t exit_value;
 	char name[32];
 
 	struct {

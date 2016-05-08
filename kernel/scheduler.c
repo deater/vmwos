@@ -30,7 +30,8 @@ void schedule(long *pcb) {
 	while(1) {
 		i++;
 		if (i>=MAX_PROCESSES) i=0;
-		if ((process[i].valid) && (process[i].ready)) break;
+		if ((process[i].valid) &&
+			(process[i].status=PROCESS_STATUS_READY)) break;
 	}
 
 	/* switch to new process */

@@ -15,6 +15,7 @@
 #include "process.h"
 #include "vfork.h"
 #include "exec.h"
+#include "exit.h"
 
 extern int blinking_enabled;
 
@@ -66,6 +67,7 @@ uint32_t swi_handler_c(
 	switch(r7) {
 		case SYSCALL_EXIT:
 			printk("Process exiting with %d\n",r0);
+			exit(r0);
 			break;
 
 		case SYSCALL_READ:
@@ -154,7 +156,7 @@ uint32_t swi_handler_c(
 			which=r0-'0';
 
 			if ((which>0) && (which<10)) {
-				process[which].ready=1;
+				process[which].status=PROCESS_STATUS_READY;
 			}
 			}
 			break;
@@ -166,7 +168,7 @@ uint32_t swi_handler_c(
 			which=r0-'0';
 
 			if ((which>0) && (which<10)) {
-				process[which].ready=0;
+				process[which].status=PROCESS_STATUS_SLEEPING;
 			}
 			}
 			break;

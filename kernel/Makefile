@@ -13,7 +13,7 @@ kernel.img:	kernel.elf
 
 
 kernel.elf:	kernel_main.o \
-	exec.o idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
+	exec.o exit.o idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
 	interrupts.o memory.o process.o scheduler.o time.o vfork.o \
 	swi_handler.o irq_handler.o \
 	boot/boot.a \
@@ -22,7 +22,8 @@ kernel.elf:	kernel_main.o \
 	lib/lib.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
-		exec.o idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
+		exec.o exit.o idle_task.o \
+		arm1176-mmu.o arm1176-pmu.o syscalls.o \
 		interrupts.o memory.o process.o scheduler.o time.o vfork.o \
 		swi_handler.o irq_handler.o \
 		boot/boot.a \
@@ -36,6 +37,9 @@ kernel_main.o:	kernel_main.c
 
 exec.o:	exec.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o exec.o -c exec.c
+
+exit.o:	exit.c
+	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o exit.o -c exit.c
 
 idle_task.o:	idle_task.c
 	$(CROSS)$(CC) $(CFLAGS) -o idle_task.o -c idle_task.c

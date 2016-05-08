@@ -64,7 +64,7 @@ int32_t process_create(void) {
 
 	/* Set up initial conditions */
 	process[which].running=0;
-	process[which].ready=0;
+	process[which].status=PROCESS_STATUS_SLEEPING;
 	process[which].time=0;
 
 	/* LOCK */
