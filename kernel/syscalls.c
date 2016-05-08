@@ -14,6 +14,7 @@
 #include "drivers/random/bcm2835_rng.h"
 #include "process.h"
 #include "vfork.h"
+#include "exec.h"
 
 extern int blinking_enabled;
 
@@ -92,6 +93,7 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_EXECVE:
 			printk("Trying to exec %s\n",(char *)r0);
+			execve((char *)r0,(char *)r1,(char *)r2);
 			break;
 
 		case SYSCALL_STAT:

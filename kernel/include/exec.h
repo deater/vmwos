@@ -1,2 +1,2 @@
-int load_exe(char *name,char **binary_start,char **stack_start,
-                int *size, int *stack_size);
+int32_t execve(const char *filename, char *const argv, char *const envp);
+

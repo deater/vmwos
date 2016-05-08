@@ -31,6 +31,7 @@
 #include "lib/memset.h"
 #include "lib/memory_benchmark.h"
 #include "drivers/random/bcm2835_rng.h"
+#include "exec.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -213,6 +214,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Mount the ramdisk */
 	mount("/dev/ramdisk","/","romfs",0,NULL);
 
+#if 0
 	/* Load the idle thread */
 	idle_process=process_load("idle",PROCESS_FROM_RAM,
 				(char *)&idle_task,8,4096);
@@ -225,19 +227,27 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	process_load("printb",PROCESS_FROM_DISK,
 				NULL,0,8192);
+#endif
 
+	/* Create idle thread */
+	idle_process=process_create();
+	process[idle_process].text=(void *)&idle_task;
+	process[idle_process].reg_state.lr=(long)&idle_task;
+	process[idle_process].running=1;
 
 	/* Enter our "init" process*/
+	init_process=process_create();
+	execve("shell",NULL,NULL);
 	printk("\nEntering userspace by starting process %d!\n",
 		init_process);
 
-	process[idle_process].ready=1;
-	process[init_process].ready=1;
+//	process[idle_process].ready=1;
+//	process[init_process].ready=1;
 
 	userspace_started=1;
 
 	/* run init and restore stack as we won't return */
-	process_run(init_process,0x8000);
+//	process_run(init_process,0x8000);
 
 	/* we should never get here */
 

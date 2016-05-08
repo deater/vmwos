@@ -118,7 +118,7 @@ int32_t process_load(char *name, int type, char *data, int size, int stack_size)
 	}
 
 	if (type==PROCESS_FROM_DISK) {
-		load_exe(name,&binary_start,&stack_start,&size,&stack_size);
+		execve(name,NULL,NULL);
 	}
 	else if (type==PROCESS_FROM_RAM) {
 		/* Allocate Memory */
@@ -134,27 +134,6 @@ int32_t process_load(char *name, int type, char *data, int size, int stack_size)
 		process_destroy(which);
 		return -1;
 	}
-
-	/* Set name */
-	strncpy(process[which].name,name,32);
-
-	/* Setup the stack */
-	/* is the -4 needed? */
-	process[which].reg_state.r[13]=((long)stack_start+stack_size);
-	process[which].stack=stack_start;
-	process[which].stacksize=stack_size;
-
-	/* Setup the entry point */
-	process[which].reg_state.lr=(long)binary_start;
-	process[which].text=binary_start;
-	process[which].textsize=size;
-
-        printk("New process %s pid %d "
-		"allocated %dkB at %x and %dkB stack at %x\n",
-		name,process[which].pid,
-		size/1024,binary_start,
-		stack_size/1024,stack_start);
-
 
 	return which;
 }
