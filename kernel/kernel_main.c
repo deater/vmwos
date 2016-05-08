@@ -17,6 +17,7 @@
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "lib/string.h"
+#include "process.h"
 #include "scheduler.h"
 #include "idle_task.h"
 #include "drivers/keyboard/ps2-keyboard.h"
@@ -56,7 +57,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	(void) r0;	/* Ignore boot method */
 
 	/* Initialize Software Structures */
-	processes_init();
+	process_table_init();
 
 	/* Detect Hardware */
 	atags_detect(atags,&atag_info);
@@ -213,16 +214,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	mount("/dev/ramdisk","/","romfs",0,NULL);
 
 	/* Load the idle thread */
-	idle_process=load_process("idle",PROCESS_FROM_RAM,
+	idle_process=process_load("idle",PROCESS_FROM_RAM,
 				(char *)&idle_task,8,4096);
 
-	init_process=load_process("shell",PROCESS_FROM_DISK,
+	init_process=process_load("shell",PROCESS_FROM_DISK,
 				NULL,0,8192);
 
-	load_process("printa",PROCESS_FROM_DISK,
+	process_load("printa",PROCESS_FROM_DISK,
 				NULL,0,8192);
 
-	load_process("printb",PROCESS_FROM_DISK,
+	process_load("printb",PROCESS_FROM_DISK,
 				NULL,0,8192);
 
 
@@ -236,7 +237,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	userspace_started=1;
 
 	/* run init and restore stack as we won't return */
-	run_process(init_process,0x8000);
+	process_run(init_process,0x8000);
 
 	/* we should never get here */
 

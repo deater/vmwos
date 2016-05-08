@@ -6,13 +6,13 @@
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "fs/files.h"
-#include "scheduler.h"
 #include "time.h"
 #include "interrupts.h"
 #include "bcm2835_periph.h"
 #include "mmio.h"
 #include "drivers/thermal/thermal.h"
 #include "drivers/random/bcm2835_rng.h"
+#include "process.h"
 
 extern int blinking_enabled;
 
