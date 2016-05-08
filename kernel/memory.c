@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "memory.h"
+
 #include "lib/printk.h"
 
 #define MAX_MEMORY	(1024*1024*1024)
@@ -80,7 +82,7 @@ static int find_free(int num_chunks) {
 	return -1;
 }
 
-void *memory_allocate(int size) {
+void *memory_allocate(uint32_t size) {
 
 	int first_chunk;
 	int num_chunks;
@@ -107,3 +109,9 @@ void *memory_allocate(int size) {
 
 }
 
+int32_t memory_free(void *location, uint32_t size) {
+
+	printk("ERROR: memory_free not implemented yet.\n");
+
+	return 0;
+}

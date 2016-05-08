@@ -16,6 +16,10 @@ struct process_control_block_type {
 		long r[15];	/* r0 - r14 */
 		long lr,spsr;
 	} reg_state;
+	void *stack;
+	uint32_t stacksize;
+	void *text;
+	uint32_t textsize;
 };
 
 extern int current_process;
@@ -27,3 +31,5 @@ int32_t process_load(char *name, int type, char *data, int size, int stack_size)
 int32_t process_run(int which, long irq_stack);
 int32_t process_save(int which, long *pcb);
 
+int32_t process_create(void);
+int32_t process_destroy(int32_t which);

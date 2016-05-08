@@ -53,13 +53,66 @@ static int32_t process_find_free(void) {
 	return which;
 }
 
+int32_t process_create(void) {
+
+	int32_t which;
+
+	which=process_find_free();
+	if (which<0) {
+		return which;
+	}
+
+	/* Set up initial conditions */
+	process[which].running=0;
+	process[which].ready=0;
+	process[which].time=0;
+
+	/* LOCK */
+	/* FIXME: what happens when we rollover */
+	process[which].pid=avail_pid;
+	avail_pid++;
+	/* UNLOCK */
+
+	process[which].stack=NULL;
+	process[which].text=NULL;
+	process[which].stacksize=0;
+	process[which].textsize=0;
+
+	/* Setup the default SPSR */
+	/* USER mode (0x10) */
+	/* We don't mask 0x80 or 0x40 (IRQ or FIQ) */
+	process[which].reg_state.spsr=0x10;
+
+	return which;
+}
+
+int32_t process_destroy(int32_t which) {
+
+	/* close open files */
+	/* TODO */
+
+	/* free memory */
+	if (process[which].stack) {
+		memory_free(process[which].stack,
+			process[which].stacksize);
+	}
+	if (process[which].text) {
+		memory_free(process[which].text,
+			process[which].textsize);
+	}
+	/* mark as no longer valid */
+	process[which].valid=0;
+
+	return 0;
+}
+
 int32_t process_load(char *name, int type, char *data, int size, int stack_size) {
 
 	char *binary_start=NULL;
 	char *stack_start=NULL;
-	int32_t which,j;
+	int32_t which;
 
-	which=process_find_free();
+	which=process_create();
 	if (which<0) {
 		return which;
 	}
@@ -78,38 +131,23 @@ int32_t process_load(char *name, int type, char *data, int size, int stack_size)
 	}
 	else {
 		printk("Unknown process type!\n");
-		process[which].valid=0;
+		process_destroy(which);
 		return -1;
 	}
 
 	/* Set name */
 	strncpy(process[which].name,name,32);
 
-	/* Set up initial conditions */
-	process[which].running=0;
-	process[which].ready=0;
-	process[which].time=0;
-	/* LOCK */
-	process[which].pid=avail_pid;
-	avail_pid++;
-	/* UNLOCK */
-
-	/* Initialize register state */
-	for(j=0;j<15;j++) {
-		process[which].reg_state.r[j]=0;
-	}
-
 	/* Setup the stack */
 	/* is the -4 needed? */
 	process[which].reg_state.r[13]=((long)stack_start+stack_size);
+	process[which].stack=stack_start;
+	process[which].stacksize=stack_size;
 
 	/* Setup the entry point */
 	process[which].reg_state.lr=(long)binary_start;
-
-	/* Setup the SPSR */
-	/* USER mode (0x10) */
-	/* We don't mask 0x80 or 0x40 (IRQ or FIQ) */
-	process[which].reg_state.spsr=0x10;
+	process[which].text=binary_start;
+	process[which].textsize=size;
 
         printk("New process %s pid %d "
 		"allocated %dkB at %x and %dkB stack at %x\n",
