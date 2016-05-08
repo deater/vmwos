@@ -16,6 +16,7 @@
 #include "vfork.h"
 #include "exec.h"
 #include "exit.h"
+#include "wait.h"
 
 extern int blinking_enabled;
 
@@ -90,7 +91,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_WAITPID:
-			printk("Unsupported waitpid on %d\n",r0);
+			waitpid(r0,(int32_t *)r1,r2);
 			break;
 
 		case SYSCALL_EXECVE:
