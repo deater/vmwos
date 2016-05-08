@@ -13,6 +13,7 @@
 #include "drivers/thermal/thermal.h"
 #include "drivers/random/bcm2835_rng.h"
 #include "process.h"
+#include "vfork.h"
 
 extern int blinking_enabled;
 
@@ -122,7 +123,7 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_VFORK:
 			printk("Trying to vfork\n");
-			//result=vfork();
+			result=vfork();
 			break;
 
 		case SYSCALL_BLINK:

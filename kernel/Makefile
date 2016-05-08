@@ -14,7 +14,7 @@ kernel.img:	kernel.elf
 
 kernel.elf:	kernel_main.o \
 	exec.o idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
-	interrupts.o memory.o process.o scheduler.o time.o \
+	interrupts.o memory.o process.o scheduler.o time.o vfork.o \
 	swi_handler.o irq_handler.o \
 	boot/boot.a \
 	drivers/drivers.a \
@@ -23,7 +23,7 @@ kernel.elf:	kernel_main.o \
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		exec.o idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
-		interrupts.o memory.o process.o scheduler.o time.o \
+		interrupts.o memory.o process.o scheduler.o time.o vfork.o \
 		swi_handler.o irq_handler.o \
 		boot/boot.a \
 		drivers/drivers.a \
@@ -63,6 +63,9 @@ syscalls.o:	syscalls.c
 
 time.o:	time.c include/time.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o time.o -c time.c
+
+vfork.o:	vfork.c include/vfork.h
+	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o vfork.o -c vfork.c
 
 irq_handler.o:	irq_handler.s
 	$(CROSS)as $(ASFLAGS) -o irq_handler.o irq_handler.s
