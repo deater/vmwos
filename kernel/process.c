@@ -157,7 +157,7 @@ int32_t process_run(int which, long *irq_stack) {
 	return_pc=process[which].reg_state.lr;
 	our_spsr=process[which].reg_state.spsr;
 
-	if (which==2) start_debug=1;
+//	if (which==2) start_debug=1;
 	if (start_debug) {
 //		printk("IRQ stack=%x\n",(long)irq_stack);
 		printk("Attempting to run proc %d (%s pid=%d): "
@@ -237,15 +237,15 @@ int32_t process_save(int which, long *irq_stack) {
 
 	process[which].reg_state.spsr=irq_stack[0];
 	process[which].reg_state.lr=irq_stack[1];
-	printk("save: SPSR=%x PC=%x IRQ_STACK=%x ",
-		irq_stack[0],irq_stack[1],
-		irq_stack);
+//	printk("save: SPSR=%x PC=%x IRQ_STACK=%x ",
+//		irq_stack[0],irq_stack[1],
+//		irq_stack);
 
 	for(i=0;i<15;i++) {
 		process[which].reg_state.r[i]=irq_stack[i+2];
-		printk("r%d=%x ",i,irq_stack[i+2]);
+//		printk("r%d=%x ",i,irq_stack[i+2]);
 	}
-	printk("\n");
+//	printk("\n");
 
 	return 0;
 }

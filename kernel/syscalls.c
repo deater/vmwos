@@ -71,6 +71,7 @@ uint32_t swi_handler_c(
 		case SYSCALL_EXIT:
 			printk("Process exiting with %d\n",r0);
 			exit(r0);
+			sched_yield();
 			break;
 
 		case SYSCALL_READ:
@@ -100,7 +101,9 @@ uint32_t swi_handler_c(
 		case SYSCALL_EXECVE:
 			printk("Trying to exec %s\n",(char *)r0);
 			execve((char *)r0,(char *)r1,(char *)r2);
-			process_run(current_process,swi_handler_stack);
+			/* wake up our parent */
+			process[process[current_process].parent].status=PROCESS_STATUS_READY;
+			process_run(current_process,(long *)swi_handler_stack);
 			break;
 
 		case SYSCALL_STAT:

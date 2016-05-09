@@ -219,6 +219,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Enter our "init" process*/
 	init_process=process_create();
 	current_process=1;
+	process[init_process].parent=init_process;
 	execve("shell",NULL,NULL);
 	printk("\nEntering userspace by starting process %d!\n",
 		init_process);

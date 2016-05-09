@@ -35,8 +35,7 @@ int32_t vfork(void) {
 	process[child].reg_state.spsr=process[parent].reg_state.spsr;
 	process[child].reg_state.lr=process[parent].reg_state.lr;
 
-	/* Set r0 to be 0 so it looks like our syscall returned 0 */
-	process[child].reg_state.r[0]=0;
+	process[child].parent=parent;
 
 	/* set stack/data to NULL */
 	/* otherwise we might try to free parent's on exit() */

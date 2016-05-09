@@ -15,6 +15,7 @@ struct process_control_block_type {
 	int32_t time;
 	int32_t pid;
 	int32_t exit_value;
+	int32_t parent;
 	char name[32];
 
 	struct {

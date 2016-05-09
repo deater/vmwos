@@ -45,7 +45,7 @@ void schedule(long *irq_stack) {
 
 	/* switch to new process */
 	if (i!=current_process) {
-		printk("Switching from %d to %d\n",current_process,i);
+//		printk("Switching from %d to %d\n",current_process,i);
 		process_save(current_process,irq_stack);
 		process_run(i,irq_stack);
 	}
