@@ -20,6 +20,11 @@ int32_t vfork(void) {
 		return child;
 	}
 
+	printk("vfork: created child %d\n",child);
+
+
+	printk("vfork: copying register state from parent (%d -> %d)\n",
+		parent,child);
 	/* copy register state from parent */
 	for(i=0;i<15;i++) {
 		process[child].reg_state.r[i]=process[parent].reg_state.r[i];
@@ -32,11 +37,15 @@ int32_t vfork(void) {
 	process[child].stack=NULL;
 	process[child].text=NULL;
 
+	printk("vfork: put parent %d to sleep\n",parent);
 	/* put parent to sleep */
 	process[parent].status=PROCESS_STATUS_SLEEPING;
-	process[parent].running=0;
 
-	/* call the scheduler */
+	printk("vfork: wake child %d\n",child);
+	process[child].status=PROCESS_STATUS_READY;
+	process[child].running=1;
+
+	/* call the scheduler ???*/
 
 	return child;
 }
