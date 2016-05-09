@@ -24,6 +24,8 @@ swi_handler:
 	mrs	ip, SPSR		@ load SPSR (assume ip not a swi arg)
 	push	{ip}			@ store on stack
 
+	ldr	ip,=swi_handler_stack
+	str	sp,[ip]
 
 	@ Call the C version of the handler
 

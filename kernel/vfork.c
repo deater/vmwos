@@ -46,9 +46,6 @@ int32_t vfork(void) {
 
 	printk("vfork: wake child %d\n",child);
 	process[child].status=PROCESS_STATUS_READY;
-	process[child].running=1;
-
-	/* call the scheduler ???*/
 
 	return child;
 }

@@ -10,6 +10,7 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
+long swi_handler_stack;
 
 void schedule(long *irq_stack) {
 
@@ -19,9 +20,6 @@ void schedule(long *irq_stack) {
 
 	i=current_process;
 
-	/* save current process state */
-
-	process_save(i,irq_stack);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
@@ -48,6 +46,7 @@ void schedule(long *irq_stack) {
 	/* switch to new process */
 	if (i!=current_process) {
 		printk("Switching from %d to %d\n",current_process,i);
+		process_save(current_process,irq_stack);
 		process_run(i,irq_stack);
 	}
 
@@ -55,5 +54,13 @@ void schedule(long *irq_stack) {
 	/* clrex instruction here */
 	/* to avoid false positives in the mutex handling? */
 	/* if there's any aliasing between new and old process? */
+
+}
+
+int32_t sched_yield(void) {
+
+	schedule((long *)swi_handler_stack);
+
+	return 0;
 
 }

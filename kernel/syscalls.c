@@ -131,6 +131,8 @@ uint32_t swi_handler_c(
 			printk("Trying to vfork\n");
 			result=vfork();
 			printk("Returning %d to parent\n",result);
+			sched_yield();
+			printk("vfork: should never get here\n");
 			break;
 
 		case SYSCALL_BLINK:
