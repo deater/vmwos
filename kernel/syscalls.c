@@ -17,6 +17,7 @@
 #include "exec.h"
 #include "exit.h"
 #include "wait.h"
+#include "scheduler.h"
 
 extern int blinking_enabled;
 
@@ -62,6 +63,7 @@ uint32_t swi_handler_c(
 #endif
 
 	uint32_t result=0;
+	int parent;
 
 //	printk("Starting syscall %d\n",r7);
 
@@ -128,11 +130,16 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_VFORK:
+			parent=current_process;
 			printk("Trying to vfork\n");
 			result=vfork();
 			printk("Returning %d to parent\n",result);
 			sched_yield();
-			printk("vfork: should never get here\n");
+			if (current_process==parent) {
+			}
+			else {
+				result=0;
+			}
 			break;
 
 		case SYSCALL_BLINK:
