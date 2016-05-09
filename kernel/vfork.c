@@ -24,6 +24,10 @@ int32_t vfork(void) {
 	printk("vfork: created child %d\n",child);
 
 	printk("vfork: synching current parent state\n");
+
+	/* Make sure on return the parent gets the syscall result */
+	((long *)swi_handler_stack)[2]=child;
+
 	process_save(parent,(long *)swi_handler_stack);
 
 	printk("vfork: copying register state from parent (%d -> %d)\n",

@@ -137,13 +137,9 @@ uint32_t swi_handler_c(
 			parent=current_process;
 			printk("Trying to vfork\n");
 			result=vfork();
-			printk("Returning %d to parent\n",result);
 			sched_yield();
-			if (current_process==parent) {
-			}
-			else {
-				result=0;
-			}
+			/* only child gets here? */
+			result=0;
 			break;
 
 		case SYSCALL_BLINK:
