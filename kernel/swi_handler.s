@@ -17,29 +17,27 @@ swi_handler:
 
 	sub	sp,sp,#56
 	stmia	sp,{r0-lr}^		@ Save all user registers r0-lr
+
+	push	{lr}			@ store saved PC on stack
 					@ (the ^ means user registers)
 
 	mrs	ip, SPSR		@ load SPSR (assume ip not a swi arg)
 	push	{ip}			@ store on stack
 
-	push	{lr}			@ store saved PC on stack
 
 	@ Call the C version of the handler
 
-	push	{lr}
-
 	bl	swi_handler_c
-
-	pop	{lr}
 
 	@ Put our return value of r0 on the stack so it is
 	@ restored with the rest of the saved registers
 
 	str	r0,[sp,#8]
 
-	pop	{lr}			@ restore address to return to
 	pop	{r0}			@ pop saved CPSR
 	msr	SPSR_cxsf, r0		@ move it into place
+
+	pop	{lr}			@ restore address to return to
 
 	@ Restore saved values.  The ^ means to restore the userspace registers
 	ldmia	sp, {r0-lr}^
