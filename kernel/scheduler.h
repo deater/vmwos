@@ -1,1 +1,1 @@
-void schedule(long *pcb);
+void schedule(long *irq_stack);

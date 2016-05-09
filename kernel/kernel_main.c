@@ -223,20 +223,63 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	printk("\nEntering userspace by starting process %d!\n",
 		init_process);
 
+	/* Mark idle and init as ready */
 	process[idle_process].status=PROCESS_STATUS_READY;
 	process[init_process].status=PROCESS_STATUS_READY;;
 
+
+	long *shell_stack=(long *)process[init_process].reg_state.r[13];
+	long *shell_address=(long *)process[init_process].reg_state.lr;
+
+
+#if 0
+	/* Setup userspace to point to process 1 */
+	/* process_run(r1,&stack); */
+	asm volatile(
+		"sub sp,sp,#64\n"	/* Put place for reg state on stack*/
+		"mov r0,#1\n"		/* Run process 1 */
+		"mov r1,sp\n"		/* point to stack */
+		"bl process_run\n"
+		: /* output */
+		: /* input */
+		: "sp", "memory");      /* clobbers */
+
+
+#endif
+
+	asm volatile(
+                "msr CPSR_c, #0xDF\n" /* System mode, like user but privldg */
+                "mov sp, %[stack]\n"
+                "msr CPSR_c, #0xD3\n" /* Back to Supervisor mode */
+					/* with interrupts disabled */
+                : /* output */
+                : [stack] "r"(shell_stack) /* input */
+                : "sp", "memory");      /* clobbers */
+
 	userspace_started=1;
 
-	/* run init and restore stack as we won't return */
-	process_run(init_process,0x8000);
+        /* enter userspace */
+
+        asm volatile(
+                "mov r0, #0x10\n"	/* Userspace, IRQ enabled */
+                "msr SPSR, r0\n"
+                "mov lr, %[shell]\n"
+                "movs pc,lr\n"
+                : /* output */
+                : [shell] "r"(shell_address) /* input */
+                : "r0", "lr", "memory");        /* clobbers */
+
 
 	/* we should never get here */
+	printk("Error starting init!\n");
+
+
 
 	while(1) {
 
 		/* Loop Forever */
 		/* Should probably execute a wfi instruction */
+		/* In theory only here for HZ until scheduler kicks in */
 	}
 
 }

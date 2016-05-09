@@ -29,6 +29,9 @@ int32_t vfork(void) {
 	for(i=0;i<15;i++) {
 		process[child].reg_state.r[i]=process[parent].reg_state.r[i];
 	}
+	process[child].reg_state.spsr=process[parent].reg_state.spsr;
+	process[child].reg_state.lr=process[parent].reg_state.lr;
+
 	/* Set r0 to be 0 so it looks like our syscall returned 0 */
 	process[child].reg_state.r[0]=0;
 

@@ -76,7 +76,7 @@ static void user_reg_dump(void) {
 
 #endif
 
-void interrupt_handler_c(uint32_t saved_sp) {
+void interrupt_handler_c(long *irq_stack) {
 
 	uint32_t basic_pending,pending2;
 	uint32_t handled=0;
@@ -112,7 +112,7 @@ void interrupt_handler_c(uint32_t saved_sp) {
 
 	timer_interrupt_handler();
 
-	schedule((long *)saved_sp);
+	schedule(irq_stack);
 
 	return;
 }

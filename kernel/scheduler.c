@@ -11,7 +11,7 @@
 #include "lib/memcpy.h"
 
 
-void schedule(long *pcb) {
+void schedule(long *irq_stack) {
 
 	int i;
 
@@ -21,7 +21,7 @@ void schedule(long *pcb) {
 
 	/* save current process state */
 
-	process_save(i,pcb);
+	process_save(i,irq_stack);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
@@ -54,6 +54,6 @@ void schedule(long *pcb) {
 	/* if there's any aliasing between new and old process? */
 
 	/* IRQ stack */
-	process_run(i,pcb[17]);
+	process_run(i,irq_stack);
 
 }

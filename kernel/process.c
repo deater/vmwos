@@ -56,6 +56,7 @@ static int32_t process_find_free(void) {
 int32_t process_create(void) {
 
 	int32_t which;
+	int i;
 
 	which=process_find_free();
 	if (which<0) {
@@ -78,10 +79,17 @@ int32_t process_create(void) {
 	process[which].stacksize=0;
 	process[which].textsize=0;
 
+	/* Clear out registers */
+	for(i=0;i<14;i++) process[which].reg_state.r[i]=0;
+
 	/* Setup the default SPSR */
 	/* USER mode (0x10) */
 	/* We don't mask 0x80 or 0x40 (IRQ or FIQ) */
 	process[which].reg_state.spsr=0x10;
+
+	/* Clear out LR (saved pc) */
+	/* exec should set this for us */
+	process[which].reg_state.lr=0;
 
 	return which;
 }
@@ -138,26 +146,34 @@ int32_t process_load(char *name, int type, char *data, int size, int stack_size)
 	return which;
 }
 
-int32_t process_run(int which, long irq_stack) {
+int32_t process_run(int which, long *irq_stack) {
 
-	long *our_sp;
+	int i;
 	long return_pc,our_spsr;
+	static int start_debug=0;
 
 //	printk("Resetting IRQ stack to %x\n",irq_stack);
 
 	return_pc=process[which].reg_state.lr;
 	our_spsr=process[which].reg_state.spsr;
 
-	our_sp=&(process[which].reg_state.r[0]);
+	if (which==2) start_debug=1;
+	if (start_debug) {
+//		printk("IRQ stack=%x\n",(long)irq_stack);
+		printk("Attempting to run proc %d (%s pid=%d): "
+			"PC=%x SPSR=%x stack=%x\n",
+			which, process[which].name,process[which].pid,
+			return_pc,our_spsr,
+			process[which].reg_state.r[13]);
+	}
+
+	irq_stack[0]=our_spsr;
+	irq_stack[1]=return_pc;
+	for(i=0;i<15;i++) {
+		irq_stack[2+i]=process[which].reg_state.r[i];
+	}
+
 #if 0
-	printk("Attempting to run proc %d (%s pid=%d): "
-		"PC=%x SPSR=%x save_addr=%x stack=%x\n",
-		which, process[which].name,process[which].pid,
-		return_pc,our_spsr,our_sp,
-		process[which].reg_state.r[13]);
-#endif
-
-
 	/* restore user registers */
 	/* update status */
 	/* jump to saved user PC */
@@ -183,8 +199,9 @@ int32_t process_run(int which, long irq_stack) {
 			);
 
 
-		printk("Should never get here!\n");
-#if 0
+
+
+
 	/* set user stack */
         asm volatile(
                 "msr CPSR_c, #0xDF\n" /* System mode, like user but privldg */
@@ -209,20 +226,22 @@ int32_t process_run(int which, long irq_stack) {
 	return 0;
 }
 
-int32_t process_save(int which, long *pcb) {
+int32_t process_save(int which, long *irq_stack) {
 
 	int i;
 
 	/* No longer running */
 	process[which].running=0;
 
-	process[which].reg_state.spsr=pcb[15];
-	process[which].reg_state.lr=pcb[16];
-//	printk("SPSR=%x PC=%x IRQ_STACK=%x ",pcb[15],pcb[16],pcb[17]);
+	process[which].reg_state.spsr=irq_stack[0];
+	process[which].reg_state.lr=irq_stack[1];
+//	printk("save: SPSR=%x PC=%x IRQ_STACK=%x ",
+//		irq_stack[0],irq_stack[1],
+//		irq_stack);
 
 	for(i=0;i<15;i++) {
-		process[which].reg_state.r[i]=pcb[i];
-//		printk("r%d=%x ",i,pcb[i]);
+		process[which].reg_state.r[i]=irq_stack[i+2];
+//		printk("r%d=%x ",i,irq_stack[i+2]);
 	}
 //	printk("\n");
 
