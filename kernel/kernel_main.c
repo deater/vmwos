@@ -166,37 +166,17 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Start HW Perf Counters */
 	arm1176_init_pmu();
 
-#if 0
-	asm("nop");
-	asm("nop");
-	asm("nop");
-	asm("nop");
-
-	asm("nop");
-	asm("nop");
-	asm("nop");
-	asm("nop");
-
-	asm("nop");
-	asm("nop");
-	asm("nop");
-	asm("nop");
-
-	asm("nop");
-
-//	printk("Heisenbug!\n");
-#endif
-
 	/* Setup Memory Hierarchy */
-#if 1
+#if 0
 	memset_benchmark(memory_total);
 #else
 	/* Enable L1 i-cache */
 	printk("Enabling L1 icache\n");
-	enable_l1_dcache();
+	enable_l1_icache();
 
 	/* Enable branch predictor */
 	printk("Enabling branch predictor\n");
+	enable_branch_predictor();
 
 	/* Enable L1 d-cache */
 	printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
@@ -230,6 +210,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 #endif
 
 	/* Create idle thread */
+	printk("Loading the idle thread\n");
 	idle_process=process_create();
 	process[idle_process].text=(void *)&idle_task;
 	process[idle_process].reg_state.lr=(long)&idle_task;
@@ -237,17 +218,18 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Enter our "init" process*/
 	init_process=process_create();
+	current_process=1;
 	execve("shell",NULL,NULL);
 	printk("\nEntering userspace by starting process %d!\n",
 		init_process);
 
-//	process[idle_process].ready=1;
-//	process[init_process].ready=1;
+	process[idle_process].status=PROCESS_STATUS_READY;
+	process[init_process].status=PROCESS_STATUS_READY;;
 
 	userspace_started=1;
 
 	/* run init and restore stack as we won't return */
-//	process_run(init_process,0x8000);
+	process_run(init_process,0x8000);
 
 	/* we should never get here */
 

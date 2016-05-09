@@ -57,9 +57,9 @@ int32_t execve(const char *filename, char *const argv, char *const envp) {
         process[current_process].text=binary_start;
         process[current_process].textsize=size;
 
-        printk("Execed process %s pid %d "
+        printk("Execed process %s current_process %d pid %d "
                 "allocated %dkB at %x and %dkB stack at %x\n",
-                filename,process[current_process].pid,
+                filename,current_process,process[current_process].pid,
                 size/1024,binary_start,
                 stack_size/1024,stack_start);
 
