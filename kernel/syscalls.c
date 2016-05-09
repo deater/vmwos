@@ -100,6 +100,7 @@ uint32_t swi_handler_c(
 		case SYSCALL_EXECVE:
 			printk("Trying to exec %s\n",(char *)r0);
 			execve((char *)r0,(char *)r1,(char *)r2);
+			process_run(current_process,swi_handler_stack);
 			break;
 
 		case SYSCALL_STAT:
