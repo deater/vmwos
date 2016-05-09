@@ -157,7 +157,7 @@ int32_t process_run(int which, long *irq_stack) {
 	return_pc=process[which].reg_state.lr;
 	our_spsr=process[which].reg_state.spsr;
 
-	if (which==2) start_debug=1;
+//	if (which==2) start_debug=1;
 	if (start_debug) {
 //		printk("IRQ stack=%x\n",(long)irq_stack);
 		printk("Attempting to run proc %d (%s pid=%d): "
@@ -173,13 +173,15 @@ int32_t process_run(int which, long *irq_stack) {
 		irq_stack[2+i]=process[which].reg_state.r[i];
 	}
 
+	process[which].running=1;
+	current_process=which;
+
 #if 0
 	/* restore user registers */
 	/* update status */
 	/* jump to saved user PC */
 
-	process[which].running=1;
-	current_process=which;
+
 
 	asm volatile(
 		"mov r0, %[our_sp]\n"
