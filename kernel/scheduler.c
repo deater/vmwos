@@ -29,12 +29,19 @@ void schedule(long *pcb) {
 
 	while(1) {
 		i++;
-		if (i>=MAX_PROCESSES) i=0;
+		if (i>=MAX_PROCESSES) i=1;
 		if ((process[i].valid) &&
 			(process[i].status=PROCESS_STATUS_READY)) break;
+		if (i==current_process) {
+			/* Nothing ready, run idle task */
+			i=0;
+			break;
+		}
+
 	}
 
 	/* switch to new process */
+	if (i!=current_process) printk("Switching from %d to %d\n",current_process,i);
 
 	/* ARM documentation says we can put a */
 	/* clrex instruction here */
