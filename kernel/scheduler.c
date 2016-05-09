@@ -35,7 +35,7 @@ void schedule(long *irq_stack) {
 
 		/* if valid and ready, then run it */
 		if ((process[i].valid) &&
-			(process[i].status=PROCESS_STATUS_READY)) break;
+			(process[i].status==PROCESS_STATUS_READY)) break;
 
 		/* Nothing was ready, run idle task */
 		if (i==current_process) {
