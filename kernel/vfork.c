@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "process.h"
+#include "scheduler.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"
@@ -22,6 +23,8 @@ int32_t vfork(void) {
 
 	printk("vfork: created child %d\n",child);
 
+	printk("vfork: synching current parent state\n");
+	process_save(parent,(long *)swi_handler_stack);
 
 	printk("vfork: copying register state from parent (%d -> %d)\n",
 		parent,child);

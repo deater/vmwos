@@ -34,7 +34,7 @@ extern struct process_control_block_type process[];
 int32_t process_table_init(void);
 int32_t process_load(char *name, int type, char *data, int size, int stack_size);
 int32_t process_run(int which, long *irq_stack);
-int32_t process_save(int which, long *pcb);
+int32_t process_save(int which, long *irq_stack);
 
 int32_t process_create(void);
 int32_t process_destroy(int32_t which);
