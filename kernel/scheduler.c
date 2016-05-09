@@ -29,11 +29,16 @@ void schedule(long *pcb) {
 
 	while(1) {
 		i++;
+
+		/* wrap around if off end */
 		if (i>=MAX_PROCESSES) i=1;
+
+		/* if valid and ready, then run it */
 		if ((process[i].valid) &&
 			(process[i].status=PROCESS_STATUS_READY)) break;
+
+		/* Nothing was ready, run idle task */
 		if (i==current_process) {
-			/* Nothing ready, run idle task */
 			i=0;
 			break;
 		}
