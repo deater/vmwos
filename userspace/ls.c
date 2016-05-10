@@ -160,3 +160,9 @@ int ls(char *path) {
 	return 0;
 }
 
+int main(int argc, char **argv) {
+
+	ls(".");
+
+	return 0;
+}
