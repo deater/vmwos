@@ -12,6 +12,7 @@
 #include "fs/romfs/romfs.h"
 
 #include "process.h"
+#include "exit.h"
 
 /* Load raw executable */
 /* We don't have a file format yet */
@@ -51,6 +52,10 @@ int32_t execve(const char *filename, char *const argv, char *const envp) {
         process[current_process].reg_state.r[13]=((long)stack_start+stack_size);
         process[current_process].stack=stack_start;
         process[current_process].stacksize=stack_size;
+
+	/* Setup lr to point to exit */
+	/* That way when a program exits it will return to where lr points */
+	process[current_process].reg_state.r[14]=(long)exit;
 
         /* Setup the entry point */
         process[current_process].reg_state.lr=(long)binary_start;
