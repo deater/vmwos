@@ -116,6 +116,38 @@ static int print_help(void) {
 	return 0;
 }
 
+#define MAX_ARGUMENTS 16
+
+static char *arguments[MAX_ARGUMENTS];
+
+static int create_argv(char *string) {
+
+	int count=0;
+	int ptr=0;
+
+	while(1) {
+		arguments[count]=&(string[ptr]);
+
+		/* TODO: handle all whitespace? */
+		while((string[ptr]!=' ')&&(string[ptr]!=0)) ptr++;
+		count++;
+
+		if (string[ptr]==0) {
+			arguments[count]=NULL;
+			break;
+		}
+		/* NUL terminate */
+		string[ptr]=0;
+		ptr++;
+
+
+	}
+
+	return count;
+}
+
+
+
 static int parse_input(char *string) {
 
 	int result=0;
@@ -205,19 +237,26 @@ static int parse_input(char *string) {
 			printf("\nCommmand not found: \"%s\"!\n",string);
 		}
 		else {
-			pid=vfork();
-			if (pid==0) {
-				execve(string,NULL,NULL);
+			/* Convert string to argv format */
+			result=create_argv(string);
+			if (result<0) {
+				printf("Too many command line arguments\n");
 			}
+
 			else {
-				waitpid(pid,&status,0);
-				printf("Child exited with %d\n",status);
+				/* Fork a child */
+				pid=vfork();
+				if (pid==0) {
+
+					execve(string,arguments,NULL);
+				}
+				else {
+					waitpid(pid,&status,0);
+					printf("Child exited with %d\n",status);
+				}
 			}
 		}
 	}
 
 	return result;
 }
-
-
-

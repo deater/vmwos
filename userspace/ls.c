@@ -155,7 +155,6 @@ static void list_file(char *name) {
 int ls(char *path) {
 
 	int fd,result;
-	char buffer[256];
 	char buf[BUF_SIZE];
 	int nread;
 	int offset;
