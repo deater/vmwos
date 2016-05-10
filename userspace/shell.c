@@ -200,13 +200,16 @@ static int parse_input(char *string) {
 	else if (!strncmp(string,"random",6)) {
 		printf("%d\n",rand());
 	}
+	else if (strlen(string)==0) {
+		/* do nothing */
+	}
 	else {
 		int32_t pid,status,result;
 		struct stat stat_buf;
 
 		result=stat(string,&stat_buf);
 		if (result<0) {
-			printf("\nUnknown commmand: \"%s\"!\n",string);
+			printf("\nCommmand not found: \"%s\"!\n",string);
 		}
 		else {
 			pid=vfork();

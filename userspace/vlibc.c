@@ -229,3 +229,12 @@ int32_t rand(void) {
 
 	return buffer;
 }
+
+int strlen(const char *s) {
+
+	int length=0;
+
+	while(s[length]) length++;
+
+	return length;
+}
