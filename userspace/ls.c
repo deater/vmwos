@@ -1,9 +1,36 @@
 #include <stddef.h>
 #include <stdint.h>
+
+#if 1
 #include "syscalls.h"
 #include "vlibc.h"
 #include "vmwos.h"
+#else
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/stat.h>
 
+#define linux_dirent vmwos_dirent
+
+struct linux_dirent {
+        long            d_ino;
+        off_t           d_off;
+        unsigned short  d_reclen;
+        char            d_name[];
+};
+
+int getdents(unsigned int fd, struct linux_dirent *dirp, unsigned int count) {
+	return syscall(SYS_getdents, fd, dirp, count);
+}
+
+
+
+
+#endif
 
 #define BUF_SIZE 1024
 
@@ -110,6 +137,21 @@ int print_permissions(int mode) {
 	return 0;
 }
 
+static void list_file(char *name) {
+
+	struct stat stat_buf;
+
+	stat(name,&stat_buf);
+	print_permissions(stat_buf.st_mode);
+	printf(" %d %d %d %d ",
+		stat_buf.st_nlink,
+		stat_buf.st_uid,
+		stat_buf.st_gid,
+		stat_buf.st_size);
+	print_date(stat_buf.st_mtime);
+	printf(" %s\n",name);
+}
+
 int ls(char *path) {
 
 	int fd,result;
@@ -120,13 +162,21 @@ int ls(char *path) {
 	struct vmwos_dirent *d;
 	struct stat stat_buf;
 
-	fd=open(path,O_RDONLY,0);
-	if (fd<0) {
-		printf("Error! %s\n",strerror(errno));
+	result=stat(path,&stat_buf);
+	if (result<0) {
+		printf("Cannot access %s: no such file or directory!\n",path);
+		return -1;
 	}
 
-	result=read(fd,buffer,256);
-	if (result<0) {
+	/* handle if it's a file */
+	if (!(stat_buf.st_mode&0040000)) {
+		list_file(path);
+		return 0;
+	}
+
+	/* handle if it's a directory */
+	fd=open(path,O_RDONLY,0);
+	if (fd<0) {
 		printf("Error! %s\n",strerror(errno));
 	}
 
@@ -134,6 +184,7 @@ int ls(char *path) {
 		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
 		if (nread<0) {
 			printf("Error! %s\n",strerror(errno));
+			break;
 		}
 		if (nread==0) break;
 
@@ -141,15 +192,7 @@ int ls(char *path) {
 		while(offset<nread) {
 			d=(struct vmwos_dirent *)(buf+offset);
 //			printf("Inode: %ld\n",d->d_ino);
-			stat(d->d_name,&stat_buf);
-			print_permissions(stat_buf.st_mode);
-			printf(" %d %d %d %d ",
-				stat_buf.st_nlink,
-				stat_buf.st_uid,
-				stat_buf.st_gid,
-				stat_buf.st_size);
-			print_date(stat_buf.st_mtime);
-			printf(" %s\n",d->d_name);
+			list_file(d->d_name);
 			offset+=d->d_reclen;
 		}
 	}
@@ -162,7 +205,12 @@ int ls(char *path) {
 
 int main(int argc, char **argv) {
 
-	ls(".");
+	if (argc==1) {
+		ls(".");
+	}
+	else {
+		ls(argv[1]);
+	}
 
 	return 0;
 }
