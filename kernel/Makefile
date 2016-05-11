@@ -14,7 +14,8 @@ kernel.img:	kernel.elf
 
 kernel.elf:	kernel_main.o \
 	exec.o exit.o idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
-	interrupts.o memory.o process.o scheduler.o time.o vfork.o wait.o \
+	interrupts.o memory.o panic.o process.o scheduler.o \
+	time.o vfork.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot.a \
 	drivers/drivers.a \
@@ -24,7 +25,7 @@ kernel.elf:	kernel_main.o \
 		kernel_main.o \
 		exec.o exit.o idle_task.o \
 		arm1176-mmu.o arm1176-pmu.o syscalls.o \
-		interrupts.o memory.o process.o scheduler.o \
+		interrupts.o memory.o panic.o process.o scheduler.o \
 		time.o vfork.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot.a \
@@ -56,6 +57,9 @@ arm1176-mmu.o:	arm1176-mmu.c
 
 arm1176-pmu.o:	arm1176-pmu.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o arm1176-pmu.o -c arm1176-pmu.c
+
+panic.o:	panic.c panic.h
+	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o panic.o -c panic.c
 
 process.o:	process.c process.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o process.o -c process.c

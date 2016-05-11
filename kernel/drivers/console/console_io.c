@@ -5,6 +5,7 @@
 #include "drivers/serial/pl011_uart.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "locks.h"
+#include "../../panic.h"
 
 #define INPUT_BUFFER_SIZE	256
 
@@ -27,6 +28,9 @@ int console_insert_char(int ch) {
 	/* the lock was held then we'd end up with deadlock.  hmmm */
 
 //	lock_mutex(&console_write_mutex);
+
+	/* Emergency debug if ^B */
+	if (ch==0x2) dump_state();
 
 	new_head=input_buffer_head+1;
 	if (new_head>=INPUT_BUFFER_SIZE) {
