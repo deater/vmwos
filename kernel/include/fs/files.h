@@ -3,6 +3,17 @@ struct timespec {
 	uint32_t ns;
 };
 
+/* We do things in hex in vmwos, none of this octal nonsense */
+#define S_IFMT		0xf000	/* mask			*/
+#define S_IFSOCK	0xc000	/* socket		*/
+#define S_IFLNK		0xa000	/* symbolic link	*/
+#define S_IFREG		0x8000	/* regular file		*/
+#define S_IFBLK		0x6000	/* block device		*/
+#define S_IFDIR		0x4000	/* directory		*/
+#define S_IFCHR		0x2000	/* character device	*/
+#define S_IFIFO		0x1000	/* FIFO			*/
+
+
 struct stat {
 	uint32_t	st_dev;		/* device containing file */
 	int32_t		st_ino;		/* inode number */

@@ -161,13 +161,46 @@ int32_t romfs_stat(int32_t inode, struct stat *buf) {
 	if (type&0x8) {
 		buf->st_mode|=0111;
 	}
+
 	type&=0x7;
 
 	header_offset+=4;		/* 4: spec.info */
 	romfs_read_noinc(&temp_int,header_offset,4);
 	spec_info=ntohl(temp_int);
-	/* FIXME: set proper fields if it's a char or block device? */
-	(void)spec_info;
+
+	switch(type) {
+		case 0: /* hard link */
+			/* spec_info is inode of destination */
+			break;
+		case 1: /* directory */
+			buf->st_mode|=S_IFDIR;
+			/* spec_info is first file in subdir's header */
+			break;
+		case 2: /* regular file */
+			/* sinfo must be zero */
+			buf->st_mode|=S_IFREG;
+			break;
+		case 3: /* symbolic link */
+			/* sinfo must be zero */
+			buf->st_mode|=S_IFLNK;
+			break;
+		case 4: /* block device */
+			buf->st_mode|=S_IFBLK;
+			buf->st_rdev=spec_info;
+			break;
+		case 5: /* char device */
+			buf->st_mode|=S_IFCHR;
+			buf->st_rdev=spec_info;
+			break;
+		case 6: /* socket */
+			buf->st_mode|=S_IFSOCK;
+			break;
+		case 7: /* fifo */
+			buf->st_mode|=S_IFIFO;
+			break;
+		default:
+			break;
+	}
 
 
 	header_offset+=4;		/* 8: Size */
