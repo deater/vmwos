@@ -5,7 +5,7 @@ AS = as
 ASFLAGS = -mcpu=arm1176jzf-s
 CFLAGS = -O2 -Wall -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib -fPIC
 OBJCOPYFLAGS = -R .note -R .comment -R .note.gnu.build-id
-LFLASG = -T../kernel/kernel.ld
+LFLAGS = -T../kernel/kernel.ld
 
 all:	shell hello ls printa printb
 
@@ -42,7 +42,7 @@ hello.elf:	hello.o start.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf start.o hello.o vlibc.o syscalls.arm.o vmwos.o
 
 ls.elf:	ls.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLASG) -o ls.elf start.o ls.o vlibc.o syscalls.arm.o vmwos.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ls.elf start.o ls.o vlibc.o syscalls.arm.o vmwos.o
 
 printa.elf:	printa.o start.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printa.elf start.o printa.o vlibc.o syscalls.arm.o vmwos.o
