@@ -8,8 +8,8 @@
 
 void exit(int32_t status) {
 
-        process[current_process].status=PROCESS_STATUS_EXITED;
-	process[current_process].exit_value=status;
+        current_process->status=PROCESS_STATUS_EXITED;
+	current_process->exit_value=status;
 
 	/* Free resources now? */
 	/* process_destroy(current_process); */

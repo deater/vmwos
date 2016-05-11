@@ -50,7 +50,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
 
 	unsigned int memory_total;
-	int init_process,idle_process;
+	struct process_control_block_type *init_process,*idle_process;
 	struct atag_info_t atag_info;
 	uint32_t framebuffer_width=800,framebuffer_height=600;
 	uint32_t temperature;
@@ -58,7 +58,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	(void) r0;	/* Ignore boot method */
 
 	/* Initialize Software Structures */
-	process_table_init();
 
 	/* Detect Hardware */
 	atags_detect(atags,&atag_info);
@@ -194,43 +193,29 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Mount the ramdisk */
 	mount("/dev/ramdisk","/","romfs",0,NULL);
 
-#if 0
-	/* Load the idle thread */
-	idle_process=process_load("idle",PROCESS_FROM_RAM,
-				(char *)&idle_task,8,4096);
-
-	init_process=process_load("shell",PROCESS_FROM_DISK,
-				NULL,0,8192);
-
-	process_load("printa",PROCESS_FROM_DISK,
-				NULL,0,8192);
-
-	process_load("printb",PROCESS_FROM_DISK,
-				NULL,0,8192);
-#endif
-
 	/* Create idle thread */
 	printk("Loading the idle thread\n");
 	idle_process=process_create();
-	process[idle_process].text=(void *)&idle_task;
-	process[idle_process].reg_state.lr=(long)&idle_task;
-	process[idle_process].running=1;
+	idle_process->text=(void *)&idle_task;
+	idle_process->reg_state.lr=(long)&idle_task;
+	idle_process->running=1;
 
 	/* Enter our "init" process*/
 	init_process=process_create();
-	current_process=1;
-	process[init_process].parent=init_process;
+	current_process=init_process;
+	/* Should this be NULL instead? */
+	init_process->parent=init_process;
 	execve("shell",NULL,NULL);
 	printk("\nEntering userspace by starting process %d!\n",
 		init_process);
 
 	/* Mark idle and init as ready */
-	process[idle_process].status=PROCESS_STATUS_READY;
-	process[init_process].status=PROCESS_STATUS_READY;;
+	idle_process->status=PROCESS_STATUS_READY;
+	init_process->status=PROCESS_STATUS_READY;
 
 
-	long *shell_stack=(long *)process[init_process].reg_state.r[13];
-	long *shell_address=(long *)process[init_process].reg_state.lr;
+	long *shell_stack=(long *)init_process->reg_state.r[13];
+	long *shell_address=(long *)init_process->reg_state.lr;
 
 
 #if 0

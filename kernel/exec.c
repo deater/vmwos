@@ -31,10 +31,14 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	inode=romfs_get_inode(filename);
 	if (inode<0) {
-		return result;
+		return inode;
 	}
 
 	result=romfs_stat(inode,&stat_info);
+	if (result<0) {
+		return result;
+	}
+
 	size=stat_info.st_size;
 
 	/* TODO: get from executable */
@@ -50,7 +54,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	romfs_read_file(inode,0,binary_start,size);
 
 	/* Set name */
-	strncpy(process[current_process].name,filename,32);
+	strncpy(current_process->name,filename,32);
 
 	argv_location=(stack_start+stack_size);
 
@@ -101,29 +105,29 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	/* Setup the stack */
         /* is the -4 needed? */
-        process[current_process].reg_state.r[13]=(long)argv_location;
-        process[current_process].stack=stack_start;
-        process[current_process].stacksize=stack_size;
+        current_process->reg_state.r[13]=(long)argv_location;
+        current_process->stack=stack_start;
+        current_process->stacksize=stack_size;
 
 	/* Setup lr to point to exit */
 	/* That way when a program exits it will return to where lr points */
-	process[current_process].reg_state.r[14]=(long)exit;
+	current_process->reg_state.r[14]=(long)exit;
 
 	/* Make r0=argc */
-	process[current_process].reg_state.r[0]=argc;
+	current_process->reg_state.r[0]=argc;
 	/* Make r1=argv */
-	process[current_process].reg_state.r[1]=(long)argv_location;
+	current_process->reg_state.r[1]=(long)argv_location;
 
 
 
         /* Setup the entry point */
-        process[current_process].reg_state.lr=(long)binary_start;
-        process[current_process].text=binary_start;
-        process[current_process].textsize=size;
+        current_process->reg_state.lr=(long)binary_start;
+        current_process->text=binary_start;
+        current_process->textsize=size;
 
-        printk("Execed process %s current_process %d pid %d "
+        printk("Execed process %s current_process %x pid %d "
                 "allocated %dkB at %x and %dkB stack at %x\n",
-                filename,current_process,process[current_process].pid,
+                filename,(long)current_process,current_process->pid,
                 size/1024,binary_start,
                 stack_size/1024,stack_start);
 

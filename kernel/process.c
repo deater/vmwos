@@ -11,109 +11,112 @@
 
 
 int userspace_started=0;
-int current_process=0;
-struct process_control_block_type process[MAX_PROCESSES];
 static int avail_pid=0;
 
+struct process_control_block_type *proc_first=NULL;
+struct process_control_block_type *current_process=NULL;
 
-int32_t process_table_init(void) {
+struct process_control_block_type *process_lookup(int32_t pid) {
 
-	int i;
+	struct process_control_block_type *result=NULL;
 
-	current_process=0;
-	for(i=0;i<MAX_PROCESSES;i++) {
-		process[i].valid=0;
+	result=proc_first;
+	while(result!=NULL) {
+		if (result->pid==pid) return result;
+
+		result=result->next;
 	}
+
+	return result;
+
+}
+
+static int32_t process_insert(struct process_control_block_type *proc) {
+
+	struct process_control_block_type *last;
+
+	if (proc_first==NULL) {
+		proc_first=proc;
+		proc->next=NULL;
+		return 0;
+	}
+
+	last=proc_first;
+	while(last->next!=NULL) {
+		last=last->next;
+	}
+	last->next=proc;
+	proc->next=NULL;
 
 	return 0;
 }
 
-static int32_t process_find_free(void) {
+struct process_control_block_type *process_create(void) {
 
-	int32_t i,which=0;
-
-	/* LOCK */
-
-	/* Find free process */
-	for(i=0;i<MAX_PROCESSES;i++) {
-		if (!process[i].valid) break;
-	}
-
-	if (i==MAX_PROCESSES) {
-		printk("ERROR: No free process slot!\n");
-		which=-1;
-	}
-	else {
-		process[i].valid=1;
-		which=i;
-	}
-
-	/* UNLOCK */
-
-	return which;
-}
-
-int32_t process_create(void) {
-
-	int32_t which;
 	int i;
+	struct process_control_block_type *new_proc;
 
-	which=process_find_free();
-	if (which<0) {
-		return which;
+	new_proc=memory_allocate(sizeof(struct process_control_block_type));
+	if (new_proc==NULL) {
+		printk("process_create: out of memory\n");
+		return NULL;
 	}
+
+	/* Insert into linked list */
+	process_insert(new_proc);
 
 	/* Set up initial conditions */
-	process[which].running=0;
-	process[which].status=PROCESS_STATUS_SLEEPING;
-	process[which].time=0;
+	new_proc->running=0;
+	new_proc->status=PROCESS_STATUS_SLEEPING;
+	new_proc->time=0;
 
 	/* LOCK */
 	/* FIXME: what happens when we rollover */
-	process[which].pid=avail_pid;
+	new_proc->pid=avail_pid;
 	avail_pid++;
 	/* UNLOCK */
 
-	process[which].stack=NULL;
-	process[which].text=NULL;
-	process[which].stacksize=0;
-	process[which].textsize=0;
+	new_proc->stack=NULL;
+	new_proc->text=NULL;
+	new_proc->stacksize=0;
+	new_proc->textsize=0;
 
 	/* Clear out registers */
-	for(i=0;i<14;i++) process[which].reg_state.r[i]=0;
+	for(i=0;i<14;i++) new_proc->reg_state.r[i]=0;
 
 	/* Setup the default SPSR */
 	/* USER mode (0x10) */
 	/* We don't mask 0x80 or 0x40 (IRQ or FIQ) */
-	process[which].reg_state.spsr=0x10;
+	new_proc->reg_state.spsr=0x10;
 
 	/* Clear out LR (saved pc) */
 	/* exec should set this for us */
-	process[which].reg_state.lr=0;
+	new_proc->reg_state.lr=0;
 
-	return which;
+	return new_proc;
 }
 
-int32_t process_destroy(int32_t which) {
+int32_t process_destroy(struct process_control_block_type *proc) {
 
 	/* close open files */
 	/* TODO */
 
 	/* free memory */
-	if (process[which].stack) {
-		memory_free(process[which].stack,
-			process[which].stacksize);
+	if (proc->stack) {
+		memory_free(proc->stack,proc->stacksize);
 	}
-	if (process[which].text) {
-		memory_free(process[which].text,
-			process[which].textsize);
+	if (proc->text) {
+		memory_free(proc->text,proc->textsize);
 	}
 	/* mark as no longer valid */
-	process[which].valid=0;
+	proc->valid=0;
+
+	/* remove from linked list? */
 
 	return 0;
 }
 
+#if 0
 int32_t process_load(char *name, int type, char *data, int size, int stack_size) {
 
 	char *binary_start=NULL;
@@ -145,8 +148,9 @@ int32_t process_load(char *name, int type, char *data, int size, int stack_size)
 
 	return which;
 }
+#endif
 
-int32_t process_run(int which, long *irq_stack) {
+int32_t process_run(struct process_control_block_type *proc, long *irq_stack) {
 
 	int i;
 	long return_pc,our_spsr;
@@ -154,27 +158,28 @@ int32_t process_run(int which, long *irq_stack) {
 
 //	printk("Resetting IRQ stack to %x\n",irq_stack);
 
-	return_pc=process[which].reg_state.lr;
-	our_spsr=process[which].reg_state.spsr;
+	return_pc=proc->reg_state.lr;
+	our_spsr=proc->reg_state.spsr;
 
 //	if (which==2) start_debug=1;
 	if (start_debug) {
 //		printk("IRQ stack=%x\n",(long)irq_stack);
-		printk("Attempting to run proc %d (%s pid=%d): "
+		printk("Attempting to run proc %x (%s pid=%d): "
 			"PC=%x SPSR=%x stack=%x\n",
-			which, process[which].name,process[which].pid,
+			(long)proc,
+			proc->name,proc->pid,
 			return_pc,our_spsr,
-			process[which].reg_state.r[13]);
+			proc->reg_state.r[13]);
 	}
 
 	irq_stack[0]=our_spsr;
 	irq_stack[1]=return_pc;
 	for(i=0;i<15;i++) {
-		irq_stack[2+i]=process[which].reg_state.r[i];
+		irq_stack[2+i]=proc->reg_state.r[i];
 	}
 
-	process[which].running=1;
-	current_process=which;
+	proc->running=1;
+	current_process=proc;
 
 #if 0
 	/* restore user registers */
@@ -228,21 +233,21 @@ int32_t process_run(int which, long *irq_stack) {
 	return 0;
 }
 
-int32_t process_save(int which, long *irq_stack) {
+int32_t process_save(struct process_control_block_type *proc, long *irq_stack) {
 
 	int i;
 
 	/* No longer running */
-	process[which].running=0;
+	proc->running=0;
 
-	process[which].reg_state.spsr=irq_stack[0];
-	process[which].reg_state.lr=irq_stack[1];
+	proc->reg_state.spsr=irq_stack[0];
+	proc->reg_state.lr=irq_stack[1];
 //	printk("save: SPSR=%x PC=%x IRQ_STACK=%x ",
 //		irq_stack[0],irq_stack[1],
 //		irq_stack);
 
 	for(i=0;i<15;i++) {
-		process[which].reg_state.r[i]=irq_stack[i+2];
+		proc->reg_state.r[i]=irq_stack[i+2];
 //		printk("r%d=%x ",i,irq_stack[i+2]);
 	}
 //	printk("\n");

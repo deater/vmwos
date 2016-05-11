@@ -14,11 +14,11 @@ long swi_handler_stack;
 
 void schedule(long *irq_stack) {
 
-	int i;
+	struct process_control_block_type *proc;
 
 	if (!userspace_started) return;
 
-	i=current_process;
+	proc=current_process;
 
 
 	/* find next available process */
@@ -26,28 +26,27 @@ void schedule(long *irq_stack) {
 	/* That is special cased and just runs wfi?   */
 
 	while(1) {
-		i++;
+		proc=proc->next;
 
 		/* wrap around if off end */
-		if (i>=MAX_PROCESSES) i=1;
+		if (proc==NULL) proc=proc_first;
 
 		/* if valid and ready, then run it */
-		if ((process[i].valid) &&
-			(process[i].status==PROCESS_STATUS_READY)) break;
+		if (proc->status==PROCESS_STATUS_READY) break;
 
 		/* Nothing was ready, run idle task */
-		if (i==current_process) {
-			i=0;
+		if (proc==current_process) {
+			//i=0;
 			break;
 		}
 
 	}
 
 	/* switch to new process */
-	if (i!=current_process) {
+	if (proc!=current_process) {
 //		printk("Switching from %d to %d\n",current_process,i);
 		process_save(current_process,irq_stack);
-		process_run(i,irq_stack);
+		process_run(proc,irq_stack);
 	}
 
 	/* ARM documentation says we can put a */

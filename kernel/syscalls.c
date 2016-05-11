@@ -101,7 +101,7 @@ uint32_t swi_handler_c(
 			printk("Trying to exec %s\n",(char *)r0);
 			result=execve((char *)r0,(char **)r1,(char **)r2);
 			/* wake up our parent */
-			process[process[current_process].parent].status=PROCESS_STATUS_READY;
+			current_process->parent->status=PROCESS_STATUS_READY;
 			process_run(current_process,(long *)swi_handler_stack);
 
 			/* Note, we set result to value of r0 from execve */
@@ -117,7 +117,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_GETPID:
-			result=process[current_process].pid;
+			result=current_process->pid;
 			break;
 
 		case SYSCALL_IOCTL:
@@ -161,7 +161,7 @@ uint32_t swi_handler_c(
 		case SYSCALL_GRADIENT:
 			result=framebuffer_gradient();
 			break;
-
+#if 0
 		case SYSCALL_RUN:
 			{
 			int which;
@@ -185,7 +185,7 @@ uint32_t swi_handler_c(
 			}
 			}
 			break;
-
+#endif
 		case SYSCALL_TB1:
 			result=framebuffer_tb1();
 			break;
