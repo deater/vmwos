@@ -63,7 +63,6 @@ uint32_t swi_handler_c(
 #endif
 
 	uint32_t result=0;
-	int parent;
 
 //	printk("Starting syscall %d\n",r7);
 
@@ -100,7 +99,7 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_EXECVE:
 			printk("Trying to exec %s\n",(char *)r0);
-			execve((char *)r0,(char *)r1,(char *)r2);
+			execve((char *)r0,(char **)r1,(char **)r2);
 			/* wake up our parent */
 			process[process[current_process].parent].status=PROCESS_STATUS_READY;
 			process_run(current_process,(long *)swi_handler_stack);
@@ -134,7 +133,6 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_VFORK:
-			parent=current_process;
 			printk("Trying to vfork\n");
 			result=vfork();
 			sched_yield();
