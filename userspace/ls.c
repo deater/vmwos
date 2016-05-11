@@ -167,8 +167,12 @@ int ls(char *path) {
 		return -1;
 	}
 
-	/* handle if it's a file */
-	if (!(stat_buf.st_mode&0040000)) {
+	printf("Mode: %x\n",stat_buf.st_mode);
+
+
+
+	/* handle if it's not a directory */
+	if ( (stat_buf.st_mode&S_IFMT)!=S_IFDIR) {
 		list_file(path);
 		return 0;
 	}
@@ -199,17 +203,27 @@ int ls(char *path) {
 
 	close(fd);
 
+
 	return 0;
 }
 
 int main(int argc, char **argv) {
 
-	if (argc==1) {
+	int i;
+	printf("ls: argc=%d\n",argc);
+	for(i=0;i<argc;i++) {
+		printf("arg%d = %s\n",i,argv[i]);
+	}
+
+	if (argc<2) {
+		printf("Listing current dir\n");
 		ls(".");
 	}
 	else {
+		printf("Listing %s\n",argv[1]);
 		ls(argv[1]);
 	}
+	printf("Ready to return\n");
 
 	return 0;
 }
