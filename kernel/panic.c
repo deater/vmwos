@@ -7,7 +7,7 @@ int32_t dump_state(void) {
 
 	int i;
 
-	printk("Kernel panic!\n");
+	printk("Kernel panic! %s\n",process[current_process].name);
 	printk("pc: %x\tcpsr: %x\n",process[current_process].reg_state.lr,
 		process[current_process].reg_state.spsr);
 	/* TODO: stack dump */
