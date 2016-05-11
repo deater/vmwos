@@ -124,6 +124,7 @@ static int create_argv(char *string) {
 
 	int count=0;
 	int ptr=0;
+	int i;
 
 	while(1) {
 		arguments[count]=&(string[ptr]);
@@ -141,6 +142,11 @@ static int create_argv(char *string) {
 		ptr++;
 
 
+	}
+
+	printf("Found %d arguments\n",count);
+	for(i=0;i<count;i++) {
+		printf("%d: %s\n",i,arguments[i]);
 	}
 
 	return count;
@@ -232,17 +238,17 @@ static int parse_input(char *string) {
 		int32_t pid,status,result;
 		struct stat stat_buf;
 
-		result=stat(string,&stat_buf);
+		/* Convert string to argv format */
+		result=create_argv(string);
 		if (result<0) {
-			printf("\nCommmand not found: \"%s\"!\n",string);
+			printf("Too many command line arguments\n");
 		}
-		else {
-			/* Convert string to argv format */
-			result=create_argv(string);
-			if (result<0) {
-				printf("Too many command line arguments\n");
-			}
 
+		else {
+			result=stat(string,&stat_buf);
+			if (result<0) {
+				printf("\nCommmand not found: \"%s\"!\n",string);
+			}
 			else {
 				/* Fork a child */
 				pid=vfork();
