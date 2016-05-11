@@ -69,8 +69,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			printk("%d: %x %s\n",i,(long)argv[i],argv[i]);
 		}
 
-		argv_length=(argc+1)*sizeof(char *)+
-			(argv[argc-1]-argv[0])+strlen(argv[argc]+1);
+		argv_length=(argc+1)*sizeof(char *)+	/* number of pointers */
+							/* plus one for NULL terminated list */
+			(argv[argc-1]-argv[0])+		/* add size of N-1 strings */
+			strlen(argv[argc])+		/* add length of last string */
+			1;				/* 1 for last NUL terminator */
 		printk("vmwos:exec: argv length %d\n",argv_length);
 
 		/* Align to 8-byte boundary */
@@ -81,12 +84,17 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		printk("vmwos:exec: argv location: %x\n",argv_location);
 
 		stack_argv=(uint32_t *)argv_location;
-		argv_ptr=(char *)stack_argv[argc+2];
-		*argv_ptr=0;
+		argv_ptr=(char *)(&stack_argv[argc+2]);
+
+		argv_ptr[0]=0;
 
 		for(i=0;i<argc;i++) {
 			stack_argv[i]=(uint32_t)argv_ptr;
 			argv_ptr=strncpy(argv_ptr,argv[i],strlen(argv[i]));
+			argv_ptr+=(strlen(argv[i])+1);
+			printk("vmwos: argv[%d]=%x %s\n",
+				i,stack_argv[i],(char *)stack_argv[i]);
+
 		}
 
 	}

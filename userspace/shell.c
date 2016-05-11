@@ -128,6 +128,8 @@ static int create_argv(char *string) {
 
 	while(1) {
 		arguments[count]=&(string[ptr]);
+		printf("shell:argv: %d %x %s\n",count,(long)(&string[ptr]),
+			&string[ptr]);
 
 		/* TODO: handle all whitespace? */
 		while((string[ptr]!=' ')&&(string[ptr]!=0)) ptr++;

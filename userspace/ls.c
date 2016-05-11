@@ -210,9 +210,10 @@ int ls(char *path) {
 int main(int argc, char **argv) {
 
 	int i;
+
 	printf("ls: argc=%d\n",argc);
 	for(i=0;i<argc;i++) {
-		printf("arg%d = %s\n",i,argv[i]);
+		printf("\targ%d = %s\n",i,argv[i]);
 	}
 
 	if (argc<2) {
