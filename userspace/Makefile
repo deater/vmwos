@@ -5,6 +5,7 @@ AS = as
 ASFLAGS = -mcpu=arm1176jzf-s
 CFLAGS = -O2 -Wall -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib -fPIC
 OBJCOPYFLAGS = -R .note -R .comment -R .note.gnu.build-id
+LFLASG = -T../kernel/kernel.ld
 
 all:	shell hello ls printa printb
 
@@ -34,20 +35,20 @@ printb:	printb.elf
 
 
 
-shell.elf:	shell.o vlibc.o syscalls.arm.o vmwos.o
-	$(CROSS)$(CC) $(CFLAGS) -o shell.elf shell.o vlibc.o syscalls.arm.o vmwos.o
+shell.elf:	shell.o start.o vlibc.o syscalls.arm.o vmwos.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o shell.elf start.o shell.o vlibc.o syscalls.arm.o vmwos.o
 
-hello.elf:	hello.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) -o hello.elf hello.o vlibc.o syscalls.arm.o vmwos.o
+hello.elf:	hello.o start.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf start.o hello.o vlibc.o syscalls.arm.o vmwos.o
 
-ls.elf:	ls.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) -o ls.elf ls.o vlibc.o syscalls.arm.o vmwos.o
+ls.elf:	ls.o start.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLASG) -o ls.elf start.o ls.o vlibc.o syscalls.arm.o vmwos.o
 
-printa.elf:	printa.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) -o printa.elf printa.o vlibc.o syscalls.arm.o vmwos.o
+printa.elf:	printa.o start.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printa.elf start.o printa.o vlibc.o syscalls.arm.o vmwos.o
 
-printb.elf:	printb.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) -o printb.elf printb.o vlibc.o syscalls.arm.o vmwos.o
+printb.elf:	printb.o start.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printb.elf start.o printb.o vlibc.o syscalls.arm.o vmwos.o
 
 ####
 
@@ -65,6 +66,9 @@ shell.o:	shell.c
 
 ls.o:	ls.c
 	$(CROSS)$(CC) $(CFLAGS) -c ls.c
+
+start.o:	start.c
+	$(CROSS)$(CC) $(CFLAGS) -c start.c
 
 vmwos.o:	vmwos.c
 	$(CROSS)$(CC) $(CFLAGS) -c vmwos.c
