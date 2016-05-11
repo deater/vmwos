@@ -64,17 +64,18 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			argc++;
 		}
 
-		printk("vmows:exec: found %d arguments\n",argc);
+		printk("vmwos:exec: found %d arguments\n",argc);
 		for(i=0;i<argc;i++) {
 			printk("%d: %x %s\n",i,(long)argv[i],argv[i]);
 		}
 
 		argv_length=(argc+1)*sizeof(char *)+
-			(argv[argc]-argv[0])+strlen(argv[argc]);
+			(argv[argc-1]-argv[0])+strlen(argv[argc]+1);
 		printk("vmwos:exec: argv length %d\n",argv_length);
 
 		/* Align to 8-byte boundary */
 		argv_length=((argv_length/8)+1)*8;
+		printk("vmwos:exec: argv length aligned %d\n",argv_length);
 
 		argv_location=(stack_start+stack_size-argv_length);
 		printk("vmwos:exec: argv location: %x\n",argv_location);
@@ -119,7 +120,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
                 stack_size/1024,stack_start);
 
 
-	return 0;
+	/* r0 gets overwritten with syscall result */
+	/* at end of syscall handler */
+	return argc;
 }
 
 
