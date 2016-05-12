@@ -10,22 +10,28 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
-long swi_handler_stack;
+int scheduling_enabled=0;
 
 void schedule(void) {
 
-	struct process_control_block_type *proc;
+	struct process_control_block_type *proc,*orig_proc;
 
-	if (!userspace_started) return;
-
+	orig_proc=current_process;
 	proc=current_process;
 
-	printk("Attempting to schedule, current proc=%d (%x)\n",
-		proc->pid,(long)proc);
+//	printk("Attempting to schedule, current proc=%d (%x)\n",
+//		proc->pid,(long)proc);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
 	/* That is special cased and just runs wfi?   */
+
+	/* Special case if in idle thread */
+	if (proc==proc_first) {
+		if (proc->next==NULL) return;
+		proc=proc->next;
+		orig_proc=proc;
+	}
 
 	while(1) {
 //		printk("proc=%x, proc->next=%x\n",(long)proc,(long)proc->next);
@@ -49,17 +55,17 @@ void schedule(void) {
 
 		/* if valid and ready, then run it */
 		if (proc->status==PROCESS_STATUS_READY) {
-			printk("scheduler: process %d looks ready\n",proc->pid);
+//			printk("scheduler: process %d looks ready\n",proc->pid);
 			break;
 		}
 		else {
-			printk("scheduler: process %d not ready\n",proc->pid);
+//			printk("scheduler: process %d not ready\n",proc->pid);
 		}
 
 		/* Nothing was ready, run idle task */
-		if (proc==current_process) {
+		if (proc==orig_proc) {
 			proc=proc_first;
-			printk("scheduler: giving up and running %d\n",proc->pid);
+//			printk("scheduler: giving up and running %d\n",proc->pid);
 			break;
 		}
 
@@ -67,9 +73,9 @@ void schedule(void) {
 
 	/* switch to new process */
 	if (proc!=current_process) {
-		printk("Switching from %d (%x) to %d (%x)\n",
-			current_process->pid,(long)current_process,
-			proc->pid,(long)proc);
+//		printk("Switching from %d (%x) to %d (%x)\n",
+//			current_process->pid,(long)current_process,
+//			proc->pid,(long)proc);
 		process_switch(current_process,proc);
 	}
 

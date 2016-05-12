@@ -53,7 +53,7 @@ int console_insert_char(int ch) {
 	if (ch==0x2) dump_saved_user_state(current_process);
 
 	/* Force schedule if ^Z */
-	if (ch==26) schedule();
+	if (ch==26) scheduling_enabled=!scheduling_enabled;
 
 	return 0;
 

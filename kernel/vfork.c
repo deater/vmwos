@@ -38,7 +38,7 @@ int32_t vfork(void) {
 
 	printk("vfork: created child %d\n",child_pid);
 
-	printk("vfork: synching current parent state\n");
+//	printk("vfork: synching current parent state\n");
 
 	/* Make sure on return the parent gets the syscall result */
 	//((long *)swi_handler_stack)[2]=child->pid;
@@ -70,23 +70,25 @@ int32_t vfork(void) {
 
 	/* Update saved process state of child */
 	/* It makes a copy of parent, but with SP pointing to child kernel stack */
-	{
-		register long r13 asm ("r13");
-		long old_stack_offset;
 
-		old_stack_offset=r13-(long)parent;
-		new_stack=(long)child+old_stack_offset;
-	}
+	register long r13 asm ("r13");
+	long old_stack_offset;
+
+	old_stack_offset=r13-(long)parent;
+	new_stack=(long)child+old_stack_offset;
+
+	printk("vfork: parent=%x child=%x r13=%x old_stack_offset %x new_stack %x\n",
+		(long)parent,(long)child,r13,old_stack_offset,new_stack);
 
 	process_save(child,new_stack);
 
-
 	if (current_process==parent) {
 		schedule();
+		printk("vfork: returning in parent\n");
 		return child_pid;
 	}
 
 	/* In child, return 0 */
-
+	printk("vfork: returning in child\n");
 	return 0;
 }

@@ -44,7 +44,6 @@ struct process_control_block_type {
 
 };
 
-extern int userspace_started;
 extern struct process_control_block_type *current_process;
 
 //int32_t process_table_init(void);

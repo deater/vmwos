@@ -6,15 +6,19 @@
 interrupt_handler:
 	sub	lr, lr, #4		@ point LR to actual return address
 
-	sub	sp,sp,#56
+	ldr	sp,=current_process
+	ldr	sp,[sp]
+
 	stmia	sp,{r0-lr}^		@ save all registers and return addr
 					@ this is 56 bytes in size
 
-	push	{lr}			@ store saved pc on stack
+	str	lr,[sp,#60]		@ store saved pc on stack
 
 	mrs	r0, SPSR		@ load SPSR
-	push	{r0}			@ store on stack
+	str	r0,[sp,#64]		@ store on stack
 
+
+	add	sp,sp,#8192
 
 	@ Call into the C routine
 	bl	interrupt_handler_c
@@ -22,12 +26,13 @@ interrupt_handler:
 	@ Return from the C routine
 
 exit_interrupt:
-	pop	{r0}
+	sub	sp,sp,#8192
+
+	ldr	r0,[sp,#64]
 	msr	SPSR_cxsf,r0
 
-	pop	{lr}
+	ldr	lr,[sp,#60]
 
 	ldmia	sp,{r0-lr}^
-	add	sp,sp,#56
 	movs	pc,lr			@ return, updating the
 					@ CPSR at the same time

@@ -112,7 +112,7 @@ void interrupt_handler_c(void) {
 
 	timer_interrupt_handler();
 
-//	schedule();
+	if (scheduling_enabled) schedule();
 
 	return;
 }

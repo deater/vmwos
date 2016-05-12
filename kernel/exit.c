@@ -10,6 +10,9 @@ void exit(int32_t status) {
 
 	printk("Process %d exiting\n",current_process->pid);
 
+//	dump_saved_user_state(current_process);
+//	dump_saved_kernel_state(current_process);
+
         current_process->status=PROCESS_STATUS_EXITED;
 	current_process->exit_value=status;
 

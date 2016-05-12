@@ -138,7 +138,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	uart_enable_interrupts();
 
 	/* Enable Interrupts */
-	enable_interrupts();
+//	enable_interrupts();
+
 
 	/* Clear screen */
 	printk("\n\033[2J\n\n");
@@ -224,6 +225,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	//dump_saved_user_state(idle_process);
 	//dump_saved_kernel_state(idle_process);
 
+
+
 	/* Enter our "init" process*/
 	init_process=process_create();
 	current_process=init_process;
@@ -265,7 +268,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
                 : [stack] "r"(shell_stack) /* input */
                 : "sp", "memory");      /* clobbers */
 
-	userspace_started=1;
 
 	enter_userspace();
 

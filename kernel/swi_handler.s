@@ -16,6 +16,10 @@
 swi_handler:
 	@ and	sp,sp,#0xffffe000
 	@ sub	sp,sp,#56
+
+	ldr     sp,=current_process
+        ldr     sp,[sp]
+
 	stmia	sp,{r0-lr}^		@ Save all user registers r0-lr
 					@ (the ^ means user registers)
 
