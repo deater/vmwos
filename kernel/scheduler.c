@@ -12,7 +12,7 @@
 
 long swi_handler_stack;
 
-void schedule(long *irq_stack) {
+void schedule(void) {
 
 	struct process_control_block_type *proc;
 
@@ -20,6 +20,7 @@ void schedule(long *irq_stack) {
 
 	proc=current_process;
 
+	printk("Attempting to schedule, old proc=%d\n",proc->pid);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
@@ -29,14 +30,32 @@ void schedule(long *irq_stack) {
 		proc=proc->next;
 
 		/* wrap around if off end */
-		if (proc==NULL) proc=proc_first;
+		if (proc==NULL) {
+			printk("proc->next is NULL, wrapping\n");
+			proc=proc_first->next;
+			if (proc==NULL) {
+				proc=proc_first;
+				printk("scheduler: only %d available\n",
+					proc->pid);
+				break;
+			}
+			printk("scheduler: wrapping to %d\n",
+				proc->pid);
+		}
 
 		/* if valid and ready, then run it */
-		if (proc->status==PROCESS_STATUS_READY) break;
+		if (proc->status==PROCESS_STATUS_READY) {
+			printk("scheduler: process %d looks ready\n",proc->pid);
+			break;
+		}
+		else {
+			printk("scheduler: process %d not ready\n",proc->pid);
+		}
 
 		/* Nothing was ready, run idle task */
 		if (proc==current_process) {
-			//i=0;
+			proc=proc_first;
+			printk("scheduler: giving up and running %d\n",proc->pid);
 			break;
 		}
 
@@ -44,9 +63,10 @@ void schedule(long *irq_stack) {
 
 	/* switch to new process */
 	if (proc!=current_process) {
-//		printk("Switching from %d to %d\n",current_process,i);
-		process_save(current_process,irq_stack);
-		process_run(proc,irq_stack);
+		printk("Switching from %d (%x) to %d (%x)\n",
+			current_process->pid,(long)current_process,
+			proc->pid,(long)proc);
+		process_switch(current_process,proc);
 	}
 
 	/* ARM documentation says we can put a */
@@ -58,7 +78,7 @@ void schedule(long *irq_stack) {
 
 int32_t sched_yield(void) {
 
-	schedule((long *)swi_handler_stack);
+	schedule();
 
 	return 0;
 

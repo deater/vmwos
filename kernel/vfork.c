@@ -11,8 +11,9 @@
 
 int32_t vfork(void) {
 
-	int32_t i;
+	int32_t child_pid;
 	struct process_control_block_type *child,*parent;
+	uint32_t new_stack;
 
 	parent=current_process;
 
@@ -23,23 +24,30 @@ int32_t vfork(void) {
 		return -1;
 	}
 
-	printk("vfork: created child %d\n",child->pid);
+	child_pid=child->pid;
+
+	/* Copy process info over, including kernel stack */
+	memcpy(child,parent,sizeof(struct process_control_block_type));
+
+	child->pid=child_pid;
+
+	printk("vfork: created child %d\n",child_pid);
 
 	printk("vfork: synching current parent state\n");
 
 	/* Make sure on return the parent gets the syscall result */
-	((long *)swi_handler_stack)[2]=child->pid;
+	//((long *)swi_handler_stack)[2]=child->pid;
 
-	process_save(parent,(long *)swi_handler_stack);
+//	process_save(parent);
 
-	printk("vfork: copying register state from parent (%d -> %d)\n",
-		parent->pid,child->pid);
+//	printk("vfork: copying register state from parent (%d -> %d)\n",
+//		parent->pid,child_pid);
 	/* copy register state from parent */
-	for(i=0;i<15;i++) {
-		child->reg_state.r[i]=parent->reg_state.r[i];
-	}
-	child->reg_state.spsr=parent->reg_state.spsr;
-	child->reg_state.lr=parent->reg_state.lr;
+//	for(i=0;i<15;i++) {
+//		child->reg_state.r[i]=parent->reg_state.r[i];
+//	}
+//	child->reg_state.spsr=parent->reg_state.spsr;
+	//child->reg_state.lr=parent->reg_state.lr;
 
 	child->parent=parent;
 
@@ -52,8 +60,28 @@ int32_t vfork(void) {
 	/* put parent to sleep */
 	parent->status=PROCESS_STATUS_SLEEPING;
 
-	printk("vfork: wake child %d\n",child->pid);
+	printk("vfork: wake child %d\n",child_pid);
 	child->status=PROCESS_STATUS_READY;
 
-	return child->pid;
+	/* Update saved process state of child */
+	/* It makes a copy of parent, but with SP pointing to child kernel stack */
+	{
+		register long r13 asm ("r13");
+		long old_stack_offset;
+
+		old_stack_offset=r13-(long)parent;
+		new_stack=(long)child+old_stack_offset;
+	}
+
+	process_save(child,new_stack);
+
+
+	if (current_process==parent) {
+		schedule();
+		return child_pid;
+	}
+
+	/* In child, return 0 */
+
+	return 0;
 }

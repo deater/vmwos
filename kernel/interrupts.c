@@ -112,7 +112,7 @@ void interrupt_handler_c(long *irq_stack) {
 
 	timer_interrupt_handler();
 
-	schedule(irq_stack);
+//	schedule();
 
 	return;
 }

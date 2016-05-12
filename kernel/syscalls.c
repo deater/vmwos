@@ -70,7 +70,6 @@ uint32_t swi_handler_c(
 		case SYSCALL_EXIT:
 			printk("Process exiting with %d\n",r0);
 			exit(r0);
-			sched_yield();
 			break;
 
 		case SYSCALL_READ:
@@ -101,8 +100,11 @@ uint32_t swi_handler_c(
 			printk("Trying to exec %s\n",(char *)r0);
 			result=execve((char *)r0,(char **)r1,(char **)r2);
 			/* wake up our parent */
+			printk("Waking parent %d\n",current_process->parent->pid);
 			current_process->parent->status=PROCESS_STATUS_READY;
-			process_run(current_process,(long *)swi_handler_stack);
+			schedule();
+
+			//process_run(current_process,(long *)swi_handler_stack);
 
 			/* Note, we set result to value of r0 from execve */
 			/* argv, otherwise it gets overwritten when we start */
@@ -138,9 +140,6 @@ uint32_t swi_handler_c(
 		case SYSCALL_VFORK:
 			printk("Trying to vfork\n");
 			result=vfork();
-			sched_yield();
-			/* only child gets here? */
-			result=0;
 			break;
 
 		case SYSCALL_BLINK:

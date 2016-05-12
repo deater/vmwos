@@ -36,8 +36,10 @@ static int32_t process_insert(struct process_control_block_type *proc) {
 	struct process_control_block_type *last;
 
 	if (proc_first==NULL) {
+		printk("Creating first process %d\n",proc->pid);
 		proc_first=proc;
 		proc->next=NULL;
+		proc->prev=NULL;
 		return 0;
 	}
 
@@ -47,6 +49,8 @@ static int32_t process_insert(struct process_control_block_type *proc) {
 	}
 	last->next=proc;
 	proc->next=NULL;
+	proc->prev=last;
+	printk("Putting new process %d after %d\n",proc->pid,last->pid);
 
 	return 0;
 }
@@ -56,14 +60,17 @@ struct process_control_block_type *process_create(void) {
 	int i;
 	struct process_control_block_type *new_proc;
 
+
 	new_proc=memory_allocate(sizeof(struct process_control_block_type));
 	if (new_proc==NULL) {
 		printk("process_create: out of memory\n");
 		return NULL;
 	}
 
-	/* Insert into linked list */
-	process_insert(new_proc);
+	printk("process_create: allocated %d bytes for PCB at %x\n",
+		sizeof(struct process_control_block_type),
+		(long)new_proc);
+
 
 	/* Set up initial conditions */
 	new_proc->running=0;
@@ -82,16 +89,19 @@ struct process_control_block_type *process_create(void) {
 	new_proc->textsize=0;
 
 	/* Clear out registers */
-	for(i=0;i<14;i++) new_proc->reg_state.r[i]=0;
+	for(i=0;i<14;i++) new_proc->user_state.r[i]=0;
 
 	/* Setup the default SPSR */
 	/* USER mode (0x10) */
 	/* We don't mask 0x80 or 0x40 (IRQ or FIQ) */
-	new_proc->reg_state.spsr=0x10;
+	new_proc->user_state.spsr=0x10;
 
 	/* Clear out LR (saved pc) */
 	/* exec should set this for us */
-	new_proc->reg_state.lr=0;
+	//new_proc->reg_state.lr=0;
+
+	/* Insert into linked list */
+	process_insert(new_proc);
 
 	return new_proc;
 }
@@ -150,7 +160,8 @@ int32_t process_load(char *name, int type, char *data, int size, int stack_size)
 }
 #endif
 
-int32_t process_run(struct process_control_block_type *proc, long *irq_stack) {
+#if 0
+int32_t process_run(struct process_control_block_type *proc) {
 
 	int i;
 	long return_pc,our_spsr;
@@ -232,8 +243,10 @@ int32_t process_run(struct process_control_block_type *proc, long *irq_stack) {
 
 	return 0;
 }
+#endif
 
-int32_t process_save(struct process_control_block_type *proc, long *irq_stack) {
+#if 0
+int32_t process_save(struct process_control_block_type *proc) {
 
 	int i;
 
@@ -253,4 +266,60 @@ int32_t process_save(struct process_control_block_type *proc, long *irq_stack) {
 //	printk("\n");
 
 	return 0;
+
 }
+#endif
+
+void process_save(struct process_control_block_type *proc, uint32_t new_stack) {
+	/* Save current state to PCB */
+	asm(
+		"mov    r2, %[save]\n"
+		"stmia  r2,{r0-lr}\n"	//Save all registers r0-lr
+		"add	r2,r2,#52\n"	// point to r13 save space
+		"str	%[new_stack],[r2]\n" // store new stack
+		"add    r2,r2,#8\n"
+		"mrs    r0, SPSR\n"	// load SPSR
+		"stmia  r2,{r0}\n"	// store
+		: /* output */
+		: [save] "r"(&(proc->kernel_state.r[0])) ,
+		  [new_stack] "r"(new_stack)
+		  /* input */
+		: /* clobbers */
+	);
+
+}
+
+int32_t process_switch(struct process_control_block_type *old,
+			struct process_control_block_type *new) {
+
+        /* Save current state to PCB */
+        asm(
+                "mov    r2, %[save]\n"
+                "stmia  r2,{r0-lr}\n"   //Save all registers r0-lr
+                "add    r2,r2,#60\n"
+                "mrs    r0, SPSR\n"     //  load SPSR
+                "stmia  r2,{r0}\n"      // store
+                : /* output */
+                : [save] "r"(&(old->kernel_state.r[0]))/* input */
+                : /* clobbers */
+        );
+
+	current_process=new;
+
+        /* Restore current state from PCB */
+        asm(
+                "mov    r2, %[restore]\n"
+		"ldr	r0,[r2,#60]\n"
+		"msr	SPSR, r0\n"		// restore SPSR
+                "ldmia	r2,{r0-r14}\n"	// restore registers
+                "mov	pc,lr\n"	// return, restoring SPSR
+                : /* output */
+                : [restore] "r"(&(new->kernel_state.r[0]))
+		/* input */
+                : /* clobbers */
+        );
+
+	return 0;
+}
+
+

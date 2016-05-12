@@ -104,24 +104,23 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	}
 
 	/* Setup the stack */
-        /* is the -4 needed? */
-        current_process->reg_state.r[13]=(long)argv_location;
+        current_process->user_state.r[13]=(long)argv_location;
         current_process->stack=stack_start;
         current_process->stacksize=stack_size;
 
 	/* Setup lr to point to exit */
 	/* That way when a program exits it will return to where lr points */
-	current_process->reg_state.r[14]=(long)exit;
+//	current_process->reg_state.r[14]=(long)exit;
 
 	/* Make r0=argc */
-	current_process->reg_state.r[0]=argc;
+	current_process->user_state.r[0]=argc;
 	/* Make r1=argv */
-	current_process->reg_state.r[1]=(long)argv_location;
+	current_process->user_state.r[1]=(long)argv_location;
 
 
 
         /* Setup the entry point */
-        current_process->reg_state.lr=(long)binary_start;
+        current_process->user_state.pc=(long)binary_start;
         current_process->text=binary_start;
         current_process->textsize=size;
 

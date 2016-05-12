@@ -1,4 +1,2 @@
-void schedule(long *irq_stack);
+void schedule(void);
 int32_t sched_yield(void);
-
-extern long swi_handler_stack;

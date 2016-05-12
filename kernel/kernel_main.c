@@ -32,6 +32,7 @@
 #include "lib/memory_benchmark.h"
 #include "drivers/random/bcm2835_rng.h"
 #include "exec.h"
+#include "panic.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -45,6 +46,26 @@ uint32_t hardware_type=RPI_MODEL_B;
 /* For memory benchmark */
 #define BENCH_SIZE (1024*1024)
 uint8_t benchmark[BENCH_SIZE];
+
+void enter_userspace(void) {
+        /* enter userspace */
+
+	long shell_address=current_process->user_state.pc;
+
+        asm volatile(
+		"ldr	sp,=current_process\n"
+		"ldr	sp,[sp]\n"
+                "mov r0, #0x10\n"	/* Userspace, IRQ enabled */
+                "msr SPSR, r0\n"
+                "mov lr, %[shell]\n"
+                "movs pc,lr\n"
+                : /* output */
+                : [shell] "r"(shell_address) /* input */
+                : "r0", "lr", "memory");        /* clobbers */
+}
+
+
+
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
@@ -70,9 +91,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Enable HW random number generator */
 	bcm2835_rng_init();
-
-	/* Enable Interrupts */
-	enable_interrupts();
 
 	/************************/
 	/* Boot message!	*/
@@ -119,6 +137,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	uart_enable_interrupts();
 
+	/* Enable Interrupts */
+	enable_interrupts();
 
 	/* Clear screen */
 	printk("\n\033[2J\n\n");
@@ -194,11 +214,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	mount("/dev/ramdisk","/","romfs",0,NULL);
 
 	/* Create idle thread */
-	printk("Loading the idle thread\n");
+	printk("Creating the idle thread\n");
 	idle_process=process_create();
 	idle_process->text=(void *)&idle_task;
-	idle_process->reg_state.lr=(long)&idle_task;
+	idle_process->user_state.pc=(long)&idle_task;
 	idle_process->running=1;
+	strncpy(idle_process->name,"idle",5);
+	idle_process->kernel_state.r[14]=(long)enter_userspace;
+	dump_saved_user_state(idle_process);
+	dump_saved_kernel_state(idle_process);
 
 	/* Enter our "init" process*/
 	init_process=process_create();
@@ -207,15 +231,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	init_process->parent=init_process;
 	execve("shell",NULL,NULL);
 	printk("\nEntering userspace by starting process %d!\n",
-		init_process);
+		init_process->pid);
 
 	/* Mark idle and init as ready */
 	idle_process->status=PROCESS_STATUS_READY;
 	init_process->status=PROCESS_STATUS_READY;
 
+	long *shell_stack=(long *)init_process->user_state.r[13];
 
-	long *shell_stack=(long *)init_process->reg_state.r[13];
-	long *shell_address=(long *)init_process->reg_state.lr;
 
 
 #if 0
@@ -244,16 +267,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	userspace_started=1;
 
-        /* enter userspace */
-
-        asm volatile(
-                "mov r0, #0x10\n"	/* Userspace, IRQ enabled */
-                "msr SPSR, r0\n"
-                "mov lr, %[shell]\n"
-                "movs pc,lr\n"
-                : /* output */
-                : [shell] "r"(shell_address) /* input */
-                : "r0", "lr", "memory");        /* clobbers */
+	enter_userspace();
 
 
 	/* we should never get here */
