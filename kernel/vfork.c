@@ -12,7 +12,7 @@
 int32_t vfork(void) {
 
 	int32_t child_pid;
-	struct process_control_block_type *child,*parent;
+	struct process_control_block_type *child,*parent,*prev,*next;
 	uint32_t new_stack;
 
 	parent=current_process;
@@ -24,12 +24,17 @@ int32_t vfork(void) {
 		return -1;
 	}
 
+	/* Some state we don't want to duplicate */
 	child_pid=child->pid;
+	prev=child->prev;
+	next=child->next;
 
 	/* Copy process info over, including kernel stack */
 	memcpy(child,parent,sizeof(struct process_control_block_type));
 
 	child->pid=child_pid;
+	child->prev=prev;
+	child->next=next;
 
 	printk("vfork: created child %d\n",child_pid);
 

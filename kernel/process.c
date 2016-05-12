@@ -51,6 +51,8 @@ static int32_t process_insert(struct process_control_block_type *proc) {
 	proc->next=NULL;
 	proc->prev=last;
 	printk("Putting new process %d after %d\n",proc->pid,last->pid);
+//	printk("proc %x proc->next %x proc->prev %x\n",
+//		(long)proc,(long)proc->next,(long)proc->prev);
 
 	return 0;
 }

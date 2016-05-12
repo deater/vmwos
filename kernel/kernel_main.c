@@ -221,8 +221,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	idle_process->running=1;
 	strncpy(idle_process->name,"idle",5);
 	idle_process->kernel_state.r[14]=(long)enter_userspace;
-	dump_saved_user_state(idle_process);
-	dump_saved_kernel_state(idle_process);
+	//dump_saved_user_state(idle_process);
+	//dump_saved_kernel_state(idle_process);
 
 	/* Enter our "init" process*/
 	init_process=process_create();

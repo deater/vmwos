@@ -20,27 +20,31 @@ void schedule(void) {
 
 	proc=current_process;
 
-	printk("Attempting to schedule, old proc=%d\n",proc->pid);
+	printk("Attempting to schedule, current proc=%d (%x)\n",
+		proc->pid,(long)proc);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
 	/* That is special cased and just runs wfi?   */
 
 	while(1) {
+//		printk("proc=%x, proc->next=%x\n",(long)proc,(long)proc->next);
 		proc=proc->next;
+//		printk("What about proc->next %x?\n",(long)proc);
+
 
 		/* wrap around if off end */
 		if (proc==NULL) {
-			printk("proc->next is NULL, wrapping\n");
+//			printk("proc->next is NULL, wrapping\n");
 			proc=proc_first->next;
 			if (proc==NULL) {
 				proc=proc_first;
-				printk("scheduler: only %d available\n",
-					proc->pid);
+//				printk("scheduler: only %d available\n",
+//					proc->pid);
 				break;
 			}
-			printk("scheduler: wrapping to %d\n",
-				proc->pid);
+//			printk("scheduler: wrapping to %d\n",
+//				proc->pid);
 		}
 
 		/* if valid and ready, then run it */
