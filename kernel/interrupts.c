@@ -76,7 +76,7 @@ static void user_reg_dump(void) {
 
 #endif
 
-void interrupt_handler_c(long *irq_stack) {
+void interrupt_handler_c(void) {
 
 	uint32_t basic_pending,pending2;
 	uint32_t handled=0;

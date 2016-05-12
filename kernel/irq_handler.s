@@ -17,7 +17,6 @@ interrupt_handler:
 
 
 	@ Call into the C routine
-	mov	r0,sp
 	bl	interrupt_handler_c
 
 	@ Return from the C routine
