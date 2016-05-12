@@ -5,7 +5,11 @@
 #include "drivers/serial/pl011_uart.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "locks.h"
+
+#include "../../process.h"
 #include "../../panic.h"
+
+#include "../../scheduler.h"
 
 #define INPUT_BUFFER_SIZE	256
 
@@ -29,9 +33,6 @@ int console_insert_char(int ch) {
 
 //	lock_mutex(&console_write_mutex);
 
-	/* Emergency debug if ^B */
-	if (ch==0x2) dump_state();
-
 	new_head=input_buffer_head+1;
 	if (new_head>=INPUT_BUFFER_SIZE) {
 		new_head=0;
@@ -47,6 +48,12 @@ int console_insert_char(int ch) {
 
 	/* RELEASE LOCK */
 //	unlock_mutex(&console_write_mutex);
+
+	/* Emergency debug if ^B */
+	if (ch==0x2) dump_saved_user_state(current_process);
+
+	/* Force schedule if ^Z */
+	if (ch==26) schedule();
 
 	return 0;
 
