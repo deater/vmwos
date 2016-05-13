@@ -12,9 +12,11 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
 
 	proc=process_lookup(pid);
 
-	if (proc->status!=PROCESS_STATUS_EXITED) {
-		printk("Waiting on pid %d\n",pid);
-//		process[current_process].status=PROCESS_STATUS_SLEEPING;
+	printk("Waiting on pid %d\n",pid);
+
+	while (proc->status!=PROCESS_STATUS_EXITED) {
+
+		schedule();
 	}
 
 	if (wstatus!=NULL) *wstatus=proc->exit_value;
