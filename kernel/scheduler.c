@@ -10,7 +10,7 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
-int scheduling_enabled=0;
+int scheduling_enabled=1;
 
 void schedule(void) {
 
