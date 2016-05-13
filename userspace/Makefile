@@ -12,7 +12,9 @@ all:	shell cat hello ls printa printb
 
 image:	shell cat hello ls printa printb
 	mkdir -p image
+	mkdir -p image/ansis
 	cp shell cat printa printb hello ls CATME aitasad1.ans utopia3.ans ./image
+	cp utopia3.ans image/ansis/other_utopia.ans
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
