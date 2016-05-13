@@ -19,6 +19,7 @@
 #include "wait.h"
 #include "scheduler.h"
 #include "uname.h"
+#include "sysinfo.h"
 
 extern int blinking_enabled;
 
@@ -184,6 +185,10 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_RANDOM:
 			result=bcm2835_rng_read((uint32_t *)r0);
+			break;
+
+		case SYSCALL_GET_SYSINFO:
+			result=get_sysinfo((struct sysinfo_t *)r0);
 			break;
 
 		default:
