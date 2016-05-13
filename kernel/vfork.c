@@ -8,6 +8,7 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
+static int debug=0;
 
 int32_t vfork(void) {
 
@@ -36,23 +37,7 @@ int32_t vfork(void) {
 	child->prev=prev;
 	child->next=next;
 
-	printk("vfork: created child %d\n",child_pid);
-
-//	printk("vfork: synching current parent state\n");
-
-	/* Make sure on return the parent gets the syscall result */
-	//((long *)swi_handler_stack)[2]=child->pid;
-
-//	process_save(parent);
-
-//	printk("vfork: copying register state from parent (%d -> %d)\n",
-//		parent->pid,child_pid);
-	/* copy register state from parent */
-//	for(i=0;i<15;i++) {
-//		child->reg_state.r[i]=parent->reg_state.r[i];
-//	}
-//	child->reg_state.spsr=parent->reg_state.spsr;
-	//child->reg_state.lr=parent->reg_state.lr;
+	if (debug) printk("vfork: created child %d\n",child_pid);
 
 	child->parent=parent;
 
@@ -61,11 +46,11 @@ int32_t vfork(void) {
 	child->stack=NULL;
 	child->text=NULL;
 
-	printk("vfork: put parent %d to sleep\n",parent->pid);
+	if (debug) printk("vfork: put parent %d to sleep\n",parent->pid);
 	/* put parent to sleep */
 	parent->status=PROCESS_STATUS_SLEEPING;
 
-	printk("vfork: wake child %d\n",child_pid);
+	if (debug) printk("vfork: wake child %d\n",child_pid);
 	child->status=PROCESS_STATUS_READY;
 
 	/* Update saved process state of child */
@@ -77,18 +62,19 @@ int32_t vfork(void) {
 	old_stack_offset=r13-(long)parent;
 	new_stack=(long)child+old_stack_offset;
 
-	printk("vfork: parent=%x child=%x r13=%x old_stack_offset %x new_stack %x\n",
+	if (debug) printk("vfork: parent=%x child=%x r13=%x old_stack_offset %x new_stack %x\n",
 		(long)parent,(long)child,r13,old_stack_offset,new_stack);
 
 	process_save(child,new_stack);
 
 	if (current_process==parent) {
 		schedule();
-		printk("vfork: returning in parent\n");
+		if (debug) printk("vfork: returning in parent\n");
 		return child_pid;
 	}
 
 	/* In child, return 0 */
-	printk("vfork: returning in child\n");
+	if (debug) printk("vfork: returning in child\n");
+
 	return 0;
 }

@@ -14,6 +14,8 @@
 #include "process.h"
 #include "exit.h"
 
+static int debug=0;
+
 /* Load raw executable */
 /* We don't have a file format yet */
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
@@ -68,9 +70,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			argc++;
 		}
 
-		printk("vmwos:exec: found %d arguments\n",argc);
-		for(i=0;i<argc;i++) {
-			printk("%d: %x %s\n",i,(long)argv[i],argv[i]);
+		if (debug) {
+			printk("vmwos:exec: found %d arguments\n",argc);
+			for(i=0;i<argc;i++) {
+				printk("%d: %x %s\n",i,(long)argv[i],argv[i]);
+			}
 		}
 
 		argv_length=(argc+1)*sizeof(char *)+	/* number of pointers */
@@ -78,14 +82,14 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			(argv[argc-1]-argv[0])+		/* add size of N-1 strings */
 			strlen(argv[argc])+		/* add length of last string */
 			1;				/* 1 for last NUL terminator */
-		printk("vmwos:exec: argv length %d\n",argv_length);
+		if (debug) printk("vmwos:exec: argv length %d\n",argv_length);
 
 		/* Align to 8-byte boundary */
 		argv_length=((argv_length/8)+1)*8;
-		printk("vmwos:exec: argv length aligned %d\n",argv_length);
+		if (debug) printk("vmwos:exec: argv length aligned %d\n",argv_length);
 
 		argv_location=(stack_start+stack_size-argv_length);
-		printk("vmwos:exec: argv location: %x\n",argv_location);
+		if (debug) printk("vmwos:exec: argv location: %x\n",argv_location);
 
 		stack_argv=(uint32_t *)argv_location;
 		argv_ptr=(char *)(&stack_argv[argc+2]);
@@ -96,7 +100,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			stack_argv[i]=(uint32_t)argv_ptr;
 			argv_ptr=strncpy(argv_ptr,argv[i],strlen(argv[i]));
 			argv_ptr+=(strlen(argv[i])+1);
-			printk("vmwos: argv[%d]=%x %s\n",
+			if (debug) printk("vmwos: argv[%d]=%x %s\n",
 				i,stack_argv[i],(char *)stack_argv[i]);
 
 		}
@@ -135,5 +139,3 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	/* at end of syscall handler */
 	return argc;
 }
-
-

@@ -68,7 +68,7 @@ uint32_t swi_handler_c(
 
 	switch(r7) {
 		case SYSCALL_EXIT:
-			printk("Process exiting with %d\n",r0);
+			//printk("Process exiting with %d\n",r0);
 			exit(r0);
 			break;
 
@@ -92,15 +92,15 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_WAITPID:
-			printk("Trying to waitpid on pid %d\n",r0);
+			//printk("Trying to waitpid on pid %d\n",r0);
 			waitpid(r0,(int32_t *)r1,r2);
 			break;
 
 		case SYSCALL_EXECVE:
-			printk("Trying to exec %s\n",(char *)r0);
+			//printk("Trying to exec %s\n",(char *)r0);
 			result=execve((char *)r0,(char **)r1,(char **)r2);
 			/* wake up our parent */
-			printk("Waking parent %d\n",current_process->parent->pid);
+			//printk("Waking parent %d\n",current_process->parent->pid);
 			current_process->parent->status=PROCESS_STATUS_READY;
 			schedule();
 
@@ -138,7 +138,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_VFORK:
-			printk("Trying to vfork\n");
+			//printk("Trying to vfork\n");
 			result=vfork();
 			break;
 
