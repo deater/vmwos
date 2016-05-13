@@ -47,20 +47,21 @@ uint32_t hardware_type=RPI_MODEL_B;
 uint8_t benchmark[BENCH_SIZE];
 
 void enter_userspace(void) {
-        /* enter userspace */
+
+	/* enter userspace */
 
 	long shell_address=current_process->user_state.pc;
 
-        asm volatile(
+	asm volatile(
+		"mov	lr, %[shell]\n"
 		"ldr	sp,=current_process\n"
 		"ldr	sp,[sp]\n"
-                "mov r0, #0x10\n"	/* Userspace, IRQ enabled */
-                "msr SPSR, r0\n"
-                "mov lr, %[shell]\n"
-                "movs pc,lr\n"
-                : /* output */
-                : [shell] "r"(shell_address) /* input */
-                : "r0", "lr", "memory");        /* clobbers */
+		"mov	r0, #0x10\n"	/* Userspace, IRQ enabled */
+		"msr	SPSR_cxsf, r0\n"
+		"movs	pc,lr\n"
+		: /* output */
+		: [shell] "r"(shell_address) /* input */
+		: "r0", "lr", "memory");        /* clobbers */
 }
 
 
@@ -74,6 +75,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	struct atag_info_t atag_info;
 	uint32_t framebuffer_width=800,framebuffer_height=600;
 	uint32_t temperature;
+	int32_t result;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -214,13 +216,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	mount("/dev/ramdisk","/","romfs",0,NULL);
 
 	/* Create idle thread */
-	printk("Creating the idle thread\n");
 	idle_process=process_create();
 	idle_process->text=(void *)&idle_task;
 	idle_process->user_state.pc=(long)&idle_task;
 	idle_process->running=1;
 	strncpy(idle_process->name,"idle",5);
 	idle_process->kernel_state.r[14]=(long)enter_userspace;
+	printk("Created idle thread: %d\n",idle_process->pid);
 	//dump_saved_user_state(idle_process);
 	//dump_saved_kernel_state(idle_process);
 
@@ -231,9 +233,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	current_process=init_process;
 	/* Should this be NULL instead? */
 	init_process->parent=init_process;
-	execve("shell",NULL,NULL);
-	printk("\nEntering userspace by starting process %d!\n",
-		init_process->pid);
+	result=execve("shell",NULL,NULL);
+	if (result<0) {
+		goto error_init;
+	}
+
+	printk("\nEntering userspace by starting process %d (%s)!\n",
+		init_process->pid,init_process->name);
 
 	/* Mark idle and init as ready */
 	idle_process->status=PROCESS_STATUS_READY;
@@ -270,6 +276,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	enter_userspace();
 
+error_init:
 
 	/* we should never get here */
 	printk("Error starting init!\n");
