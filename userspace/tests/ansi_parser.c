@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define FORE_BLACK      0x0
 #define FORE_BLUE       0x1
@@ -37,6 +39,9 @@
 int console_fore_color,console_back_color;
 int console_x=0,console_y=0;
 int console_fore_bright=0;
+
+char *text_console,*text_color;
+
 #define CONSOLE_X 80
 #define CONSOLE_Y 25
 
@@ -57,7 +62,7 @@ static uint32_t ansi_command;
 
 int framebuffer_console_write(const char *buffer, int length) {
 
-	int i=0;
+	int i=0,x;
 	int refresh_screen=0;
 	int distance;
 	int c;
@@ -86,7 +91,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 			else {
 				if (buffer[i]<128) printf("%c",buffer[i]);
 				else printf("<%x>",buffer[i]);
-#if 0
+
 				/* Write out the characters */
 				/* If overwriting previous char, need to refresh */
 				if (text_console[console_x+(console_y*CONSOLE_X)]!=' ') {
@@ -96,7 +101,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 				text_color[console_x+(console_y*CONSOLE_X)]=
 					(console_back_color<<4 |
 					(console_fore_color&0xf));
-#endif
+
 				console_x++;
 
 			}
@@ -300,6 +305,10 @@ int framebuffer_console_write(const char *buffer, int length) {
 		if (console_x>=CONSOLE_X) {
 //			printf("\nWrapping x=%d\n",console_x);
 			console_x=console_x%CONSOLE_X;
+			if (console_x>CONSOLE_X) {
+				printf("console x too big!\n");
+				exit(-1);
+			}
 			console_y++;
 		}
 
@@ -307,7 +316,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 
 			/* scroll up a line */
-#if 0
+
 			refresh_screen=1;
 
 			memcpy(&(text_console[0]),&(text_console[CONSOLE_X]),
@@ -319,7 +328,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 				text_console[x+(CONSOLE_Y-1)*CONSOLE_X]=' ';
 				text_color[x+(CONSOLE_Y-1)*CONSOLE_X]=FORE_GREY|BACK_BLACK;
 			}
-#endif
+
 			console_y--;
 		}
 
@@ -338,17 +347,24 @@ int framebuffer_console_write(const char *buffer, int length) {
 	return 0;
 }
 
+#define BUFFERSIZE 128
+
 int main(int argc, char **argv) {
 
-	int ch;
-	char buffer[128];
+	char buffer[BUFFERSIZE];
+	int result;
+
+	text_console=calloc(CONSOLE_X*CONSOLE_Y,sizeof(char));
+	text_color=calloc(CONSOLE_X*CONSOLE_Y,sizeof(char));
 
 	while(1) {
-		ch=fgetc(stdin);
-		if (ch==EOF) break;
-		buffer[0]=ch;
-		framebuffer_console_write(buffer,1);
+		result=read(0,buffer,BUFFERSIZE);
+		if (result<1) break;
+		framebuffer_console_write(buffer,result);
 	}
+
+	free(text_console);
+	free(text_color);
 
 	return 0;
 }
