@@ -167,9 +167,7 @@ int ls(char *path) {
 		return -1;
 	}
 
-	printf("Mode: %x\n",stat_buf.st_mode);
-
-
+//	printf("Mode: %x\n",stat_buf.st_mode);
 
 	/* handle if it's not a directory */
 	if ( (stat_buf.st_mode&S_IFMT)!=S_IFDIR) {
