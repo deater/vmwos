@@ -1,0 +1,48 @@
+0.13 -- 13 May 2016
++ cache/branch prediction enabled
++ simple 1:1 MMU (needed for L1-dcache)
++ blocking I/O
++ dynamically allocate processes
++ proper round-robin scheduler with idle task
++ new syscalls: open,read,vfork,execve,waitpid,stat,exit,getdents
++ read-only romfs support
++ ramdisk blockdevice
++ process command line arguments
++ full color ANSI terminal framebuffer support
++ userspace utilities: cat, ls, hello
++ arm1176 performance counter measurements
++ bcm2835 random number generator
++ optimized memset()
+
+0.12 -- 29 February 2016
++ major file layout restructuring
++ ps/2 keyboard gpio bitbanged support
++ uart: now interrupt driven
++ timer now runs at 64Hz
++ move most of interrupt handler to be C
++ bcm2835 temperature driver
++ automatically convert \n to \r\n
+
+0.11 --  7 January 2016
++ add gpio helper code (modeled on Linux interface)
++ Fix build on gcc-4.9 (mostly inline assembly issues)
++ Executables loaded from romfs image
++ New system calls: reboot,time,getpid
++ simple multi-tasking
++ framebuffer scrolling
++ userspace processes
+
+0.10 -- 21 April 2015
++ simple HDMI framebuffer support
++ add firmware mailbox support
+
+0.03 -- 26 February 2015
++ ATAGs parsing
++ UART/serial console support
++ Simple interrupt handler
++ Heartbeat ACT LED
++ Rudimentary in-kernel monitor shell
++ Support device detection (BPLUS vs B)
+
+0.01 --23 January 2015
++ Simple bare-metal ACT LED blinking code
