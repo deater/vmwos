@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	}
 	else {
 		for(i=1;i<argc;i++) {
-			input_fd=open(argv[i],O_RDONLY);
+			input_fd=open(argv[i],O_RDONLY,0);
 			if (input_fd<0) {
 				printf("Error opening %s\n",argv[i]);
 				return -1;
