@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include "drivers/console/console_io.h"
 
+#include "drivers/serial/pl011_uart.h"
+
 #define MAX_PRINT_SIZE 256
 
 int vsprintf(char *buffer, char *string, va_list ap) {
@@ -106,6 +108,24 @@ int printk(char *string,...) {
 	va_end(argp);
 
 	console_write(buffer,result);
+
+	return result;
+
+}
+
+int serial_printk(char *string,...) {
+
+	char buffer[MAX_PRINT_SIZE];
+	int result;
+
+	va_list argp;
+	va_start(argp, string);
+
+	result=vsprintf(buffer,string,argp);
+
+	va_end(argp);
+
+	uart_write(buffer,result);
 
 	return result;
 
