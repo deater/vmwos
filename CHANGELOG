@@ -37,12 +37,14 @@
 + add firmware mailbox support
 
 0.03 -- 26 February 2015
-+ ATAGs parsing
-+ UART/serial console support
-+ Simple interrupt handler
 + Heartbeat ACT LED
 + Rudimentary in-kernel monitor shell
 + Support device detection (BPLUS vs B)
+
+0.02 -- 4 February 2015
++ ATAGs parsing
++ UART/serial console support
++ Simple interrupt handler
 
 0.01 --23 January 2015
 + Simple bare-metal ACT LED blinking code
