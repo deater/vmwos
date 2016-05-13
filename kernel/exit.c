@@ -5,6 +5,7 @@
 #include "lib/string.h"
 
 #include "process.h"
+#include "scheduler.h"
 
 void exit(int32_t status) {
 
