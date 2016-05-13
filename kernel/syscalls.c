@@ -160,31 +160,7 @@ uint32_t swi_handler_c(
 		case SYSCALL_GRADIENT:
 			result=framebuffer_gradient();
 			break;
-#if 0
-		case SYSCALL_RUN:
-			{
-			int which;
 
-			which=r0-'0';
-
-			if ((which>0) && (which<10)) {
-				process[which].status=PROCESS_STATUS_READY;
-			}
-			}
-			break;
-
-		case SYSCALL_STOP:
-			{
-			int which;
-
-			which=r0-'0';
-
-			if ((which>0) && (which<10)) {
-				process[which].status=PROCESS_STATUS_SLEEPING;
-			}
-			}
-			break;
-#endif
 		case SYSCALL_TB1:
 			result=framebuffer_tb1();
 			break;

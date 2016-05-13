@@ -26,7 +26,7 @@
 #define SYSCALL_SETFONT		8193
 #define SYSCALL_GRADIENT	8194
 #define SYSCALL_TB1		8195
-#define SYSCALL_RUN		8196
-#define SYSCALL_STOP		8197
+/* #define SYSCALL_RUN		8196	obsolete */
+/* #define SYSCALL_STOP		8197	obsolete */
 #define SYSCALL_TEMPERATURE	8198
 #define SYSCALL_RANDOM		8199

@@ -207,24 +207,28 @@ int ls(char *path) {
 	return 0;
 }
 
+static int debug=0;
+
 int main(int argc, char **argv) {
 
 	int i;
 
-	printf("ls: argc=%d\n",argc);
-	for(i=0;i<argc;i++) {
-		printf("\targ%d = %s\n",i,argv[i]);
+	if (debug) {
+		printf("ls: argc=%d\n",argc);
+		for(i=0;i<argc;i++) {
+			printf("\targ%d = %s\n",i,argv[i]);
+		}
 	}
 
 	if (argc<2) {
-		printf("Listing current dir\n");
+		if (debug) printf("Listing current dir\n");
 		ls(".");
 	}
 	else {
-		printf("Listing %s\n",argv[1]);
+		if (debug) printf("Listing %s\n",argv[1]);
 		ls(argv[1]);
 	}
-	printf("Ready to return\n");
+	if (debug) printf("Ready to return\n");
 
 	return 0;
 }
