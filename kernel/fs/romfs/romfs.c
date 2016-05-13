@@ -241,7 +241,7 @@ int32_t romfs_get_inode(const char *name) {
 //		if (debug) printk("romfs_get_inode: %s is %s? %x\n",name,filename,inode);
 
 		/* Match filename */
-		if (!strncmp(name,filename,strlen(name))) {
+		if (!strncmp(name,filename,MAX_FILENAME_SIZE)) {
 			return inode;
 		}
 
