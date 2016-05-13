@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if 1
+#ifdef VMWOS
 #include "syscalls.h"
 #include "vlibc.h"
 #include "vmwos.h"
