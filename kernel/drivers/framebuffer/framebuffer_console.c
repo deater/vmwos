@@ -13,7 +13,7 @@
 #include "lib/memcpy.h"
 #include "lib/memset.h"
 
-static int debug=1;
+//static int debug=1;
 
 #define ANSI_BLACK	0
 #define ANSI_RED	1
@@ -289,6 +289,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 					console_x-=distance;
 					break;
 				case 'H':
+
 					/* GotoXY */
 					if (numbers[0]==ANSI_DEFAULT) {
 						console_x=0;
@@ -297,13 +298,16 @@ int framebuffer_console_write(const char *buffer, int length) {
 					else if (which_number==0) {
 						/* 1-based */
 						console_y=numbers[0]-1;
+						//serial_printk("Y=%d\n",console_y);
 					}
 					else {
 						/* 1-based */
 						console_y=numbers[0]-1;
 						console_x=numbers[1]-1;
+						//serial_printk("X,Y=%d,%d\n",console_x,console_y);
 
 					}
+
 					break;
 				case 'J':
 					switch(numbers[0]) {
