@@ -8,6 +8,8 @@ int time(int *time);
 int reboot(void);
 int errno;
 int32_t rand(void);
+int32_t atoi(char *string);
+
 
 
 int strlen(const char *s);

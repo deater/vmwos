@@ -238,3 +238,19 @@ int strlen(const char *s) {
 
 	return length;
 }
+
+int32_t atoi(char *string) {
+
+	int result=0;
+	char *ptr;
+
+	ptr=string;
+
+	while(*ptr!=0) {
+		result*=10;
+		result+=(*ptr)-'0';
+		ptr++;
+	}
+
+	return result;
+}
