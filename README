@@ -4,7 +4,7 @@ The VMWos -- an operating system by Vincent M. Weaver
 History:
 ~~~~~~~~
 	This project originated from code written for the
-	Spring 2015 ECE598 Advanced Operating System class
+	ECE598 Advanced Operating System class
 	at the University of Maine.
 
 Building:
@@ -29,13 +29,13 @@ Building:
 	
 Installing:
 ~~~~~~~~~~~
-	You need a memory key with an existing OS install
+	You need an SD card with an existing OS install
 	that you don't care about (raspbian works great).
 
-	Mount the boot directory on that key, and copy
-	kernel.img to a safe place.
+	Mount the boot directory on that SD card, and copy
+	the existing kernel.img to a safe place.
 
-	Now copy your built kernel/kernel.img overtop
+	Now copy your vmwos kernel/kernel.img overtop
 	of the existing kernel.img
 
 
@@ -47,6 +47,8 @@ Required Hardware:
 
 	It will not run on a Raspberry Pi 2 without some
 	changes to the OS (but it should be possible).
+
+	Running on a Pi 3 will be a lot harder.
 
 	It will drive an HDMI screen, but has no support
 	for USB input.
@@ -63,6 +65,7 @@ Using:
 	Assuming you have booted properly into the shell, you can
 	run "help" to get a list of supported commands.
 
+	Also "ls" should work.
 
 Compiling user programs:
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,4 +86,4 @@ For more information:
 
 Vince Weaver
 vince@deater.net
-27 February 2016
+13 May 2016
