@@ -7,13 +7,13 @@ CFLAGS = -O2 -Wall -DVMWOS=1 -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestandi
 OBJCOPYFLAGS = -R .note -R .comment -R .note.gnu.build-id
 LFLAGS = -T../kernel/kernel.ld
 
-all:	shell cat cat_count hello ls printa printb
+all:	shell cat cat_count hello ls printa printb uname
 
 
-image:	shell cat cat_count hello ls printa printb
+image:	shell cat cat_count hello ls printa printb uname
 	mkdir -p image
 	mkdir -p image/ansis
-	cp shell cat cat_count printa printb hello ls CATME aitasad1.ans utopia3.ans ./image
+	cp shell cat cat_count printa printb uname hello ls CATME aitasad1.ans utopia3.ans ./image
 	cp utopia3.ans image/ansis/other_utopia.ans
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
@@ -41,6 +41,9 @@ printa:	printa.elf
 printb:	printb.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) printb.elf -O binary printb
 
+uname:	uname.elf
+	$(CROSS)objcopy $(OBJCOPYFLAGS) uname.elf -O binary uname
+
 
 
 shell.elf:	shell.o start.o vlibc.o syscalls.arm.o vmwos.o
@@ -64,6 +67,9 @@ printa.elf:	printa.o start.o vlibc.o syscalls.arm.o
 printb.elf:	printb.o start.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printb.elf start.o printb.o vlibc.o syscalls.arm.o vmwos.o
 
+uname.elf:	uname.o start.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o uname.elf start.o uname.o vlibc.o syscalls.arm.o vmwos.o
+
 ####
 
 cat.o:	cat.c
@@ -80,6 +86,9 @@ printa.o:	printa.c
 
 printb.o:	printb.c
 	$(CROSS)$(CC) $(CFLAGS) -c printb.c
+
+uname.o:	uname.c
+	$(CROSS)$(CC) $(CFLAGS) -c uname.c
 
 shell.o:	shell.c
 	$(CROSS)$(CC) $(CFLAGS) -c shell.c
@@ -100,4 +109,4 @@ syscalls.arm.o:	syscalls.arm.c
 	$(CROSS)$(CC) $(CFLAGS) -c syscalls.arm.c
 
 clean:
-	rm -f *~ *.o *.elf hello cat cat_count ls printa printb shell initrd.h initrd.romfs
+	rm -f *~ *.o *.elf hello cat cat_count ls printa printb shell uname initrd.h initrd.romfs

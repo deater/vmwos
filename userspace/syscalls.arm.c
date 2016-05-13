@@ -16,6 +16,7 @@
 #define __NR_ioctl	54
 #define __NR_reboot	88
 #define __NR_stat	106
+#define	__NR_uname	122
 #define __NR_getdents	141
 #define __NR_nanosleep  162
 #define __NR_vfork	190
@@ -159,6 +160,20 @@ int32_t stat(const char *pathname, struct stat *buf) {
 		"svc #0\n"
 		: "=r"(r0)
 		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return r0;
+}
+
+int32_t uname(struct utsname *buf) {
+
+	register long r7 __asm__("r7") = __NR_uname;
+	register long r0 __asm__("r0") = (long)buf;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
 		: "memory");
 
 	return r0;
