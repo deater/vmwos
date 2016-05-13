@@ -10,7 +10,7 @@
 
 static int parse_input(char *string);
 
-#define VERSION "10.0"
+#define VERSION "13.0"
 
 int main(int argc, char **argv) {
 
@@ -95,7 +95,6 @@ static int print_help(void) {
 
 	printf("VMWos Shell Version %s\n\n",VERSION);
 	printf("\tblink on/off	- turns on/off heartbeat LED\n");
-	printf("\tcat X		- dump file to screen\n");
 	printf("\tcls		- clears the screen\n");
 	printf("\tcolor X	- set text to color #X\n");
 	printf("\techo X	- prints string X\n");
@@ -105,8 +104,6 @@ static int print_help(void) {
 	printf("\thelp		- prints this help message\n");
 	printf("\trandom	- print random number\n");
 	printf("\treset		- reset the machine\n");
-	printf("\trun X		- run program #X\n");
-	printf("\tstop X	- stop program #X\n");
 	printf("\ttemp		- print the temperature\n");
 	printf("\ttime		- print seconds since boot\n");
 	printf("\ttb1		- play TB1\n");
@@ -161,24 +158,7 @@ static int parse_input(char *string) {
 	int result=0;
 
 	if (!strncmp(string,"echo",4)) {
-		printf("%s\n",string+5);
-	}
-	else if (!strncmp(string,"cat",3)) {
-		int fd,st_result;
-		char buffer[128];
-
-		fd=open(string+4,O_RDONLY,0);
-		if (fd<0) {
-			printf("Error opening file %s\n",string+4);
-		}
-		else {
-			while(1) {
-				st_result=read(fd,buffer,128);
-				if (st_result<1) break;
-				write(2,buffer,st_result);
-			}
-			close(fd);
-		}
+		if (string[4]!=0) printf("%s\n",string+5);
 	}
 	else if (!strncmp(string,"cls",3)) {
 		printf("\n\r\033[2J\n");
@@ -200,12 +180,6 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"help",4)) {
 		result=print_help();
-	}
-	else if (!strncmp(string,"run ",4)) {
-		result=vmwos_run(string[4]);
-	}
-	else if (!strncmp(string,"stop ",5)) {
-		result=vmwos_stop(string[5]);
 	}
 	else if (!strncmp(string,"color ",6)) {
 		printf("%c[3%cm\n",27,string[6]);
