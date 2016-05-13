@@ -7,9 +7,11 @@
 #include "process.h"
 #include "scheduler.h"
 
+static int debug=0;
+
 void exit(int32_t status) {
 
-	printk("Process %d exiting\n",current_process->pid);
+	if (debug) printk("Process %d exiting\n",current_process->pid);
 
 //	dump_saved_user_state(current_process);
 //	dump_saved_kernel_state(current_process);

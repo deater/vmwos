@@ -9,6 +9,7 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
+static int debug=0;
 
 int userspace_started=0;
 static int avail_pid=0;
@@ -36,7 +37,7 @@ static int32_t process_insert(struct process_control_block_type *proc) {
 	struct process_control_block_type *last;
 
 	if (proc_first==NULL) {
-		printk("Creating first process %d\n",proc->pid);
+		if (debug) printk("Creating first process %d\n",proc->pid);
 		proc_first=proc;
 		proc->next=NULL;
 		proc->prev=NULL;
@@ -50,7 +51,7 @@ static int32_t process_insert(struct process_control_block_type *proc) {
 	last->next=proc;
 	proc->next=NULL;
 	proc->prev=last;
-	printk("Putting new process %d after %d\n",proc->pid,last->pid);
+	if (debug) printk("Putting new process %d after %d\n",proc->pid,last->pid);
 //	printk("proc %x proc->next %x proc->prev %x\n",
 //		(long)proc,(long)proc->next,(long)proc->prev);
 
@@ -69,7 +70,7 @@ struct process_control_block_type *process_create(void) {
 		return NULL;
 	}
 
-	printk("process_create: allocated %d bytes for PCB at %x\n",
+	if (debug) printk("process_create: allocated %d bytes for PCB at %x\n",
 		sizeof(struct process_control_block_type),
 		(long)new_proc);
 
