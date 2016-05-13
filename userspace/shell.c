@@ -10,6 +10,8 @@
 
 static int parse_input(char *string);
 
+static int debug=0;
+
 #define VERSION "13.0"
 
 int main(int argc, char **argv) {
@@ -125,7 +127,7 @@ static int create_argv(char *string) {
 
 	while(1) {
 		arguments[count]=&(string[ptr]);
-		printf("shell:argv: %d %x %s\n",count,(long)(&string[ptr]),
+		if (debug) printf("shell:argv: %d %x %s\n",count,(long)(&string[ptr]),
 			&string[ptr]);
 
 		/* TODO: handle all whitespace? */
@@ -143,9 +145,11 @@ static int create_argv(char *string) {
 
 	}
 
-	printf("Found %d arguments\n",count);
-	for(i=0;i<count;i++) {
-		printf("%d: %s\n",i,arguments[i]);
+	if (debug) {
+		printf("Found %d arguments\n",count);
+		for(i=0;i<count;i++) {
+			printf("%d: %s\n",i,arguments[i]);
+		}
 	}
 
 	return count;
