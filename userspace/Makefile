@@ -3,16 +3,16 @@ include ../Makefile.inc
 CC = gcc
 AS = as
 ASFLAGS = -mcpu=arm1176jzf-s
-CFLAGS = -O2 -Wall -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib -fPIC
+CFLAGS = -O2 -Wall -DVMWOS=1 -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib -fPIC
 OBJCOPYFLAGS = -R .note -R .comment -R .note.gnu.build-id
 LFLAGS = -T../kernel/kernel.ld
 
-all:	shell hello ls printa printb
+all:	shell cat hello ls printa printb
 
 
-image:	shell hello ls printa printb
+image:	shell cat hello ls printa printb
 	mkdir -p image
-	cp shell printa printb hello ls CATME aitasad1.ans utopia3.ans ./image
+	cp shell cat printa printb hello ls CATME aitasad1.ans utopia3.ans ./image
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
@@ -20,6 +20,9 @@ image:	shell hello ls printa printb
 
 shell:	shell.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) shell.elf -O binary shell
+
+cat:	cat.elf
+	$(CROSS)objcopy $(OBJCOPYFLAGS) cat.elf -O binary cat
 
 hello:	hello.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) hello.elf -O binary hello
@@ -38,6 +41,9 @@ printb:	printb.elf
 shell.elf:	shell.o start.o vlibc.o syscalls.arm.o vmwos.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o shell.elf start.o shell.o vlibc.o syscalls.arm.o vmwos.o
 
+cat.elf:	cat.o start.o vlibc.o syscalls.arm.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cat.elf start.o cat.o vlibc.o syscalls.arm.o vmwos.o
+
 hello.elf:	hello.o start.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf start.o hello.o vlibc.o syscalls.arm.o vmwos.o
 
@@ -51,6 +57,9 @@ printb.elf:	printb.o start.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printb.elf start.o printb.o vlibc.o syscalls.arm.o vmwos.o
 
 ####
+
+cat.o:	cat.c
+	$(CROSS)$(CC) $(CFLAGS) -c cat.c
 
 hello.o:	hello.c
 	$(CROSS)$(CC) $(CFLAGS) -c hello.c
