@@ -18,6 +18,7 @@
 #include "exit.h"
 #include "wait.h"
 #include "scheduler.h"
+#include "uname.h"
 
 extern int blinking_enabled;
 
@@ -108,6 +109,10 @@ uint32_t swi_handler_c(
 
 			/* Note, we set result to value of r0 from execve */
 			/* argv, otherwise it gets overwritten when we start */
+			break;
+
+		case SYSCALL_UNAME:
+			result=uname((struct utsname *)r0);
 			break;
 
 		case SYSCALL_STAT:

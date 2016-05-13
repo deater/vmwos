@@ -1,3 +1,6 @@
+0.14 -- ?????
++ new syscalls: uname
+
 0.13 -- 13 May 2016
 + cache/branch prediction enabled
 + simple 1:1 MMU (needed for L1-dcache)
