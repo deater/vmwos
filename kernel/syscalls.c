@@ -160,11 +160,11 @@ uint32_t swi_handler_c(
 		case SYSCALL_GRADIENT:
 			result=framebuffer_gradient();
 			break;
-
+#if 0
 		case SYSCALL_TB1:
 			result=framebuffer_tb1();
 			break;
-
+#endif
 		case SYSCALL_REBOOT:
 			/* See https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=53862 */
 			mmio_write(PM_WDOG, PM_PASSWORD | 1);	/* timeout = 1/16th of a second? */

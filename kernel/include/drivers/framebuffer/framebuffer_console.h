@@ -36,4 +36,4 @@ int framebuffer_console_home(void);
 
 void framebuffer_console_setfont(int which);
 int framebuffer_console_push(void);
-int framebuffer_tb1(void);
+
