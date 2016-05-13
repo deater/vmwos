@@ -8,14 +8,14 @@ int strncmp(const char *s1, const char *s2, uint32_t n) {
 
 	int i=0,r;
 
-	while(1) {
-
-		if (i==n) return 0;
+	while(n>0) {
 
 		r=s1[i]-s2[i];
 		if (r!=0) return r;
+		else if (s1[i]==0) return 0;
 
 		i++;
+		n--;
 	}
 
 	return 0;
