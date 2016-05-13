@@ -37,8 +37,7 @@
 /* Initrd hack */
 #include "../userspace/initrd.h"
 
-
-#define VERSION 12
+#include "version.h"
 
 /* default, this is over-ridden later */
 uint32_t hardware_type=RPI_MODEL_B;
@@ -146,7 +145,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Print boot message */
 	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
-	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version 0.%d\n\n",VERSION);
+	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version %s\n\n",VERSION);
 
 	/* Print hardware version */
 	printk("Hardware version: %x ",r1);

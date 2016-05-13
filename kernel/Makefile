@@ -34,7 +34,7 @@ kernel.elf:	kernel_main.o \
 		lib/lib.a \
 		-Map kernel.map -o kernel.elf
 
-kernel_main.o:	kernel_main.c
+kernel_main.o:	kernel_main.c version.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o kernel_main.o -c kernel_main.c
 
 exec.o:	exec.c
