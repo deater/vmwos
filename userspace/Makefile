@@ -68,7 +68,7 @@ ls.elf:	ls.o start.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ls.elf start.o ls.o vlibc.o syscalls.arm.o vmwos.o
 
 ll.elf:	ll.o
-	$(CROSS)$(LD) -o ll.elf ll.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ll.elf ll.o
 
 printa.elf:	printa.o start.o vlibc.o syscalls.arm.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printa.elf start.o printa.o vlibc.o syscalls.arm.o vmwos.o
