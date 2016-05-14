@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
 
 	printf("%d/%d Processes Ready\n",
 		buf.procs_ready,buf.procs);
-	printf("%d/%d RAM free\n",
-		buf.free_ram,buf.total_ram);
+	printf("%dk/%dk RAM free\n",
+		buf.free_ram/1024,buf.total_ram/1024);
 	printf("Up %ds, Idle for %ds\n",
 		buf.uptime,buf.idle_time);
 
