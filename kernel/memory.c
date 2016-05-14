@@ -8,6 +8,8 @@
 #define MAX_MEMORY	(1024*1024*1024)
 #define CHUNK_SIZE	4096
 
+unsigned int memory_total;
+
 unsigned int memory_map[MAX_MEMORY/CHUNK_SIZE/32];
 
 static unsigned int max_chunk=0;
@@ -81,6 +83,20 @@ static int find_free(int num_chunks) {
 
 	return -1;
 }
+
+int32_t memory_total_free(void) {
+
+	int32_t total_free=0,i;
+
+	for(i=0;i<max_chunk;i++) {
+		if (!memory_test_used(i)) total_free++;
+	}
+
+	return total_free*CHUNK_SIZE;
+
+}
+
+
 
 void *memory_allocate(uint32_t size) {
 

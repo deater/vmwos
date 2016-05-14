@@ -96,16 +96,3 @@ int vmwos_random(uint32_t *buffer) {
 	return r0;
 }
 
-int get_sysinfo(struct sysinfo_t *buffer) {
-
-	register long r7 __asm__("r7") = __NR_get_sysinfo;
-	register long r0 __asm__("r0") = (long)buffer;
-
-	asm volatile(
-		"svc #0\n"
-		: "=r"(r0)
-		: "r"(r7), "0"(r0)
-		: "memory");
-
-	return r0;
-}

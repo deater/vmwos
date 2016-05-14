@@ -9,21 +9,21 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/utsname.h>
+#include <sys/sysinfo.h>
 #endif
 
 int main(int argc, char **argv) {
 
-	struct sysinfo_t buf;
+	struct sysinfo buf;
 
-	get_sysinfo(&buf);
+	sysinfo(&buf);
 
 	printf("%d/%d Processes Ready\n",
-		buf.processes_ready,buf.total_processes);
+		buf.procs_ready,buf.procs);
 	printf("%d/%d RAM free\n",
 		buf.free_ram,buf.total_ram);
 	printf("Up %ds, Idle for %ds\n",
-		buf.uptime,buf.idletime);
+		buf.uptime,buf.idle_time);
 
 	return 0;
 }

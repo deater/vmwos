@@ -116,6 +116,10 @@ uint32_t swi_handler_c(
 			result=uname((struct utsname *)r0);
 			break;
 
+		case SYSCALL_SYSINFO:
+			result=sysinfo((struct sysinfo *)r0);
+			break;
+
 		case SYSCALL_STAT:
 			result=stat((char *)r0,(struct stat *)r1);
 			break;
@@ -185,10 +189,6 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_RANDOM:
 			result=bcm2835_rng_read((uint32_t *)r0);
-			break;
-
-		case SYSCALL_GET_SYSINFO:
-			result=get_sysinfo((struct sysinfo_t *)r0);
 			break;
 
 		default:

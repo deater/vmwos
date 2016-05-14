@@ -70,7 +70,6 @@ void enter_userspace(void) {
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		uint32_t memory_kernel) {
 
-	unsigned int memory_total;
 	struct process_control_block_type *init_process,*idle_process;
 	struct atag_info_t atag_info;
 	uint32_t framebuffer_width=800,framebuffer_height=600;
