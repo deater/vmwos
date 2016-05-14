@@ -312,6 +312,9 @@ int32_t process_switch(struct process_control_block_type *old,
                 : /* clobbers */
         );
 
+	old->total_time+=(ticks_since_boot()-old->last_scheduled);
+	new->last_scheduled=ticks_since_boot();
+
 	current_process=new;
 
         /* Restore current state from PCB */
