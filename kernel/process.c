@@ -4,6 +4,7 @@
 #include "exec.h"
 #include "memory.h"
 #include "process.h"
+#include "time.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"
@@ -78,7 +79,11 @@ struct process_control_block_type *process_create(void) {
 	/* Set up initial conditions */
 	new_proc->running=0;
 	new_proc->status=PROCESS_STATUS_SLEEPING;
-	new_proc->time=0;
+
+	/* Set up process time accounting */
+	new_proc->start_time=ticks_since_boot();
+	new_proc->last_scheduled=new_proc->start_time;
+	new_proc->total_time=0;
 
 	/* LOCK */
 	/* FIXME: what happens when we rollover */

@@ -219,6 +219,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	idle_process->text=(void *)&idle_task;
 	idle_process->user_state.pc=(long)&idle_task;
 	idle_process->running=1;
+	idle_process->total_time=0;
+	idle_process->start_time=ticks_since_boot();
+	idle_process->last_scheduled=idle_process->start_time;
 	strncpy(idle_process->name,"idle",5);
 	idle_process->kernel_state.r[14]=(long)enter_userspace;
 	printk("Created idle thread: %d\n",idle_process->pid);

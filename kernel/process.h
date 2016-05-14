@@ -27,20 +27,22 @@ struct process_control_block_type {
 	int32_t valid;					/* 140 */
 	int32_t running;				/* 144 */
 	int32_t status;					/* 148 */
-	int32_t time;					/* 152 */
-	int32_t pid;					/* 156 */
-	int32_t exit_value;				/* 160 */
-	struct process_control_block_type *parent;	/* 164 */
+	int32_t start_time;				/* 152 */
+	int32_t last_scheduled;				/* 156 */
+	int32_t total_time;				/* 160 */
+	int32_t pid;					/* 164 */
+	int32_t exit_value;				/* 168 */
+	struct process_control_block_type *parent;	/* 172 */
 
-	void *stack;					/* 168 */
-	uint32_t stacksize;				/* 172 */
-	void *text;					/* 176 */
-	uint32_t textsize;				/* 180 */
-	char name[32];					/* 184 */
-							/* 216 */
-	/* Current size = 216 */
+	void *stack;					/* 176 */
+	uint32_t stacksize;				/* 180 */
+	void *text;					/* 184 */
+	uint32_t textsize;				/* 188 */
+	char name[32];					/* 192 */
+							/* 224 */
+	/* Current size = 224 */
 
-	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-216)/4];
+	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-224)/4];
 
 };
 

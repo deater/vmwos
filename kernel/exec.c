@@ -58,6 +58,8 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	/* Set name */
 	strncpy(current_process->name,filename,32);
 
+	/* Set up command line arguments */
+
 	argv_location=(stack_start+stack_size);
 
 	if (argv!=NULL) {
