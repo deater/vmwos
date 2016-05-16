@@ -181,30 +181,30 @@ static uint32_t convert_size(uint32_t value) {
 void l1_cache_detect(void) {
 
 	uint32_t reg;
-	uint32_t size,assoc,blocksize,restrict;
+	uint32_t size,assoc,blocksize,res;
 
 	asm("mrc p15, 0, %0, c0, c0, 1" : "=r" (reg) : : "cc");
 
 	/* 28-25 = type, 1110 on 1176 */
 	/* 24 = separate I and D caches */
 
-	restrict=!!(reg&(1<<24));
+	res=!!(reg&(1<<24));
 	size=convert_size((reg>>18)&0xf);
 	assoc=(reg>>15)&0x7;
 	blocksize=(reg>>12)&3;
 
 	printk("Detected L1 data cache: "
 		"%d size, %d assoc, %d blocksize, %d restrict\n",
-		size,assoc,blocksize,restrict);
+		size,assoc,blocksize,res);
 
-	restrict=!!(reg&(1<<11));
+	res=!!(reg&(1<<11));
 	size=convert_size((reg>>6)&0xf);
 	assoc=(reg>>3)&0x7;
 	blocksize=(reg>>0)&3;
 
 	printk("Detected L1 instruction cache: "
 		"%d size, %d assoc, %d blocksize, %d restrict\n",
-		size,assoc,blocksize,restrict);
+		size,assoc,blocksize,res);
 }
 
 
