@@ -79,7 +79,7 @@ time.o:	time.c include/time.h
 times.o:	times.c times.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o times.o -c times.c
 
-uname.o:	uname.c uname.h
+uname.o:	uname.c uname.h date.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o uname.o -c uname.c
 
 vfork.o:	vfork.c include/vfork.h
@@ -117,11 +117,16 @@ force_look:
 		true
 
 
+date.h:	force_look
+	echo -n "#define COMPILE_DATE \"" > date.h
+	date | tr -d '\n' >> date.h
+	echo "\"" >> date.h
+
 kernel.dis:	kernel.elf
 	$(CROSS)objdump --disassemble-all kernel.elf > kernel.dis
 
 clean:
-	rm -f *~ *.o *.map *.elf kernel.img *.dis
+	rm -f *~ *.o *.map *.elf kernel.img *.dis date.h
 	cd boot && make clean
 	cd drivers && make clean
 	cd fs && make clean
