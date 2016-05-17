@@ -20,6 +20,7 @@
 #include "scheduler.h"
 #include "uname.h"
 #include "sysinfo.h"
+#include "times.h"
 
 extern int blinking_enabled;
 
@@ -130,6 +131,10 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_GETPID:
 			result=current_process->pid;
+			break;
+
+		case SYSCALL_TIMES:
+			result=times((struct tms *)r0);
 			break;
 
 		case SYSCALL_IOCTL:
