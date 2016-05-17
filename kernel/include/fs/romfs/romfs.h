@@ -19,7 +19,7 @@ struct romfs_file_header_t {
 
 int32_t open_romfs_file(char *name,
 		struct romfs_file_header_t *file);
-int32_t romfs_get_inode(const char *name);
+int32_t romfs_get_inode(int32_t dir_inode, const char *name);
 int32_t romfs_read_file(uint32_t inode, uint32_t offset,
 			void *buf,uint32_t count);
 int32_t romfs_mount(struct superblock_t *superblock);

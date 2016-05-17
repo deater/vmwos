@@ -74,7 +74,7 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 			else {
 				max_length=max_stringsize;
 			}
-			strncpy(buffer,temp_buffer,max_length);
+			strncat(buffer,temp_buffer,max_length);
 		}
 
 		/* Only exit if hit the end of the string */
@@ -218,14 +218,30 @@ int32_t romfs_stat(int32_t inode, struct stat *buf) {
 }
 
 /* We cheat and just use the file header offset as the inode */
-int32_t romfs_get_inode(const char *name) {
+int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 
 	int temp_int;
-	int32_t inode=0,next=0;
-	uint32_t offset=file_headers_start;
+	int32_t inode=0,next=0,spec=0;
+	uint32_t offset=dir_inode; /* file_headers_start; */
 	char filename[MAX_FILENAME_SIZE];
 
-//	if (debug) printk("romfs_get_inode: Trying to get inode for file %s\n",name);
+	if (debug) {
+		printk("romfs_get_inode: Trying to get inode for file %s\n",name);
+	}
+
+	/* Check to make sure our dir_inode is in fact a dir_inode */
+
+	romfs_read_noinc(&temp_int,offset,4);
+	next=ntohl(temp_int)&~0xf;
+	romfs_read_noinc(&temp_int,offset+4,4);
+	spec=ntohl(temp_int)&~0xf;
+
+	if (next&0xf!=1) {
+		return -ENOTDIR;
+	}
+
+	/* first file in directory is pointed to by spec */
+	offset=spec;
 
 	while(1) {
 		inode=offset;
@@ -238,7 +254,7 @@ int32_t romfs_get_inode(const char *name) {
 		offset+=16;
 
 		romfs_read_string(offset,filename,MAX_FILENAME_SIZE);
-//		if (debug) printk("romfs_get_inode: %s is %s? %x\n",name,filename,inode);
+		if (debug) printk("romfs_get_inode: %s is %s? %x\n",name,filename,inode);
 
 		/* Match filename */
 		if (!strncmp(name,filename,MAX_FILENAME_SIZE)) {
@@ -294,9 +310,10 @@ int32_t romfs_mount(struct superblock_t *superblock) {
 			header.volume_name,offset);
 	}
 
+	/* This is the inode of the root director */
 	file_headers_start=offset;
 
-	return 0;
+	return file_headers_start;
 
 }
 

@@ -9,7 +9,6 @@
 #include "drivers/block/ramdisk.h"
 
 #include "fs/files.h"
-#include "fs/romfs/romfs.h"
 
 #include "process.h"
 #include "exit.h"
@@ -31,7 +30,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	uint32_t *stack_argv;
 	char *argv_ptr;
 
-	inode=romfs_get_inode(filename);
+	inode=get_inode(filename);
 	if (inode<0) {
 		return inode;
 	}

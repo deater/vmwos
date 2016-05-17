@@ -8,8 +8,13 @@
 #include "fs/romfs/romfs.h"
 #include "lib/printk.h"
 #include "lib/string.h"
+#include "../process.h"
 
 static int debug=0;
+
+static int32_t root_dir=0;
+
+#define MAX_FILENAME_SIZE 256
 
 #define MAX_FD	32
 
@@ -50,6 +55,63 @@ int32_t fd_allocate(uint32_t inode) {
 	return fd;
 }
 
+
+static const char *split_filename(const char *start_ptr, char *name) {
+
+	const char *ptr=start_ptr;
+	char *out=name;
+
+	/* FIXME: check if overflow size */
+
+	while(1) {
+		if (*ptr==0) {
+			*out=0;
+			return NULL;
+		}
+		if (*ptr=='/') {
+			*out=0;
+			ptr++;
+			break;
+		}
+		*out=*ptr;
+		ptr++;
+		out++;
+	}
+	return ptr;
+}
+
+int32_t get_inode(const char *pathname) {
+
+	int32_t inode;
+	char name[MAX_FILENAME_SIZE];
+	const char *ptr=pathname;
+	int32_t dir_inode;
+
+	/* start at root directory */
+	if (*ptr=='/') {
+		dir_inode=root_dir;
+		ptr++;
+	}
+	else {
+		dir_inode=current_process->current_dir;
+	}
+
+	if (*ptr==0) {
+		return dir_inode;
+	}
+
+	while(1) {
+		ptr=split_filename(ptr,name);
+		if (debug) printk("get_inode: di=%x path_part %s\n",dir_inode,name);
+		if (ptr==NULL) break;
+		dir_inode=romfs_get_inode(dir_inode,name);
+	}
+
+	inode=romfs_get_inode(dir_inode,name);
+
+	return inode;
+}
+
 int32_t close(uint32_t fd) {
 
 	int32_t result;
@@ -70,7 +132,7 @@ int32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 		printk("### Trying to open %s\n",pathname);
 	}
 
-	inode=romfs_get_inode(pathname);
+	inode=get_inode(pathname);
 	if (inode<0) {
 		return -ENOENT;
 	}
@@ -145,7 +207,7 @@ int32_t stat(const char *pathname, struct stat *buf) {
 	int32_t inode;
 	int32_t result;
 
-	inode=romfs_get_inode(pathname);
+	inode=get_inode(pathname);
 	if (inode<0) {
 		return -ENOENT;
 	}
@@ -158,13 +220,17 @@ int32_t stat(const char *pathname, struct stat *buf) {
 struct superblock_t superblock_table[8];
 
 int32_t mount(const char *source, const char *target,
-        const char *filesystemtype, uint32_t mountflags,
-        const void *data) {
+	const char *filesystemtype, uint32_t mountflags,
+	const void *data) {
 
 	int32_t result=0;
 
 	if (!strncmp(filesystemtype,"romfs",5)) {
 		result=romfs_mount(&superblock_table[0]);
+		if (result>=0) {
+			root_dir=result;
+			result=0;
+		}
 	}
 	else {
 		result=-ENODEV;

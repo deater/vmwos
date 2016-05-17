@@ -33,16 +33,17 @@ struct process_control_block_type {
 	int32_t pid;					/* 164 */
 	int32_t exit_value;				/* 168 */
 	struct process_control_block_type *parent;	/* 172 */
+	int32_t current_dir;				/* 176 */
 
-	void *stack;					/* 176 */
-	uint32_t stacksize;				/* 180 */
-	void *text;					/* 184 */
-	uint32_t textsize;				/* 188 */
-	char name[32];					/* 192 */
-							/* 224 */
-	/* Current size = 224 */
+	void *stack;					/* 180 */
+	uint32_t stacksize;				/* 184 */
+	void *text;					/* 188 */
+	uint32_t textsize;				/* 192 */
+	char name[32];					/* 196 */
+							/* 228 */
+	/* Current size = 228 */
 
-	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-224)/4];
+	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-228)/4];
 
 };
 
