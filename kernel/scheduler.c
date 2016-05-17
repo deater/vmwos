@@ -71,6 +71,11 @@ void schedule(void) {
 
 	}
 
+
+	/* Update time stats */
+	current_process->total_time+=(ticks_since_boot()-current_process->last_scheduled);
+	proc->last_scheduled=ticks_since_boot();
+
 	/* switch to new process */
 	if (proc!=current_process) {
 //		printk("Switching from %d (%x) to %d (%x)\n",
