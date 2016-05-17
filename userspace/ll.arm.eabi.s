@@ -126,8 +126,44 @@ _start:
 	@ r11 = data_begin
 	@ r12 = bss_begin
 
-	adr	r3,addresses
-	ldmia	r3!,{r1,r2,r8,r9,r11,r12}
+#	adr	r3,addresses
+#	ldmia	r3!,{r1,r2,r8,r9,r11,r12}
+
+
+@ UGH: no assembler support for PIC, have to do it by hand
+
+	ldr	r11,[pc,#12]
+	add	r11,r11,pc
+	ldr	r12,[pc,#8]
+	add	r12,r12,pc
+	b	done_pic
+
+data_offset:	.word (data_begin - _start - 12)
+bss_offset:	.word (bss_begin - _start - 20)
+out_offset:	.word (out_buffer-bss_begin)
+logo_offset:	.word (logo-data_begin)
+done_pic:
+
+	ldr	r1,[pc,#-16]	@ out buffer
+	add	r1,r12,r1
+
+	ldr	r3,[pc,#-20]	@ logo
+	add	r3,r11,r3
+
+	add	r8,r11,#(logo_end-data_begin)
+	add	r9,r12,#(text_buf-bss_begin)
+	ldr	r2,=(N-F)
+
+	str	r1,[r12,#(out_addr-bss_begin)]
+
+@	push	{r0-r12}
+
+@	mov	r0,#0
+@	mov	r3,r1
+@	bl	num_to_ascii
+
+@	pop	{r0-r12}
+
 
 decompression_loop:
 	ldrb	r4,[r3],#+1		@ load a byte, increment pointer/
@@ -139,8 +175,7 @@ test_flags:
 	bge	done_logo  	@ if so, exit
 
 	lsrs 	r5,#1		@ shift bottom bit into carry flag
-@	bcc	offset_length	@ if not set, we jump to offset_length
-				@ USE CONDITIONAL EXECUTION INSTEAD OF BRANCH
+
 discrete_char:
 	ldrcsb	r4,[r3],#+1		@ load a byte, increment pointer
 	movcs	r6,#1			@ we set r6 to one so byte
@@ -166,9 +201,6 @@ offset_length:
 				@                       (=match_length)
 
 output_loop:
-@	ldr	r0,=((POSITION_MASK<<8)+0xff)
-	                                @ urgh, can't handle simple constants
-@	and	r7,r7,r0		@ mask it
 
 	lsl	r7,#22			@ mask by shifting
 	lsr	r7,#22
@@ -180,10 +212,6 @@ store_byte:
 	strb	r4,[r1],#+1		@ store a byte, increment pointer
 	strb	r4,[r9,r2]		@ store a byte to text_buf[r]
 	add 	r2,r2,#1		@ r++
-
-@	mov	r0,#(N)			@ grr, N-1 won't fit in 12-bits
-@	sub	r0,r0,#1		@ grrr no way to get this easier
-@	and 	r2,r2,r0		@ mask r
 
 	lsl	r2,#22			@ mask by shifting
 	lsr	r2,#22
@@ -201,7 +229,9 @@ store_byte:
 # end of LZSS code
 
 done_logo:
-	ldr	r1,out_addr		@ buffer we are printing to
+
+@	ldr	r1,=out_buffer		@ buffer we are printing to
+	ldr	r1,[r12,#(out_addr-bss_begin)]
 
 	bl	write_stdout		@ print the logo
 
@@ -217,7 +247,9 @@ first_line:
 	add	r1,r12,#(uname_info-bss_begin)
 						@ os-name from uname "Linux"
 
-	ldr	r10,out_addr			@ point r10 to out_buffer
+@	ldr	r10,out_addr			@ point r10 to out_buffer
+	ldr	r10,[r12,#(out_addr-bss_begin)]
+
 
 	bl	strcat				@ call strcat
 
@@ -233,7 +265,7 @@ first_line:
 						@ source is ", Compiled "
 	bl	strcat				@  call strcat
 
-@	add	r1,r12,#((uname_info-bss_begin)+U_VERSION)
+	@VMWOS	add	r1,r12,#((uname_info-bss_begin)+U_VERSION)
 	add	r1,r12,#((uname_info-bss_begin))
 	add	r1,r1,#U_VERSION
 						@ compiled date
@@ -253,7 +285,8 @@ middle_line:
 	@ Load /proc/cpuinfo into buffer
 	@=========
 
-	ldr	r10,out_addr		@ point r10 to out_buffer
+@	ldr	r10,out_addr		@ point r10 to out_buffer
+	ldr	r1,[r12,#(out_addr-bss_begin)]
 
 	add	r0,r11,#(cpuinfo-data_begin)
 					@ '/proc/cpuinfo'
@@ -321,7 +354,7 @@ chip_name:
 	adc	r3,r3,#0		@ round
 
 	mov	r0,#1
-	bl num_to_ascii
+	bl 	num_to_ascii
 
 	add	r1,r11,#(ram_comma-data_begin)
 					@ print 'M RAM, '
@@ -347,7 +380,9 @@ chip_name:
 	# Print Host Name
 	#=================================
 last_line:
-	ldr	r10,out_addr		@ point r10 to out_buffer
+@	ldr	r10,out_addr		@ point r10 to out_buffer
+	ldr	r10,[r12,#(out_addr-bss_begin)]
+
 
 	add	r1,r12,#((uname_info-bss_begin)+U_NODENAME)
 					@ host name from uname()
@@ -440,7 +475,9 @@ center_and_print:
 	bl	write_stdout
 
 str_loop2:
-	ldr	r2,out_addr		@ point r2 to out_buffer
+@	ldr	r2,out_addr		@ point r2 to out_buffer
+	ldr	r2,[r12,#(out_addr-bss_begin)]
+
 	sub	r2,r10,r2		@ get length by subtracting
 
 	rsb	r2,r2,#81		@ reverse subtract!  r2=81-r2
@@ -459,7 +496,9 @@ str_loop2:
 	bl	write_stdout
 
 done_center:
-	ldr	r1,out_addr		@ point r1 to out_buffer
+@	ldr	r1,out_addr		@ point r1 to out_buffer
+	ldr	r1,[r12,#(out_addr-bss_begin)]
+
 	ldmfd	SP!,{LR}		@ restore return address from stack
 
 	#================================
@@ -538,15 +577,6 @@ literals:
 # Put literal values here
 .ltorg
 
-addresses:
-out_addr:	.word out_buffer
-R_val:		.word (N-F)
-@logo_addr:	.word logo
-logo_end_addr:	.word logo_end
-text_addr:	.word text_buf
-data_begin_addr:.word data_begin
-bss_begin_addr:	.word bss_begin
-
 
 
 
@@ -586,7 +616,13 @@ one:	.ascii	"One \0"
 # executable format
 
 #.bss
+
+@ UGH if not aligned and we have alignment disabled
+@ the ARM chip will just do fun things like swap bytes when writing
+@ fun to debug
+.align 4
 bss_begin:
+out_addr:	.word	0
 
 #.lcomm	ascii_buffer,10
 ascii_buffer:
