@@ -233,7 +233,9 @@ first_line:
 						@ source is ", Compiled "
 	bl	strcat				@  call strcat
 
-	add	r1,r12,#((uname_info-bss_begin)+U_VERSION)
+@	add	r1,r12,#((uname_info-bss_begin)+U_VERSION)
+	add	r1,r12,#((uname_info-bss_begin))
+	add	r1,r1,#U_VERSION
 						@ compiled date
 	bl	strcat				@ call strcat
 
@@ -579,16 +581,48 @@ one:	.ascii	"One \0"
 #============================================================================
 #	section .bss
 #============================================================================
-.bss
+
+# Note, vmwOS doesn't really support BSS yet, need to use an actual
+# executable format
+
+#.bss
 bss_begin:
-.lcomm	uname_info,(65*6)
-.lcomm	sysinfo_buff,(64)
-.lcomm	ascii_buffer,10
-.lcomm	text_buf, (N+F-1)
 
-.lcomm	disk_buffer,4096	@ we cheat!!!!
-.lcomm	out_buffer,16384
+#.lcomm	ascii_buffer,10
+ascii_buffer:
+.rept 10
+.byte 0
+.endr
 
+#.lcomm	sysinfo_buff,(64)
+sysinfo_buff:
+.rept 64
+.byte 0
+.endr
+
+#.lcomm	uname_info,(65*6)
+uname_info:
+.rept 65*6
+.byte 0
+.endr
+
+#.lcomm	text_buf, (N+F-1)
+text_buf:
+.rept (N+F-1)
+.byte 0
+.endr
+
+#.lcomm	disk_buffer,4096	@ we cheat!!!!
+disk_buffer:
+.rept 4096
+.byte 0
+.endr
+
+#.lcomm	out_buffer,16384
+out_buffer:
+.rept 16384
+.byte 0
+.endr
 
 	# see /usr/src/linux/include/linux/kernel.h
 
