@@ -192,7 +192,11 @@ static int parse_input(char *string) {
 		printf("VMWos Shell version %s\n",VERSION);
 	}
 	else if (!strncmp(string,"time",4)) {
+		struct tms buf;
+		times(&buf);
+
 		printf("Time since boot: %ds\n",time(NULL));
+		printf("Time running: %d\n",(buf.tms_utime)/64);
 	}
 	else if (!strncmp(string,"reset",5)) {
 		printf("Resetting...\n");

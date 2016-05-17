@@ -13,6 +13,7 @@
 #define __NR_execve	11
 #define __NR_time	13
 #define __NR_getpid	20
+#define __NR_times	43
 #define __NR_ioctl	54
 #define __NR_reboot	88
 #define __NR_stat	106
@@ -149,6 +150,20 @@ int32_t getpid(void) {
 
 	return r0;
 
+}
+
+int32_t times(struct tms *buf) {
+
+	register long r7 __asm__("r7") = __NR_times;
+	register long r0 __asm__("r0") = (long)buf;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
+		: "memory");
+
+	return r0;
 }
 
 int32_t stat(const char *pathname, struct stat *buf) {
