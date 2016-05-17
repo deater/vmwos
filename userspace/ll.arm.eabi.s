@@ -286,7 +286,7 @@ middle_line:
 	@=========
 
 @	ldr	r10,out_addr		@ point r10 to out_buffer
-	ldr	r1,[r12,#(out_addr-bss_begin)]
+	ldr	r10,[r12,#(out_addr-bss_begin)]
 
 	add	r0,r11,#(cpuinfo-data_begin)
 					@ '/proc/cpuinfo'
@@ -630,24 +630,28 @@ ascii_buffer:
 .byte 0
 .endr
 
+.align 4
 #.lcomm	sysinfo_buff,(64)
 sysinfo_buff:
 .rept 64
 .byte 0
 .endr
 
+.align 4
 #.lcomm	uname_info,(65*6)
 uname_info:
 .rept 65*6
 .byte 0
 .endr
 
+.align 4
 #.lcomm	text_buf, (N+F-1)
 text_buf:
 .rept (N+F-1)
 .byte 0
 .endr
 
+.align 4
 #.lcomm	disk_buffer,4096	@ we cheat!!!!
 disk_buffer:
 .rept 4096
