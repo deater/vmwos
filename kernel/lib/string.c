@@ -51,6 +51,22 @@ char *strncpy(char *dest, const char *src, uint32_t n) {
 
 }
 
+char *strncat(char *dest, const char *src, uint32_t n) {
+
+	uint32_t i,dest_len;
+
+	dest_len=strlen(dest);
+
+	for(i=0; i<n; i++) {
+		dest[dest_len+i]=src[i];
+		if (src[i]=='\0') break;
+	}
+	dest[dest_len+i]='\0';
+
+	return dest;
+
+}
+
 int strlen(const char *s1) {
 
 	int i=0;
