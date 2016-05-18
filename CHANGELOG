@@ -1,7 +1,7 @@
-0.14 -- ?????
+0.14 -- 18 May 2016
 + new syscalls: uname,sysinfo,times
-+ ll (assembly language linux_logo) mostly works
 + supports subdirectories
++ ll (assembly language linux_logo) works
 
 0.13 -- 13 May 2016
 + cache/branch prediction enabled

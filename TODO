@@ -2,36 +2,53 @@ Kernel routines:
 	way to kill process
 	way to free memory
 	better scheduler
-	blocking I/O
+	migrate read() to use blocking I/O
 
 Performance:
 	tophalf/bottomhalf IRQ split
+	optimized memcpy
+	optimize graphics routines
 
 Systemcalls to add:
 	nanosleep
-	uname
-	times
 	statfs
+	chdir
+	mount
 
 Binary support:
 	ARM binflt support
 
 Filesystem support:
-	romfs
 	fat
+	dos33fs
 
 Hardware support:
 	i2c
 	SD card
 	USB ( https://github.com/rsta2/uspi )
+	sound
 
-Keybaord driver:
+Keyboard driver:
 	Properly generate ANSI escape chars for arrows, etc
+	Migrate to use FIQ interrupt
 
-Annoyances:
+BUGS to fix:
+	the occasional "unknown interrupt" bug
+	ls on subdirectories gives weird permission results
 
+Programs to write:
+	df
+	text editor
+	assembler
+	compiler
 
 Rapsberry Pi 2 support
+	Multi-core
 	Change I/O offset
 	Interrupt controller is more complex, see
 		[PATCH 4/4] irqchip: Add bcm2836 interrupt controller for Raspberry     Pi 2
+
+Raspberry Pi 3 support
+	ARMv8 (arm64)
+	ACT LED is behind an i2c GPIO extender
+	Thermal results are 5 degrees off?
