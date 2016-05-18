@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "time.h"
+#include "syscalls/time.h"
 
 /* In seconds */
 uint32_t time_since_boot(void) {

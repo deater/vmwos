@@ -3,7 +3,7 @@
 #include "mmio.h"
 #include "bcm2835_periph.h"
 #include "drivers/led/led.h"
-#include "time.h"
+#include "syscalls/time.h"
 
 /* This is the standard ARM timer */
 /* Described in Chapter 14 of the BCM2835 ARM Peripherals Document */

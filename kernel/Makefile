@@ -13,35 +13,29 @@ kernel.img:	kernel.elf
 
 
 kernel.elf:	kernel_main.o \
-	exec.o exit.o idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
+	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
 	interrupts.o memory.o panic.o process.o scheduler.o \
-	sysinfo.o time.o times.o uname.o vfork.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot.a \
 	drivers/drivers.a \
 	fs/fs.a \
+	syscalls/syscalls.a \
 	lib/lib.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
-		exec.o exit.o idle_task.o \
+		idle_task.o \
 		arm1176-mmu.o arm1176-pmu.o syscalls.o \
 		interrupts.o memory.o panic.o process.o scheduler.o \
-		sysinfo.o time.o times.o uname.o vfork.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot.a \
 		drivers/drivers.a \
 		fs/fs.a \
+		syscalls/syscalls.a \
 		lib/lib.a \
 		-Map kernel.map -o kernel.elf
 
 kernel_main.o:	kernel_main.c version.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o kernel_main.o -c kernel_main.c
-
-exec.o:	exec.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o exec.o -c exec.c
-
-exit.o:	exit.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o exit.o -c exit.c
 
 idle_task.o:	idle_task.c
 	$(CROSS)$(CC) $(CFLAGS) -o idle_task.o -c idle_task.c
@@ -61,32 +55,14 @@ arm1176-pmu.o:	arm1176-pmu.c
 panic.o:	panic.c panic.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o panic.o -c panic.c
 
-process.o:	process.c process.h
+process.o:	process.c include/process.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o process.o -c process.c
 
-scheduler.o:	scheduler.c scheduler.h
+scheduler.o:	scheduler.c include/scheduler.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o scheduler.o -c scheduler.c
 
 syscalls.o:	syscalls.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o syscalls.o -c syscalls.c
-
-sysinfo.o:	sysinfo.c sysinfo.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o sysinfo.o -c sysinfo.c
-
-time.o:	time.c include/time.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o time.o -c time.c
-
-times.o:	times.c times.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o times.o -c times.c
-
-uname.o:	uname.c uname.h date.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o uname.o -c uname.c
-
-vfork.o:	vfork.c include/vfork.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o vfork.o -c vfork.c
-
-wait.o:	wait.c wait.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o wait.o -c wait.c
 
 irq_handler.o:	irq_handler.s
 	$(CROSS)as $(ASFLAGS) -o irq_handler.o irq_handler.s
@@ -108,6 +84,9 @@ drivers/drivers.a:	force_look
 fs/fs.a:	force_look
 	cd fs && make
 
+syscalls/syscalls.a:	force_look
+	cd syscalls && make
+
 lib/lib.a:	force_look
 	cd lib && make
 
@@ -115,12 +94,6 @@ lib/lib.a:	force_look
 
 force_look:
 		true
-
-
-date.h:	force_look
-	echo -n "#define COMPILE_DATE \"" > date.h
-	date | tr -d '\n' >> date.h
-	echo "\"" >> date.h
 
 kernel.dis:	kernel.elf
 	$(CROSS)objdump --disassemble-all kernel.elf > kernel.dis
@@ -130,4 +103,5 @@ clean:
 	cd boot && make clean
 	cd drivers && make clean
 	cd fs && make clean
+	cd syscalls && make clean
 	cd lib && make clean

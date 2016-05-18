@@ -6,10 +6,10 @@
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "locks.h"
 
-#include "../../process.h"
+#include "process.h"
 #include "../../panic.h"
 
-#include "../../scheduler.h"
+#include "scheduler.h"
 
 #define INPUT_BUFFER_SIZE	256
 

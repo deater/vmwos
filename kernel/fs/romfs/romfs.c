@@ -236,7 +236,7 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 	romfs_read_noinc(&temp_int,offset+4,4);
 	spec=ntohl(temp_int)&~0xf;
 
-	if (next&0xf!=1) {
+	if ( (next&0xf)!=1) {
 		return -ENOTDIR;
 	}
 

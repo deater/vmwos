@@ -9,9 +9,10 @@
 #include "drivers/block/ramdisk.h"
 
 #include "fs/files.h"
+#include "fs/romfs/romfs.h"
 
 #include "process.h"
-#include "exit.h"
+#include "syscalls/exit.h"
 
 static int debug=0;
 

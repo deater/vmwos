@@ -1,11 +1,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "exec.h"
+#include "syscalls/exec.h"
 #include "memory.h"
 #include "scheduler.h"
 #include "process.h"
-#include "time.h"
+#include "syscalls/time.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"

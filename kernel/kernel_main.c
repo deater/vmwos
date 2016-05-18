@@ -21,7 +21,7 @@
 #include "scheduler.h"
 #include "idle_task.h"
 #include "drivers/keyboard/ps2-keyboard.h"
-#include "time.h"
+#include "syscalls/time.h"
 #include "lib/div.h"
 #include "arch/arm1176/arm1176-mmu.h"
 #include "arch/arm1176/arm1176-pmu.h"
@@ -31,7 +31,7 @@
 #include "lib/memset.h"
 #include "lib/memory_benchmark.h"
 #include "drivers/random/bcm2835_rng.h"
-#include "exec.h"
+#include "syscalls/exec.h"
 #include "panic.h"
 
 /* Initrd hack */

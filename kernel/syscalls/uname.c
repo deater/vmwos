@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "version.h"
-#include "uname.h"
+#include "../version.h"
+#include "syscalls/uname.h"
 #include "lib/string.h"
 
 #include "date.h"

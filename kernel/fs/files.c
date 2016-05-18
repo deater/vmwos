@@ -8,7 +8,7 @@
 #include "fs/romfs/romfs.h"
 #include "lib/printk.h"
 #include "lib/string.h"
-#include "../process.h"
+#include "process.h"
 
 static int debug=0;
 
