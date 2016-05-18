@@ -13,8 +13,7 @@ all:	shell cat cat_count hello ll ls printa printb sysinfo uname
 image:	shell cat cat_count hello ll ls printa printb sysinfo uname
 	mkdir -p image
 	mkdir -p image/ansis
-	cp shell cat cat_count printa printb sysinfo uname hello ll ls CATME aitasad1.ans utopia3.ans ./image
-	cp utopia3.ans image/ansis/other_utopia.ans
+	cp shell cat cat_count printa printb sysinfo uname hello ll ls CATME ./image
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
