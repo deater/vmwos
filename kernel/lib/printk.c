@@ -142,6 +142,9 @@ int sprintf(char *string, char *fmt, ...) {
 
 	va_end(argp);
 
+	/* NUL terminate */
+	string[result]='\0';
+
 	return result;
 
 }
