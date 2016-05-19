@@ -18,6 +18,24 @@ static int avail_pid=0;
 struct process_control_block_type *proc_first=NULL;
 struct process_control_block_type *current_process=NULL;
 
+
+int32_t process_get_totals(int32_t type, int32_t *count) {
+
+	int32_t total_count=0;
+	struct process_control_block_type *proc_ptr=proc_first;
+
+	*count=0;
+
+	while(1) {
+		total_count++;
+		if (proc_ptr->status==PROCESS_STATUS_READY) (*count)++;
+		proc_ptr=proc_ptr->next;
+		if (proc_ptr==NULL) break;
+	}
+
+	return total_count;
+}
+
 struct process_control_block_type *process_lookup(int32_t pid) {
 
 	struct process_control_block_type *result=NULL;

@@ -62,3 +62,5 @@ struct process_control_block_type *process_lookup(int32_t pid);
 
 int32_t process_switch(struct process_control_block_type *old,
 		struct process_control_block_type *new);
+
+int32_t process_get_totals(int32_t type, int32_t *count);
