@@ -1,4 +1,5 @@
 0.15 -- ???????
++ new syscalls: chdir
 + More comlpete stats in sysinfo
 + Mark kernel and I/O pages as system-mode only
 
@@ -8,12 +9,12 @@
 + ll (assembly language linux_logo) works
 
 0.13 -- 13 May 2016
++ new syscalls: open,read,vfork,execve,waitpid,stat,exit,getdents
 + cache/branch prediction enabled
 + simple 1:1 MMU (needed for L1-dcache)
 + blocking I/O
 + dynamically allocate processes
 + proper round-robin scheduler with idle task
-+ new syscalls: open,read,vfork,execve,waitpid,stat,exit,getdents
 + read-only romfs support
 + ramdisk blockdevice
 + process command line arguments
@@ -33,10 +34,10 @@
 + automatically convert \n to \r\n
 
 0.11 --  7 January 2016
++ new syscalls: reboot,time,getpid
 + add gpio helper code (modeled on Linux interface)
 + Fix build on gcc-4.9 (mostly inline assembly issues)
 + Executables loaded from romfs image
-+ New system calls: reboot,time,getpid
 + simple multi-tasking
 + framebuffer scrolling
 + userspace processes
@@ -46,6 +47,7 @@
 + add firmware mailbox support
 
 0.03 -- 26 February 2015
++ new syscalls: write,blink
 + Heartbeat ACT LED
 + Rudimentary in-kernel monitor shell
 + Support device detection (BPLUS vs B)

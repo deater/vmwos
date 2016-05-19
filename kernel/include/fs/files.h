@@ -69,3 +69,5 @@ int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
 void fd_table_init(void);
 
 int32_t get_inode(const char *pathname);
+
+int32_t chdir(const char *pathname);

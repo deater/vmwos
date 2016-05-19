@@ -113,6 +113,10 @@ uint32_t swi_handler_c(
 			/* argv, otherwise it gets overwritten when we start */
 			break;
 
+		case SYSCALL_CHDIR:
+			result=chdir((char *)r0);
+			break;
+
 		case SYSCALL_UNAME:
 			result=uname((struct utsname *)r0);
 			break;

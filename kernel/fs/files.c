@@ -283,3 +283,27 @@ int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 
 }
 
+int32_t chdir(const char *path) {
+
+	int32_t inode,result;
+
+	struct stat buf;
+
+	inode=get_inode(path);
+	if (inode<0) {
+		return -ENOENT;
+	}
+
+	result=romfs_stat(inode, &buf);
+	if (result<0) {
+		return result;
+	}
+
+	if ((buf.st_mode&S_IFMT)!=S_IFDIR) {
+		return -ENOTDIR;
+	}
+
+	current_process->current_dir=inode;
+
+	return 0;
+}
