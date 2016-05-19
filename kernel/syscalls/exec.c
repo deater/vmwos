@@ -14,6 +14,8 @@
 #include "process.h"
 #include "syscalls/exit.h"
 
+#include "errors.h"
+
 static int debug=0;
 
 /* Load raw executable */
@@ -31,13 +33,17 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	uint32_t *stack_argv;
 	char *argv_ptr;
 
+	if (debug) printk("Entering execve\n");
+
 	inode=get_inode(filename);
 	if (inode<0) {
+		if (debug) printk("Error get_inode(%s)\n",filename);
 		return inode;
 	}
 
 	result=romfs_stat(inode,&stat_info);
 	if (result<0) {
+		if (debug) printk("Error stat()\n");
 		return result;
 	}
 
@@ -49,6 +55,12 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	/* Allocate Memory */
 	binary_start=memory_allocate(size);
 	stack_start=memory_allocate(stack_size);
+
+	if ((binary_start==NULL) || (stack_start==NULL)) {
+
+		if (debug) printk("execve: no memory\n");
+		return -ENOMEM;
+	}
 
 	/* FIXME: handle memory allocation failure */
 

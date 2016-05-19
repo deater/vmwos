@@ -108,6 +108,9 @@ int32_t get_inode(const char *pathname) {
 	}
 
 	inode=romfs_get_inode(dir_inode,name);
+	if (inode<0) {
+		if (debug) printk("get_inode: error opening %s\n",name);
+	}
 
 	return inode;
 }
