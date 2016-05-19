@@ -21,9 +21,12 @@ Binary support:
 Filesystem support:
 	fat
 	dos33fs
+	partition table
 
 Hardware support:
 	i2c
+	spi
+	1-wire
 	SD card
 	USB ( https://github.com/rsta2/uspi )
 	sound
@@ -52,3 +55,4 @@ Raspberry Pi 3 support
 	ARMv8 (arm64)
 	ACT LED is behind an i2c GPIO extender
 	Thermal results are 5 degrees off?
+	Uses mini-tty (usual UART is used for bluetooth)
