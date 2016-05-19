@@ -38,6 +38,9 @@ int memcmp(const char *s1, const char *s2, uint32_t n) {
 	return 0;
 }
 
+/* At most n bytes of src are copied to dest */
+/* If no nul in the first n bytes of src, dest will *not* be nul terminated */
+/* If length of src less than n, nuls are padded */
 char *strncpy(char *dest, const char *src, uint32_t n) {
 
 	uint32_t i;
@@ -46,9 +49,25 @@ char *strncpy(char *dest, const char *src, uint32_t n) {
 		dest[i]=src[i];
 		if (src[i]=='\0') break;
 	}
+	for(i=i;i<n;i++) {
+		dest[i]='\0';
+	}
 
 	return dest;
 
+}
+
+int32_t strlcpy(char *dest, const char *src, uint32_t n) {
+
+	uint32_t i;
+
+	for(i=0; i<n-1; i++) {
+		dest[i]=src[i];
+		if (src[i]=='\0') break;
+	}
+	dest[i]='\0';
+
+	return i;
 }
 
 char *strncat(char *dest, const char *src, uint32_t n) {

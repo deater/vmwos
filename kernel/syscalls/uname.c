@@ -9,12 +9,12 @@
 
 int32_t uname(struct utsname *buf) {
 
-	strncpy(buf->sysname,"vmwOS",5);
-	strncpy(buf->nodename,"pi",2);
-	strncpy(buf->release,VERSION,strlen(VERSION));
-	strncpy(buf->version,COMPILE_DATE,65);
-	strncpy(buf->machine,"arm6",3);
-	strncpy(buf->domainname,"none",4);
+	strlcpy(buf->sysname,"vmwOS",UTSNAME_SIZE);
+	strlcpy(buf->nodename,"pi",UTSNAME_SIZE);
+	strlcpy(buf->release,VERSION,UTSNAME_SIZE);
+	strlcpy(buf->version,COMPILE_DATE,UTSNAME_SIZE);
+	strlcpy(buf->machine,"arm6",UTSNAME_SIZE);
+	strlcpy(buf->domainname,"none",UTSNAME_SIZE);
 
 	return 0;
 

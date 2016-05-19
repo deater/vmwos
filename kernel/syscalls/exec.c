@@ -68,7 +68,8 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	romfs_read_file(inode,0,binary_start,size);
 
 	/* Set name */
-	strncpy(current_process->name,filename,32);
+	/* FIXME: strip off path before setting filename */
+	strlcpy(current_process->name,filename,32);
 
 	/* Set up command line arguments */
 
