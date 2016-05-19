@@ -1,14 +1,8 @@
 include ../Makefile.inc
 
-CC = gcc
-AS = as
-ASFLAGS = -mcpu=arm1176jzf-s
-CFLAGS = -O2 -Wall -DVMWOS=1 -mcpu=arm1176jzf-s -marm -nostartfiles -ffreestanding -nostdlib -fPIC
-OBJCOPYFLAGS = -R .note -R .comment -R .note.gnu.build-id
-LFLAGS = -T../kernel/kernel.ld
+include Makefile_user.inc
 
 all:	shell cat cat_count hello ll ls printa printb sysinfo uname
-
 
 image:	shell cat cat_count hello ll ls printa printb sysinfo uname
 	mkdir -p image
@@ -51,35 +45,35 @@ uname:	uname.elf
 
 
 
-shell.elf:	shell.o start.o vlibc.o syscalls.arm.o vmwos.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o shell.elf start.o shell.o vlibc.o syscalls.arm.o vmwos.o
+shell.elf:	shell.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o shell.elf shell.o ./vlibc/vlibc.a
 
-cat.elf:	cat.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cat.elf start.o cat.o vlibc.o syscalls.arm.o vmwos.o
+cat.elf:	cat.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cat.elf cat.o ./vlibc/vlibc.a
 
-cat_count.elf:	cat_count.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cat_count.elf start.o cat_count.o vlibc.o syscalls.arm.o vmwos.o
+cat_count.elf:	cat_count.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cat_count.elf cat_count.o ./vlibc/vlibc.a
 
-hello.elf:	hello.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf start.o hello.o vlibc.o syscalls.arm.o vmwos.o
+hello.elf:	hello.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf hello.o ./vlibc/vlibc.a
 
-ls.elf:	ls.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ls.elf start.o ls.o vlibc.o syscalls.arm.o vmwos.o
+ls.elf:	ls.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ls.elf ls.o ./vlibc/vlibc.a
 
 ll.elf:	ll.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ll.elf ll.o
 
-printa.elf:	printa.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printa.elf start.o printa.o vlibc.o syscalls.arm.o vmwos.o
+printa.elf:	printa.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printa.elf printa.o ./vlibc/vlibc.a
 
-printb.elf:	printb.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printb.elf start.o printb.o vlibc.o syscalls.arm.o vmwos.o
+printb.elf:	printb.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printb.elf printb.o ./vlibc/vlibc.a
 
-sysinfo.elf:	sysinfo.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o sysinfo.elf start.o sysinfo.o vlibc.o syscalls.arm.o vmwos.o
+sysinfo.elf:	sysinfo.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o sysinfo.elf sysinfo.o ./vlibc/vlibc.a
 
-uname.elf:	uname.o start.o vlibc.o syscalls.arm.o
-	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o uname.elf start.o uname.o vlibc.o syscalls.arm.o vmwos.o
+uname.elf:	uname.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o uname.elf uname.o ./vlibc/vlibc.a
 
 ####
 
@@ -113,19 +107,12 @@ ls.o:	ls.c
 ll.o:	ll.arm.eabi.s logo.lzss_new
 	$(CROSS)$(AS) -defsym FAKE_PROC=1 -o ll.o ll.arm.eabi.s
 
-start.o:	start.c
-	$(CROSS)$(CC) $(CFLAGS) -c start.c
-
-vmwos.o:	vmwos.c
-	$(CROSS)$(CC) $(CFLAGS) -c vmwos.c
-
-vlibc.o:	vlibc.c
-	$(CROSS)$(CC) $(CFLAGS) -c vlibc.c
-
-syscalls.arm.o:	syscalls.arm.c
-	$(CROSS)$(CC) $(CFLAGS) -c syscalls.arm.c
+./vlibc/vlibc.a:
+	cd	vlibc && make
 
 clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count ll ls printa printb shell sysinfo uname \
 		initrd.h initrd.romfs
+	cd vlibc && make clean
+
