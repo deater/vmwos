@@ -107,7 +107,7 @@ static int print_help(void) {
 	printf("\trandom	- print random number\n");
 	printf("\treset		- reset the machine\n");
 	printf("\ttemp		- print the temperature\n");
-	printf("\ttime		- print seconds since boot\n");
+	printf("\tuptime	- print seconds since boot\n");
 	printf("\ttb1		- play TB1\n");
 	printf("\tver		- print version\n");
 	printf("\n");
@@ -191,12 +191,16 @@ static int parse_input(char *string) {
 	else if (!strncmp(string,"ver",3)) {
 		printf("VMWos Shell version %s\n",VERSION);
 	}
-	else if (!strncmp(string,"time",4)) {
+	else if (!strncmp(string,"uptime",6)) {
 		struct tms buf;
+		char timestring[256];
+
 		times(&buf);
 
-		printf("Time since boot: %ds\n",time(NULL));
-		printf("Time running: %d\n",(buf.tms_utime)/64);
+		printf("Time since boot: %s\n",
+			time_pretty(time(NULL),timestring,256));
+		printf("Time running: %s\n",
+			time_pretty((buf.tms_utime)/64,timestring,256));
 	}
 	else if (!strncmp(string,"reset",5)) {
 		printf("Resetting...\n");

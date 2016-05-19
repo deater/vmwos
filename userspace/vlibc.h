@@ -15,3 +15,5 @@ int32_t atoi(char *string);
 int strlen(const char *s);
 int strncmp(const char *s1, const char *s2, uint32_t n);
 char *strerror(int errnum);
+
+char *time_pretty(int32_t time, char *buffer, int32_t size);

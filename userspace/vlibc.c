@@ -38,19 +38,14 @@ unsigned int sleep(unsigned int seconds) {
 
 #define MAX_PRINT_SIZE 256
 
-int printf(char *string,...) {
+int vsprintf(char *buffer, char *string, va_list ap) {
 
-	va_list ap;
-
-	char buffer[MAX_PRINT_SIZE];
 	char int_buffer[10];
 	int int_pointer=0;
 
 	int buffer_pointer=0;
 	int i;
 	unsigned long x;
-
-	va_start(ap, string);
 
 	while(1) {
 		if (*string==0) break;
@@ -61,10 +56,12 @@ int printf(char *string,...) {
 				string++;
 				x=va_arg(ap, unsigned long);
 				if (x&0x80000000) {
-					x=~x;
-					x+=1;
 					buffer[buffer_pointer]='-';
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
+
+					x=~x;
+					x++;
 				}
 				int_pointer=9;
 				do {
@@ -75,6 +72,7 @@ int printf(char *string,...) {
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
 
 			}
@@ -95,6 +93,7 @@ int printf(char *string,...) {
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
 			}
 			else if (*string=='c') {
@@ -102,6 +101,7 @@ int printf(char *string,...) {
 				x=va_arg(ap, unsigned long);
 				buffer[buffer_pointer]=x;
 				buffer_pointer++;
+				if (buffer_pointer==MAX_PRINT_SIZE) break;
 			}
 			else if (*string=='s') {
 				char *s;
@@ -111,23 +111,59 @@ int printf(char *string,...) {
 					buffer[buffer_pointer]=*s;
 					s++;
 					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
 			}
 		}
 		else {
 			buffer[buffer_pointer]=*string;
 			buffer_pointer++;
+			if (buffer_pointer==MAX_PRINT_SIZE) break;
 			string++;
 		}
 		if (buffer_pointer==MAX_PRINT_SIZE-1) break;
 	}
 
-	va_end(ap);
-
-	write(1,buffer,buffer_pointer);
-
 	return buffer_pointer;
 }
+
+int printf(char *string,...) {
+
+	char buffer[MAX_PRINT_SIZE];
+	int result;
+
+	va_list argp;
+	va_start(argp, string);
+
+	result=vsprintf(buffer,string,argp);
+
+	va_end(argp);
+
+	write(1,buffer,result);
+
+        return result;
+
+}
+
+int sprintf(char *string, char *fmt, ...) {
+
+	int result;
+
+	va_list argp;
+	va_start(argp, fmt);
+
+	result=vsprintf(string,fmt,argp);
+
+	va_end(argp);
+
+	/* NUL terminate */
+	string[result]='\0';
+
+	return result;
+
+}
+
+
 
 
 int strncmp(const char *s1, const char *s2, uint32_t n) {
@@ -253,4 +289,41 @@ int32_t atoi(char *string) {
 	}
 
 	return result;
+}
+
+char *time_pretty(int32_t time, char *buffer, int32_t size) {
+
+	int32_t days=0,hours=0,minutes=0,seconds=0;
+
+	buffer[0]='\0';
+
+	if (time>(24*60*60)) {
+		days=time/(24*60*60);
+		time-=(days*24*60*60);
+	}
+
+	if (time>(60*60)) {
+		hours=time/(60*60);
+		time-=(hours*60*60);
+	}
+
+	if (time>60) {
+		minutes=time/60;
+		time-=(minutes*60);
+	}
+	seconds=time;
+
+	if (days) {
+		sprintf(buffer,"%dd %dh %dm %ds",days,hours,minutes,seconds);
+	} else if (hours) {
+		sprintf(buffer,"%dh %dm %ds",hours,minutes,seconds);
+	}
+	else if (minutes) {
+		sprintf(buffer,"%dm %ds",minutes,seconds);
+	}
+	else {
+		sprintf(buffer,"%ds",seconds);
+	}
+
+	return buffer;
 }
