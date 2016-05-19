@@ -1,4 +1,4 @@
-void enable_mmu(uint32_t mem_start, uint32_t mem_end);
+void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end);
 void enable_l1_dcache(void);
 void disable_l1_dcache(void);
 void enable_l1_icache(void);

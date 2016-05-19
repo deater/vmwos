@@ -1,6 +1,6 @@
 0.15 -- ???????
 + More comlpete stats in sysinfo
-
++ Mark kernel and I/O pages as system-mode only
 
 0.14 -- 18 May 2016
 + new syscalls: uname,sysinfo,times

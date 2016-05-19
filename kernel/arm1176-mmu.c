@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "lib/printk.h"
+#include "arch/arm1176/arm1176-mmu.h"
 
 /* From the ARM1176JZF-S Technical Reference Manual	*/
 /* The processor has separate L1I and L1D caches	*/
@@ -30,7 +31,7 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 
 /* We want a 1MB coarse ARMv5 page table descriptor */
 /* see 6.11.1 and 6.12.2 and 6.6.1 */
-/* All mappings global an executable */
+/* All mappings global and executable */
 /* 31-20 = section base address
    19 = NS (not shared)
    18 = 0
@@ -45,27 +46,46 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 */
 
 /* Domain=1, C=0,B=0, noncachable (Table 6.3) */
-#define CACHE_DISABLED    0x12
+#define CACHE_DISABLED		0x12
 /* Domain=1, C=1,B=1, writeback cache, no alloc on write (Table 6.3) */
-#define CACHE_WRITEBACK   0x1e
+#define CACHE_WRITEBACK		0x1e
 
+/* Table 3-151 */
+#define AP_NO_ACCESS		0x0
+#define AP_SUPERVISOR_ONLY	0x1
+#define AP_USER_READ_ONLY	0x2
+#define AP_FULL_ACCESS		0x3
 
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
 /* This uses the ARMv5 compatible interface, not native ARMv6 */
 /* Mark RAM has writeback, but disable cache for non-RAM */
-void enable_mmu(uint32_t mem_start, uint32_t mem_end) {
+void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
 	int i;
 	uint32_t reg;
 
 	/* Set up an identity-mapping for all 4GB, ARMv5 1MB pages */
+	/* See figure 6-12 */
+	/* See table 3-151 for list of AP bit settings */
+
+
 	/* AP (bits 11 and 10) = 11 = R/W for everyone */
+
+	/* As a baseline, Set 1:1 mapping for all memory */
+	/* Cache disabled, supervisor access only */
 	for (i = 0; i < NUM_PAGE_TABLE_ENTRIES; i++) {
-		page_table[i] = i << 20 | (3 << 10) | CACHE_DISABLED;
+		page_table[i] = i << 20 | (AP_SUPERVISOR_ONLY << 10)
+					| CACHE_DISABLED;
 	}
 
-	/* Then, enable cacheable and bufferable for RAM only */
-	for (i = mem_start >> 20; i < mem_end >> 20; i++) {
+	/* Enanble supervisor only and cachable for kernel */
+	for (i = (mem_start >> 20); i < (kernel_end >> 20); i++) {
+		page_table[i] = i << 20 | (AP_SUPERVISOR_ONLY << 10)
+					| CACHE_WRITEBACK;
+	}
+
+	/* Enanble cachable and readable by all for rest */
+	for (i = kernel_end >> 20; i < mem_end >> 20; i++) {
 		page_table[i] = i << 20 | (3 << 10) | CACHE_WRITEBACK;
 	}
 

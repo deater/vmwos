@@ -10,6 +10,8 @@
 
 #include "lib/memset.h"
 
+#include "lib/memory_benchmark.h"
+
 #define MEMORY_BENCHMARK 1
 
 #if (MEMORY_BENCHMARK==1)
@@ -110,7 +112,7 @@ static void run_memory_benchmark_asm(void) {
 	memset_test(benchmark+OFFSET,0x78,BENCH_SIZE);
 }
 
-void memset_benchmark(uint32_t memory_total) {
+void memset_benchmark(uint32_t memory_total, uint32_t kernel_end) {
 
 	/* Run some memory benchmarks */
 	printk("\nRunning Memory benchmarks %x %x\n",
@@ -129,7 +131,7 @@ void memset_benchmark(uint32_t memory_total) {
 	run_memory_benchmark();
 
 	/* Enable L1 d-cache */
-	enable_mmu(0,memory_total);
+	enable_mmu(0,memory_total,kernel_end);
 	enable_l1_dcache();
 	printk("L1 dcache enabled:\n");
 	run_memory_benchmark();

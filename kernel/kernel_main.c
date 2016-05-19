@@ -200,7 +200,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	/* Enable L1 d-cache */
 	printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
-	enable_mmu(0,memory_total);
+	enable_mmu(0,memory_total,memory_kernel);
 	printk("Enabling L1 dcache\n");
 	enable_l1_dcache();
 #endif
