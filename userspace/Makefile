@@ -105,7 +105,7 @@ ls.o:	ls.c
 	$(CROSS)$(CC) $(CFLAGS) -c ls.c
 
 ll.o:	ll.arm.eabi.s logo.lzss_new
-	$(CROSS)$(AS) -defsym FAKE_PROC=1 -o ll.o ll.arm.eabi.s
+	$(CROSS)$(AS) -o ll.o ll.arm.eabi.s
 
 ./vlibc/vlibc.a:
 	cd	vlibc && make

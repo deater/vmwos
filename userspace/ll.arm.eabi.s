@@ -295,7 +295,7 @@ middle_line:
 	swi	0x0
 					@ syscall.  return in r0?
 	mov	r5,r0			@ save our fd
-	ldr	r1,=disk_buffer
+	add	r1,r12,#(disk_buffer-bss_begin)
 	mov	r2,#4096
 				 	@ 4096 is maximum size of proc file ;)
 	mov	r7,#SYSCALL_READ
@@ -411,7 +411,8 @@ exit:
 	@ r3 = char to end at
 	@ r5 trashed
 find_string:
-	ldr	r7,=disk_buffer		@ look in cpuinfo buffer
+	add	r7,r12,#(disk_buffer-bss_begin)
+@	ldr	r7,=disk_buffer		@ look in cpuinfo buffer
 find_loop:
 	ldrb	r5,[r7],#+1		@ load a byte, increment pointer
 	cmp	r5,r0			@ compare against first byte
