@@ -232,11 +232,15 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 	/* Check to make sure our dir_inode is in fact a dir_inode */
 
 	romfs_read_noinc(&temp_int,offset,4);
-	next=ntohl(temp_int)&~0xf;
+	next=ntohl(temp_int);
 	romfs_read_noinc(&temp_int,offset+4,4);
-	spec=ntohl(temp_int)&~0xf;
+	spec=ntohl(temp_int);
 
-	if ( (next&0xf)!=1) {
+	if ( (next&0x7)!=1) {
+		if (debug) {
+			printk("romfs_get_inode: inode %x (%x) is not a dir\n",
+				next,dir_inode);
+		}
 		return -ENOTDIR;
 	}
 
