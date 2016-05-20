@@ -4,7 +4,7 @@
 #include "syscalls/exec.h"
 #include "memory.h"
 #include "process.h"
-#include "syscalls/time.h"
+#include "time.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"

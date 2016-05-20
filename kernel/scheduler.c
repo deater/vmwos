@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "scheduler.h"
 #include "process.h"
-#include "syscalls/time.h"
+#include "time.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"

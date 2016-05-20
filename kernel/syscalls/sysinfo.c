@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #include "syscalls/sysinfo.h"
-#include "syscalls/time.h"
+#include "time.h"
 #include "memory.h"
 #include "lib/memset.h"
 #include "process.h"

@@ -1,8 +1,3 @@
-struct timespec {
-	uint32_t seconds;
-	uint32_t ns;
-};
-
 /* We do things in hex in vmwos, none of this octal nonsense */
 #define S_IFMT		0xf000	/* mask			*/
 #define S_IFSOCK	0xc000	/* socket		*/

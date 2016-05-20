@@ -10,7 +10,7 @@
 #include "drivers/keyboard/ps2-keyboard.h"
 #include "interrupts.h"
 #include "drivers/console/console_io.h"
-#include "syscalls/time.h"
+#include "time.h"
 
 static int irq_num;
 

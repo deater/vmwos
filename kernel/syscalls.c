@@ -6,7 +6,7 @@
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "fs/files.h"
-#include "syscalls/time.h"
+#include "time.h"
 #include "interrupts.h"
 #include "bcm2835_periph.h"
 #include "mmio.h"
@@ -21,6 +21,8 @@
 #include "syscalls/uname.h"
 #include "syscalls/sysinfo.h"
 #include "syscalls/times.h"
+#include "syscalls/nanosleep.h"
+
 
 extern int blinking_enabled;
 
@@ -152,8 +154,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_NANOSLEEP:
-			printk("UNIMPLEMENTED SYSCALL: NANOSLEEP\n");
-			result=-1;
+			result=nanosleep((struct timespec *)r0,(struct timespec *)r1);
 			break;
 
 		case SYSCALL_VFORK:

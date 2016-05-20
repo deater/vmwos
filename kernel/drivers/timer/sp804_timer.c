@@ -1,9 +1,12 @@
 #include <stdint.h>
+#include <stddef.h>
 
 #include "mmio.h"
 #include "bcm2835_periph.h"
 #include "drivers/led/led.h"
-#include "syscalls/time.h"
+#include "time.h"
+#include "wait.h"
+#include "process.h"
 
 /* This is the standard ARM timer */
 /* Described in Chapter 14 of the BCM2835 ARM Peripherals Document */
@@ -16,6 +19,13 @@
 /* best clock to be using */
 
 /* We set the timer to overflow at roughly 64Hz */
+
+static struct wait_queue_t timer_wait_queue = {
+	NULL
+};
+
+static uint32_t timer_next_wakeup=0;
+
 
 int timer_init(void) {
 
@@ -69,6 +79,12 @@ void timer_interrupt_handler(void) {
 	mmio_write(TIMER_IRQ_CLEAR,0x1);
 	tick_counter++;
 
+	if ((timer_next_wakeup) && (tick_counter>timer_next_wakeup)) {
+		timer_next_wakeup=0;
+		/* Wake anyone waiting on a timer */
+	        wait_queue_wake(&timer_wait_queue);
+	}
+
 	if (blinking_enabled) {
 		lit++;
 		/* Blink the LED at 1HZ */
@@ -81,4 +97,17 @@ void timer_interrupt_handler(void) {
 		}
 	}
 
+}
+
+void timer_sleep_until(uint32_t time) {
+
+	if (timer_next_wakeup==0) {
+		timer_next_wakeup=time;
+	}
+	else {
+		if (time<timer_next_wakeup) {
+			timer_next_wakeup=time;
+		}
+	}
+	wait_queue_add(&timer_wait_queue,current_process);
 }

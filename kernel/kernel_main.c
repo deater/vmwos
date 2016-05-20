@@ -21,7 +21,7 @@
 #include "scheduler.h"
 #include "idle_task.h"
 #include "drivers/keyboard/ps2-keyboard.h"
-#include "syscalls/time.h"
+#include "time.h"
 #include "lib/div.h"
 #include "arch/arm1176/arm1176-mmu.h"
 #include "arch/arm1176/arm1176-pmu.h"

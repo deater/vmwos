@@ -1,3 +1,8 @@
+struct timespec {
+	uint32_t seconds;
+	uint32_t ns;
+};
+
 /* Must be a power of two */
 /* as ARM1176 has no divide instruction */
 #define TIMER_HZ 64
