@@ -94,6 +94,7 @@ int32_t open(char *filename, uint32_t flags, uint32_t mode);
 int32_t close(uint32_t fd);
 int32_t vfork(void);
 int32_t exit(int32_t status);
+int32_t chdir(const char *path);
 
 #define NCCS 32
 

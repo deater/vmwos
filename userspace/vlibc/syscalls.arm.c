@@ -11,6 +11,7 @@
 #define __NR_close	6
 #define __NR_waitpid	7
 #define __NR_execve	11
+#define __NR_chdir	12
 #define __NR_time	13
 #define __NR_getpid	20
 #define __NR_times	43
@@ -135,6 +136,20 @@ int32_t execve(const char *filename, char *const argv[],
 
 	return r0;
 
+}
+
+int32_t chdir(const char *path) {
+
+	register long r7 __asm__("r7") = __NR_chdir;
+	register long r0 __asm__("r0") = (long)path;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
+		: "memory");
+
+	return r0;
 }
 
 int32_t getpid(void) {

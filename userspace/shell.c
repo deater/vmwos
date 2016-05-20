@@ -97,6 +97,7 @@ static int print_help(void) {
 
 	printf("VMWos Shell Version %s\n\n",VERSION);
 	printf("\tblink on/off	- turns on/off heartbeat LED\n");
+	printf("\tcd		- change directory\n");
 	printf("\tcls		- clears the screen\n");
 	printf("\tcolor X	- set text to color #X\n");
 	printf("\techo X	- prints string X\n");
@@ -166,6 +167,14 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"cls",3)) {
 		printf("\n\r\033[2J\n");
+	}
+	else if (!strncmp(string,"cd",2)) {
+		if (strlen(string)>3) {
+			chdir((const char *)&(string[3]));
+		}
+		else {
+			chdir("/home");
+		}
 	}
 	else if (!strncmp(string,"font ",5)) {
 		vmwos_setfont(string[5]);
