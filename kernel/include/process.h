@@ -24,26 +24,27 @@ struct process_control_block_type {
 
 	struct process_control_block_type *next;	/* 132 */
 	struct process_control_block_type *prev;	/* 136 */
-	int32_t valid;					/* 140 */
-	int32_t running;				/* 144 */
-	int32_t status;					/* 148 */
-	int32_t start_time;				/* 152 */
-	int32_t last_scheduled;				/* 156 */
-	int32_t total_time;				/* 160 */
-	int32_t pid;					/* 164 */
-	int32_t exit_value;				/* 168 */
-	struct process_control_block_type *parent;	/* 172 */
-	int32_t current_dir;				/* 176 */
+	struct process_control_block_type *wait_queue_next;	/* 140 */
+	int32_t valid;					/* 144 */
+	int32_t running;				/* 148 */
+	int32_t status;					/* 152 */
+	int32_t start_time;				/* 156 */
+	int32_t last_scheduled;				/* 160 */
+	int32_t total_time;				/* 164 */
+	int32_t pid;					/* 168 */
+	int32_t exit_value;				/* 172 */
+	struct process_control_block_type *parent;	/* 176 */
+	int32_t current_dir;				/* 180 */
 
-	void *stack;					/* 180 */
-	uint32_t stacksize;				/* 184 */
-	void *text;					/* 188 */
-	uint32_t textsize;				/* 192 */
-	char name[32];					/* 196 */
-							/* 228 */
-	/* Current size = 228 */
+	void *stack;					/* 184 */
+	uint32_t stacksize;				/* 188 */
+	void *text;					/* 192 */
+	uint32_t textsize;				/* 196 */
+	char name[32];					/* 200 */
+							/* 232 */
+	/* Current size = 232 */
 
-	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-228)/4];
+	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-232)/4];
 
 };
 
