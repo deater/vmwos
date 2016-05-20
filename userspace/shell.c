@@ -96,9 +96,9 @@ static int print_help(void) {
 	printf("\thelp		- prints this help message\n");
 	printf("\trandom	- print random number\n");
 	printf("\treset		- reset the machine\n");
+	printf("\tsleep	X	- sleep for X seconds\n");
 	printf("\ttemp		- print the temperature\n");
 	printf("\tuptime	- print seconds since boot\n");
-	printf("\ttb1		- play TB1\n");
 	printf("\tver		- print version\n");
 	printf("\n");
 
@@ -159,10 +159,13 @@ static int parse_input(char *string) {
 	}
 	else if (!strncmp(string,"cd",2)) {
 		if (strlen(string)>3) {
-			chdir((const char *)&(string[3]));
+			result=chdir((const char *)&(string[3]));
 		}
 		else {
-			chdir("/home");
+			result=chdir("/home");
+		}
+		if (result<0) {
+			printf("Error changing directory %s\n",strerror(result));
 		}
 	}
 	else if (!strncmp(string,"font ",5)) {
@@ -204,15 +207,18 @@ static int parse_input(char *string) {
 		printf("Resetting...\n");
 		reboot();
 	}
+	else if (!strncmp(string,"sleep",5)) {
+		int seconds=0;
+		seconds=atoi(string+6);
+		printf("Sleeping for %ds...\n",seconds);
+		sleep(seconds);
+	}
 	else if (!strncmp(string,"temp",4)) {
 		uint32_t temperature;
 		temperature=vmwos_get_temp();
 		printf("Current temperature %dC, %dF\n",
 			temperature/1000,
 			((temperature*9)/5000)+32);
-	}
-	else if (!strncmp(string,"tb1",3)) {
-		vmwos_tb1();
 	}
 	else if (!strncmp(string,"random",6)) {
 		printf("%d\n",rand());
