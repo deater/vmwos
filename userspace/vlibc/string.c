@@ -23,13 +23,6 @@ int strncmp(const char *s1, const char *s2, uint32_t n) {
 	return 0;
 }
 
-static char strerror_string[]="Error!";
-int errno=0;
-
-char *strerror(int errnum) {
-	return strerror_string;
-}
-
 int strlen(const char *s) {
 
 	int length=0;
