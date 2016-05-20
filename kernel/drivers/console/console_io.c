@@ -8,6 +8,7 @@
 
 #include "process.h"
 #include "../../panic.h"
+#include "wait.h"
 
 #include "scheduler.h"
 
@@ -19,6 +20,10 @@ static uint32_t input_buffer_tail=0;
 
 uint32_t console_write_mutex = MUTEX_UNLOCKED;
 uint32_t console_read_mutex = MUTEX_UNLOCKED;
+
+struct wait_queue_t console_wait_queue = {
+	NULL
+};
 
 int console_insert_char(int ch) {
 
@@ -54,6 +59,9 @@ int console_insert_char(int ch) {
 
 	/* Force schedule if ^Z */
 	if (ch==26) scheduling_enabled=!scheduling_enabled;
+
+	/* Wake anyone waiting for I/O */
+	wait_queue_wake(&console_wait_queue);
 
 	return 0;
 
@@ -116,9 +124,15 @@ int console_read(void *buf, size_t count) {
 
 	/* Read from input buffer */
 
+
+	/* put to sleep if no data available */
+	/* FIXME: handle non-blocking case */
+	while (input_buffer_head==input_buffer_tail) {
+		wait_queue_add(&console_wait_queue,current_process);
+	}
+
 	for(i=0;i<count;i++) {
 		buffer[i]=console_get_char();
-		if (buffer[i]==0) break;
 	}
 
 	return i;
