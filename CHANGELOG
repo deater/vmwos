@@ -1,7 +1,9 @@
-0.15 -- ???????
-+ new syscalls: chdir
+0.15 -- 20 May 2016
++ new syscalls: chdir,nanosleep
 + More comlpete stats in sysinfo
-+ Mark kernel and I/O pages as system-mode only
++ MMU: Mark kernel and I/O pages as system-mode only
++ Add waitqueues, have blocking I/O in console_read and nanosleep
++ Userspace: split off vlibc, improve strerror()
 
 0.14 -- 18 May 2016
 + new syscalls: uname,sysinfo,times
@@ -12,7 +14,7 @@
 + new syscalls: open,read,vfork,execve,waitpid,stat,exit,getdents
 + cache/branch prediction enabled
 + simple 1:1 MMU (needed for L1-dcache)
-+ blocking I/O
++ simple blocking I/O for waitpid
 + dynamically allocate processes
 + proper round-robin scheduler with idle task
 + read-only romfs support
