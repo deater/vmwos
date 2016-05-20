@@ -16,6 +16,7 @@
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */
 
+static char error_none[]=	"No error";
 static char error_enoent[]=	"File not found";
 static char error_ebadf[]=	"Bad file descriptor";
 static char error_enomem[]=	"Not enougn memory";
@@ -27,7 +28,7 @@ static char error_enosys[]=	"No such system call";
 static char error_generic[]=	"Unknown error";
 
 static char *error_table[MAX_ERRNO]={
-	error_generic,	/* 0 */
+	error_none,	/* 0 */
 	error_generic,	/* 1 */
 	error_enoent,	/* 2 ENOENT */
 	error_generic,	/* 3 */
@@ -73,6 +74,8 @@ static char *error_table[MAX_ERRNO]={
 int errno=0;
 
 char *strerror(int errnum) {
+
+	if (errnum<0) errnum=-errnum;
 
 	if (errnum>=MAX_ERRNO) {
 		return error_generic;
