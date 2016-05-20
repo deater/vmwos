@@ -6,12 +6,24 @@
 #include "vmwos.h"
 #include "vlibc.h"
 
-unsigned int sleep(unsigned int seconds) {
+int32_t sleep(uint32_t seconds) {
 
 	struct timespec t;
 
 	t.tv_sec=seconds;
 	t.tv_nsec=0;
+
+	nanosleep(&t, NULL);
+
+	return 0;
+}
+
+int32_t usleep(uint32_t usecs) {
+
+	struct timespec t;
+
+	t.tv_sec=usecs/1000000;
+	t.tv_nsec=(usecs-(t.tv_sec*1000000))*1000;
 
 	nanosleep(&t, NULL);
 

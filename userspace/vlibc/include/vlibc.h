@@ -1,6 +1,10 @@
 /* div.c */
 uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor);
 
+/* error.c */
+int errno;
+char *strerror(int errnum);
+
 /* printf.c */
 int printf(char *string,...);
 int sprintf(char *string, char *fmt, ...);
@@ -13,17 +17,16 @@ int putchar(int c);
 int getchar(void);
 
 /* string.c */
-int errno;
 int32_t atoi(char *string);
 int strlen(const char *s);
 int strncmp(const char *s1, const char *s2, uint32_t n);
-char *strerror(int errnum);
 
 /* system.c */
 int reboot(void);
 
 /* time.c */
-unsigned int sleep(unsigned int seconds);
+int32_t sleep(uint32_t seconds);
+int32_t usleep(uint32_t usecs);
 int time(int *time);
 char *time_pretty(int32_t time, char *buffer, int32_t size);
 
