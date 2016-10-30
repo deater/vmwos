@@ -6,6 +6,7 @@
 /* #define __NR_stop		8197 obsolete */
 #define __NR_temp		8198
 #define __NR_random		8199
+#define __NR_framebuffer_load	8200
 
 int vmwos_blink(int value);
 int vmwos_tb1(void);

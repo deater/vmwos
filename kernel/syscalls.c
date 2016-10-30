@@ -180,6 +180,10 @@ uint32_t swi_handler_c(
 		case SYSCALL_GRADIENT:
 			result=framebuffer_gradient();
 			break;
+
+		case SYSCALL_FRAMEBUFFER_LOAD:
+			result=framebuffer_load(r0,r1,r2,(char *)r3);
+			break;
 #if 0
 		case SYSCALL_TB1:
 			result=framebuffer_tb1();

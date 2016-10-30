@@ -67,6 +67,24 @@ int vmwos_gradient(void) {
 
 }
 
+int vmwos_framebuffer_load(int x, int y, int depth, char *fb) {
+
+	register long r7 __asm__("r7") = __NR_framebuffer_load;
+	register long r0 __asm__("r0")=x;
+	register long r1 __asm__("r1")=y;
+	register long r2 __asm__("r2")=depth;
+	register long r3 __asm__("r3")=(unsigned long)fb;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0) /* output */
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2), "r"(r3) /* input */
+		: "memory");
+
+	return r0;
+
+}
+
 
 int vmwos_get_temp(void) {
 
