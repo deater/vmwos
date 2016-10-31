@@ -7,6 +7,8 @@
 #include "process.h"
 #include "scheduler.h"
 
+#include "syscalls/wait.h"
+
 static int debug=0;
 
 void exit(int32_t status) {
@@ -21,6 +23,9 @@ void exit(int32_t status) {
 
 	/* Free resources now? */
 	/* process_destroy(current_process); */
+
+	/* Wake anyone waiting in waitpid */
+	waitpid_done();
 
 	/* Reschedule? */
 	schedule();
