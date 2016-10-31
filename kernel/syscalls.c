@@ -104,7 +104,8 @@ uint32_t swi_handler_c(
 		case SYSCALL_EXECVE:
 			//printk("Trying to exec %s\n",(char *)r0);
 			result=execve((char *)r0,(char **)r1,(char **)r2);
-			/* wake up our parent */
+			/* wake up our parent (why would we do that???)*/
+			/* oh, because separate process now, I see */
 			//printk("Waking parent %d\n",current_process->parent->pid);
 			current_process->parent->status=PROCESS_STATUS_READY;
 			schedule();
