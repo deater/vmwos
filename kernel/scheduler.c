@@ -13,6 +13,8 @@
 
 int scheduling_enabled=1;
 
+static int schedule_debug=0;
+
 void schedule(void) {
 
 	struct process_control_block_type *proc,*orig_proc;
@@ -20,8 +22,11 @@ void schedule(void) {
 	orig_proc=current_process;
 	proc=current_process;
 
-//	printk("Attempting to schedule, current proc=%d (%x)\n",
-//		proc->pid,(long)proc);
+//	if (proc->pid==2) schedule_debug=1;
+
+//	if (schedule_debug)
+//		printk("Attempting to schedule, current proc=%d (%x)\n",
+//			proc->pid,(long)proc);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
@@ -35,38 +40,46 @@ void schedule(void) {
 	}
 
 	while(1) {
-//		printk("proc=%x, proc->next=%x\n",(long)proc,(long)proc->next);
+//		if (schedule_debug)
+//			printk("proc=%x, proc->next=%x\n",(long)proc,(long)proc->next);
 		proc=proc->next;
-//		printk("What about proc->next %x?\n",(long)proc);
+//		if (schedule_debug)
+//			printk("What about proc->next %x?\n",(long)proc);
 
 
 		/* wrap around if off end */
 		if (proc==NULL) {
-//			printk("proc->next is NULL, wrapping\n");
+//			if (schedule_debug)
+//				printk("proc->next is NULL, wrapping\n");
 			proc=proc_first->next;
 			if (proc==NULL) {
 				proc=proc_first;
-//				printk("scheduler: only %d available\n",
-//					proc->pid);
+//				if (schedule_debug)
+//					printk("scheduler: only %d available\n",
+//						proc->pid);
 				break;
 			}
-//			printk("scheduler: wrapping to %d\n",
-//				proc->pid);
+//			if (schedule_debug)
+//				printk("scheduler: wrapping to %d\n",
+//					proc->pid);
 		}
 
 		/* if valid and ready, then run it */
 		if (proc->status==PROCESS_STATUS_READY) {
-//			printk("scheduler: process %d looks ready\n",proc->pid);
+//			if (schedule_debug)
+//				printk("scheduler: process %d looks ready\n",proc->pid);
 			break;
 		}
 		else {
-//			printk("scheduler: process %d not ready\n",proc->pid);
+//			if (schedule_debug)
+//				printk("SCHEDULER: process %d not ready\n",proc->pid);
 		}
 
 		/* Nothing was ready, run idle task */
 		if (proc==orig_proc) {
 			proc=proc_first;
-//			printk("scheduler: giving up and running %d\n",proc->pid);
+			if (schedule_debug)
+				printk("SCHEDULER: running idle task %d\n",proc->pid);
 			break;
 		}
 
@@ -79,9 +92,10 @@ void schedule(void) {
 
 	/* switch to new process */
 	if (proc!=current_process) {
-//		printk("Switching from %d (%x) to %d (%x)\n",
-//			current_process->pid,(long)current_process,
-//			proc->pid,(long)proc);
+		if (schedule_debug)
+			printk("SCHEDULER: Switching from proc %d (%x) to %d (%x)\n",
+				current_process->pid,(long)current_process,
+				proc->pid,(long)proc);
 		process_switch(current_process,proc);
 	}
 
