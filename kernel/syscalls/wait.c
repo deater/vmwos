@@ -7,7 +7,23 @@
 #include "process.h"
 #include "scheduler.h"
 
-static int debug=0;
+#include "wait.h"
+
+static int debug=1;
+
+struct wait_queue_t waitpid_wait_queue = {
+	NULL
+};
+
+
+int32_t waitpid_done(void) {
+	/* Wake anyone waiting for exit */
+	if (debug) printk("WAITPID: waking all waiters\n");
+
+	wait_queue_wake(&waitpid_wait_queue);
+
+	return 0;
+}
 
 int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
 
@@ -15,11 +31,11 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
 
 	proc=process_lookup(pid);
 
-	if (debug) printk("Waiting on pid %d\n",pid);
+	if (debug) printk("WAITPID: Waiting on pid %d\n",pid);
 
 	while (proc->status!=PROCESS_STATUS_EXITED) {
-
-		schedule();
+		wait_queue_add(&waitpid_wait_queue,current_process);
+		//schedule();
 	}
 
 	if (wstatus!=NULL) *wstatus=proc->exit_value;
