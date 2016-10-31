@@ -20,6 +20,7 @@ int getchar(void);
 int32_t atoi(char *string);
 int strlen(const char *s);
 int strncmp(const char *s1, const char *s2, uint32_t n);
+void *memset(void *s, int c, uint32_t n);
 
 /* system.c */
 int reboot(void);
