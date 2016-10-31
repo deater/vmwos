@@ -8,7 +8,7 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
-static int debug=0;
+static int debug=1;
 
 int32_t vfork(void) {
 
@@ -68,8 +68,12 @@ int32_t vfork(void) {
 	process_save(child,new_stack);
 
 	if (current_process==parent) {
+		if (debug) printk("parent status %d, ready=%d sleep=%d running schedule\n",
+				parent->status,
+				PROCESS_STATUS_READY,PROCESS_STATUS_SLEEPING);
 		schedule();
-		if (debug) printk("vfork: returning in parent\n");
+		if (debug) printk("vfork: returning in parent, status=%d\n",
+				parent->status);
 		return child_pid;
 	}
 
