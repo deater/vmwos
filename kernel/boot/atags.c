@@ -256,13 +256,29 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 				case 0x8:
 				case 0x9:	info->hardware_type=RPI_MODEL_A;
 						break;
-				case 0x10:	info->hardware_type=RPI_MODEL_BPLUS;
+				case 0x10:
+				case 0x13:	info->hardware_type=RPI_MODEL_BPLUS;
 						break;
-				case 0x11:	info->hardware_type=RPI_COMPUTE_NODE;
+				case 0x11:
+				case 0x14:	info->hardware_type=RPI_COMPUTE_NODE;
 						break;
-				case 0x12:	info->hardware_type=RPI_MODEL_APLUS;
+				case 0x12:
+				case 0x15:	info->hardware_type=RPI_MODEL_APLUS;
 						break;
-
+				case 0x90092:
+				case 0x90093:
+						info->hardware_type=RPI_MODEL_ZERO;
+						break;
+				case 0xa01040:
+				case 0xa01041:
+				case 0xa21041:
+				case 0xa22042:
+						info->hardware_type=RPI_MODEL_2B;
+						break;
+				case 0xa02082:
+				case 0xa22082:
+						info->hardware_type=RPI_MODEL_3B;
+						break;
 				default:	info->hardware_type=RPI_UNKNOWN;
 						break;
 			}

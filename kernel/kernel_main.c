@@ -160,7 +160,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		case RPI_MODEL_APLUS:	printk("A+"); break;
 		case RPI_MODEL_B:	printk("B"); break;
 		case RPI_MODEL_BPLUS:	printk("B+"); break;
-		case RPI_MODEL_B2:	printk("B2"); break;
+		case RPI_MODEL_2B:	printk("2B"); break;
+		case RPI_MODEL_3B:	printk("3B"); break;
+		case RPI_MODEL_ZERO:	printk("Zero"); break;
 		case RPI_COMPUTE_NODE:	printk("Compute Node"); break;
 		default:		printk("Unknown %x",hardware_type); break;
 	}
