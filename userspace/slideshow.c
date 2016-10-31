@@ -52,7 +52,7 @@ int vmwLoadPCX(char *filename, char *raw_image) {
 	if (debug) {
 		printf("Manufacturer: ");
 		if (pcx_header[0]==10) printf("Zsoft\n");
-		else printf("Unknown %i\n",pcx_header[0]);
+		else printf("Unknown %d\n",pcx_header[0]);
 
 		printf("Version: ");
 
@@ -66,9 +66,9 @@ int vmwLoadPCX(char *filename, char *raw_image) {
 		}
 		printf("Encoding: ");
 		if (pcx_header[2]==1) printf("RLE\n");
-		else printf("Unknown %i\n",pcx_header[2]);
+		else printf("Unknown %d\n",pcx_header[2]);
 
-		printf("BitsPerPixelPerPlane: %i\n",bpp);
+		printf("BitsPerPixelPerPlane: %d\n",bpp);
 		printf("File goes from %i,%i to %i,%i\n",xmin,ymin,xmax,ymax);
 
 		printf("Horizontal DPI: %i\n",(pcx_header[13]<<8)+pcx_header[12]);
@@ -147,6 +147,8 @@ int main(int argc, char **argv) {
 //	else {
 //		filename=argv[1];
 //	}
+
+	printf("Starting slide show!\n");
 
 	while(1) {
 
