@@ -14,3 +14,4 @@ int vmwos_setfont(int which);
 int vmwos_gradient(void);
 int vmwos_get_temp(void);
 int vmwos_random(uint32_t *buffer);
+int vmwos_framebuffer_load(int x, int y, int depth, char *fb);
