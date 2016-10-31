@@ -21,7 +21,7 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 
 		if (*string=='%') {
 			string++;
-			if (*string=='d') {
+			if ((*string=='d') || (*string=='i')) {
 				string++;
 				x=va_arg(ap, unsigned long);
 				if (x&0x80000000) {
