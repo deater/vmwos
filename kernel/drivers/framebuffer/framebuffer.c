@@ -199,7 +199,14 @@ int framebuffer_gradient(void) {
 
 int framebuffer_load(int x, int y, int depth, char *pointer) {
 
-	memcpy(offscreen,pointer,x*y*(depth/8));
+
+	int i;
+
+	for(i=0;i<y;i++) {
+		memcpy( (offscreen+i*current_fb.pitch),
+			(pointer+i*800),
+			x*(depth/8));
+	}
 
 	/* Yes, this dual copies for now */
 	framebuffer_push();

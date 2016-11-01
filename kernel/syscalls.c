@@ -22,7 +22,7 @@
 #include "syscalls/sysinfo.h"
 #include "syscalls/times.h"
 #include "syscalls/nanosleep.h"
-
+#include "memory.h"
 
 extern int blinking_enabled;
 
@@ -204,6 +204,10 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_RANDOM:
 			result=bcm2835_rng_read((uint32_t *)r0);
+			break;
+
+		case SYSCALL_MALLOC:
+			result=(uint32_t)memory_allocate(r0);
 			break;
 
 		default:

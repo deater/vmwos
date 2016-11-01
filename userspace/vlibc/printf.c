@@ -45,7 +45,7 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 				}
 
 			}
-			else if (*string=='x') {
+			else if ((*string=='x') || (*string=='p')) {
 				string++;
 				x=va_arg(ap, unsigned long);
 				int_pointer=9;

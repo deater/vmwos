@@ -132,7 +132,7 @@ int vmwLoadPCX(char *filename, char *raw_image) {
 
 /* Force it into the data segment */
 /* FIXME when bss properly implemented */
-static char pixels[800*600*3]={1};
+//char pixels[800*600*3]={1};
 
 int main(int argc, char **argv) {
 
@@ -140,6 +140,8 @@ int main(int argc, char **argv) {
 	int slide=0;
 	int ch;
 	char filename[32];
+
+	char *pixels;
 
 //	if (argc<2) {
 //		filename=default_filename;
@@ -150,18 +152,31 @@ int main(int argc, char **argv) {
 
 	printf("Starting slide show!\n");
 
+	/* allocating memory */
+	pixels=vmwos_malloc(800*600*3);
+
+	printf("Memsetting %p\n",pixels);
+	memset(pixels,0xff,800*600*3);
+
 	while(1) {
 
 		sprintf(filename,"out-%d.pcx",slide);
 
 		result=vmwLoadPCX(filename,pixels);
 		if (result<0) {
-			//fprintf(stderr,"Error opening %s\n",filename);
+			printf("Error opening %s\n",filename);
 			exit(1);
 		}
+
+
 		vmwos_framebuffer_load(800, 600, 24, pixels);
 
+		printf("About to get character\n");
+
 		ch=getchar();
+
+		printf("Read character %x\n",ch);
+
 		if (ch==' ') slide++;
 		if (ch=='q') break;
 		if (ch=='b') {
@@ -172,7 +187,3 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-
-
-
-
