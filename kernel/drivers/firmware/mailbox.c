@@ -31,7 +31,7 @@ int mailbox_write(unsigned int value, unsigned int channel) {
 
 	/* Wait until mailbox is ready */
 
-	while( (mmio_read(MAILBOX_STATUS) & MAIL_FULL) ) {
+	while( (mmio_read(MAILBOX1_STATUS) & MAIL_FULL) ) {
 		printk("Write mailbox full!\n");
 	}
 
@@ -57,7 +57,7 @@ int mailbox_read(unsigned int channel) {
 
 	/* Wait until mailbox has something there */
 
-	while((mmio_read(MAILBOX_STATUS) & MAIL_EMPTY) ) {
+	while((mmio_read(MAILBOX0_STATUS) & MAIL_EMPTY) ) {
 		printk("mailbox_read: mail_empty\n");
 	}
 
