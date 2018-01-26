@@ -78,7 +78,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 
 	(void) r0;	/* Ignore boot method */
 
-	emergency_blink();
+//	emergency_blink();
 
 	/* Initialize Software Structures */
 
@@ -92,7 +92,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	uart_init();
 
 	/* Enable HW random number generator */
-//	bcm2835_rng_init();
+	bcm2835_rng_init();
 
 	/************************/
 	/* Boot message!	*/
@@ -109,13 +109,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/**************************/
 
 	/* Set up ACT LED */
-//	led_init();
+	led_init();
 
 	/* Set up timer */
 	timer_init();
 
 	/* Set up keyboard */
-//	ps2_keyboard_init();
+	ps2_keyboard_init();
 
 	/* Enable the Framebuffer */
 	if (atag_info.framebuffer_x!=0) {
@@ -140,11 +140,11 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	uart_enable_interrupts();
 
 	/* Enable Interrupts */
-//	enable_interrupts();
+	enable_interrupts();
 
 
 	/* Clear screen */
-	printk("\n\033[2J\n\n");
+//	printk("\n\033[2J\n\n");
 
 	/* Print boot message */
 	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");

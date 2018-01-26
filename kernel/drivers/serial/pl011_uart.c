@@ -19,6 +19,7 @@ static int uart_initialized=0;
 
 void uart_init(void) {
 
+#if 0
 	uint32_t old;
 
 	/* Set UART0 (the pl011) to be on GPIO14/15 */
@@ -35,7 +36,7 @@ void uart_init(void) {
 	old&=0xfffc0fff;
 	old|=0x00024000;
         mmio_write(GPIO_GPFSEL1, old);
-
+#endif
 
 
 	/* Disable UART */

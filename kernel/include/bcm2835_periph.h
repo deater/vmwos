@@ -2,11 +2,11 @@
 
 /* For BCM2835, this will be different on BCM2836 Pi2 */
 
-#ifdef NEWPI
-#define IO_BASE	0x3F000000
-#else
+//#ifdef NEWPI
+//#define IO_BASE	0x3F000000
+//#else
 #define IO_BASE	0x20000000
-#endif
+//#endif
 
 
 
