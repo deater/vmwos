@@ -1,6 +1,5 @@
 /* Minimal assembly language startup code */
-/* This does just enough to prepare a C   */
-/* Program for execution on Raspberry-Pi  */
+/* Sets up a Raspberry Pi-1 for launching into C */
 
 /* Put this in the boot section, this matches */
 /* The declaration in the linker script       */
@@ -26,9 +25,9 @@ _start:
 	ldr	pc, software_interrupt_addr
 	ldr	pc, prefetch_abort_addr
 	ldr	pc, data_abort_addr
-        ldr	pc, unused_handler_addr
-        ldr	pc, interrupt_addr
-        ldr	pc, fast_interrupt_addr
+	ldr	pc, unused_handler_addr
+	ldr	pc, interrupt_addr
+	ldr	pc, fast_interrupt_addr
 reset_addr:			.word	reset
 undefined_instruction_addr:	.word	undef_handler
 software_interrupt_addr:	.word	swi_handler
@@ -71,13 +70,13 @@ reset:
 	/* TODO: setup the other stacks?	*/
 
 	/* copy irq vector2 into place.  Preserve r0,r1,r2 */
-        ldr	r3, =_start
-        mov     r4, #0x0000
+	ldr	r3, =_start
+	mov     r4, #0x0000
 	/* Quick way to copy 256 bytes of memory */
-        ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
-        stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
-        ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
-        stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
 
 
 	/* clear the bss section */
