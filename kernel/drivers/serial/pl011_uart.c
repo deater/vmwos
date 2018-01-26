@@ -19,6 +19,25 @@ static int uart_initialized=0;
 
 void uart_init(void) {
 
+	uint32_t old;
+
+	/* Set UART0 (the pl011) to be on GPIO14/15 */
+	/* This was the default for old Pis */
+	/* But Pi3 has the bluetooth there */
+
+	/* GPFSEL0 = 9 - 0 */
+	/* GPFSEL1 = 19 - 10 */
+        old=mmio_read(GPIO_GPFSEL1);
+        /* 100 means ALT0 */
+	/* 1111 1111 1111 1100 0000 1111 1111 1111 */
+	/* xxxx xxxx xxxx xx10 0100 xxxx xxxx xxxx */
+	/* xx xxx xxx xxx xxx 100 100 xxx xxx xxx xxx */
+	old&=0xfffc0fff;
+	old|=0x00024000;
+        mmio_write(GPIO_GPFSEL1, old);
+
+
+
 	/* Disable UART */
 	mmio_write(UART0_CR, 0x0);
 

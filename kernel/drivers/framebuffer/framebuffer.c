@@ -76,7 +76,11 @@ char *framebuffer_init(int x, int y, int depth) {
 		dump_framebuffer_info(&fb_info);
 	}
 
-	result=mailbox_write( (unsigned int)(&fb_info)+0x40000000 ,
+	// pi2 vs pi1
+//	result=mailbox_write( (unsigned int)(&fb_info)+0x40000000 ,
+//		MAILBOX_CHAN_FRAMEBUFFER);
+
+	result=mailbox_write( (unsigned int)(&fb_info)+0xC0000000 ,
 		MAILBOX_CHAN_FRAMEBUFFER);
 
 	if (result<0) {

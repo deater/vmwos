@@ -1,8 +1,13 @@
 /* Values from the BCM2835-ARM-Peripherals.pdf manual */
 
-
 /* For BCM2835, this will be different on BCM2836 Pi2 */
+
+#ifdef NEWPI
+#define IO_BASE	0x3F000000
+#else
 #define IO_BASE	0x20000000
+#endif
+
 
 
 /************/

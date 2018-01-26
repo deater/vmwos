@@ -5,12 +5,13 @@ LINKER_SCRIPT = kernel.ld
 
 INCLUDE = -I./include
 
-all:	kernel.img kernel.dis
+all:	kernel7.img kernel.img kernel.dis
 
 kernel.img:	kernel.elf
 	$(CROSS)objcopy kernel.elf -O binary kernel.img
 
-
+kernel7.img:	kernel7.elf
+	$(CROSS)objcopy kernel7.elf -O binary kernel7.img
 
 kernel.elf:	kernel_main.o \
 	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
@@ -33,6 +34,28 @@ kernel.elf:	kernel_main.o \
 		syscalls/syscalls.a \
 		lib/lib.a \
 		-Map kernel.map -o kernel.elf
+
+kernel7.elf:	kernel_main.o \
+	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
+	interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
+	swi_handler.o irq_handler.o \
+	boot/boot.a \
+	drivers/drivers.a \
+	fs/fs.a \
+	syscalls/syscalls.a \
+	lib/lib.a
+	$(CROSS)ld $(LFLAGS) \
+		kernel_main.o \
+		idle_task.o \
+		arm1176-mmu.o arm1176-pmu.o syscalls.o \
+		interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
+		swi_handler.o irq_handler.o \
+		boot/boot.a \
+		drivers/drivers.a \
+		fs/fs.a \
+		syscalls/syscalls.a \
+		lib/lib.a \
+		-Map kernel7.map -o kernel7.elf
 
 kernel_main.o:	kernel_main.c version.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o kernel_main.o -c kernel_main.c

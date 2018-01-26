@@ -70,8 +70,6 @@ reset:
 
 	/* TODO: setup the other stacks?	*/
 
-
-
 	/* copy irq vector2 into place.  Preserve r0,r1,r2 */
         ldr	r3, =_start
         mov     r4, #0x0000
