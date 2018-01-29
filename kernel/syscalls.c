@@ -8,7 +8,7 @@
 #include "fs/files.h"
 #include "time.h"
 #include "interrupts.h"
-#include "bcm2835_periph.old.h"
+#include "drivers/bcm2835/bcm2835_periph.old.h"
 #include "mmio.h"
 #include "drivers/thermal/thermal.h"
 #include "drivers/random/bcm2835_rng.h"

@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include "lib/printk.h"
 #include "mmio.h"
-#include "bcm2835_periph.old.h"
+#include "drivers/bcm2835/bcm2835_periph.old.h"
 
 
 /* RNG Enable */

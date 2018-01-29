@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "bcm2835_periph.old.h"
+#include "drivers/bcm2835/bcm2835_periph.old.h"
 #include "drivers/led/led.h"
 #include "mmio.h"
 #include "hardware.h"

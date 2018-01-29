@@ -4,6 +4,7 @@ include ../Makefile_kernel.inc
 all:	drivers.a
 
 drivers.a:	\
+		bcm2835/bcm2835.a \
 		block/block.a \
 		console/console.a \
 		firmware/firmware.a \
@@ -17,6 +18,7 @@ drivers.a:	\
 		timer/timer.a
 
 	$(CROSS)$(AR) crsT drivers.a \
+		bcm2835/bcm2835.a \
 		block/block.a \
 		console/console.a \
 		firmware/firmware.a \
@@ -28,6 +30,9 @@ drivers.a:	\
 		serial/serial.a \
 		thermal/thermal.a \
 		timer/timer.a
+
+bcm2835/bcm2835.a:	force_look
+	cd bcm2835 && make
 
 block/block.a:	force_look
 	cd block && make
@@ -68,6 +73,7 @@ force_look:
 
 clean:
 	rm -f *~ *.o *.a
+	cd bcm2835 && make clean
 	cd block && make clean
 	cd console && make clean
 	cd firmware && make clean

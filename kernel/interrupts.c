@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "bcm2835_periph.old.h"
+#include "drivers/bcm2835/bcm2835_periph.old.h"
 #include "mmio.h"
 #include "lib/printk.h"
 #include "time.h"
