@@ -3,8 +3,6 @@
 
 #include "drivers/block/ramdisk.h"
 
-//#include "drivers/serial/pl011_uart.h"
-//#include "drivers/serial/mini_uart.h"
 #include "drivers/serial/serial.h"
 
 #include "lib/printk.h"
@@ -13,7 +11,7 @@
 #include "delay.h"
 #include "drivers/timer/timer.h"
 #include "interrupts.h"
-#include "bcm2835_periph.h"
+//#include "bcm2835_periph.h"
 #include "mmio.h"
 #include "memory.h"
 #include "syscalls.h"

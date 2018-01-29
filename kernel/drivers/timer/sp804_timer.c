@@ -2,7 +2,7 @@
 #include <stddef.h>
 
 #include "mmio.h"
-#include "bcm2835_periph.h"
+#include "bcm2835_periph.old.h"
 #include "drivers/led/led.h"
 #include "time.h"
 #include "wait.h"

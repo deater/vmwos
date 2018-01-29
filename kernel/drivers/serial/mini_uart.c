@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "bcm2835_periph.h"
+#include "bcm2835_periph.old.h"
 #include "mmio.h"
 #include "delay.h"
 #include "drivers/gpio/gpio.h"

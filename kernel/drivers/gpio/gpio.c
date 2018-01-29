@@ -11,7 +11,7 @@
 #include "drivers/gpio/gpio.h"
 #include "lib/printk.h"
 #include "mmio.h"
-#include "bcm2835_periph.h"
+#include "bcm2835_periph.old.h"
 
 #define MAX_GPIO 54
 
