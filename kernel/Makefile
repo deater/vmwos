@@ -25,7 +25,8 @@ kernel.elf:	kernel_main.o \
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
-		arm1176-mmu.o arm1176-pmu.o syscalls.o \
+		arm1176-mmu.o arm1176-pmu.o \
+		syscalls.o \
 		interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/atags.o boot/boot-arm1176.o \
@@ -47,8 +48,9 @@ kernel7.elf:	kernel_main.o \
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
-		arm1176-mmu.o arm1176-pmu.o syscalls.o \
-		interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
+		arm1176-mmu.o arm1176-pmu.o \
+		syscalls.o interrupts.o memory.o panic.o \
+		process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/atags.o boot/boot-arm7.o \
 		drivers/drivers.a \

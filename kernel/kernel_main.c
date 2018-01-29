@@ -89,10 +89,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Initialize Hardware */
 
 	/* Serial console is most important so do that first */
-	uart_init();
-
-	/* Enable HW random number generator */
-	bcm2835_rng_init();
+	if ((hardware_type==RPI_MODEL_2B) || (hardware_type==RPI_MODEL_3B)) {
+		/* FIXME: use mini-uart */
+		uart_init();
+	}
+	else {
+		uart_init();
+	}
 
 	/************************/
 	/* Boot message!	*/
@@ -104,6 +107,34 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	printk("\nBooting VMWos...\n");
 
 
+	/* Print boot message */
+	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
+	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version %s\n\n",VERSION);
+
+	/* Print hardware version */
+	printk("Hardware version: %x ",r1);
+	if (r1==0xc42) printk("(Raspberry Pi)");
+	else printk("(Unknown Hardware)");
+	printk("\n");
+
+	printk("Detected Model ");
+	switch(hardware_type) {
+		case RPI_MODEL_A:	printk("A"); break;
+		case RPI_MODEL_APLUS:	printk("A+"); break;
+		case RPI_MODEL_B:	printk("B"); break;
+		case RPI_MODEL_BPLUS:	printk("B+"); break;
+		case RPI_MODEL_2B:	printk("2B"); break;
+		case RPI_MODEL_3B:	printk("3B"); break;
+		case RPI_MODEL_ZERO:	printk("Zero"); break;
+		case RPI_COMPUTE_NODE:	printk("Compute Node"); break;
+		default:		printk("Unknown %x",hardware_type); break;
+	}
+	printk("\n");
+
+	/* Print ATAGS */
+	atags_dump(atags);
+
+	printk("\n");
 
 	/**************************/
 	/* Device Drivers	  */
@@ -141,35 +172,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	uart_enable_interrupts();
 
 	/* Enable Interrupts */
-	enable_interrupts();
+
+	/* Note, we do not need to enable this in kernel space? */
+	/* In fact we possibly don't want to enable this in kernel space? */
+	/* It is enabled while running in user mode elsewhere? */
+
+//	enable_interrupts();
 
 
-	/* Clear screen */
-//	printk("\n\033[2J\n\n");
-
-	/* Print boot message */
-	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
-	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version %s\n\n",VERSION);
-
-	/* Print hardware version */
-	printk("Hardware version: %x ",r1);
-	if (r1==0xc42) printk("(Raspberry Pi)");
-	else printk("(Unknown Hardware)");
-	printk("\n");
-
-	printk("Detected Model ");
-	switch(hardware_type) {
-		case RPI_MODEL_A:	printk("A"); break;
-		case RPI_MODEL_APLUS:	printk("A+"); break;
-		case RPI_MODEL_B:	printk("B"); break;
-		case RPI_MODEL_BPLUS:	printk("B+"); break;
-		case RPI_MODEL_2B:	printk("2B"); break;
-		case RPI_MODEL_3B:	printk("3B"); break;
-		case RPI_MODEL_ZERO:	printk("Zero"); break;
-		case RPI_COMPUTE_NODE:	printk("Compute Node"); break;
-		default:		printk("Unknown %x",hardware_type); break;
-	}
-	printk("\n");
+	/* Enable HW random number generator */
+	bcm2835_rng_init();
 
 	/* Check temperature */
 	temperature=thermal_read();
@@ -177,10 +189,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 		temperature/1000,
 		((temperature*9)/5000)+32);
 
-	/* Print ATAGS */
-	atags_dump(atags);
 
-	printk("\n");
 
 	/* Get amount of RAM from ATAGs */
 	memory_total=atag_info.ramsize;
@@ -188,27 +197,34 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
 
-	/* Start HW Perf Counters */
-	arm1176_init_pmu();
 
-	/* Setup Memory Hierarchy */
-#if 0
-	memset_benchmark(memory_total);
-#else
-	/* Enable L1 i-cache */
-	printk("Enabling L1 icache\n");
-	enable_l1_icache();
 
-	/* Enable branch predictor */
-	printk("Enabling branch predictor\n");
-	enable_branch_predictor();
+	if ((hardware_type==RPI_MODEL_2B) || (hardware_type==RPI_MODEL_3B)) {
 
-	/* Enable L1 d-cache */
-	printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
-	enable_mmu(0,memory_total,memory_kernel);
-	printk("Enabling L1 dcache\n");
-	enable_l1_dcache();
-#endif
+	}
+	else {
+
+		/* Start HW Perf Counters */
+		arm1176_init_pmu();
+
+		/* Setup Memory Hierarchy */
+
+		// memset_benchmark(memory_total);
+
+		/* Enable L1 i-cache */
+		printk("Enabling L1 icache\n");
+		enable_l1_icache();
+
+		/* Enable branch predictor */
+		printk("Enabling branch predictor\n");
+		enable_branch_predictor();
+
+		/* Enable L1 d-cache */
+		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
+		enable_mmu(0,memory_total,memory_kernel);
+		printk("Enabling L1 dcache\n");
+		enable_l1_dcache();
+	}
 
 	/* Init the file descriptor table */
 	fd_table_init();
@@ -232,8 +248,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	printk("Created idle thread: %d\n",idle_process->pid);
 	//dump_saved_user_state(idle_process);
 	//dump_saved_kernel_state(idle_process);
-
-
 
 	/* Enter our "init" process*/
 	init_process=process_create();
