@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-#include "drivers/serial/pl011_uart.h"
+#include "drivers/serial/serial.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "locks.h"
 
@@ -109,8 +109,8 @@ int console_write(const void *buf, size_t count) {
 	/* Write to framebuffer */
 	result=framebuffer_console_write(buf, count);
 
-	/* Write to UART */
-	result=uart_write(buf, count);
+	/* Write to Serial port */
+	result=serial_write(buf, count);
 
 	return result;
 

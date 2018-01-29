@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include "drivers/console/console_io.h"
 
-#include "drivers/serial/pl011_uart.h"
+#include "drivers/serial/serial.h"
 
 #define MAX_PRINT_SIZE 256
 
@@ -125,7 +125,7 @@ int serial_printk(char *string,...) {
 
 	va_end(argp);
 
-	uart_write(buffer,result);
+	serial_write(buffer,result);
 
 	return result;
 

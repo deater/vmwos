@@ -7,8 +7,9 @@
 #include "scheduler.h"
 
 #include "drivers/keyboard/ps2-keyboard.h"
-#include "drivers/serial/pl011_uart.h"
 #include "drivers/timer/timer.h"
+
+#include "drivers/serial/serial.h"
 
 #define MAX_IRQ	64
 
@@ -94,7 +95,7 @@ void interrupt_handler_c(void) {
 
 	if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
 		handled++;
-		uart_interrupt_handler();
+		serial_interrupt_handler();
 	}
 
 	// check if it's a timer interrupt

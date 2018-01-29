@@ -2,7 +2,11 @@
 #include <stdint.h>
 
 #include "drivers/block/ramdisk.h"
-#include "drivers/serial/pl011_uart.h"
+
+//#include "drivers/serial/pl011_uart.h"
+//#include "drivers/serial/mini_uart.h"
+#include "drivers/serial/serial.h"
+
 #include "lib/printk.h"
 #include "boot/atags.h"
 #include "drivers/led/led.h"
@@ -89,19 +93,19 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Initialize Hardware */
 
 	/* Serial console is most important so do that first */
-	if ((hardware_type==RPI_MODEL_2B) || (hardware_type==RPI_MODEL_3B)) {
-		/* FIXME: use mini-uart */
-		uart_init();
+	if (hardware_type==RPI_MODEL_3B) {
+		serial_init(SERIAL_UART_MINI);
+		printk("\n\n\nUsing mini-uart\n");
 	}
 	else {
-		uart_init();
+		serial_init(SERIAL_UART_PL011);
+		printk("\n\n\nUsing pl011-uart\n");
 	}
 
 	/************************/
 	/* Boot message!	*/
 	/************************/
 
-	printk("\n\n\n");
 	printk("From bootloader: r0=%x r1=%x r2=%x\n",
 		r0,r1,(uint32_t)atags);
 	printk("\nBooting VMWos...\n");
@@ -169,7 +173,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	uart_getc();
 #endif
 
-	uart_enable_interrupts();
+	serial_enable_interrupts();
 
 	/* Enable Interrupts */
 

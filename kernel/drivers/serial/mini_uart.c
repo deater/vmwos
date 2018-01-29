@@ -1,5 +1,8 @@
-/* This is code to drive the BCM2835 PL011 UART				*/
-/* As decribed in Chapter 13 of the BCM2835 ARM Peripherals Manual	*/
+/* This is code to drive the X compatible mini-uart			*/
+/* As decribed in Chapter XX of the BCM2835 ARM Peripherals Manual	*/
+
+/* This UART is used by default on the Pi3 */
+/* As the pl011 is connected to bluetooth */
 
 /* The code assumes you have a serial connector with TX/RX connected	*/
 /* To GPIO pins 14 and 15						*/
@@ -16,12 +19,11 @@
 #include "lib/printk.h"
 
 #include "drivers/serial/serial.h"
-#include "drivers/serial/pl011_uart.h"
+#include "drivers/serial/mini_uart.h"
 
+static int mini_uart_initialized=0;
 
-static int pl011_uart_initialized=0;
-
-uint32_t pl011_uart_init(struct serial_type *serial) {
+uint32_t mini_uart_init(struct serial_type *serial) {
 
 	/* Make this configurable? */
 	serial->baud=115200;
@@ -30,11 +32,11 @@ uint32_t pl011_uart_init(struct serial_type *serial) {
 	serial->parity=SERIAL_PARITY_NONE;
 
 	/* Set up function pointers */
-	serial->uart_enable_interrupts=pl011_uart_enable_interrupts;
-	serial->uart_putc=pl011_uart_putc;
-	serial->uart_getc=pl011_uart_getc;
-	serial->uart_getc_noblock=pl011_uart_getc_noblock;
-	serial->uart_interrupt_handler=pl011_uart_interrupt_handler;
+	serial->uart_enable_interrupts=mini_uart_enable_interrupts;
+	serial->uart_putc=mini_uart_putc;
+	serial->uart_getc=mini_uart_getc;
+	serial->uart_getc_noblock=mini_uart_getc_noblock;
+	serial->uart_interrupt_handler=mini_uart_interrupt_handler;
 
 	/* Disable UART */
 	mmio_write(UART0_CR, 0x0);
@@ -85,12 +87,12 @@ uint32_t pl011_uart_init(struct serial_type *serial) {
 
 
 
-	pl011_uart_initialized=1;
+	mini_uart_initialized=1;
 
 	return 0;
 }
 
-void pl011_uart_enable_interrupts(void) {
+void mini_uart_enable_interrupts(void) {
 	uint32_t old;
 
 	/* clear pending interrupts */
@@ -110,7 +112,7 @@ void pl011_uart_enable_interrupts(void) {
 	irq_enable(57);
 }
 
-void pl011_uart_putc(unsigned char byte) {
+void mini_uart_putc(unsigned char byte) {
 
 	/* Check Flags Register */
 	/* And wait until FIFO not full */
@@ -121,7 +123,7 @@ void pl011_uart_putc(unsigned char byte) {
 	mmio_write(UART0_DR, byte);
 }
 
-int32_t pl011_uart_getc(void) {
+int32_t mini_uart_getc(void) {
 
 	/* Check Flags Register */
 	/* Wait until Receive FIFO is not empty */
@@ -134,7 +136,7 @@ int32_t pl011_uart_getc(void) {
 	return mmio_read(UART0_DR);
 }
 
-int32_t pl011_uart_getc_noblock(void) {
+int32_t mini_uart_getc_noblock(void) {
 
 	/* Check Flags Register */
 
@@ -149,13 +151,13 @@ int32_t pl011_uart_getc_noblock(void) {
 	return (mmio_read(UART0_DR))&0xff;
 }
 
-int32_t pl011_uart_interrupt_handler(void) {
+int32_t mini_uart_interrupt_handler(void) {
 
 	uint32_t ascii;
 
 	/* read byte */
 	while(1) {
-		ascii=pl011_uart_getc_noblock();
+		ascii=mini_uart_getc_noblock();
 		if (ascii==-1) break;
 
 		/* Send to console */
