@@ -17,7 +17,7 @@ kernel.elf:	kernel_main.o \
 	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
 	interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
-	boot/atags.o boot/boot-arm1176.o \
+	boot/boot-arm1176.a \
 	drivers/drivers.a \
 	fs/fs.a \
 	syscalls/syscalls.a \
@@ -39,7 +39,7 @@ kernel7.elf:	kernel_main.o \
 	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
 	interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
-	boot/atags.o boot/boot-arm7.o \
+	boot/boot-arm7.a \
 	drivers/drivers.a \
 	fs/fs.a \
 	syscalls/syscalls.a \
@@ -104,7 +104,10 @@ locks.o:	locks.s
 
 
 
-boot/boot.a:	force_look
+boot/boot-arm1176.a:	force_look
+	cd boot && make
+
+boot/boot-arm7.a:	force_look
 	cd boot && make
 
 drivers/drivers.a:	force_look

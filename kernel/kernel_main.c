@@ -98,6 +98,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/* Boot message!	*/
 	/************************/
 
+	printk("\n\n\n");
 	printk("From bootloader: r0=%x r1=%x r2=%x\n",
 		r0,r1,(uint32_t)atags);
 	printk("\nBooting VMWos...\n");

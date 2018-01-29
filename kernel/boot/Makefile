@@ -3,11 +3,13 @@ include ../Makefile_kernel.inc
 
 INCLUDE = -I../include
 
-all:	atags.o boot-arm1176.o boot-arm7.o
+all:	boot-arm7.a boot-arm1176.a
 
-#boot.a:	atags.o boot.o
-#	$(CROSS)$(AR) crs boot.a atags.o boot.o
+boot-arm7.a:	atags.o boot-arm7.o
+	$(CROSS)$(AR) crs boot-arm7.a atags.o boot-arm7.o
 
+boot-arm1176.a:	atags.o boot-arm1176.o
+	$(CROSS)$(AR) crs boot-arm1176.a atags.o boot-arm1176.o
 
 atags.o:	atags.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o atags.o -c atags.c
