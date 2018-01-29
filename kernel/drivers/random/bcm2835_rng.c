@@ -9,8 +9,8 @@
 
 #include <stdint.h>
 #include "lib/printk.h"
-#include "mmio.h"
-#include "drivers/bcm2835/bcm2835_periph.old.h"
+#include "drivers/bcm2835/bcm2835_io.h"
+#include "drivers/bcm2835/bcm2835_periph.h"
 
 
 /* RNG Enable */
@@ -25,10 +25,10 @@
 int bcm2835_rng_init(void) {
 
 	/* Set up warm-up count */
-	mmio_write(RNG_STATUS, RNG_WARMUP_COUNT);
+	bcm2835_write(RNG_STATUS, RNG_WARMUP_COUNT);
 
 	/* Enable RNG */
-	mmio_write(RNG_CTRL, RNG_RBGEN);
+	bcm2835_write(RNG_CTRL, RNG_RBGEN);
 
 	return 0;
 }
@@ -36,7 +36,7 @@ int bcm2835_rng_init(void) {
 int bcm2835_rng_exit(void) {
 
 	/* Disable RNG */
-	mmio_write(RNG_CTRL, 0);
+	bcm2835_write(RNG_CTRL, 0);
 
 	return 0;
 }
@@ -48,13 +48,13 @@ int32_t bcm2835_rng_read(uint32_t *value) {
 
 	/* wait for a random number to be in fifo */
 	while(1) {
-		count = mmio_read(RNG_STATUS)>>24;
+		count = bcm2835_read(RNG_STATUS)>>24;
 		if (count!=0) break;
 		timeout++;
 		if (timeout>100) return -1;
 	}
 
 	/* read the random number */
-	*value = mmio_read(RNG_DATA);
+	*value = bcm2835_read(RNG_DATA);
 	return 4;
 }

@@ -1,8 +1,9 @@
 #include <stdint.h>
 
-#include "drivers/bcm2835/bcm2835_periph.old.h"
+#include "drivers/bcm2835/bcm2835_io.h"
+#include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/led/led.h"
-#include "mmio.h"
+//#include "mmio.h"
 #include "hardware.h"
 #include "drivers/gpio/gpio.h"
 #include "lib/printk.h"

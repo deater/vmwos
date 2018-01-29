@@ -8,8 +8,8 @@
 #include "fs/files.h"
 #include "time.h"
 #include "interrupts.h"
-#include "drivers/bcm2835/bcm2835_periph.old.h"
-#include "mmio.h"
+#include "drivers/bcm2835/bcm2835_io.h"
+#include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/thermal/thermal.h"
 #include "drivers/random/bcm2835_rng.h"
 #include "process.h"
@@ -192,8 +192,8 @@ uint32_t swi_handler_c(
 #endif
 		case SYSCALL_REBOOT:
 			/* See https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=53862 */
-			mmio_write(PM_WDOG, PM_PASSWORD | 1);	/* timeout = 1/16th of a second? */
-			mmio_write(PM_RSTC, PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET);
+			bcm2835_write(PM_WDOG, PM_PASSWORD | 1);	/* timeout = 1/16th of a second? */
+			bcm2835_write(PM_RSTC, PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET);
 			result = -1;
 			break;
 

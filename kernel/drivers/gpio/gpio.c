@@ -10,8 +10,9 @@
 #include <stdint.h>
 #include "drivers/gpio/gpio.h"
 #include "lib/printk.h"
-#include "mmio.h"
-#include "drivers/bcm2835/bcm2835_periph.old.h"
+//#include "mmio.h"
+#include "drivers/bcm2835/bcm2835_io.h"
+#include "drivers/bcm2835/bcm2835_periph.h"
 
 #define MAX_GPIO 54
 
@@ -74,9 +75,9 @@ int gpio_direction_input(int which_one) {
 
 	/* 000 means input */
 
-	old=mmio_read(GPIO_GPFSEL0+addr_offset);
+	old=bcm2835_read(GPIO_GPFSEL0+addr_offset);
 	old &= ~bit;
-	mmio_write(GPIO_GPFSEL0+addr_offset, old);
+	bcm2835_write(GPIO_GPFSEL0+addr_offset, old);
 
 	return 0;
 
@@ -100,9 +101,9 @@ int gpio_direction_output(int which_one) {
 
 	/* 001 means output */
 
-	old=mmio_read(GPIO_GPFSEL0+addr_offset);
+	old=bcm2835_read(GPIO_GPFSEL0+addr_offset);
 	old |= bit;
-	mmio_write(GPIO_GPFSEL0+addr_offset, old);
+	bcm2835_write(GPIO_GPFSEL0+addr_offset, old);
 
 	return 0;
 }
@@ -139,7 +140,7 @@ int gpio_get_value(int which_one) {
 	bit=1<<(which_one&0x1f);
 	address_offset=(which_one/32)*4;
 
-	result=mmio_read(GPIO_GPLEV0+address_offset);
+	result=bcm2835_read(GPIO_GPLEV0+address_offset);
 
 	result=!!(result&bit);
 
@@ -160,10 +161,10 @@ int gpio_set_value(int which_one, int value) {
 	address_offset=(which_one/32)*4;
 
 	if (value==0) {
-		mmio_write(GPIO_GPSET0+address_offset,bit);
+		bcm2835_write(GPIO_GPSET0+address_offset,bit);
 	}
 	else if (value==1) {
-		mmio_write(GPIO_GPCLR0+address_offset,bit);
+		bcm2835_write(GPIO_GPCLR0+address_offset,bit);
 	}
 	else {
 		printk("Invalid GPIO value %d\n",value);
@@ -186,8 +187,8 @@ int gpio_set_falling(int which_one) {
 	bit=1<<(which_one&0x1f);
 	address_offset=(which_one/32)*4;
 
-	old=mmio_read(GPIO_GPFEN0+address_offset);
-	mmio_write(GPIO_GPFEN0+address_offset,old|bit);
+	old=bcm2835_read(GPIO_GPFEN0+address_offset);
+	bcm2835_write(GPIO_GPFEN0+address_offset,old|bit);
 
 	return 0;
 
@@ -205,7 +206,7 @@ int gpio_clear_interrupt(int which_one) {
 	bit=1<<(which_one&0x1f);
 	address_offset=(which_one/32)*4;
 
-	mmio_write(GPIO_GPEDS0+address_offset,bit);
+	bcm2835_write(GPIO_GPEDS0+address_offset,bit);
 
 	return 0;
 }

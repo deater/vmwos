@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "drivers/bcm2835/bcm2835_periph.old.h"
-#include "mmio.h"
+#include "drivers/bcm2835/bcm2835_io.h"
+#include "drivers/bcm2835/bcm2835_periph.h"
 #include "lib/printk.h"
 #include "time.h"
 #include "scheduler.h"
@@ -25,8 +25,8 @@ int irq_enable(int which_one) {
         bit=1<<(which_one&0x1f);
         address_offset=(which_one/32)*4;
 
-        old=mmio_read(IRQ_ENABLE_IRQ1+address_offset);
-        mmio_write(IRQ_ENABLE_IRQ1+address_offset,old|bit);
+        old=bcm2835_read(IRQ_ENABLE_IRQ1+address_offset);
+        bcm2835_write(IRQ_ENABLE_IRQ1+address_offset,old|bit);
 
         return 0;
 }
@@ -44,8 +44,8 @@ int irq_disable(int which_one) {
         bit=1<<(which_one&0x1f);
         address_offset=(which_one/32)*4;
 
-        old=mmio_read(IRQ_DISABLE_IRQ1+address_offset);
-        mmio_write(IRQ_DISABLE_IRQ1+address_offset,old|bit);
+        old=bcm2835_read(IRQ_DISABLE_IRQ1+address_offset);
+        bcm2835_write(IRQ_DISABLE_IRQ1+address_offset,old|bit);
 
         return 0;
 
@@ -83,7 +83,7 @@ void interrupt_handler_c(void) {
 	uint32_t handled=0;
 
 	// Check if GPIO23 (ps2 keyboard) (irq49)
-	pending2=mmio_read(IRQ_PENDING2);
+	pending2=bcm2835_read(IRQ_PENDING2);
 
 	if (pending2 & IRQ_PENDING2_IRQ49) {
 		handled++;
@@ -91,7 +91,7 @@ void interrupt_handler_c(void) {
 	}
 
 	// Check if UART (irq57)
-	basic_pending=mmio_read(IRQ_BASIC_PENDING);
+	basic_pending=bcm2835_read(IRQ_BASIC_PENDING);
 
 	if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
 		handled++;
