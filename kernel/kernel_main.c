@@ -11,7 +11,7 @@
 #include "delay.h"
 #include "drivers/timer/timer.h"
 #include "interrupts.h"
-//#include "bcm2835_periph.h"
+#include "drivers/bcm2835/bcm2835_io.h"
 #include "mmio.h"
 #include "memory.h"
 #include "syscalls.h"
@@ -89,6 +89,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	hardware_type=atag_info.hardware_type;
 
 	/* Initialize Hardware */
+
+	/* Set up proper IO_BASE for bcm2835 accesses */
+	bcm2835_init(hardware_type);
 
 	/* Serial console is most important so do that first */
 	if (hardware_type==RPI_MODEL_3B) {
