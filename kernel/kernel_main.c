@@ -6,7 +6,10 @@
 #include "drivers/serial/serial.h"
 
 #include "lib/printk.h"
+
 #include "boot/atags.h"
+#include "boot/device_tree.h"
+
 #include "drivers/led/led.h"
 #include "delay.h"
 #include "drivers/timer/timer.h"
@@ -35,6 +38,7 @@
 #include "drivers/random/bcm2835_rng.h"
 #include "syscalls/exec.h"
 #include "panic.h"
+#include "errors.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -42,7 +46,8 @@
 #include "version.h"
 
 /* default, this is over-ridden later */
-uint32_t hardware_type=RPI_MODEL_B;
+//uint32_t hardware_type=RPI_MODEL_B;
+uint32_t hardware_type=RPI_MODEL_3B;
 
 /* For memory benchmark */
 #define BENCH_SIZE (1024*1024)
@@ -69,24 +74,33 @@ void enter_userspace(void) {
 
 
 
-void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
+void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		uint32_t memory_kernel) {
 
 	struct process_control_block_type *init_process,*idle_process;
 	struct atag_info_t atag_info;
 	uint32_t framebuffer_width=800,framebuffer_height=600;
 	uint32_t temperature;
-	int32_t result;
+	int32_t result,atags_found=0,device_tree_found=0;
 
 	(void) r0;	/* Ignore boot method */
-
-//	emergency_blink();
 
 	/* Initialize Software Structures */
 
 	/* Detect Hardware */
-	atags_detect(atags,&atag_info);
-	hardware_type=atag_info.hardware_type;
+	result=devicetree_decode((uint32_t *)r2);
+	if (result==0) {
+		device_tree_found=1;
+	} else {
+		/* Atags is being deprecated on new Pis */
+		atags_detect((uint32_t *)r2,&atag_info);
+		atags_found=1;
+		hardware_type=atag_info.hardware_type;
+	}
+
+//	if (hardware_type==RPI_MODEL_3B) {
+//		emergency_blink();
+//	}
 
 	/* Initialize Hardware */
 
@@ -108,7 +122,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	/************************/
 
 	printk("From bootloader: r0=%x r1=%x r2=%x\n",
-		r0,r1,(uint32_t)atags);
+		r0,r1,r2);
 	printk("\nBooting VMWos...\n");
 
 
@@ -137,7 +151,12 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t *atags,
 	printk("\n");
 
 	/* Print ATAGS */
-	atags_dump(atags);
+	if (atags_found) {
+		atags_dump((uint32_t *)r2);
+	}
+	if (device_tree_found) {
+		devicetree_dump();
+	}
 
 	printk("\n");
 
