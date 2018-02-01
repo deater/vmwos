@@ -5,7 +5,8 @@
 /* Values from the BCM2835-ARM-Peripherals.pdf manual */
 //#define IO_BASE	0x20000000
 
-#define IO_BASE	0x3f000000
+//#define IO_BASE	0x3f000000
+#define IO_BASE	0x20000000
 
 
 #define GPIO_BASE	(IO_BASE+0x200000)

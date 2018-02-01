@@ -41,13 +41,13 @@ static uint32_t big_to_little(uint32_t big) {
 int32_t devicetree_decode(uint32_t *dt_ptr) {
 
 	uint32_t *dt;
-#if 0
+
 	dt=dt_ptr;
 
 	device_tree.valid=0;
 
 	device_tree.magic=big_to_little(dt[0]);
-//	device_tree.magic=big_to_little(0xdeadbeef);
+
 	if (device_tree.magic!=0xd00dfeed) {
 		return -ENODEV;
 	}
@@ -67,14 +67,14 @@ int32_t devicetree_decode(uint32_t *dt_ptr) {
 	if (device_tree.version>=3) {
 		device_tree.size_strs=big_to_little(dt[8]);
 	}
-#endif
+
 	return -ENODEV;
 
 }
 
 
 void devicetree_dump(void) {
-
+#if 0
 	if (!device_tree.valid) return;
 
 	printk("Device tree:\n");
@@ -91,4 +91,5 @@ void devicetree_dump(void) {
 	if (device_tree.version>=3) {
 		printk("\tSizeStrs: %d\n",device_tree.size_strs);
 	}
+#endif
 }

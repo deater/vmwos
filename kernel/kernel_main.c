@@ -51,7 +51,7 @@ uint32_t hardware_type=RPI_MODEL_3B;
 
 /* For memory benchmark */
 #define BENCH_SIZE (1024*1024)
-uint8_t benchmark[BENCH_SIZE];
+//uint8_t benchmark[BENCH_SIZE];
 
 void enter_userspace(void) {
 
@@ -72,9 +72,12 @@ void enter_userspace(void) {
 }
 
 
+void pl011_uart_putc(unsigned char byte);
+uint32_t pl011_write(const char* buffer, size_t size);
+void pl011_uart_putc_extra(unsigned char byte, unsigned int extra);
+uint32_t old_pl011_uart_init(void);
 
-
-void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
+void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 		uint32_t memory_kernel) {
 
 	struct process_control_block_type *init_process,*idle_process;
@@ -88,7 +91,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Initialize Software Structures */
 
 	/* Detect Hardware */
+
 	result=devicetree_decode((uint32_t *)r2);
+
 	if (result==0) {
 		device_tree_found=1;
 	} else {
@@ -114,8 +119,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	}
 	else {
 		serial_init(SERIAL_UART_PL011);
-		printk("\n\n\nUsing pl011-uart\n");
+		serial_printk("\n\n\nUsing pl011-uart\n");
 	}
+
+//	pl011_uart_putc_extra('X',0xb00b135);
+//	pl011_uart_putc_extra('\n',0);
+//	pl011_write("W\n",2);
+//	pl011_uart_putc('V');
+//	pl011_uart_putc('\n');
 
 	/************************/
 	/* Boot message!	*/
@@ -125,6 +136,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		r0,r1,r2);
 	printk("\nBooting VMWos...\n");
 
+//	emergency_blink();
+//	pl011_write("W\n",2);
+//	pl011_uart_putc_extra('X',0xb00b135);
 
 	/* Print boot message */
 	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
