@@ -37,7 +37,7 @@
 #include "lib/memory_benchmark.h"
 #include "drivers/random/bcm2835_rng.h"
 #include "syscalls/exec.h"
-#include "panic.h"
+#include "debug/panic.h"
 #include "errors.h"
 
 /* Initrd hack */
@@ -76,6 +76,8 @@ void pl011_uart_putc(unsigned char byte);
 uint32_t pl011_write(const char* buffer, size_t size);
 void pl011_uart_putc_extra(unsigned char byte, unsigned int extra);
 uint32_t old_pl011_uart_init(void);
+extern int gpio_clk;
+
 
 void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 		uint32_t memory_kernel) {
@@ -122,6 +124,18 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 		serial_printk("\n\n\nUsing pl011-uart\n");
 	}
 
+	{
+//		unsigned int x;
+//		unsigned char *blah;
+//
+//		blah=(unsigned char *)0x14f000;
+//		for(x=0;x<256;x++) {
+//			if ((x&15)==0) printk("\n%x :",x);
+//			printk("%d ",*(blah+x));
+//		}
+
+	}
+
 //	pl011_uart_putc_extra('X',0xb00b135);
 //	pl011_uart_putc_extra('\n',0);
 //	pl011_write("W\n",2);
@@ -138,7 +152,9 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 
 //	emergency_blink();
 //	pl011_write("W\n",2);
-//	pl011_uart_putc_extra('X',0xb00b135);
+	pl011_uart_putc('@');
+	pl011_uart_putc_extra(gpio_clk,65);
+	pl011_uart_putc('\n');
 
 	/* Print boot message */
 	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");

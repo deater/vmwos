@@ -15,9 +15,10 @@ kernel7.img:	kernel7.elf
 
 kernel.elf:	kernel_main.o \
 	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
-	interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
+	interrupts.o memory.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-arm1176.a \
+	debug/debug.a \
 	drivers/drivers.a \
 	fs/fs.a \
 	syscalls/syscalls.a \
@@ -27,10 +28,11 @@ kernel.elf:	kernel_main.o \
 		idle_task.o \
 		arm1176-mmu.o arm1176-pmu.o \
 		syscalls.o \
-		interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
+		interrupts.o memory.o process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot-arm1176.a \
 		drivers/drivers.a \
+		debug/debug.a \
 		fs/fs.a \
 		syscalls/syscalls.a \
 		lib/lib.a \
@@ -38,9 +40,10 @@ kernel.elf:	kernel_main.o \
 
 kernel7.elf:	kernel_main.o \
 	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
-	interrupts.o memory.o panic.o process.o scheduler.o time.o wait.o \
+	interrupts.o memory.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-arm7.a \
+	debug/debug.a \
 	drivers/drivers.a \
 	fs/fs.a \
 	syscalls/syscalls.a \
@@ -49,11 +52,12 @@ kernel7.elf:	kernel_main.o \
 		kernel_main.o \
 		idle_task.o \
 		arm1176-mmu.o arm1176-pmu.o \
-		syscalls.o interrupts.o memory.o panic.o \
+		syscalls.o interrupts.o memory.o \
 		process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot-arm7.a \
 		drivers/drivers.a \
+		debug/debug.a \
 		fs/fs.a \
 		syscalls/syscalls.a \
 		lib/lib.a \
@@ -76,9 +80,6 @@ arm1176-mmu.o:	arm1176-mmu.c
 
 arm1176-pmu.o:	arm1176-pmu.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o arm1176-pmu.o -c arm1176-pmu.c
-
-panic.o:	panic.c panic.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o panic.o -c panic.c
 
 process.o:	process.c include/process.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o process.o -c process.c
@@ -112,6 +113,9 @@ boot/boot-arm1176.a:	force_look
 boot/boot-arm7.a:	force_look
 	cd boot && make
 
+debug/debug.a:	force_look
+	cd debug && make
+
 drivers/drivers.a:	force_look
 	cd drivers && make
 
@@ -135,6 +139,7 @@ kernel.dis:	kernel.elf
 clean:
 	rm -f *~ *.o *.map *.elf kernel.img *.dis date.h
 	cd boot && make clean
+	cd debug && make clean
 	cd drivers && make clean
 	cd fs && make clean
 	cd syscalls && make clean

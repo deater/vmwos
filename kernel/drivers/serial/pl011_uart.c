@@ -184,7 +184,7 @@ void pl011_uart_putc_extra(unsigned char byte,unsigned int extra) {
 	bcm2835_write(UART0_DR, byte+extra-extra);
 }
 
-#if 0
+#if 1
 
 int32_t pl011_write(const char* buffer, size_t size) {
 
@@ -201,10 +201,6 @@ int32_t pl011_write(const char* buffer, size_t size) {
 	}
 	return i;
 }
-
-
-
-
 
 uint32_t old_pl011_uart_init(void) {
 

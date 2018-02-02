@@ -22,7 +22,7 @@ static uint64_t gpio_reserved=0;
 
 
 /* Keeps track of all GPIOs so we don't double allocate */
-int gpio_request(int which_one, char *string) {
+int32_t gpio_request(uint32_t which_one, char *string) {
 
 	if (which_one>MAX_GPIO) {
 		printk("Invalid GPIO%d\n",which_one);
@@ -42,7 +42,7 @@ int gpio_request(int which_one, char *string) {
 }
 
 /* mark GPIO as being available */
-int gpio_free(int which_one) {
+int32_t gpio_free(uint32_t which_one) {
 
 	if (which_one>MAX_GPIO) {
 		printk("Invalid GPIO%d\n",which_one);

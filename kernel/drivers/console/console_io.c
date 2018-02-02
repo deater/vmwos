@@ -7,7 +7,7 @@
 #include "locks.h"
 
 #include "process.h"
-#include "../../panic.h"
+#include "debug/panic.h"
 #include "wait.h"
 
 #include "scheduler.h"
