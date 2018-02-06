@@ -1,6 +1,5 @@
 The VMWos -- an operating system by Vincent M. Weaver
 
-
 History:
 ~~~~~~~~
 	This project originated from code written for the
@@ -45,10 +44,7 @@ Required Hardware:
 	Currently VMWos runs on any Raspberry Pi 
 	Model A, B, B+ or A+.
 
-	It will not run on a Raspberry Pi 2 without some
-	changes to the OS (but it should be possible).
-
-	Running on a Pi 3 will be a lot harder.
+	I am currently working on Pi2/Pi3 support.
 
 	It will drive an HDMI screen, but has no support
 	for USB input.
@@ -84,6 +80,41 @@ For more information:
 	See http://www.deater.net/weave/vmwprod/vmwos
 
 
+Changes that break older Bare-metal 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	It is hard running a backward compatible bare-metal OS on 
+	Pi as things keep changing.
+
+	Some of this is mitigated if you parse the device tree
+	found on newer setups.
+
+	Hardware Changes:
+	=================
+	+ On 1GB systems the IO_BASE moved 
+		from 0x20000000 to 0x3f0000000
+	+ Processor architecture changed from ARMv6 to ARMv7 to ARMv8
+	+ On Pi3 the pl011 is hooked to bluetooth, so
+		mini-uart is the default
+	+ ACT LED:
+		Model B was GPIO16, Active Low
+		On 2/B+/A+ was GPIO47, Active High
+		On 3 it is on an i2c/GPIO expander controlled by GPU
+	+ TODO: The Framebuffer address moved on Pi3 (?)
+
+	Firmware Changes:
+	=================
+	+ Older firmware, the framebuffer byte order was GRB instead of RGB
+	+ Older firmware, the UART_CLOCK was 3MHz, it's 48MHz on newer
+	+ Older firmware, did ATAGS, newer use device-tree
+	+ Have issue on older-firmware loading kernel image >15MB
+		not sure if bug or not
+
+
+
+
+
+
 Vince Weaver
 vince@deater.net
-20 May 2016
+6 Febryary 2018
