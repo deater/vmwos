@@ -71,7 +71,7 @@ int gpio_direction_input(int which_one) {
 
 	/* GPFSEL0 = 9 - 0 */
 	addr_offset=(which_one/10)*4;
-	bit=(which_one%10)<<3;
+	bit=(which_one%10)*3;
 
 	/* 000 means input */
 
@@ -97,7 +97,7 @@ int gpio_direction_output(int which_one) {
 
 	/* GPFSEL0 = 9 - 0 */
 	addr_offset=(which_one/10)*4;
-	bit=(which_one%10)<<3;
+	bit=(which_one%10)*3;
 
 	/* 001 means output */
 
