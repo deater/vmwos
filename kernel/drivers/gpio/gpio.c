@@ -76,7 +76,7 @@ int gpio_direction_input(int which_one) {
 	/* 000 means input */
 
 	old=bcm2835_read(GPIO_GPFSEL0+addr_offset);
-	old &= ~bit;
+	old &= ~(7<<bit);
 	bcm2835_write(GPIO_GPFSEL0+addr_offset, old);
 
 	return 0;
@@ -102,7 +102,8 @@ int gpio_direction_output(int which_one) {
 	/* 001 means output */
 
 	old=bcm2835_read(GPIO_GPFSEL0+addr_offset);
-	old |= bit;
+	old &= ~(7<<bit);
+	old |= (1<<bit);
 	bcm2835_write(GPIO_GPFSEL0+addr_offset, old);
 
 	return 0;
@@ -161,10 +162,10 @@ int gpio_set_value(int which_one, int value) {
 	address_offset=(which_one/32)*4;
 
 	if (value==0) {
-		bcm2835_write(GPIO_GPSET0+address_offset,bit);
+		bcm2835_write(GPIO_GPCLR0+address_offset,bit);
 	}
 	else if (value==1) {
-		bcm2835_write(GPIO_GPCLR0+address_offset,bit);
+		bcm2835_write(GPIO_GPSET0+address_offset,bit);
 	}
 	else {
 		printk("Invalid GPIO value %d\n",value);
