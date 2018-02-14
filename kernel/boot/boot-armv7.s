@@ -133,7 +133,11 @@ done_pi2:
 
 	/* TODO: setup the other stacks?	*/
 
-	/* copy irq vector2 into place.  Preserve r0,r1,r2 */
+	/* copy irq vector into place.  Preserve r0,r1,r2 */
+	/* Note: irq vector defaults to 0x000000 but this is */
+	/*       configurable on the Pi2/Pi3                 */
+	/* TODO: should we make sure the various bits are set right? */
+
 	ldr	r3, =_start
 	mov     r4, #0x0000
 	/* Quick way to copy 256 bytes of memory */
