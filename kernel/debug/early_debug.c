@@ -95,3 +95,40 @@ int32_t early_debug_write(const char* buffer, size_t size) {
 	return i;
 }
 
+
+static void early_debug_put_hex_char(unsigned char x) {
+
+	unsigned char temp;
+
+	temp=((x>>4)&0xf);
+	if (temp<10) temp+='0';
+	else temp+=('A'-10);
+	early_debug_putc(temp);
+
+	temp=(x&0xf);
+	if (temp<10) temp+='0';
+	else temp+=('A'-10);
+	early_debug_putc(temp);
+
+}
+
+void early_debug_dump_memory(uint32_t address, uint32_t size) {
+
+	unsigned char *ptr;
+	int i;
+
+	ptr=(unsigned char *)address;
+
+	for(i=0;i<size;i++) {
+		if ((i&0xf)==0) {
+			early_debug_putc('\r');
+			early_debug_putc('\n');
+		}
+		early_debug_put_hex_char(*ptr);
+		ptr++;
+		early_debug_putc(' ');
+
+	}
+
+}
+

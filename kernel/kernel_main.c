@@ -38,6 +38,7 @@
 #include "drivers/random/bcm2835_rng.h"
 #include "syscalls/exec.h"
 #include "debug/panic.h"
+#include "debug/early_debug.h"
 #include "errors.h"
 
 /* Initrd hack */
@@ -89,6 +90,9 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 	int32_t result,atags_found=0,device_tree_found=0;
 
 	(void) r0;	/* Ignore boot method */
+
+	early_debug_init();
+	early_debug_dump_memory(0x14d764,4096);
 
 	/* Initialize Software Structures */
 
