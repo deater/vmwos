@@ -3,10 +3,10 @@ include ../Makefile_kernel.inc
 
 INCLUDE = -I../include
 
-all:	boot-arm7.a boot-arm1176.a
+all:	boot-armv7.a boot-arm1176.a
 
-boot-arm7.a:	atags.o boot-arm7.o device_tree.o
-	$(CROSS)$(AR) crs boot-arm7.a atags.o boot-arm7.o device_tree.o
+boot-armv7.a:	atags.o boot-armv7.o device_tree.o
+	$(CROSS)$(AR) crs boot-armv7.a atags.o boot-armv7.o device_tree.o
 
 boot-arm1176.a:	atags.o boot-arm1176.o device_tree.o
 	$(CROSS)$(AR) crs boot-arm1176.a atags.o boot-arm1176.o device_tree.o
@@ -14,8 +14,8 @@ boot-arm1176.a:	atags.o boot-arm1176.o device_tree.o
 atags.o:	atags.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o atags.o -c atags.c
 
-boot-arm7.o:	boot-arm7.s
-	$(CROSS)as $(ASFLAGS) $(INCLUDE) -o boot-arm7.o boot-arm7.s
+boot-armv7.o:	boot-armv7.s
+	$(CROSS)as $(ASFLAGS_ARMV7) $(INCLUDE) -o boot-armv7.o boot-armv7.s
 
 boot-arm1176.o:	boot-arm1176.s
 	$(CROSS)as $(ASFLAGS) $(INCLUDE) -o boot-arm1176.o boot-arm1176.s
@@ -25,6 +25,3 @@ device_tree.o:	device_tree.c
 
 clean:
 	rm -f *~ *.o *.a
-
-
-
