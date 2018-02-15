@@ -24,6 +24,8 @@ static int pl011_uart_initialized=0;
 
 uint32_t pl011_uart_init(struct serial_type *serial) {
 
+	uint32_t old;
+
 	/* Make this configurable? */
 	serial->baud=115200;
 	serial->bits=8;
@@ -43,6 +45,17 @@ uint32_t pl011_uart_init(struct serial_type *serial) {
 	/* Setup GPIO pins 14 and 15 */
 	gpio_request(14,"uart_tx");
 	gpio_request(15,"uart_rx");
+
+	/* Set GPIO14 and GPIO15 to be pl011 TX, so ALT0        */
+	/* ALT0 is binary 100 (0x4)                             */
+	old=bcm2835_read(GPIO_GPFSEL1);
+	old &= ~(0x7 << 12);
+	old |= (4<<12);
+
+	old &= ~(0x7 << 15);
+	old |= (4<<15);
+	bcm2835_write(GPIO_GPFSEL1,old);
+
 
 	/* Disable the pull up/down on pins 14 and 15 */
 	/* See the Peripheral Manual for more info */
@@ -68,8 +81,16 @@ uint32_t pl011_uart_init(struct serial_type *serial) {
 	/* Divider = 3000000 / (16 * 115200) = 1.627   */
 	/* Integer part = 1 */
 	/* Fractional part register = (.627 * 64) + 0.5 = 40.6 = 40 */
-	bcm2835_write(UART0_IBRD, 1);
-	bcm2835_write(UART0_FBRD, 40);
+//	bcm2835_write(UART0_IBRD, 1);
+//	bcm2835_write(UART0_FBRD, 40);
+
+	/* On Pi3 (and all other Pis with recent firmware) */
+	/* UART clock is now 48MHz */
+
+	bcm2835_write(UART0_IBRD, 26);
+	bcm2835_write(UART0_FBRD, 3);
+
+
 
 	/* Enable FIFO */
 	/* Set 8N1 (8 bits of data, no parity, 1 stop bit */
