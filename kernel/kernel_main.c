@@ -91,36 +91,38 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 
 	(void) r0;	/* Ignore boot method */
 
-	early_debug_init();
-	early_debug_dump_memory(0x14d764,4096);
+	/* Set up proper IO_BASE for bcm2835 accesses */
+	bcm2835_init(hardware_type);
+
+//	early_debug_init();
+//	early_debug_dump_memory(0x14d764,4096);
 
 	/* Initialize Software Structures */
 
 	/* Detect Hardware */
 
-	result=devicetree_decode((uint32_t *)r2);
+//	result=devicetree_decode((uint32_t *)r2);
 
-	if (result==0) {
-		device_tree_found=1;
-	} else {
-		/* Atags is being deprecated on new Pis */
-		atags_detect((uint32_t *)r2,&atag_info);
-		atags_found=1;
-		hardware_type=atag_info.hardware_type;
-	}
+//	if (result==0) {
+//		device_tree_found=1;
+//	} else {
+//		/* Atags is being deprecated on new Pis */
+//		atags_detect((uint32_t *)r2,&atag_info);
+//		atags_found=1;
+//		hardware_type=atag_info.hardware_type;
+//	}
 
 //	if (hardware_type==RPI_MODEL_3B) {
-//		emergency_blink();
+		emergency_blink();
 //	}
 
 	/* Initialize Hardware */
 
-	/* Set up proper IO_BASE for bcm2835 accesses */
-	bcm2835_init(hardware_type);
+
 
 	/* Serial console is most important so do that first */
 	if (hardware_type==RPI_MODEL_3B) {
-		serial_init(SERIAL_UART_MINI);
+		serial_init(SERIAL_UART_PL011);
 		printk("\n\n\nUsing mini-uart\n");
 	}
 	else {
