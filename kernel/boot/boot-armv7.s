@@ -35,7 +35,7 @@
 /* r0 = boot method (usually 0 on pi)       		   */
 /* r1 = hardware type (usually 0xc42 on pi) 		   */
 /* r2 = points to device tree file			   */
-/*      on older firmware points to ATAGS (usually 0x100)  */
+/*	on older firmware points to ATAGS (usually 0x100)  */
 
 _start:
 
@@ -78,7 +78,7 @@ reset:
 					/* In theory recent firmware already */
 					/* Did this for us */
 
-	cpsid   if			/* Disable IRQ/FIR interrupts */
+	cpsid	if			/* Disable IRQ/FIR interrupts */
 					/* The cpsid instruction is a */
 					/* shortcut to setting those  */
 					/* bits in the CPSR */
@@ -100,11 +100,11 @@ reset:
 					/* If we try to include with above */
 	orr	r3, #CPSR_MODE_ABORT_DISABLE
 
-        adr	lr, done_pi2		/* load address we want to return to */
-        msr	spsr_cxsf, r3		/* update spsr, cxsf = everything */
-        msr	ELR_hyp, lr		/* Special return address when in */
+	adr	lr, done_pi2		/* load address we want to return to */
+	msr	spsr_cxsf, r3		/* update spsr, cxsf = everything */
+	msr	ELR_hyp, lr		/* Special return address when in */
 					/* hypervisor mode */
-        eret				/* Special return-from hypervisor */
+	eret				/* Special return-from hypervisor */
 					/* instruction */
 done_hyp:
 					/* Make sure we are in SVC mode */
@@ -113,8 +113,6 @@ done_hyp:
 done_pi2:
 
 /* End Pi2/Pi3 only!!! */
-
-
 
 	/* Set up the Supervisor Mode Stack	*/
 	/* Put it right before the entry point	*/
@@ -139,12 +137,12 @@ done_pi2:
 	/* TODO: should we make sure the various bits are set right? */
 
 	ldr	r3, =_start
-	mov     r4, #0x0000
+	mov	r4, #0x0000
 	/* Quick way to copy 256 bytes of memory */
-	ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
-	stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
-	ldmia   r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
-	stmia   r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	ldmia	r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	stmia	r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	ldmia	r3!,{r5, r6, r7, r8, r9, r10, r11, r12}
+	stmia	r4!,{r5, r6, r7, r8, r9, r10, r11, r12}
 
 
 	/* clear the bss section */
