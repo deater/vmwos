@@ -74,7 +74,7 @@ int32_t devicetree_decode(uint32_t *dt_ptr) {
 
 
 void devicetree_dump(void) {
-#if 0
+
 	if (!device_tree.valid) return;
 
 	printk("Device tree:\n");
@@ -91,5 +91,5 @@ void devicetree_dump(void) {
 	if (device_tree.version>=3) {
 		printk("\tSizeStrs: %d\n",device_tree.size_strs);
 	}
-#endif
+
 }

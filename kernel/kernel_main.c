@@ -106,29 +106,30 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 //	if (result==0) {
 //		device_tree_found=1;
 //	} else {
-//		/* Atags is being deprecated on new Pis */
+		/* Atags is being deprecated on new Pis */
 //		atags_detect((uint32_t *)r2,&atag_info);
 //		atags_found=1;
 //		hardware_type=atag_info.hardware_type;
 //	}
 
 //	if (hardware_type==RPI_MODEL_3B) {
-		emergency_blink();
+//		emergency_blink();
 //	}
 
 	/* Initialize Hardware */
 
-
-
 	/* Serial console is most important so do that first */
-	if (hardware_type==RPI_MODEL_3B) {
-		serial_init(SERIAL_UART_PL011);
-		printk("\n\n\nUsing mini-uart\n");
-	}
-	else {
+//	if (hardware_type==RPI_MODEL_3B) {
+//		serial_init(SERIAL_UART_PL011);
+//		printk("\n\n\nUsing mini-uart\n");
+//	}
+//	else {
 		serial_init(SERIAL_UART_PL011);
 		serial_printk("\n\n\nUsing pl011-uart\n");
-	}
+//	}
+
+//		emergency_blink();
+
 
 	{
 //		unsigned int x;
@@ -156,7 +157,7 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 		r0,r1,r2);
 	printk("\nBooting VMWos...\n");
 
-//	emergency_blink();
+	emergency_blink();
 //	pl011_write("W\n",2);
 	pl011_uart_putc('@');
 	pl011_uart_putc_extra(gpio_clk,65);
