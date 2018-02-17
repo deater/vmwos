@@ -35,6 +35,7 @@ int timer_init(void) {
 	/* Disable the clock before changing config */
 	old=bcm2835_read(TIMER_CONTROL);
 	old&=~(TIMER_CONTROL_ENABLE|TIMER_CONTROL_INT_ENABLE);
+	bcm2835_write(TIMER_CONTROL,old);
 
 	/* The value is loaded into TIMER_LOAD and then it counts down */
 	/* and interrupts once it hits zero. */
