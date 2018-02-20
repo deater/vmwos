@@ -37,11 +37,6 @@ int timer_init(void) {
 	old&=~(TIMER_CONTROL_ENABLE|TIMER_CONTROL_INT_ENABLE);
 	bcm2835_write(TIMER_CONTROL,old);
 
-	/* The value is loaded into TIMER_LOAD and then it counts down */
-	/* and interrupts once it hits zero. */
-	/* Then this value is automatically reloaded and restarted */
-
-
 	/* Timer is based on the APB bus clock which is 250MHz on Rasp-Pi */
 
 	/* First we scale this down to 1MHz using the pre-divider */
@@ -50,6 +45,10 @@ int timer_init(void) {
 
 	/* We enable the /256 prescalar */
 	/* So final frequency = 1MHz/256/61 = 64.04 Hz */
+
+	/* The value is loaded into TIMER_LOAD and then it counts down */
+	/* and interrupts once it hits zero. */
+	/* Then this value is automatically reloaded and restarted */
 
 	bcm2835_write(TIMER_LOAD,61);
 
