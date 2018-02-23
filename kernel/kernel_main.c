@@ -157,12 +157,6 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 		r0,r1,r2);
 	printk("\nBooting VMWos...\n");
 
-	emergency_blink();
-//	pl011_write("W\n",2);
-	pl011_uart_putc('@');
-	pl011_uart_putc_extra(gpio_clk,65);
-	pl011_uart_putc('\n');
-
 	/* Print boot message */
 	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
 	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version %s\n\n",VERSION);
@@ -189,9 +183,11 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 
 	/* Print ATAGS */
 	if (atags_found) {
+		printk("ATAGS values:\n");
 		atags_dump((uint32_t *)r2);
 	}
 	if (device_tree_found) {
+		printk("Device Tree values:\n");
 		devicetree_dump();
 	}
 
@@ -207,6 +203,7 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 	/* Set up timer */
 	timer_init();
 
+#if 0
 	/* Set up keyboard */
 	ps2_keyboard_init();
 
@@ -220,6 +217,7 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 
 	framebuffer_init(framebuffer_width,framebuffer_height,24);
 	framebuffer_console_init();
+#endif
 
 #if 0
 	/* Delay to allow time for serial port to settle */
@@ -245,15 +243,21 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 	bcm2835_rng_init();
 
 	/* Check temperature */
+#if 0
+	/* FIXME: not working on Pi3?  Mailbox change? */
+
 	temperature=thermal_read();
 	printk("CPU Temperature: %dC, %dF\n",
 		temperature/1000,
 		((temperature*9)/5000)+32);
-
-
+#endif
 
 	/* Get amount of RAM from ATAGs */
-	memory_total=atag_info.ramsize;
+	/* FIXME: pi3 detect this properly */
+
+	memory_total=256*1024*1024;
+
+//	memory_total=atag_info.ramsize;
 
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
@@ -262,6 +266,9 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 
 	if ((hardware_type==RPI_MODEL_2B) || (hardware_type==RPI_MODEL_3B)) {
 
+		/* Enable L1 d-cache */
+		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
+		enable_mmu(0,memory_total,memory_kernel);
 	}
 	else {
 
