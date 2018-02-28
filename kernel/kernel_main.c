@@ -15,7 +15,6 @@
 #include "drivers/timer/timer.h"
 #include "interrupts.h"
 #include "drivers/bcm2835/bcm2835_io.h"
-#include "mmio.h"
 #include "memory.h"
 #include "syscalls.h"
 #include "hardware.h"
@@ -222,14 +221,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	bcm2835_rng_init();
 
 	/* Check temperature */
-#if 0
-	/* FIXME: not working on Pi3?  Mailbox change? */
-
 	temperature=thermal_read();
 	printk("CPU Temperature: %dC, %dF\n",
 		temperature/1000,
 		((temperature*9)/5000)+32);
-#endif
 
 	/* Get amount of RAM from ATAGs */
 	/* FIXME: pi3 detect this properly */
