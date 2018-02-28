@@ -68,7 +68,7 @@ int32_t devicetree_decode(uint32_t *dt_ptr) {
 		device_tree.size_strs=big_to_little(dt[8]);
 	}
 
-	return -ENODEV;
+	return 0;
 
 }
 

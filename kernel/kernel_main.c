@@ -80,7 +80,7 @@ uint32_t old_pl011_uart_init(void);
 extern int gpio_clk;
 
 
-void kernel_main(uint32_t r0, uint32_t r1, void *r2,
+void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		uint32_t memory_kernel) {
 
 	struct process_control_block_type *init_process,*idle_process;
@@ -101,16 +101,16 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 
 	/* Detect Hardware */
 
-//	result=devicetree_decode((uint32_t *)r2);
+	result=devicetree_decode((uint32_t *)r2);
 
-//	if (result==0) {
-//		device_tree_found=1;
-//	} else {
+	if (result==0) {
+		device_tree_found=1;
+	} else {
 		/* Atags is being deprecated on new Pis */
-//		atags_detect((uint32_t *)r2,&atag_info);
-//		atags_found=1;
-//		hardware_type=atag_info.hardware_type;
-//	}
+		atags_detect((uint32_t *)r2,&atag_info);
+		atags_found=1;
+		hardware_type=atag_info.hardware_type;
+	}
 
 //	if (hardware_type==RPI_MODEL_3B) {
 //		emergency_blink();
@@ -130,24 +130,6 @@ void kernel_main(uint32_t r0, uint32_t r1, void *r2,
 
 //		emergency_blink();
 
-
-	{
-//		unsigned int x;
-//		unsigned char *blah;
-//
-//		blah=(unsigned char *)0x14f000;
-//		for(x=0;x<256;x++) {
-//			if ((x&15)==0) printk("\n%x :",x);
-//			printk("%d ",*(blah+x));
-//		}
-
-	}
-
-//	pl011_uart_putc_extra('X',0xb00b135);
-//	pl011_uart_putc_extra('\n',0);
-//	pl011_write("W\n",2);
-//	pl011_uart_putc('V');
-//	pl011_uart_putc('\n');
 
 	/************************/
 	/* Boot message!	*/
