@@ -5,7 +5,7 @@ LINKER_SCRIPT = kernel.ld
 
 INCLUDE = -I./include
 
-all:	kernel7.img kernel.img kernel.dis
+all:	kernel7.img kernel.img kernel7.dis kernel.dis
 
 kernel.img:	kernel.elf
 	$(CROSS)objcopy kernel.elf -O binary kernel.img
@@ -132,6 +132,9 @@ lib/lib.a:	force_look
 
 force_look:
 		true
+
+kernel7.dis:	kernel7.elf
+	$(CROSS)objdump --disassemble-all kernel7.elf > kernel7.dis
 
 kernel.dis:	kernel.elf
 	$(CROSS)objdump --disassemble-all kernel.elf > kernel.dis
