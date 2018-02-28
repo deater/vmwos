@@ -9,12 +9,13 @@
 
 int vsprintf(char *buffer, char *string, va_list ap) {
 
-	char int_buffer[10];
+	char int_buffer[18];
 	int int_pointer=0;
 
 	int buffer_pointer=0;
 	int i;
 	unsigned long x;
+	uint64_t lx;
 
 	while(1) {
 		if (*string==0) break;
@@ -44,6 +45,32 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 				}
 
 			}
+			else if (*string=='l') {
+				string++;
+				if (*string!='l'); // FIXME: indicate error
+				string++;
+				if (*string!='x'); // FIXME: indicate error
+				string++;
+
+				lx=va_arg(ap, uint64_t);
+				int_pointer=17;
+				do {
+					if ((lx%16)<10) {
+						int_buffer[int_pointer]=(lx%16)+'0';
+					}
+					else {
+						int_buffer[int_pointer]=(lx%16)-10+'a';
+					}
+					int_pointer--;
+					lx/=16;
+				} while(lx!=0);
+				for(i=int_pointer+1;i<18;i++) {
+					buffer[buffer_pointer]=int_buffer[i];
+					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE) break;
+				}
+			}
+
 			else if (*string=='x') {
 				string++;
 				x=va_arg(ap, unsigned long);
