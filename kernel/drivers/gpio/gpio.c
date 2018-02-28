@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include "drivers/gpio/gpio.h"
 #include "lib/printk.h"
-//#include "mmio.h"
+
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
 

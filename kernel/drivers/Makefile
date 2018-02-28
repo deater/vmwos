@@ -1,71 +1,144 @@
 include ../../Makefile.inc
 include ../Makefile_kernel.inc
 
-all:	drivers.a
+all:	drivers.arm1176.a drivers.armv7.a
 
-drivers.a:	\
-		bcm2835/bcm2835.a \
-		block/block.a \
-		console/console.a \
-		firmware/firmware.a \
-		framebuffer/framebuffer.a \
-		gpio/gpio.a \
-		keyboard/keyboard.a \
-		led/led.a \
-		random/random.a \
-		serial/serial.a \
-		thermal/thermal.a \
-		timer/timer.a
+#### ARM1176
 
-	$(CROSS)$(AR) crsT drivers.a \
-		bcm2835/bcm2835.a \
-		block/block.a \
-		console/console.a \
-		firmware/firmware.a \
-		framebuffer/framebuffer.a \
-		gpio/gpio.a \
-		keyboard/keyboard.a \
-		led/led.a \
-		random/random.a \
-		serial/serial.a \
-		thermal/thermal.a \
-		timer/timer.a
+drivers.arm1176.a:	\
+		bcm2835/bcm2835.arm1176.a \
+		block/block.arm1176.a \
+		console/console.arm1176.a \
+		firmware/firmware.arm1176.a \
+		framebuffer/framebuffer.arm1176.a \
+		gpio/gpio.arm1176.a \
+		keyboard/keyboard.arm1176.a \
+		led/led.arm1176.a \
+		random/random.arm1176.a \
+		serial/serial.arm1176.a \
+		thermal/thermal.arm1176.a \
+		timer/timer.arm1176.a
 
-bcm2835/bcm2835.a:	force_look
+	$(CROSS)$(AR) crsT drivers.arm1176.a \
+		bcm2835/bcm2835.arm1176.a \
+		block/block.arm1176.a \
+		console/console.arm1176.a \
+		firmware/firmware.arm1176.a \
+		framebuffer/framebuffer.arm1176.a \
+		gpio/gpio.arm1176.a \
+		keyboard/keyboard.arm1176.a \
+		led/led.arm1176.a \
+		random/random.arm1176.a \
+		serial/serial.arm1176.a \
+		thermal/thermal.arm1176.a \
+		timer/timer.arm1176.a
+
+
+bcm2835/bcm2835.arm1176.a:	force_look
 	cd bcm2835 && make
 
-block/block.a:	force_look
+block/block.arm1176.a:	force_look
 	cd block && make
 
-console/console.a:	force_look
+console/console.arm1176.a:	force_look
 	cd console && make
 
-firmware/firmware.a:	force_look
+firmware/firmware.arm1176.a:	force_look
 	cd firmware && make
 
-framebuffer/framebuffer.a:	force_look
+framebuffer/framebuffer.arm1176.a:	force_look
 	cd framebuffer && make
 
-gpio/gpio.a:	force_look
+gpio/gpio.arm1176.a:	force_look
 	cd gpio && make
 
-keyboard/keyboard.a:	force_look
+keyboard/keyboard.arm1176.a:	force_look
 	cd keyboard && make
 
-led/led.a:	force_look
+led/led.arm1176.a:	force_look
 	cd led && make
 
-random/random.a:	force_look
+random/random.arm1176.a:	force_look
 	cd random && make
 
-serial/serial.a:	force_look
+serial/serial.arm1176.a:	force_look
 	cd serial && make
 
-thermal/thermal.a:	force_look
+thermal/thermal.arm1176.a:	force_look
 	cd thermal && make
 
-timer/timer.a:	force_look
+timer/timer.arm1176.a:	force_look
 	cd timer && make
+
+
+#### ARMV7
+
+drivers.armv7.a:	\
+		bcm2835/bcm2835.armv7.a \
+		block/block.armv7.a \
+		console/console.armv7.a \
+		firmware/firmware.armv7.a \
+		framebuffer/framebuffer.armv7.a \
+		gpio/gpio.armv7.a \
+		keyboard/keyboard.armv7.a \
+		led/led.armv7.a \
+		random/random.armv7.a \
+		serial/serial.armv7.a \
+		thermal/thermal.armv7.a \
+		timer/timer.armv7.a
+
+	$(CROSS)$(AR) crsT drivers.armv7.a \
+		bcm2835/bcm2835.armv7.a \
+		block/block.armv7.a \
+		console/console.armv7.a \
+		firmware/firmware.armv7.a \
+		framebuffer/framebuffer.armv7.a \
+		gpio/gpio.armv7.a \
+		keyboard/keyboard.armv7.a \
+		led/led.armv7.a \
+		random/random.armv7.a \
+		serial/serial.armv7.a \
+		thermal/thermal.armv7.a \
+		timer/timer.armv7.a
+
+
+bcm2835/bcm2835.armv7.a:	force_look
+	cd bcm2835 && make
+
+block/block.armv7.a:	force_look
+	cd block && make
+
+console/console.armv7.a:	force_look
+	cd console && make
+
+firmware/firmware.armv7.a:	force_look
+	cd firmware && make
+
+framebuffer/framebuffer.armv7.a:	force_look
+	cd framebuffer && make
+
+gpio/gpio.armv7.a:	force_look
+	cd gpio && make
+
+keyboard/keyboard.armv7.a:	force_look
+	cd keyboard && make
+
+led/led.armv7.a:	force_look
+	cd led && make
+
+random/random.armv7.a:	force_look
+	cd random && make
+
+serial/serial.armv7.a:	force_look
+	cd serial && make
+
+thermal/thermal.armv7.a:	force_look
+	cd thermal && make
+
+timer/timer.armv7.a:	force_look
+	cd timer && make
+
+###
 
 force_look:
 	true

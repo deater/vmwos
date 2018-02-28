@@ -3,16 +3,31 @@ include ../../Makefile_kernel.inc
 
 INCLUDE = -I../../include
 
-all:	framebuffer.a
+all:	framebuffer.arm1176.a framebuffer.armv7.a
 
-framebuffer.a:	framebuffer.o framebuffer_console.o
-	$(CROSS)$(AR) crs framebuffer.a framebuffer.o framebuffer_console.o
+#### ARM1176
 
-framebuffer.o:	framebuffer.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o framebuffer.o -c framebuffer.c
+framebuffer.arm1176.a:	framebuffer.arm1176.o framebuffer_console.arm1176.o
+	$(CROSS)$(AR) crs framebuffer.arm1176.a framebuffer.arm1176.o framebuffer_console.arm1176.o
 
-framebuffer_console.o:	framebuffer_console.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o framebuffer_console.o -c framebuffer_console.c
+framebuffer.arm1176.o:	framebuffer.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o framebuffer.arm1176.o -c framebuffer.c
+
+framebuffer_console.arm1176.o:	framebuffer_console.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o framebuffer_console.arm1176.o -c framebuffer_console.c
+
+#### ARMV7
+
+framebuffer.armv7.a:	framebuffer.armv7.o framebuffer_console.armv7.o
+	$(CROSS)$(AR) crs framebuffer.armv7.a framebuffer.armv7.o framebuffer_console.armv7.o
+
+framebuffer.armv7.o:	framebuffer.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o framebuffer.armv7.o -c framebuffer.c
+
+framebuffer_console.armv7.o:	framebuffer_console.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o framebuffer_console.armv7.o -c framebuffer_console.c
+
+####
 
 clean:
 	rm -f *~ *.o *.a

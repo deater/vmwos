@@ -19,7 +19,7 @@ kernel.elf:	kernel_main.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-arm1176.a \
 	debug/debug.a \
-	drivers/drivers.a \
+	drivers/drivers.arm1176.a \
 	fs/fs.a \
 	syscalls/syscalls.a \
 	lib/lib.a
@@ -31,7 +31,7 @@ kernel.elf:	kernel_main.o \
 		interrupts.o memory.o process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot-arm1176.a \
-		drivers/drivers.a \
+		drivers/drivers.arm1176.a \
 		debug/debug.a \
 		fs/fs.a \
 		syscalls/syscalls.a \
@@ -44,7 +44,7 @@ kernel7.elf:	kernel_main.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-armv7.a \
 	debug/debug.a \
-	drivers/drivers.a \
+	drivers/drivers.armv7.a \
 	fs/fs.a \
 	syscalls/syscalls.a \
 	lib/lib.a
@@ -56,7 +56,7 @@ kernel7.elf:	kernel_main.o \
 		process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot-armv7.a \
-		drivers/drivers.a \
+		drivers/drivers.armv7.a \
 		debug/debug.a \
 		fs/fs.a \
 		syscalls/syscalls.a \
@@ -106,18 +106,30 @@ locks.o:	locks.s
 	$(CROSS)as $(ASFLAGS) -o locks.o locks.s
 
 
+### ARM1176
 
 boot/boot-arm1176.a:	force_look
 	cd boot && make
 
+drivers/drivers.arm1176.a:	force_look
+	cd drivers && make
+
+### ARMV7
+
 boot/boot-armv7.a:	force_look
 	cd boot && make
+
+drivers/drivers.armv7.a:	force_look
+	cd drivers && make
+
+###
+
+
 
 debug/debug.a:	force_look
 	cd debug && make
 
-drivers/drivers.a:	force_look
-	cd drivers && make
+
 
 fs/fs.a:	force_look
 	cd fs && make

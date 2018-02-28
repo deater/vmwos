@@ -91,9 +91,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	(void) r0;	/* Ignore boot method */
 
-	/* Set up proper IO_BASE for bcm2835 accesses */
-	bcm2835_init(hardware_type);
-
 //	early_debug_init();
 //	early_debug_dump_memory(0x14d764,4096);
 

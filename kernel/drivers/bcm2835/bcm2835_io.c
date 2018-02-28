@@ -3,23 +3,18 @@
 #include "mmio.h"
 #include "hardware.h"
 
-static uint32_t io_base=0x20000000;
-
-//#define	io_base		0x20000000
-
-void bcm2835_init(int type) {
-
-	if ((type==RPI_MODEL_3B) || (type==RPI_MODEL_2B)) {
-		io_base=0x3f000000;
-	}
-
-	return;
-}
+#if defined(ARMV7)
+#define			IO_BASE		0x3f000000
+#elif defined(ARM1176)
+#define			IO_BASE		0x20000000
+#else
+#error "UNKNOWN ARCHITECTURE"
+#endif
 
 void bcm2835_write(uint32_t address, uint32_t data) {
-	mmio_write(io_base+address, data);
+	mmio_write(IO_BASE+address, data);
 }
 
 uint32_t bcm2835_read(uint32_t address) {
-	return mmio_read(io_base+address);
+	return mmio_read(IO_BASE+address);
 }

@@ -3,14 +3,25 @@ include ../../Makefile_kernel.inc
 
 INCLUDE = -I../../include
 
-all:	block.a
+all:	block.arm1176.a block.armv7.a
 
-block.a:	ramdisk.o
-	$(CROSS)$(AR) crus block.a ramdisk.o
-	$(CROSS)$(RANLIB) block.a
+### ARM1176
 
-ramdisk.o:	ramdisk.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o ramdisk.o -c ramdisk.c
+block.arm1176.a:	ramdisk.arm1176.o
+	$(CROSS)$(AR) crus block.arm1176.a ramdisk.arm1176.o
+	$(CROSS)$(RANLIB) block.arm1176.a
+
+ramdisk.arm1176.o:	ramdisk.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o ramdisk.arm1176.o -c ramdisk.c
+
+### ARMV7
+
+block.armv7.a:	ramdisk.armv7.o
+	$(CROSS)$(AR) crus block.armv7.a ramdisk.armv7.o
+	$(CROSS)$(RANLIB) block.armv7.a
+
+ramdisk.armv7.o:	ramdisk.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o ramdisk.armv7.o -c ramdisk.c
 
 clean:
 	rm -f *~ *.o *.a
