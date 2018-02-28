@@ -10,7 +10,7 @@
 #define MAIL_FULL	0x80000000
 #define MAIL_EMPTY	0x40000000
 
-#define MAILBOX_BASE	0x2000b880
+#define MAILBOX_BASE	0xb880
 #define MAILBOX_READ	(MAILBOX_BASE+0x00) /* 0x2000b880 4 Read Receiving mail. R */
 #define MAILBOX_POLL	(MAILBOX_BASE+0x10) /* 0x2000b890 4 Poll Receive without retrieving. 	R */
 #define MAILBOX_SENDER	(MAILBOX_BASE+0x14) /* 0x2000b894 4 Sender Sender information. 	R */

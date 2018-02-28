@@ -6,8 +6,7 @@
 #include <stdint.h>
 
 #include "lib/printk.h"
-#include "mmio.h"
-
+#include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/firmware/mailbox.h"
 
 int mailbox_write(unsigned int value, unsigned int channel) {
@@ -31,12 +30,12 @@ int mailbox_write(unsigned int value, unsigned int channel) {
 
 	/* Wait until mailbox is ready */
 
-	while( (mmio_read(MAILBOX1_STATUS) & MAIL_FULL) ) {
+	while( (bcm2835_read(MAILBOX1_STATUS) & MAIL_FULL) ) {
 		printk("Write mailbox full!\n");
 	}
 
 	/* write the command */
-	mmio_write(MAILBOX_WRITE,channel|value);
+	bcm2835_write(MAILBOX_WRITE,channel|value);
 
 	return 0;
 }
@@ -57,11 +56,11 @@ int mailbox_read(unsigned int channel) {
 
 	/* Wait until mailbox has something there */
 
-	while((mmio_read(MAILBOX0_STATUS) & MAIL_EMPTY) ) {
+	while((bcm2835_read(MAILBOX0_STATUS) & MAIL_EMPTY) ) {
 		printk("mailbox_read: mail_empty\n");
 	}
 
-	mail=mmio_read(MAILBOX_READ);
+	mail=bcm2835_read(MAILBOX_READ);
 
 	/* Got mail from the wrong channel!*/
 	/* FIXME: Should we try again? */

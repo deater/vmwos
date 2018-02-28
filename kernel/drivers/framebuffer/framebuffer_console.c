@@ -2,7 +2,6 @@
 #include <stdint.h>
 
 #include "lib/printk.h"
-#include "mmio.h"
 
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"

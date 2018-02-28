@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include "lib/printk.h"
-#include "mmio.h"
 
 #include "drivers/firmware/mailbox.h"
 
