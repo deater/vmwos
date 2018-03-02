@@ -166,7 +166,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	}
 	if (device_tree_found) {
 		printk("Device Tree values:\n");
-		devicetree_dump();
+		//devicetree_dump();
+		devicetree_raw_dump((uint32_t *)r2);
 	}
 
 	printk("\n");

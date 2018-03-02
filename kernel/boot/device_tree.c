@@ -12,6 +12,8 @@
 #include "hardware.h"
 #include "lib/string.h"
 #include "lib/memset.h"
+#include "lib/memcpy.h"
+
 #include "errors.h"
 
 #include "lib/printk.h"
@@ -100,6 +102,65 @@ int32_t devicetree_decode(uint32_t *dt_ptr) {
 
 }
 
+uint32_t dt_parse_prop(uint32_t *tree, int *i) {
+
+	uint32_t temp;
+	char string[5];
+
+	string[4]=0;
+
+	temp=big_to_little(tree[*i]);
+	printk("\tstring addr: %x\n",temp);
+	(*i)++;
+
+	temp=big_to_little(tree[*i]);
+	printk("\tLength: %x\n",temp);
+	(*i)++;
+
+	printk("\t");
+	while(1) {
+		temp=tree[*i];
+		(*i)++;
+		memcpy(string,&temp,4);
+		printk("%d %d %d %d\n",string[0],string[1],string[2],string[3]);
+		if (string[3]==0) break;
+	}
+
+	return 0;
+}
+
+uint32_t dt_parse_node(uint32_t *tree, int *i) {
+
+	uint32_t temp;
+
+	if (big_to_little(tree[*i])!=OF_DT_BEGIN_NODE) {
+		printk("Expected OF_DT_BEGIN_NODE, got %x\n",tree[*i]);
+		(*i)++;
+		return -1;
+	}
+	(*i)++;
+
+	temp=big_to_little(tree[*i]);
+	printk("Node name: %x\n",temp);
+	(*i)++;
+
+	while(1) {
+
+		if (big_to_little(tree[*i])==OF_DT_PROP) {
+			(*i)++;
+			dt_parse_prop(tree,i);
+		}
+		else if (big_to_little(tree[*i])==OF_DT_END_NODE) {
+			(*i)++;
+			break;
+		} else {
+			printk("UNEXPECTED %x\n",big_to_little(tree[*i]));
+			(*i)++;
+		}
+	}
+	return 0;
+}
+
 
 void devicetree_dump(void) {
 
@@ -143,11 +204,7 @@ void devicetree_dump(void) {
 	i=0;
 
 	while(1) {
-		if (big_to_little(tree[i])!=OF_DT_BEGIN_NODE) {
-			printk("Expected OF_DT_BEGIN_NODE, got %x\n",tree[i]);
-			return;
-		}
-		i++;
+		dt_parse_node(tree,&i);
 
 		/* See if at end */
 		if (big_to_little(tree[i])==OF_DT_END) break;
@@ -157,3 +214,41 @@ void devicetree_dump(void) {
 	}
 }
 
+#if 1
+
+int32_t devicetree_raw_dump(uint32_t *dt_ptr) {
+
+	uint32_t *dt;
+	uint32_t magic,size;
+	char *ptr;
+
+	int i,count;
+
+	dt=dt_ptr;
+
+	magic=big_to_little(dt[0]);
+
+	if (magic!=0xd00dfeed) {
+		return -ENODEV;
+	}
+
+	size=big_to_little(dt[1]);
+
+	printk("BEGIN DT DUMP OF SIZE %d\n",size);
+
+	count=0;
+	ptr=(char *)dt_ptr;
+	for(i=0;i<size;i++) {
+		if ((count&0xf)==0) printk("\n");
+		printk("%d ",ptr[i]);
+		count++;
+	}
+
+	printk("\nEND DT DUMP\n");
+
+	return 0;
+
+}
+
+
+#endif
