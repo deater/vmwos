@@ -33,5 +33,17 @@ device_tree.armv7.o:	device_tree.c
 device_tree.arm1176.o:	device_tree.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o device_tree.arm1176.o -c device_tree.c
 
+
+###
+
+dt_standalone:	dt_standalone.o
+	gcc -o dt_standalone dt_standalone.o
+
+dt_standalone.o:	device_tree.c
+	gcc -Wall -O2 -DSTANDALONE_TEST=1 -o dt_standalone.o -c device_tree.c
+
+
+###
+
 clean:
-	rm -f *~ *.o *.a
+	rm -f *~ *.o *.a dt_standanlone
