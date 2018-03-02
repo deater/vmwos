@@ -152,7 +152,7 @@ kernel.dis:	kernel.elf
 	$(CROSS)objdump --disassemble-all kernel.elf > kernel.dis
 
 clean:
-	rm -f *~ *.o *.map *.elf kernel.img *.dis date.h
+	rm -f *~ *.o *.map *.elf kernel.img kernel7.img *.dis date.h
 	cd boot && make clean
 	cd debug && make clean
 	cd drivers && make clean
