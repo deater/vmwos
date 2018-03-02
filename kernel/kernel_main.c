@@ -20,6 +20,7 @@
 #include "hardware.h"
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
+#include "drivers/pmu/arm-pmu.h"
 #include "lib/string.h"
 #include "process.h"
 #include "scheduler.h"
@@ -28,7 +29,6 @@
 #include "time.h"
 #include "lib/div.h"
 #include "arch/arm1176/arm1176-mmu.h"
-#include "arch/arm1176/arm1176-pmu.h"
 #include "drivers/thermal/thermal.h"
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
@@ -237,7 +237,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
 
-
+	/* Start HW Perf Counters */
+	pmu_init();
 
 	if ((hardware_type==RPI_MODEL_2B) || (hardware_type==RPI_MODEL_3B)) {
 
@@ -246,9 +247,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		enable_mmu(0,memory_total,memory_kernel);
 	}
 	else {
-
-		/* Start HW Perf Counters */
-		arm1176_init_pmu();
 
 		/* Setup Memory Hierarchy */
 

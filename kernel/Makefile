@@ -14,7 +14,7 @@ kernel7.img:	kernel7.elf
 	$(CROSS)objcopy kernel7.elf -O binary kernel7.img
 
 kernel.elf:	kernel_main.o \
-	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
+	idle_task.o arm1176-mmu.o syscalls.o \
 	interrupts.o memory.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-arm1176.a \
@@ -26,7 +26,7 @@ kernel.elf:	kernel_main.o \
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
-		arm1176-mmu.o arm1176-pmu.o \
+		arm1176-mmu.o \
 		syscalls.o \
 		interrupts.o memory.o process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
@@ -39,7 +39,7 @@ kernel.elf:	kernel_main.o \
 		-Map kernel.map -o kernel.elf
 
 kernel7.elf:	kernel_main.o \
-	idle_task.o arm1176-mmu.o arm1176-pmu.o syscalls.o \
+	idle_task.o arm1176-mmu.o syscalls.o \
 	interrupts.o memory.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-armv7.a \
@@ -51,7 +51,7 @@ kernel7.elf:	kernel_main.o \
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
-		arm1176-mmu.o arm1176-pmu.o \
+		arm1176-mmu.o \
 		syscalls.o interrupts.o memory.o \
 		process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
@@ -77,9 +77,6 @@ memory.o:	memory.c
 
 arm1176-mmu.o:	arm1176-mmu.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o arm1176-mmu.o -c arm1176-mmu.c
-
-arm1176-pmu.o:	arm1176-pmu.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o arm1176-pmu.o -c arm1176-pmu.c
 
 process.o:	process.c include/process.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o process.o -c process.c

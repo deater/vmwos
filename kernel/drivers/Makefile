@@ -14,6 +14,7 @@ drivers.arm1176.a:	\
 		gpio/gpio.arm1176.a \
 		keyboard/keyboard.arm1176.a \
 		led/led.arm1176.a \
+		pmu/pmu.arm1176.a \
 		random/random.arm1176.a \
 		serial/serial.arm1176.a \
 		thermal/thermal.arm1176.a \
@@ -28,6 +29,7 @@ drivers.arm1176.a:	\
 		gpio/gpio.arm1176.a \
 		keyboard/keyboard.arm1176.a \
 		led/led.arm1176.a \
+		pmu/pmu.arm1176.a \
 		random/random.arm1176.a \
 		serial/serial.arm1176.a \
 		thermal/thermal.arm1176.a \
@@ -58,6 +60,9 @@ keyboard/keyboard.arm1176.a:	force_look
 led/led.arm1176.a:	force_look
 	cd led && make
 
+pmu/pmu.arm1176.a:	force_look
+	cd pmu && make
+
 random/random.arm1176.a:	force_look
 	cd random && make
 
@@ -82,6 +87,7 @@ drivers.armv7.a:	\
 		gpio/gpio.armv7.a \
 		keyboard/keyboard.armv7.a \
 		led/led.armv7.a \
+		pmu/pmu.armv7.a \
 		random/random.armv7.a \
 		serial/serial.armv7.a \
 		thermal/thermal.armv7.a \
@@ -96,6 +102,7 @@ drivers.armv7.a:	\
 		gpio/gpio.armv7.a \
 		keyboard/keyboard.armv7.a \
 		led/led.armv7.a \
+		pmu/pmu.armv7.a \
 		random/random.armv7.a \
 		serial/serial.armv7.a \
 		thermal/thermal.armv7.a \
@@ -125,6 +132,9 @@ keyboard/keyboard.armv7.a:	force_look
 
 led/led.armv7.a:	force_look
 	cd led && make
+
+pmu/pmu.armv7.a:	force_look
+	cd pmu && make
 
 random/random.armv7.a:	force_look
 	cd random && make

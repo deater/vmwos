@@ -2,9 +2,11 @@
 
 #include <stdint.h>
 
+#include "drivers/pmu/arm-pmu.h"
+
 #include "lib/printk.h"
 
-int arm1176_init_pmu(void) {
+int pmu_init(void) {
 
 	uint32_t control;
 

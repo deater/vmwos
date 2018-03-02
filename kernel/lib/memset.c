@@ -5,7 +5,7 @@
 
 #include "time.h"
 #include "arch/arm1176/arm1176-mmu.h"
-#include "arch/arm1176/arm1176-pmu.h"
+#include "drivers/pmu/arm-pmu.h"
 #include "lib/div.h"
 
 #define MEMORY_BENCHMARK 1
