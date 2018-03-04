@@ -46,4 +46,4 @@ dt_standalone.o:	device_tree.c
 ###
 
 clean:
-	rm -f *~ *.o *.a dt_standanlone
+	rm -f *~ *.o *.a dt_standalone
