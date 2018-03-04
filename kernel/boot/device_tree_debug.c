@@ -32,10 +32,6 @@
 
 #include "boot/device_tree.h"
 
-#ifndef NULL
-#define NULL (void *)0
-#endif
-
 #else
 
 #include <stdio.h>
@@ -46,11 +42,10 @@
 #include <errno.h>
 
 #define printk printf
-#define strlcpy strncpy
 
 #endif
 
-//static int fdt_verbose=0;
+static int fdt_verbose=0;
 
 struct device_tree_type {
 	void *address;
@@ -98,7 +93,7 @@ static uint64_t big_to_little64(uint64_t big) {
 }
 
 
-int32_t devicetree_setup(uint32_t *dt_ptr) {
+int32_t devicetree_decode(uint32_t *dt_ptr) {
 
 	uint32_t *dt;
 
@@ -134,51 +129,35 @@ int32_t devicetree_setup(uint32_t *dt_ptr) {
 
 }
 
-static void dt_copy_string(uint32_t offset, char *s, uint32_t len) {
+static void dt_print_string(uint32_t offset) {
 
 	char *string;
 	string=(char *)(device_tree.address+device_tree.off_strs+offset);
 
-	strlcpy(s,string,len);
+	printk("%s",string);
 }
 
-#define DT_MAXSIZE	128
-
-static uint32_t dt_parse_prop(uint32_t *tree, int *i,
-	char *current_node_name, char *node, char *prop) {
+static uint32_t dt_parse_prop(uint32_t *tree, int *i) {
 
 	uint32_t temp,length,j,k;
-	char string[DT_MAXSIZE];
+	char string[5];
 	int printing,saved;
-	int start_i;
 
-	start_i=*i;
 	string[4]=0;
 
-//	printk("%s:",current_node_name);
+	printk("\t");
 
 	temp=big_to_little(tree[*i]);
-	//if (fdt_verbose) printk("\tValue Length: %x\n",temp);
+	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
 	length=temp;
 	(*i)++;
 
 	temp=big_to_little(tree[*i]);
-	//if (fdt_verbose) printk("\tstring offset: %x\n",temp);
-	dt_copy_string(temp,string,DT_MAXSIZE);
-//	printk("%s",string);
-
-
-	if ((node==0) || (!strncmp(node,current_node_name,DT_MAXSIZE))) {
-
-		if (!strncmp(string,prop,DT_MAXSIZE)) {
-			//printk("FOUND!\n");
-			return start_i;
-		}
-	}
-
+	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
+	dt_print_string(temp);
 	(*i)++;
 
-//	printk("\n\t");
+	printk("\t");
 	printing=1;
 
 	saved=*i;
@@ -196,12 +175,12 @@ static uint32_t dt_parse_prop(uint32_t *tree, int *i,
 					break;
 				}
 				else {
-//					printk("%c",string[k]);
+					printk("%c",string[k]);
 				}
 			}
 		}
 	}
-//	printk("\n\t");
+	printk("\n\t");
 
 	*i=saved;
 
@@ -211,90 +190,20 @@ static uint32_t dt_parse_prop(uint32_t *tree, int *i,
 		(*i)++;
 		memcpy(string,&temp,4);
 
-//		for(k=0;k<4;k++) {
-//			printk("%x",string[k]&0xff);
-//		}
+		for(k=0;k<4;k++) {
+			printk("%x",string[k]&0xff);
+		}
 	}
-//	printk("\n");
+	printk("\n");
 
 
 	return 0;
 }
 
-static uint32_t devicetree_prop_int(int start_i,uint32_t *value) {
-
-	uint32_t *tree;
-
-	uint32_t temp,length,i;
-
-	if (!device_tree.valid) return -ENODEV;
-
-	tree=(uint32_t *)(device_tree.address+device_tree.off_struct);
-
-	i=start_i;
-
-	temp=big_to_little(tree[i]);
-	//if (fdt_verbose) printk("\tValue Length: %x\n",temp);
-	length=temp;
-	i++;
-
-	temp=big_to_little(tree[i]);
-	//if (fdt_verbose) printk("\tstring offset: %x\n",temp);
-	i++;
-
-	temp=big_to_little(tree[i]);
-	i++;
-
-	*value=temp;
-
-	if (length!=4) {
-		printk("Warning! Asking for int32 but length is %d\n",length);
-	}
-
-
-	return 0;
-}
-
-
-static uint32_t devicetree_prop_string(int start_i,char *string,int len) {
-
-
-	uint32_t *tree;
-
-	uint32_t temp,length,i,j;
-	char *ptr;
-
-	if (!device_tree.valid) return -ENODEV;
-
-	tree=(uint32_t *)(device_tree.address+device_tree.off_struct);
-
-	i=start_i;
-
-	temp=big_to_little(tree[i]);
-	//if (fdt_verbose) printk("\tValue Length: %x\n",temp);
-	length=temp;
-	i++;
-
-	temp=big_to_little(tree[i]);
-	//if (fdt_verbose) printk("\tstring offset: %x\n",temp);
-	i++;
-
-	ptr=(char *)&tree[i];
-
-	for(j=0;j<length;j++) {
-		string[j]=*ptr;
-		ptr++;
-	}
-
-	return 0;
-}
-
-static uint32_t dt_parse_node(uint32_t *tree, int *i,char *node, char *prop) {
+static uint32_t dt_parse_node(uint32_t *tree, int *i) {
 
 	uint32_t temp;
 	char *ptr;
-	char node_name[DT_MAXSIZE];
-	uint32_t result;
 
 	if (big_to_little(tree[*i])!=FDT_BEGIN_NODE) {
 		printk("Expected FDT_BEGIN_NODE, got %x\n",tree[*i]);
@@ -303,11 +212,10 @@ static uint32_t dt_parse_node(uint32_t *tree, int *i,char *node, char *prop) {
 	}
 	(*i)++;
 
-//	printk("Node: ");
+	printk("Node: ");
 
 	ptr=(char *)&tree[*i];
-	strlcpy(node_name,ptr,DT_MAXSIZE);
-//	printk("%s\n",ptr);
+	printk("%s\n",ptr);
 
 	/* Skip to end of padding */
 	while(1) {
@@ -326,14 +234,13 @@ static uint32_t dt_parse_node(uint32_t *tree, int *i,char *node, char *prop) {
 		}
 		if (big_to_little(tree[*i])==FDT_PROP) {
 			(*i)++;
-			result=dt_parse_prop(tree,i,node_name,node,prop);
-			if (result>0) return result;
+			dt_parse_prop(tree,i);
 		}
 		else if (big_to_little(tree[*i])==FDT_BEGIN_NODE) {
-			result=dt_parse_node(tree,i,node,prop);
-			if (result>0) return result;
+			dt_parse_node(tree,i);
 		}
 		else if (big_to_little(tree[*i])==FDT_END_NODE) {
+			if (fdt_verbose) printk("FDT_END_NODE\n");
 			(*i)++;
 			break;
 		} else {
@@ -345,12 +252,13 @@ static uint32_t dt_parse_node(uint32_t *tree, int *i,char *node, char *prop) {
 }
 
 
-int32_t devicetree_find_reserved(void) {
+void devicetree_dump(void) {
 
 	int i;
 	uint64_t *memory_reserved;
+	uint32_t *tree;
 
-	if (!device_tree.valid) return -ENODEV;
+	if (!device_tree.valid) return;
 
 	printk("Device tree:\n");
 	printk("\tMagic: 0x%x\n",device_tree.magic);
@@ -385,24 +293,12 @@ int32_t devicetree_find_reserved(void) {
 		i+=2;
 	}
 
-	return 0;
-}
-
-static int32_t devicetree_find_node_prop(char *node, char *prop) {
-
-	int i;
-	uint32_t *tree;
-	uint32_t result;
-
-	if (!device_tree.valid) return -ENODEV;
-
 	tree=(uint32_t *)(device_tree.address+device_tree.off_struct);
-
+	printk("Device Tree:\n");
 	i=0;
 
 	while(1) {
-		result=dt_parse_node(tree,&i,node,prop);
-		if (result>0) return result;
+		dt_parse_node(tree,&i);
 
 		/* See if at end */
 		if (big_to_little(tree[i])==FDT_END) break;
@@ -410,107 +306,40 @@ static int32_t devicetree_find_node_prop(char *node, char *prop) {
 			break;
 		}
 	}
-	return 0;
 }
 
 
+int32_t devicetree_raw_dump(uint32_t *dt_ptr) {
 
-uint32_t devicetree_find_string(char *node, char *prop,
-		char *string, uint32_t len) {
+	uint32_t *dt;
+	uint32_t magic,size;
+	char *ptr;
 
-	uint32_t result;
+	int i,count;
 
-	result=devicetree_find_node_prop(node,prop);
-	if (result<0) return result;
+	dt=dt_ptr;
 
-	devicetree_prop_string(result,string,len);
+	magic=big_to_little(dt[0]);
+
+	if (magic!=0xd00dfeed) {
+		return -ENODEV;
+	}
+
+	size=big_to_little(dt[1]);
+
+	printk("BEGIN DT DUMP OF SIZE %d\n",size);
+
+	count=0;
+	ptr=(char *)dt_ptr;
+	for(i=0;i<size;i++) {
+		if ((count&0xf)==0) printk("\n");
+		printk("%d ",ptr[i]);
+		count++;
+	}
+
+	printk("\nEND DT DUMP\n");
 
 	return 0;
-}
-
-uint32_t devicetree_find_int(char *node, char *prop, uint32_t *value) {
-
-	uint32_t result;
-
-	result=devicetree_find_node_prop(node,prop);
-	if (result<0) {
-		return result;
-	}
-
-	devicetree_prop_int(result,value);
-
-	return 0;
-}
-
-
-uint64_t devicetree_get_memory(void) {
-
-	uint32_t address_cells,size_cells,result,temp,val_len;
-	uint32_t *tree;
-	uint64_t address,length,temp64;
-	int i;
-
-	devicetree_find_int(NULL,"#address-cells",&address_cells);
-	printk("mem: found addr cells: %d\n",address_cells);
-
-	devicetree_find_int(NULL,"#size-cells",&size_cells);
-	printk("mem: found size cells: %d\n",size_cells);
-
-	/* Point to memory:reg */
-	result=devicetree_find_node_prop("memory","reg");
-	if (result<0) {
-		return result;
-	}
-
-	tree=(uint32_t *)(device_tree.address+device_tree.off_struct);
-
-	i=result;
-
-	temp=big_to_little(tree[i]);
-//	printk("\tValue Length: %x\n",temp);
-	val_len=temp;
-	i++;
-
-	temp=big_to_little(tree[i]);
-	//if (fdt_verbose) printk("\tstring offset: %x\n",temp);
-	i++;
-
-	/* NOTE: should loop if val_len != 8 */
-
-	if (val_len!=8) {
-		printk("ERROR!  Unexpected number of memory entries\n");
-	}
-
-	if (address_cells==1) {
-		memcpy(&temp,&tree[i],4);
-		address=big_to_little(temp);
-		i+=1;
-	} else if (address_cells==2) {
-		memcpy(&temp64,&tree[i],8);
-		address=big_to_little64(temp64);
-		i+=2;
-	} else {
-		address=0;
-		printk("Error! Unknown addr cell size\n");
-	}
-
-	if (size_cells==1) {
-		memcpy(&temp,&tree[i],4);
-		length=big_to_little(temp);
-		i+=1;
-	} else if (size_cells==2) {
-		memcpy(&temp64,&tree[i],8);
-		length=big_to_little64(temp64);
-		i+=2;
-	} else {
-		length=0;
-		printk("Error! Unknown size cell size\n");
-	}
-
-	printk("Memory found, %llx bytes at address %llx (%dMB)\n",
-		length,address,length/1024/1024);
-
-	return length;
 
 }
 
@@ -523,8 +352,6 @@ int main(int argc, char **argv) {
 	char *dt_mem;
 	int fd;
 	int size;
-	char string[DT_MAXSIZE];
-	uint32_t revision=0;
 
 	dt_mem=calloc(MAXSIZE,sizeof(char));
 	if (dt_mem==NULL) {
@@ -544,19 +371,8 @@ int main(int argc, char **argv) {
 
 	close(fd);
 
-	devicetree_setup((uint32_t *)dt_mem);
-
-	devicetree_find_string(NULL,"model",string,DT_MAXSIZE);
-
-	printf("\t%s\n",string);
-
-
-	devicetree_find_int("system","linux,revision",&revision);
-
-	printf("\t%x\n",revision);
-
-
-	devicetree_get_memory();
+	devicetree_decode((uint32_t *)dt_mem);
+	devicetree_dump();
 
 	return 0;
 }

@@ -1,0 +1,1937 @@
+Read 19113 bytes
+Device tree:
+	Magic: 0xd00dfeed
+	Totalsize:  19113
+	Off Struct: 0x48
+	Off strs:   0x439c
+	Off rsvmap: 0x28
+	Version:    17
+	LastCompVer:16
+	BootCpuID: 0
+	SizeStrs: 1805
+Reserved memory:
+	0x100000 bytes starting at address 0x0
+Device Tree:
+:memreserve
+	;@
+	3b40004c000
+:serial-number
+	0000000032af3711
+	3030303030303030333261663337313102c6263
+:compatible
+	brcm,bcm2837
+	6272636d2c62636d3238333706272636d2c62636d32383336000
+:model
+	Raspberry Pi 3 Model B Rev 1.2
+	5261737062657272792050692033204d6f64656c20422052657620312e3204
+:interrupt-parent
+	
+	0001
+:#address-cells
+	
+	0001
+:#size-cells
+	
+	0001
+system:linux,serial
+	
+	000032af3711
+system:linux,revision
+	
+	0a02082
+vc_mem:reg
+	>¿
+	3ec00040000c0000
+onewire@0:phandle
+	
+	0004d
+onewire@0:status
+	okay
+	6f6b61790003
+onewire@0:rpi,parasitic-power
+	
+	0000
+onewire@0:gpios
+	
+	000c00040000
+onewire@0:pinctrl-0
+	
+	0004c
+onewire@0:pinctrl-names
+	default
+	64656661756c740
+onewire@0:compatible
+	w1-gpio
+	77312d6770696f0
+chosen:kaslr-seed
+	Kviµˆ”
+	f4b76b69b5f6d3
+chosen:bootargs
+	8250.nr_uarts=1 bcm2708_fb.fbwidth=656 bcm2708_fb.fbheight=416 bcm2708_fb.fbswap=1 vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  dwc_otg.lpm_enable=0 console=ttyS0,115200 console=tty1 root=PARTUUID=42302d04-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait
+	383235302e6e725f75617274733d312062636d323730385f66622e666277696474683d3635362062636d323730385f66622e66626865696768743d3431362062636d323730385f66622e6662737761703d312076635f6d656d2e6d656d5f626173653d307833656330303030302076635f6d656d2e6d656d5f73697a653d3078343030303030303020206477635f6f74672e6c706d5f656e61626c653d3020636f6e736f6c653d74747953302c31313532303020636f6e736f6c653d7474793120726f6f743d50415254555549443d34323330326430342d303220726f6f746673747970653d6578743420656c657661746f723d646561646c696e65206673636b2e7265706169723d79657320726f6f7477616974001
+soc:compatible
+	simple-bus
+	73696d706c652d62757300
+soc:#address-cells
+	
+	0001
+soc:#size-cells
+	
+	0001
+soc:ranges
+	~
+	7e0003f000100040000400000400
+soc:dma-ranges
+	¿
+	c000000003f000
+soc:phandle
+	
+	0002d
+dma@7e007000:compatible
+	brcm,bcm2835-dma
+	6272636d2c62636d323833352d646d610000
+dma@7e007000:reg
+	~
+	7e070000f0
+dma@7e007000:interrupts
+	
+	00010001000010001100010001200010001300010001400010001500010001600010001700010001800010001900010001a00010001b00010001b00010001b00010001b00010001c
+dma@7e007000:interrupt-names
+	dma0
+	646d61300646d61310646d61320646d61330646d61340646d61350646d61360646d61370646d61380646d61390646d6131300646d6131310646d6131320646d6131330646d6131340646d612d7368617265642d616c6c00
+dma@7e007000:#dma-cells
+	
+	0001
+dma@7e007000:brcm,dma-channel-mask
+	
+	007f34
+dma@7e007000:phandle
+	
+	000a
+interrupt-controller@7e00b200:compatible
+	brcm,bcm2836-armctrl-ic
+	6272636d2c62636d323833362d61726d6374726c2d69630
+interrupt-controller@7e00b200:reg
+	~
+	7e0b200020
+interrupt-controller@7e00b200:interrupt-controller
+	
+	
+interrupt-controller@7e00b200:#interrupt-cells
+	
+	0002
+interrupt-controller@7e00b200:interrupt-parent
+	
+	0002
+interrupt-controller@7e00b200:interrupts
+	
+	0008
+interrupt-controller@7e00b200:phandle
+	
+	0001
+watchdog@7e100000:compatible
+	brcm,bcm2835-pm-wdt
+	6272636d2c62636d323833352d706d2d7764740
+watchdog@7e100000:reg
+	~
+	7e100000028
+watchdog@7e100000:phandle
+	
+	0002a
+cprman@7e101000:compatible
+	brcm,bcm2835-cprman
+	6272636d2c62636d323833352d6370726d616e0
+cprman@7e101000:#clock-cells
+	
+	0001
+cprman@7e101000:reg
+	~
+	7e1010000200
+cprman@7e101000:clocks
+	
+	0003000400000004000100040002000500000005000100050002
+cprman@7e101000:firmware
+	
+	0006
+cprman@7e101000:phandle
+	
+	0007
+rng@7e104000:compatible
+	brcm,bcm2835-rng
+	6272636d2c62636d323833352d726e670000
+rng@7e104000:reg
+	~@
+	7e1040000010
+rng@7e104000:phandle
+	
+	0002b
+mailbox@7e00b880:compatible
+	brcm,bcm2835-mbox
+	6272636d2c62636d323833352d6d626f78000
+mailbox@7e00b880:reg
+	~
+	7e0b88000040
+mailbox@7e00b880:interrupts
+	
+	00000001
+mailbox@7e00b880:#mbox-cells
+	
+	0000
+mailbox@7e00b880:phandle
+	
+	00019
+gpio@7e200000:compatible
+	brcm,bcm2835-gpio
+	6272636d2c62636d323833352d6770696f000
+gpio@7e200000:reg
+	~ 
+	7e2000000b4
+gpio@7e200000:interrupts
+	
+	000200011000200012
+gpio@7e200000:gpio-controller
+	
+	
+gpio@7e200000:#gpio-cells
+	
+	0002
+gpio@7e200000:interrupt-controller
+	
+	
+gpio@7e200000:#interrupt-cells
+	
+	0002
+gpio@7e200000:phandle
+	
+	000c
+w1_pins@0:phandle
+	
+	0004c
+w1_pins@0:brcm,pull
+	
+	0000
+w1_pins@0:brcm,function
+	
+	0000
+w1_pins@0:brcm,pins
+	
+	0004
+sdhost_pins:brcm,pins
+	
+	000300003100032000330003400035
+sdhost_pins:brcm,function
+	
+	0004
+sdhost_pins:phandle
+	
+	00017
+spi0_pins:brcm,pins
+	
+	0009000a000b
+spi0_pins:brcm,function
+	
+	0004
+spi0_pins:phandle
+	
+	000d
+spi0_cs_pins:brcm,pins
+	
+	00080007
+spi0_cs_pins:brcm,function
+	
+	0001
+spi0_cs_pins:phandle
+	
+	000e
+i2c0:brcm,pins
+	
+	00000001
+i2c0:brcm,function
+	
+	0004
+i2c0:phandle
+	
+	000f
+i2c1:brcm,pins
+	
+	00020003
+i2c1:brcm,function
+	
+	0004
+i2c1:phandle
+	
+	00013
+i2s:brcm,pins
+	
+	00012000130001400015
+i2s:brcm,function
+	
+	0004
+i2s:phandle
+	
+	000b
+sdio_pins:brcm,pins
+	
+	000220002300024000250002600027
+sdio_pins:brcm,function
+	
+	0007
+sdio_pins:brcm,pull
+	
+	000000020002000200020002
+sdio_pins:phandle
+	
+	00018
+bt_pins:brcm,pins
+	
+	0002b
+bt_pins:brcm,function
+	
+	0004
+bt_pins:brcm,pull
+	
+	0000
+bt_pins:phandle
+	
+	0009
+uart0_pins:brcm,pins
+	
+	0002000021
+uart0_pins:brcm,function
+	
+	0007
+uart0_pins:brcm,pull
+	
+	00000002
+uart0_pins:phandle
+	
+	0008
+uart1_pins:brcm,pins
+	
+	
+uart1_pins:brcm,function
+	
+	
+uart1_pins:brcm,pull
+	
+	
+uart1_pins:phandle
+	
+	00011
+audio_pins:brcm,pins
+	
+	0002800029
+audio_pins:brcm,function
+	
+	0004
+audio_pins:phandle
+	
+	0001a
+serial@7e201000:compatible
+	brcm,bcm2835-pl011
+	6272636d2c62636d323833352d706c303131061726d2c706c303131061726d2c7072696d6563656c6c00
+serial@7e201000:reg
+	~ 
+	7e2010000100
+serial@7e201000:interrupts
+	
+	000200019
+serial@7e201000:clocks
+	
+	000700013000700014
+serial@7e201000:clock-names
+	uartclk
+	75617274636c6b06170625f70636c6b0000
+serial@7e201000:arm,primecell-periphid
+	
+	0241011
+serial@7e201000:cts-event-workaround
+	
+	
+serial@7e201000:pinctrl-names
+	default
+	64656661756c740
+serial@7e201000:pinctrl-0
+	
+	00080009
+serial@7e201000:status
+	okay
+	6f6b61790000
+serial@7e201000:phandle
+	
+	00021
+i2s@7e203000:compatible
+	brcm,bcm2835-i2s
+	6272636d2c62636d323833352d6932730000
+i2s@7e203000:reg
+	~ 0
+	7e2030000024
+i2s@7e203000:dmas
+	
+	000a0002000a0003
+i2s@7e203000:dma-names
+	tx
+	747807278000
+i2s@7e203000:status
+	disabled
+	64697361626c65640000
+i2s@7e203000:#sound-dai-cells
+	
+	0000
+i2s@7e203000:clocks
+	
+	00070001f
+i2s@7e203000:pinctrl-names
+	default
+	64656661756c740
+i2s@7e203000:pinctrl-0
+	
+	000b
+i2s@7e203000:phandle
+	
+	00023
+spi@7e204000:compatible
+	brcm,bcm2835-spi
+	6272636d2c62636d323833352d7370690000
+spi@7e204000:reg
+	~ @
+	7e2040000100
+spi@7e204000:interrupts
+	
+	000200016
+spi@7e204000:clocks
+	
+	000700014
+spi@7e204000:#address-cells
+	
+	0001
+spi@7e204000:#size-cells
+	
+	0000
+spi@7e204000:status
+	okay
+	6f6b617906c6564
+spi@7e204000:cs-gpios
+	
+	000c00080001000c00070001
+spi@7e204000:dmas
+	
+	000a0006000a0007
+spi@7e204000:dma-names
+	tx
+	747807278000
+spi@7e204000:pinctrl-names
+	default
+	64656661756c740
+spi@7e204000:pinctrl-0
+	
+	000d000e
+spi@7e204000:phandle
+	
+	00024
+spidev@0:compatible
+	spidev
+	73706964657600
+spidev@0:reg
+	
+	0000
+spidev@0:#address-cells
+	
+	0001
+spidev@0:#size-cells
+	
+	0000
+spidev@0:spi-max-frequency
+	sY@
+	7735940
+spidev@0:phandle
+	
+	0002e
+spidev@1:compatible
+	spidev
+	73706964657600
+spidev@1:reg
+	
+	0001
+spidev@1:#address-cells
+	
+	0001
+spidev@1:#size-cells
+	
+	0000
+spidev@1:spi-max-frequency
+	sY@
+	7735940
+spidev@1:phandle
+	
+	0002f
+i2c@7e205000:compatible
+	brcm,bcm2835-i2c
+	6272636d2c62636d323833352d6932630000
+i2c@7e205000:reg
+	~ P
+	7e2050000100
+i2c@7e205000:interrupts
+	
+	000200015
+i2c@7e205000:clocks
+	
+	000700014
+i2c@7e205000:#address-cells
+	
+	0001
+i2c@7e205000:#size-cells
+	
+	0000
+i2c@7e205000:status
+	disabled
+	64697361626c65640000
+i2c@7e205000:pinctrl-names
+	default
+	64656661756c740
+i2c@7e205000:pinctrl-0
+	
+	000f
+i2c@7e205000:clock-frequency
+	
+	0186a0
+i2c@7e205000:phandle
+	
+	00025
+pixelvalve@7e206000:compatible
+	brcm,bcm2835-pixelvalve0
+	6272636d2c62636d323833352d706978656c76616c7665300000
+pixelvalve@7e206000:reg
+	~ `
+	7e206000010
+pixelvalve@7e206000:interrupts
+	
+	0002000d
+pixelvalve@7e206000:status
+	disabled
+	64697361626c65640000
+pixelvalve@7e206000:phandle
+	
+	00030
+pixelvalve@7e207000:compatible
+	brcm,bcm2835-pixelvalve1
+	6272636d2c62636d323833352d706978656c76616c7665310000
+pixelvalve@7e207000:reg
+	~ p
+	7e207000010
+pixelvalve@7e207000:interrupts
+	
+	0002000e
+pixelvalve@7e207000:status
+	disabled
+	64697361626c65640000
+pixelvalve@7e207000:phandle
+	
+	00031
+dsi@7e209000:compatible
+	brcm,bcm2835-dsi0
+	6272636d2c62636d323833352d64736930000
+dsi@7e209000:reg
+	~ ê
+	7e2090000078
+dsi@7e209000:interrupts
+	
+	00020004
+dsi@7e209000:#address-cells
+	
+	0001
+dsi@7e209000:#size-cells
+	
+	0000
+dsi@7e209000:#clock-cells
+	
+	0001
+dsi@7e209000:clocks
+	
+	00070002000070002f000700031
+dsi@7e209000:clock-names
+	phy
+	70687906573636170650706978656c0000
+dsi@7e209000:clock-output-names
+	dsi0_byte
+	647369305f627974650647369305f646472320647369305f6464720000
+dsi@7e209000:status
+	disabled
+	64697361626c65640000
+dsi@7e209000:phandle
+	
+	0004
+aux@0x7e215000:compatible
+	brcm,bcm2835-aux
+	6272636d2c62636d323833352d6175780000
+aux@0x7e215000:#clock-cells
+	
+	0001
+aux@0x7e215000:reg
+	~!P
+	7e215000008
+aux@0x7e215000:clocks
+	
+	000700014
+aux@0x7e215000:interrupts
+	
+	00010001d
+aux@0x7e215000:interrupt-controller
+	
+	
+aux@0x7e215000:#interrupt-cells
+	
+	0001
+aux@0x7e215000:phandle
+	
+	00010
+serial@7e215040:compatible
+	brcm,bcm2835-aux-uart
+	6272636d2c62636d323833352d6175782d75617274000
+serial@7e215040:reg
+	~!P@
+	7e21504000040
+serial@7e215040:interrupt-parent
+	
+	00010
+serial@7e215040:interrupts
+	
+	0000
+serial@7e215040:clocks
+	
+	000100000
+serial@7e215040:status
+	okay
+	6f6b61790000
+serial@7e215040:pinctrl-names
+	default
+	64656661756c740
+serial@7e215040:pinctrl-0
+	
+	00011
+serial@7e215040:phandle
+	
+	00022
+spi@7e215080:compatible
+	brcm,bcm2835-aux-spi
+	6272636d2c62636d323833352d6175782d7370690000
+spi@7e215080:reg
+	~!PÄ
+	7e21508000040
+spi@7e215080:interrupt-parent
+	
+	00010
+spi@7e215080:interrupts
+	
+	0001
+spi@7e215080:clocks
+	
+	000100001
+spi@7e215080:#address-cells
+	
+	0001
+spi@7e215080:#size-cells
+	
+	0000
+spi@7e215080:status
+	disabled
+	64697361626c65640000
+spi@7e215080:phandle
+	
+	00032
+spi@7e2150c0:compatible
+	brcm,bcm2835-aux-spi
+	6272636d2c62636d323833352d6175782d7370690000
+spi@7e2150c0:reg
+	~!P¿
+	7e2150c000040
+spi@7e2150c0:interrupt-parent
+	
+	00010
+spi@7e2150c0:interrupts
+	
+	0002
+spi@7e2150c0:clocks
+	
+	000100002
+spi@7e2150c0:#address-cells
+	
+	0001
+spi@7e2150c0:#size-cells
+	
+	0000
+spi@7e2150c0:status
+	disabled
+	64697361626c65640000
+spi@7e2150c0:phandle
+	
+	00033
+pwm@7e20c000:compatible
+	brcm,bcm2835-pwm
+	6272636d2c62636d323833352d70776d0000
+pwm@7e20c000:reg
+	~ ¿
+	7e20c0000028
+pwm@7e20c000:clocks
+	
+	00070001e
+pwm@7e20c000:assigned-clocks
+	
+	00070001e
+pwm@7e20c000:assigned-clock-rates
+	
+	0989680
+pwm@7e20c000:#pwm-cells
+	
+	0002
+pwm@7e20c000:status
+	disabled
+	64697361626c65640000
+pwm@7e20c000:phandle
+	
+	00034
+hvs@7e400000:compatible
+	brcm,bcm2835-hvs
+	6272636d2c62636d323833352d6876730000
+hvs@7e400000:reg
+	~@
+	7e400000600
+hvs@7e400000:interrupts
+	
+	00020001
+hvs@7e400000:status
+	disabled
+	64697361626c65640000
+hvs@7e400000:phandle
+	
+	00035
+dsi@7e700000:compatible
+	brcm,bcm2835-dsi1
+	6272636d2c62636d323833352d64736931000
+dsi@7e700000:reg
+	~p
+	7e70000008c
+dsi@7e700000:interrupts
+	
+	0002000c
+dsi@7e700000:#address-cells
+	
+	0001
+dsi@7e700000:#size-cells
+	
+	0000
+dsi@7e700000:#clock-cells
+	
+	0001
+dsi@7e700000:clocks
+	
+	000700023000700030000700032
+dsi@7e700000:clock-names
+	phy
+	70687906573636170650706978656c0000
+dsi@7e700000:clock-output-names
+	dsi1_byte
+	647369315f627974650647369315f646472320647369315f6464720000
+dsi@7e700000:status
+	disabled
+	64697361626c65640000
+dsi@7e700000:power-domains
+	
+	0001200012
+dsi@7e700000:phandle
+	
+	0005
+i2c@7e804000:compatible
+	brcm,bcm2835-i2c
+	6272636d2c62636d323833352d6932630000
+i2c@7e804000:reg
+	~Ä@
+	7e8040000100
+i2c@7e804000:interrupts
+	
+	000200015
+i2c@7e804000:clocks
+	
+	000700014
+i2c@7e804000:#address-cells
+	
+	0001
+i2c@7e804000:#size-cells
+	
+	0000
+i2c@7e804000:status
+	okay
+	6f6b617906c6564
+i2c@7e804000:pinctrl-names
+	default
+	64656661756c740
+i2c@7e804000:pinctrl-0
+	
+	00013
+i2c@7e804000:clock-frequency
+	
+	0186a0
+i2c@7e804000:phandle
+	
+	00026
+i2c@7e805000:compatible
+	brcm,bcm2835-i2c
+	6272636d2c62636d323833352d6932630000
+i2c@7e805000:reg
+	~ÄP
+	7e8050000100
+i2c@7e805000:interrupts
+	
+	000200015
+i2c@7e805000:clocks
+	
+	000700014
+i2c@7e805000:#address-cells
+	
+	0001
+i2c@7e805000:#size-cells
+	
+	0000
+i2c@7e805000:status
+	disabled
+	64697361626c65640000
+i2c@7e805000:clock-frequency
+	
+	0186a0
+i2c@7e805000:phandle
+	
+	00014
+vec@7e806000:compatible
+	brcm,bcm2835-vec
+	6272636d2c62636d323833352d7665630000
+vec@7e806000:reg
+	~Ä`
+	7e8060000100
+vec@7e806000:clocks
+	
+	000700018
+vec@7e806000:interrupts
+	
+	00020001b
+vec@7e806000:status
+	disabled
+	64697361626c65640000
+vec@7e806000:phandle
+	
+	00036
+pixelvalve@7e807000:compatible
+	brcm,bcm2835-pixelvalve2
+	6272636d2c62636d323833352d706978656c76616c7665320000
+pixelvalve@7e807000:reg
+	~Äp
+	7e807000010
+pixelvalve@7e807000:interrupts
+	
+	0002000a
+pixelvalve@7e807000:status
+	disabled
+	64697361626c65640000
+pixelvalve@7e807000:phandle
+	
+	00037
+hdmi@7e902000:compatible
+	brcm,bcm2835-hdmi
+	6272636d2c62636d323833352d68646d69000
+hdmi@7e902000:reg
+	~ê 
+	7e9020000607e808000010
+hdmi@7e902000:interrupts
+	
+	0002000800020009
+hdmi@7e902000:ddc
+	
+	00014
+hdmi@7e902000:clocks
+	
+	000700010000700019
+hdmi@7e902000:clock-names
+	pixel
+	706978656c068646d6900
+hdmi@7e902000:dmas
+	
+	000a00011
+hdmi@7e902000:dma-names
+	audio-rx
+	617564696f2d72780000
+hdmi@7e902000:status
+	disabled
+	64697361626c65640000
+hdmi@7e902000:power-domains
+	
+	000120005
+hdmi@7e902000:hpd-gpios
+	
+	0001500040001
+hdmi@7e902000:phandle
+	
+	00038
+usb@7e980000:compatible
+	brcm,bcm2708-usb
+	6272636d2c62636d323730382d7573620000
+usb@7e980000:reg
+	~ò
+	7e980001007e060000100
+usb@7e980000:interrupts
+	
+	0002000000010009
+usb@7e980000:#address-cells
+	
+	0001
+usb@7e980000:#size-cells
+	
+	0000
+usb@7e980000:clocks
+	
+	00016
+usb@7e980000:clock-names
+	otg
+	6f74670
+usb@7e980000:power-domains
+	
+	000120006
+usb@7e980000:phandle
+	
+	00039
+usb1@1:compatible
+	usb424,9514
+	7573623432342c393531340
+usb1@1:reg
+	
+	0001
+usb1@1:#address-cells
+	
+	0001
+usb1@1:#size-cells
+	
+	0000
+usbether@1:local-mac-address
+	∏'ÎØ7,e
+	b827ebaf37112c65
+usbether@1:compatible
+	usb424,ec00
+	7573623432342c656330300
+usbether@1:reg
+	
+	0001
+usbether@1:phandle
+	
+	0003a
+v3d@7ec00000:compatible
+	brcm,vc4-v3d
+	6272636d2c7663342d7633640000
+v3d@7ec00000:reg
+	~¿
+	7ec00000100
+v3d@7ec00000:interrupts
+	
+	0001000a
+v3d@7ec00000:power-domains
+	
+	00012000a
+v3d@7ec00000:status
+	disabled
+	64697361626c65640000
+v3d@7ec00000:phandle
+	
+	0003b
+gpu:compatible
+	brcm,bcm2835-vc4
+	6272636d2c62636d323833352d7663340000
+gpu:status
+	disabled
+	64697361626c65640000
+gpu:phandle
+	
+	0003c
+sdhost@7e202000:compatible
+	brcm,bcm2835-sdhost
+	6272636d2c62636d323833352d7364686f73740
+sdhost@7e202000:reg
+	~  
+	7e202000010
+sdhost@7e202000:interrupts
+	
+	000200018
+sdhost@7e202000:clocks
+	
+	000700014
+sdhost@7e202000:dmas
+	
+	000a000d
+sdhost@7e202000:dma-names
+	rx-tx
+	72782d7478000
+sdhost@7e202000:brcm,overclock-50
+	
+	0000
+sdhost@7e202000:brcm,pio-limit
+	
+	0001
+sdhost@7e202000:status
+	okay
+	6f6b61790000
+sdhost@7e202000:pinctrl-names
+	default
+	64656661756c740
+sdhost@7e202000:pinctrl-0
+	
+	00017
+sdhost@7e202000:bus-width
+	
+	0004
+sdhost@7e202000:phandle
+	
+	0002c
+dpi@7e208000:compatible
+	brcm,bcm2835-dpi
+	6272636d2c62636d323833352d6470690000
+dpi@7e208000:reg
+	~ Ä
+	7e208000008c
+dpi@7e208000:clocks
+	
+	00070001400070002c
+dpi@7e208000:clock-names
+	core
+	636f72650706978656c00
+dpi@7e208000:#address-cells
+	
+	0001
+dpi@7e208000:#size-cells
+	
+	0000
+dpi@7e208000:status
+	disabled
+	64697361626c65640000
+dpi@7e208000:phandle
+	
+	0003d
+mmc@7e300000:compatible
+	brcm,bcm2835-mmc
+	6272636d2c62636d323833352d6d6d630000
+mmc@7e300000:reg
+	~0
+	7e30000010
+mmc@7e300000:interrupts
+	
+	00020001e
+mmc@7e300000:clocks
+	
+	00070001c
+mmc@7e300000:dmas
+	
+	000a000b
+mmc@7e300000:dma-names
+	rx-tx
+	72782d7478000
+mmc@7e300000:brcm,overclock-50
+	
+	0000
+mmc@7e300000:status
+	okay
+	6f6b61790000
+mmc@7e300000:pinctrl-names
+	default
+	64656661756c740
+mmc@7e300000:pinctrl-0
+	
+	00018
+mmc@7e300000:non-removable
+	
+	
+mmc@7e300000:bus-width
+	
+	0004
+mmc@7e300000:phandle
+	
+	0003e
+firmwarekms@7e600000:compatible
+	raspberrypi,rpi-firmware-kms
+	72617370626572727970692c7270692d6669726d776172652d6b6d730000
+firmwarekms@7e600000:reg
+	~`
+	7e60000010
+firmwarekms@7e600000:interrupts
+	
+	000200010
+firmwarekms@7e600000:brcm,firmware
+	
+	0006
+firmwarekms@7e600000:status
+	disabled
+	64697361626c65640000
+firmwarekms@7e600000:phandle
+	
+	0003f
+smi@7e600000:compatible
+	brcm,bcm2835-smi
+	6272636d2c62636d323833352d736d690000
+smi@7e600000:reg
+	~`
+	7e60000010
+smi@7e600000:interrupts
+	
+	000200010
+smi@7e600000:clocks
+	
+	00070002a
+smi@7e600000:assigned-clocks
+	
+	00070002a
+smi@7e600000:assigned-clock-rates
+	sY@
+	7735940
+smi@7e600000:dmas
+	
+	000a0004
+smi@7e600000:dma-names
+	rx-tx
+	72782d7478000
+smi@7e600000:status
+	disabled
+	64697361626c65640000
+smi@7e600000:phandle
+	
+	00040
+i2cdsi:compatible
+	i2c-gpio
+	6932632d6770696f0000
+i2cdsi:#address-cells
+	
+	0001
+i2cdsi:#size-cells
+	
+	0000
+i2cdsi:status
+	disabled
+	64697361626c65640000
+i2cdsi:gpios
+	
+	000c0002c0000000c0002d0000
+i2cdsi:phandle
+	
+	00041
+bridge@45:compatible
+	raspberrypi,touchscreen-bridge-i2c
+	72617370626572727970692c746f75636873637265656e2d6272696467652d69326300
+bridge@45:reg
+	
+	00045
+bridge@45:phandle
+	
+	00042
+bridge@38:compatible
+	raspberrypi,touchscreen-ts-i2c
+	72617370626572727970692c746f75636873637265656e2d74732d69326300
+bridge@38:reg
+	
+	00038
+bridge@38:phandle
+	
+	00043
+gpiomem:compatible
+	brcm,bcm2835-gpiomem
+	6272636d2c62636d323833352d6770696f6d656d0000
+gpiomem:reg
+	~ 
+	7e200000100
+firmware:compatible
+	raspberrypi,bcm2835-firmware
+	72617370626572727970692c62636d323833352d6669726d776172650000
+firmware:mboxes
+	
+	00019
+firmware:phandle
+	
+	0006
+power:compatible
+	raspberrypi,bcm2835-power
+	72617370626572727970692c62636d323833352d706f776572000
+power:firmware
+	
+	0006
+power:#power-domain-cells
+	
+	0001
+power:phandle
+	
+	00012
+fb:compatible
+	brcm,bcm2708-fb
+	6272636d2c62636d323730382d66620
+fb:firmware
+	
+	0006
+fb:status
+	okay
+	6f6b61790000
+fb:phandle
+	
+	00044
+vchiq:compatible
+	brcm,bcm2835-vchiq
+	6272636d2c62636d323833352d766368697100
+vchiq:reg
+	~
+	7e0b840000f
+vchiq:interrupts
+	
+	00000002
+vchiq:cache-line-size
+	
+	00040
+vchiq:firmware
+	
+	0006
+vchiq:phandle
+	
+	0001c
+vcsm:compatible
+	raspberrypi,bcm2835-vcsm
+	72617370626572727970692c62636d323833352d7663736d0000
+vcsm:firmware
+	
+	0006
+vcsm:status
+	okay
+	6f6b61790000
+vcsm:phandle
+	
+	00045
+thermal:compatible
+	brcm,bcm2835-thermal
+	6272636d2c62636d323833352d746865726d616c0000
+thermal:firmware
+	
+	0006
+thermal:phandle
+	
+	00046
+audio:compatible
+	brcm,bcm2835-audio
+	6272636d2c62636d323833352d617564696f00
+audio:brcm,pwm-channels
+	
+	0008
+audio:status
+	okay
+	6f6b617906c6564
+audio:pinctrl-names
+	default
+	64656661756c740
+audio:pinctrl-0
+	
+	0001a
+audio:phandle
+	
+	00029
+sound:status
+	disabled
+	64697361626c65640000
+sound:phandle
+	
+	00047
+local_intc:compatible
+	brcm,bcm2836-l1-intc
+	6272636d2c62636d323833362d6c312d696e74630000
+local_intc:reg
+	@
+	400000010
+local_intc:interrupt-controller
+	
+	
+local_intc:#interrupt-cells
+	
+	0001
+local_intc:interrupt-parent
+	
+	0002
+local_intc:phandle
+	
+	0002
+arm-pmu:compatible
+	arm,cortex-a7-pmu
+	61726d2c636f727465782d61372d706d75000
+arm-pmu:interrupt-parent
+	
+	0002
+arm-pmu:interrupts
+	
+	0009
+timer:compatible
+	arm,armv7-timer
+	61726d2c61726d76372d74696d65720
+timer:interrupt-parent
+	
+	0002
+timer:interrupts
+	
+	0000000100030002
+timer:always-on
+	
+	
+syscon@40000000:compatible
+	brcm,bcm2836-arm-local
+	6272636d2c62636d323833362d61726d2d6c6f63616c0737973636f6e000
+syscon@40000000:reg
+	@
+	400000010
+virtgpio:compatible
+	brcm,bcm2835-virtgpio
+	6272636d2c62636d323833352d766972746770696f000
+virtgpio:gpio-controller
+	
+	
+virtgpio:#gpio-cells
+	
+	0002
+virtgpio:firmware
+	
+	0006
+virtgpio:status
+	okay
+	6f6b61790000
+virtgpio:phandle
+	
+	0001b
+expgpio:compatible
+	brcm,bcm2835-expgpio
+	6272636d2c62636d323833352d6578706770696f0000
+expgpio:gpio-controller
+	
+	
+expgpio:#gpio-cells
+	
+	0002
+expgpio:firmware
+	
+	0006
+expgpio:status
+	okay
+	6f6b61790000
+expgpio:phandle
+	
+	00015
+clocks:compatible
+	simple-bus
+	73696d706c652d62757300
+clocks:#address-cells
+	
+	0001
+clocks:#size-cells
+	
+	0000
+clock@3:compatible
+	fixed-clock
+	66697865642d636c6f636b0
+clock@3:reg
+	
+	0003
+clock@3:#clock-cells
+	
+	0000
+clock@3:clock-output-names
+	osc
+	6f73630
+clock@3:clock-frequency
+	$¯
+	124f80
+clock@3:phandle
+	
+	0003
+clock@4:compatible
+	fixed-clock
+	66697865642d636c6f636b0
+clock@4:reg
+	
+	0004
+clock@4:#clock-cells
+	
+	0000
+clock@4:clock-output-names
+	otg
+	6f74670
+clock@4:clock-frequency
+	ú8
+	1c9c380
+clock@4:phandle
+	
+	00016
+fixedregulator_5v0:compatible
+	regulator-fixed
+	726567756c61746f722d66697865640
+fixedregulator_5v0:regulator-name
+	5v0
+	3576300
+fixedregulator_5v0:regulator-min-microvolt
+	
+	04c4b40
+fixedregulator_5v0:regulator-max-microvolt
+	
+	04c4b40
+fixedregulator_5v0:regulator-always-on
+	
+	
+fixedregulator_5v0:phandle
+	
+	00048
+fixedregulator_3v3:compatible
+	regulator-fixed
+	726567756c61746f722d66697865640
+fixedregulator_3v3:regulator-name
+	3v3
+	3376330
+fixedregulator_3v3:regulator-min-microvolt
+	
+	0325aa0
+fixedregulator_3v3:regulator-max-microvolt
+	
+	0325aa0
+fixedregulator_3v3:regulator-always-on
+	
+	
+fixedregulator_3v3:phandle
+	
+	00049
+memory:device_type
+	memory
+	6d656d6f727900
+memory:reg
+	
+	00003b4000
+aliases:serial1
+	/soc/serial@7e201000
+	2f736f632f73657269616c4037653230313030300003
+aliases:serial0
+	/soc/serial@7e215040
+	2f736f632f73657269616c4037653231353034300003
+aliases:i2c_arm
+	/soc/i2c@7e804000
+	2f736f632f6932634037653830343030300014
+aliases:i2c
+	/soc/i2c@7e804000
+	2f736f632f6932634037653830343030300014
+aliases:i2c_vc
+	/soc/i2c@7e205000
+	2f736f632f6932634037653230353030300014
+aliases:audio
+	/soc/audio
+	2f736f632f617564696f00
+aliases:aux
+	/soc/aux@0x7e215000
+	2f736f632f61757840307837653231353030300
+aliases:sound
+	/soc/sound
+	2f736f632f736f756e6400
+aliases:soc
+	/soc
+	2f736f630000
+aliases:dma
+	/soc/dma@7e007000
+	2f736f632f646d61403765303037303030000
+aliases:intc
+	/soc/interrupt-controller@7e00b200
+	2f736f632f696e746572727570742d636f6e74726f6c6c657240376530306232303000
+aliases:watchdog
+	/soc/watchdog@7e100000
+	2f736f632f7761746368646f6740376531303030303000
+aliases:random
+	/soc/rng@7e104000
+	2f736f632f726e67403765313034303030000
+aliases:mailbox
+	/soc/mailbox@7e00b880
+	2f736f632f6d61696c626f78403765303062383830000
+aliases:gpio
+	/soc/gpio@7e200000
+	2f736f632f6770696f40376532303030303000
+aliases:uart0
+	/soc/serial@7e201000
+	2f736f632f73657269616c4037653230313030300000
+aliases:sdhost
+	/soc/sdhost@7e202000
+	2f736f632f7364686f73744037653230323030300000
+aliases:i2s
+	/soc/i2s@7e203000
+	2f736f632f693273403765323033303030000
+aliases:spi0
+	/soc/spi@7e204000
+	2f736f632f737069403765323034303030000
+aliases:i2c0
+	/soc/i2c@7e205000
+	2f736f632f693263403765323035303030000
+aliases:uart1
+	/soc/serial@7e215040
+	2f736f632f73657269616c4037653231353034300000
+aliases:spi1
+	/soc/spi@7e215080
+	2f736f632f737069403765323135303830000
+aliases:spi2
+	/soc/spi@7e2150c0
+	2f736f632f737069403765323135306330000
+aliases:mmc
+	/soc/mmc@7e300000
+	2f736f632f6d6d63403765333030303030000
+aliases:i2c1
+	/soc/i2c@7e804000
+	2f736f632f693263403765383034303030000
+aliases:i2c2
+	/soc/i2c@7e805000
+	2f736f632f693263403765383035303030000
+aliases:usb
+	/soc/usb@7e980000
+	2f736f632f757362403765393830303030000
+aliases:leds
+	/leds
+	2f6c656473000
+aliases:fb
+	/soc/fb
+	2f736f632f66620
+aliases:vchiq
+	/soc/vchiq
+	2f736f632f766368697100
+aliases:thermal
+	/soc/thermal
+	2f736f632f746865726d616c0000
+aliases:ethernet
+	/soc/usb@7e980000/usb1@1/usbether@1
+	2f736f632f7573624037653938303030302f7573623140312f757362657468657240310
+leds:compatible
+	gpio-leds
+	6770696f2d6c656473000
+leds:phandle
+	
+	0004a
+act:label
+	led0
+	6c6564300000
+act:linux,default-trigger
+	mmc0
+	6d6d63300000
+act:gpios
+	
+	0001b00000000
+act:phandle
+	
+	00027
+pwr:label
+	led1
+	6c6564310000
+pwr:linux,default-trigger
+	input
+	696e707574000
+pwr:gpios
+	
+	0001500070000
+pwr:phandle
+	
+	00028
+__overrides__:i2c_arm_baudrate
+	
+	00026636c6f636b2d6672657175656e63793a30066d
+__overrides__:i2c_baudrate
+	
+	00026636c6f636b2d6672657175656e63793a30066d
+__overrides__:i2c_arm
+	
+	00026737461747573072
+__overrides__:i2c
+	
+	00026737461747573072
+__overrides__:i2c_vc_baudrate
+	
+	00025636c6f636b2d6672657175656e63793a3003cd
+__overrides__:i2c_vc
+	
+	00025737461747573069
+__overrides__:cache_line_size
+	
+	0001c63616368652d6c696e652d73697a653a30000
+__overrides__:arm_freq
+	
+	0001d636c6f636b2d6672657175656e63793a3000001e636c6f636b2d6672657175656e63793a3000001f636c6f636b2d6672657175656e63793a30000020636c6f636b2d6672657175656e63793a300
+__overrides__:uart0
+	
+	0002173746174757300
+__overrides__:uart1
+	
+	0002273746174757300
+__overrides__:i2s
+	
+	0002373746174757300
+__overrides__:spi
+	
+	0002473746174757300
+__overrides__:i2c0
+	
+	0002573746174757300
+__overrides__:i2c1
+	
+	0002673746174757300
+__overrides__:i2c2_iknowwhatimdoing
+	
+	0001473746174757300
+__overrides__:i2c0_baudrate
+	
+	00025636c6f636b2d6672657175656e63793a30000
+__overrides__:i2c1_baudrate
+	
+	00026636c6f636b2d6672657175656e63793a30000
+__overrides__:i2c2_baudrate
+	
+	00014636c6f636b2d6672657175656e63793a30000
+__overrides__:act_led_gpio
+	
+	000276770696f733a340
+__overrides__:act_led_activelow
+	
+	000276770696f733a380
+__overrides__:act_led_trigger
+	
+	000276c696e75782c64656661756c742d74726967676572000
+__overrides__:pwr_led_gpio
+	
+	000286770696f733a340
+__overrides__:pwr_led_activelow
+	
+	000286770696f733a380
+__overrides__:pwr_led_trigger
+	
+	000286c696e75782c64656661756c742d74726967676572000
+__overrides__:audio
+	
+	0002973746174757300
+__overrides__:watchdog
+	
+	0002a73746174757300
+__overrides__:random
+	
+	0002b73746174757300
+__overrides__:sd_overclock
+	
+	0002c6272636d2c6f766572636c6f636b2d35303a300
+__overrides__:sd_force_pio
+	
+	0002c6272636d2c666f7263652d70696f3f0
+__overrides__:sd_pio_limit
+	
+	0002c6272636d2c70696f2d6c696d69743a300000
+__overrides__:sd_debug
+	
+	0002c6272636d2c646562756700
+cpus:#address-cells
+	
+	0001
+cpus:#size-cells
+	
+	0000
+cpus:phandle
+	
+	0004b
+cpu@0:device_type
+	cpu
+	6370750
+cpu@0:compatible
+	arm,cortex-a7
+	61726d2c636f727465782d6137000
+cpu@0:reg
+	
+	0000
+cpu@0:clock-frequency
+	GÜå
+	47868c0
+cpu@0:phandle
+	
+	0001d
+cpu@1:device_type
+	cpu
+	6370750
+cpu@1:compatible
+	arm,cortex-a7
+	61726d2c636f727465782d6137000
+cpu@1:reg
+	
+	0001
+cpu@1:clock-frequency
+	GÜå
+	47868c0
+cpu@1:phandle
+	
+	0001e
+cpu@2:device_type
+	cpu
+	6370750
+cpu@2:compatible
+	arm,cortex-a7
+	61726d2c636f727465782d6137000
+cpu@2:reg
+	
+	0002
+cpu@2:clock-frequency
+	GÜå
+	47868c0
+cpu@2:phandle
+	
+	0001f
+cpu@3:device_type
+	cpu
+	6370750
+cpu@3:compatible
+	arm,cortex-a7
+	61726d2c636f727465782d6137000
+cpu@3:reg
+	
+	0003
+cpu@3:clock-frequency
+	GÜå
+	47868c0
+cpu@3:phandle
+	
+	00020
+__symbols__:i2c_arm
+	/soc/i2c@7e804000
+	2f736f632f693263403765383034303030032f
+__symbols__:i2c
+	/soc/i2c@7e804000
+	2f736f632f693263403765383034303030032f
+__symbols__:i2c_vc
+	/soc/i2c@7e205000
+	2f736f632f693263403765323035303030032f
+__symbols__:soc
+	/soc
+	2f736f630000
+__symbols__:dma
+	/soc/dma@7e007000
+	2f736f632f646d61403765303037303030000
+__symbols__:intc
+	/soc/interrupt-controller@7e00b200
+	2f736f632f696e746572727570742d636f6e74726f6c6c657240376530306232303000
+__symbols__:watchdog
+	/soc/watchdog@7e100000
+	2f736f632f7761746368646f6740376531303030303000
+__symbols__:cprman
+	/soc/cprman@7e101000
+	2f736f632f6370726d616e4037653130313030300000
+__symbols__:clocks
+	/soc/cprman@7e101000
+	2f736f632f6370726d616e4037653130313030300000
+__symbols__:random
+	/soc/rng@7e104000
+	2f736f632f726e67403765313034303030000
+__symbols__:mailbox
+	/soc/mailbox@7e00b880
+	2f736f632f6d61696c626f78403765303062383830000
+__symbols__:gpio
+	/soc/gpio@7e200000
+	2f736f632f6770696f40376532303030303000
+__symbols__:sdhost_pins
+	/soc/gpio@7e200000/sdhost_pins
+	2f736f632f6770696f4037653230303030302f7364686f73745f70696e7300
+__symbols__:spi0_pins
+	/soc/gpio@7e200000/spi0_pins
+	2f736f632f6770696f4037653230303030302f737069305f70696e730000
+__symbols__:spi0_cs_pins
+	/soc/gpio@7e200000/spi0_cs_pins
+	2f736f632f6770696f4037653230303030302f737069305f63735f70696e730
+__symbols__:i2c0_pins
+	/soc/gpio@7e200000/i2c0
+	2f736f632f6770696f4037653230303030302f693263300
+__symbols__:i2c1_pins
+	/soc/gpio@7e200000/i2c1
+	2f736f632f6770696f4037653230303030302f693263310
+__symbols__:i2s_pins
+	/soc/gpio@7e200000/i2s
+	2f736f632f6770696f4037653230303030302f69327300
+__symbols__:sdio_pins
+	/soc/gpio@7e200000/sdio_pins
+	2f736f632f6770696f4037653230303030302f7364696f5f70696e730000
+__symbols__:bt_pins
+	/soc/gpio@7e200000/bt_pins
+	2f736f632f6770696f4037653230303030302f62745f70696e7300
+__symbols__:uart0_pins
+	/soc/gpio@7e200000/uart0_pins
+	2f736f632f6770696f4037653230303030302f75617274305f70696e73000
+__symbols__:uart1_pins
+	/soc/gpio@7e200000/uart1_pins
+	2f736f632f6770696f4037653230303030302f75617274315f70696e73000
+__symbols__:audio_pins
+	/soc/gpio@7e200000/audio_pins
+	2f736f632f6770696f4037653230303030302f617564696f5f70696e73000
+__symbols__:uart0
+	/soc/serial@7e201000
+	2f736f632f73657269616c4037653230313030300000
+__symbols__:i2s
+	/soc/i2s@7e203000
+	2f736f632f693273403765323033303030000
+__symbols__:spi0
+	/soc/spi@7e204000
+	2f736f632f737069403765323034303030000
+__symbols__:spi
+	/soc/spi@7e204000
+	2f736f632f737069403765323034303030000
+__symbols__:spidev0
+	/soc/spi@7e204000/spidev@0
+	2f736f632f7370694037653230343030302f737069646576403000
+__symbols__:spidev1
+	/soc/spi@7e204000/spidev@1
+	2f736f632f7370694037653230343030302f737069646576403100
+__symbols__:i2c0
+	/soc/i2c@7e205000
+	2f736f632f693263403765323035303030000
+__symbols__:pixelvalve0
+	/soc/pixelvalve@7e206000
+	2f736f632f706978656c76616c76654037653230363030300000
+__symbols__:pixelvalve1
+	/soc/pixelvalve@7e207000
+	2f736f632f706978656c76616c76654037653230373030300000
+__symbols__:dsi0
+	/soc/dsi@7e209000
+	2f736f632f647369403765323039303030000
+__symbols__:aux
+	/soc/aux@0x7e215000
+	2f736f632f61757840307837653231353030300
+__symbols__:uart1
+	/soc/serial@7e215040
+	2f736f632f73657269616c4037653231353034300000
+__symbols__:spi1
+	/soc/spi@7e215080
+	2f736f632f737069403765323135303830000
+__symbols__:spi2
+	/soc/spi@7e2150c0
+	2f736f632f737069403765323135306330000
+__symbols__:pwm
+	/soc/pwm@7e20c000
+	2f736f632f70776d403765323063303030000
+__symbols__:hvs
+	/soc/hvs@7e400000
+	2f736f632f687673403765343030303030000
+__symbols__:dsi1
+	/soc/dsi@7e700000
+	2f736f632f647369403765373030303030000
+__symbols__:i2c1
+	/soc/i2c@7e804000
+	2f736f632f693263403765383034303030000
+__symbols__:i2c2
+	/soc/i2c@7e805000
+	2f736f632f693263403765383035303030000
+__symbols__:vec
+	/soc/vec@7e806000
+	2f736f632f766563403765383036303030000
+__symbols__:pixelvalve2
+	/soc/pixelvalve@7e807000
+	2f736f632f706978656c76616c76654037653830373030300000
+__symbols__:hdmi
+	/soc/hdmi@7e902000
+	2f736f632f68646d6940376539303230303000
+__symbols__:usb
+	/soc/usb@7e980000
+	2f736f632f757362403765393830303030000
+__symbols__:ethernet
+	/soc/usb@7e980000/usb1@1/usbether@1
+	2f736f632f7573624037653938303030302f7573623140312f757362657468657240310
+__symbols__:v3d
+	/soc/v3d@7ec00000
+	2f736f632f763364403765633030303030000
+__symbols__:gpu
+	/soc/gpu
+	2f736f632f6770750000
+__symbols__:vc4
+	/soc/gpu
+	2f736f632f6770750000
+__symbols__:sdhost
+	/soc/sdhost@7e202000
+	2f736f632f7364686f73744037653230323030300000
+__symbols__:dpi
+	/soc/dpi@7e208000
+	2f736f632f647069403765323038303030000
+__symbols__:mmc
+	/soc/mmc@7e300000
+	2f736f632f6d6d63403765333030303030000
+__symbols__:firmwarekms
+	/soc/firmwarekms@7e600000
+	2f736f632f6669726d776172656b6d73403765363030303030000
+__symbols__:smi
+	/soc/smi@7e600000
+	2f736f632f736d69403765363030303030000
+__symbols__:i2c_dsi
+	/soc/i2cdsi
+	2f736f632f6932636473690
+__symbols__:pitouchscreen_bridge
+	/soc/i2cdsi/bridge@45
+	2f736f632f6932636473692f627269646765403435000
+__symbols__:pitouchscreen_touch
+	/soc/i2cdsi/bridge@38
+	2f736f632f6932636473692f627269646765403338000
+__symbols__:firmware
+	/soc/firmware
+	2f736f632f6669726d77617265000
+__symbols__:power
+	/soc/power
+	2f736f632f706f77657200
+__symbols__:fb
+	/soc/fb
+	2f736f632f66620
+__symbols__:vchiq
+	/soc/vchiq
+	2f736f632f766368697100
+__symbols__:vcsm
+	/soc/vcsm
+	2f736f632f7663736d000
+__symbols__:thermal
+	/soc/thermal
+	2f736f632f746865726d616c0000
+__symbols__:audio
+	/soc/audio
+	2f736f632f617564696f00
+__symbols__:sound
+	/soc/sound
+	2f736f632f736f756e6400
+__symbols__:local_intc
+	/soc/local_intc
+	2f736f632f6c6f63616c5f696e74630
+__symbols__:virtgpio
+	/soc/virtgpio
+	2f736f632f766972746770696f000
+__symbols__:expgpio
+	/soc/expgpio
+	2f736f632f6578706770696f0000
+__symbols__:clk_osc
+	/clocks/clock@3
+	2f636c6f636b732f636c6f636b40330
+__symbols__:clk_usb
+	/clocks/clock@4
+	2f636c6f636b732f636c6f636b40340
+__symbols__:vdd_5v0_reg
+	/fixedregulator_5v0
+	2f6669786564726567756c61746f725f3576300
+__symbols__:vdd_3v3_reg
+	/fixedregulator_3v3
+	2f6669786564726567756c61746f725f3376330
+__symbols__:leds
+	/leds
+	2f6c656473000
+__symbols__:act_led
+	/leds/act
+	2f6c6564732f616374000
+__symbols__:pwr_led
+	/leds/pwr
+	2f6c6564732f707772000
+__symbols__:cpus
+	/cpus
+	2f63707573000
+__symbols__:v7_cpu0
+	/cpus/cpu@0
+	2f637075732f63707540300
+__symbols__:v7_cpu1
+	/cpus/cpu@1
+	2f637075732f63707540310
+__symbols__:v7_cpu2
+	/cpus/cpu@2
+	2f637075732f63707540320
+__symbols__:v7_cpu3
+	/cpus/cpu@3
+	2f637075732f63707540330

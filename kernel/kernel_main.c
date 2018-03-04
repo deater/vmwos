@@ -97,7 +97,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	/* Detect Hardware */
 
-	result=devicetree_decode((uint32_t *)r2);
+	result=devicetree_setup((uint32_t *)r2);
 
 	if (result==0) {
 		device_tree_found=1;
@@ -167,7 +167,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	if (device_tree_found) {
 		printk("Device Tree values:\n");
 		//devicetree_dump();
-		devicetree_raw_dump((uint32_t *)r2);
+		//devicetree_raw_dump((uint32_t *)r2);
 	}
 
 	printk("\n");
