@@ -1,7 +1,6 @@
 #include <stdint.h>
 
 #include "mmio.h"
-#include "hardware.h"
 
 #if defined(ARMV7)
 #define			IO_BASE		0x3f000000

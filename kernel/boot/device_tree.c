@@ -12,8 +12,9 @@
 #define FDT_NOP		4
 #define FDT_END		9
 
-#include <inttypes.h>
 #include <stdint.h>
+
+#include <stddef.h>
 
 /* Not sure why arm cross-compiler does not support this? */
 #ifndef	PRIx64
@@ -32,9 +33,9 @@
 
 #include "boot/device_tree.h"
 
-#ifndef NULL
-#define NULL (void *)0
-#endif
+//#ifndef NULL
+//#define NULL (void *)0
+//#endif
 
 #else
 
@@ -142,13 +143,11 @@ static void dt_copy_string(uint32_t offset, char *s, uint32_t len) {
 	strlcpy(s,string,len);
 }
 
-#define DT_MAXSIZE	128
-
 static uint32_t dt_parse_prop(uint32_t *tree, int *i,
 	char *current_node_name, char *node, char *prop) {
 
 	uint32_t temp,length,j,k;
-	char string[DT_MAXSIZE];
+	char string[DT_STRING_MAXSIZE];
 	int printing,saved;
 	int start_i;
 
@@ -164,13 +163,13 @@ static uint32_t dt_parse_prop(uint32_t *tree, int *i,
 
 	temp=big_to_little(tree[*i]);
 	//if (fdt_verbose) printk("\tstring offset: %x\n",temp);
-	dt_copy_string(temp,string,DT_MAXSIZE);
+	dt_copy_string(temp,string,DT_STRING_MAXSIZE);
 //	printk("%s",string);
 
 
-	if ((node==0) || (!strncmp(node,current_node_name,DT_MAXSIZE))) {
+	if ((node==0) || (!strncmp(node,current_node_name,DT_STRING_MAXSIZE))) {
 
-		if (!strncmp(string,prop,DT_MAXSIZE)) {
+		if (!strncmp(string,prop,DT_STRING_MAXSIZE)) {
 			//printk("FOUND!\n");
 			return start_i;
 		}
@@ -293,7 +292,7 @@ static uint32_t dt_parse_node(uint32_t *tree, int *i,char *node, char *prop) {
 
 	uint32_t temp;
 	char *ptr;
-	char node_name[DT_MAXSIZE];
+	char node_name[DT_STRING_MAXSIZE];
 	uint32_t result;
 
 	if (big_to_little(tree[*i])!=FDT_BEGIN_NODE) {
@@ -306,7 +305,7 @@ static uint32_t dt_parse_node(uint32_t *tree, int *i,char *node, char *prop) {
 //	printk("Node: ");
 
 	ptr=(char *)&tree[*i];
-	strlcpy(node_name,ptr,DT_MAXSIZE);
+	strlcpy(node_name,ptr,DT_STRING_MAXSIZE);
 //	printk("%s\n",ptr);
 
 	/* Skip to end of padding */
@@ -523,7 +522,7 @@ int main(int argc, char **argv) {
 	char *dt_mem;
 	int fd;
 	int size;
-	char string[DT_MAXSIZE];
+	char string[DT_STRING_MAXSIZE];
 	uint32_t revision=0;
 
 	dt_mem=calloc(MAXSIZE,sizeof(char));
@@ -546,7 +545,7 @@ int main(int argc, char **argv) {
 
 	devicetree_setup((uint32_t *)dt_mem);
 
-	devicetree_find_string(NULL,"model",string,DT_MAXSIZE);
+	devicetree_find_string(NULL,"model",string,DT_STRING_MAXSIZE);
 
 	printf("\t%s\n",string);
 

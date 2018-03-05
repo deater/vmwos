@@ -8,4 +8,8 @@
 #define RPI_MODEL_ZERO		8
 #define RPI_MODEL_3B		9
 
-extern uint32_t hardware_type;
+uint32_t hardware_detect(void *info_ptr);
+void hardware_print_model(uint32_t version);
+void hardware_print_commandline(void);
+uint32_t hardware_get_type(void);
+

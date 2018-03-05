@@ -1,5 +1,6 @@
 0.16 -- ?? March 2018
 + Pi2/Pi3 support
++ device-tree support
 
 0.15 -- 20 May 2016
 + new syscalls: chdir,nanosleep

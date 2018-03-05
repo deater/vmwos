@@ -1,14 +1,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
 #include "drivers/block/ramdisk.h"
 
 #include "drivers/serial/serial.h"
 
 #include "lib/printk.h"
 
-#include "boot/atags.h"
-#include "boot/device_tree.h"
+#include "boot/hardware_detect.h"
 
 #include "drivers/led/led.h"
 #include "delay.h"
@@ -17,7 +17,6 @@
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "memory.h"
 #include "syscalls.h"
-#include "hardware.h"
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "drivers/pmu/arm-pmu.h"
@@ -45,10 +44,6 @@
 
 #include "version.h"
 
-/* default, this is over-ridden later */
-//uint32_t hardware_type=RPI_MODEL_B;
-uint32_t hardware_type=RPI_MODEL_3B;
-
 /* For memory benchmark */
 #define BENCH_SIZE (1024*1024)
 //uint8_t benchmark[BENCH_SIZE];
@@ -71,22 +66,13 @@ void enter_userspace(void) {
 		: "r0", "lr", "memory");        /* clobbers */
 }
 
-
-//void pl011_uart_putc(unsigned char byte);
-//uint32_t pl011_write(const char* buffer, size_t size);
-//void pl011_uart_putc_extra(unsigned char byte, unsigned int extra);
-//uint32_t old_pl011_uart_init(void);
-//extern int gpio_clk;
-
-
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		uint32_t memory_kernel) {
 
 	struct process_control_block_type *init_process,*idle_process;
-	struct atag_info_t atag_info;
 	uint32_t framebuffer_width=800,framebuffer_height=600;
 	uint32_t temperature;
-	int32_t result,atags_found=0,device_tree_found=0;
+	int32_t result;
 
 	(void) r0;	/* Ignore boot method */
 
@@ -96,36 +82,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Initialize Software Structures */
 
 	/* Detect Hardware */
-
-	result=devicetree_setup((uint32_t *)r2);
-
-	if (result==0) {
-		device_tree_found=1;
-	} else {
-		/* Atags is being deprecated on new Pis */
-		atags_detect((uint32_t *)r2,&atag_info);
-		atags_found=1;
-		hardware_type=atag_info.hardware_type;
-	}
-
-//	if (hardware_type==RPI_MODEL_3B) {
-//		emergency_blink();
-//	}
+	printk("Detecting hardware:\n");
+	result=hardware_detect((uint32_t *)r2);
 
 	/* Initialize Hardware */
 
 	/* Serial console is most important so do that first */
-//	if (hardware_type==RPI_MODEL_3B) {
-//		serial_init(SERIAL_UART_PL011);
-//		printk("\n\n\nUsing mini-uart\n");
-//	}
-//	else {
-		serial_init(SERIAL_UART_PL011);
-		serial_printk("\n\n\nUsing pl011-uart\n");
-//	}
-
-//		emergency_blink();
-
+	serial_init(SERIAL_UART_PL011);
+	serial_printk("\n\n\nUsing pl011-uart\n");
 
 	/************************/
 	/* Boot message!	*/
@@ -139,38 +103,24 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
 	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version %s\n\n",VERSION);
 
-	/* Print hardware version */
-	printk("Hardware version: %x ",r1);
-	if (r1==0xc42) printk("(Raspberry Pi)");
-	else printk("(Unknown Hardware)");
-	printk("\n");
+	/* Print model info */
+	hardware_print_model(r1);
 
-	printk("Detected Model ");
-	switch(hardware_type) {
-		case RPI_MODEL_A:	printk("A"); break;
-		case RPI_MODEL_APLUS:	printk("A+"); break;
-		case RPI_MODEL_B:	printk("B"); break;
-		case RPI_MODEL_BPLUS:	printk("B+"); break;
-		case RPI_MODEL_2B:	printk("2B"); break;
-		case RPI_MODEL_3B:	printk("3B"); break;
-		case RPI_MODEL_ZERO:	printk("Zero"); break;
-		case RPI_COMPUTE_NODE:	printk("Compute Node"); break;
-		default:		printk("Unknown %x",hardware_type); break;
-	}
-	printk("\n");
+	/* Print command line */
+	hardware_print_commandline();
 
 	/* Print ATAGS */
-	if (atags_found) {
-		printk("ATAGS values:\n");
-		atags_dump((uint32_t *)r2);
-	}
-	if (device_tree_found) {
-		printk("Device Tree values:\n");
+//	if (atags_found) {
+//		printk("ATAGS values:\n");
+//		atags_dump((uint32_t *)r2);
+//	}
+//	if (device_tree_found) {
+//		printk("Device Tree values:\n");
 		//devicetree_dump();
 		//devicetree_raw_dump((uint32_t *)r2);
-	}
+//	}
 
-	printk("\n");
+//	printk("\n");
 
 	/**************************/
 	/* Device Drivers	  */
@@ -240,7 +190,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Start HW Perf Counters */
 	pmu_init();
 
-	if ((hardware_type==RPI_MODEL_2B) || (hardware_type==RPI_MODEL_3B)) {
+	if ((hardware_get_type()==RPI_MODEL_2B) ||
+		(hardware_get_type()==RPI_MODEL_3B)) {
 
 		/* Enable L1 d-cache */
 		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");

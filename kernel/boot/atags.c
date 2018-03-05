@@ -2,7 +2,7 @@
 
 #include "boot/atags.h"
 #include "lib/printk.h"
-#include "hardware.h"
+#include "boot/hardware_detect.h"
 #include "lib/string.h"
 #include "lib/memset.h"
 
@@ -240,48 +240,6 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info) {
 			info->framebuffer_y=parse_cmdline_int(cmdline,"fbheight");
 
 			info->revision=parse_cmdline_int(cmdline,"rev");
-
-			/* http://elinux.org/RPi_HardwareHistory */
-			switch(info->revision) {
-				case 0x2:
-				case 0x3:
-				case 0x4:
-				case 0x5:
-				case 0x6:
-				case 0xd:
-				case 0xe:
-				case 0xf:	info->hardware_type=RPI_MODEL_B;
-						break;
-				case 0x7:
-				case 0x8:
-				case 0x9:	info->hardware_type=RPI_MODEL_A;
-						break;
-				case 0x10:
-				case 0x13:	info->hardware_type=RPI_MODEL_BPLUS;
-						break;
-				case 0x11:
-				case 0x14:	info->hardware_type=RPI_COMPUTE_NODE;
-						break;
-				case 0x12:
-				case 0x15:	info->hardware_type=RPI_MODEL_APLUS;
-						break;
-				case 0x90092:
-				case 0x90093:
-						info->hardware_type=RPI_MODEL_ZERO;
-						break;
-				case 0xa01040:
-				case 0xa01041:
-				case 0xa21041:
-				case 0xa22042:
-						info->hardware_type=RPI_MODEL_2B;
-						break;
-				case 0xa02082:
-				case 0xa22082:
-						info->hardware_type=RPI_MODEL_3B;
-						break;
-				default:	info->hardware_type=RPI_UNKNOWN;
-						break;
-			}
 
 			tags += size;
 			break;
