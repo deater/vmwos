@@ -14,51 +14,53 @@ kernel7.img:	kernel7.elf
 	$(CROSS)objcopy kernel7.elf -O binary kernel7.img
 
 kernel.elf:	kernel_main.o \
-	idle_task.o arm1176-mmu.o syscalls.o \
-	interrupts.o memory.o process.o scheduler.o time.o wait.o \
+	idle_task.o syscalls.o \
+	interrupts.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-arm1176.a \
 	debug/debug.a \
 	drivers/drivers.arm1176.a \
 	fs/fs.a \
+	memory/memory-arm1176.a \
 	syscalls/syscalls.a \
 	lib/lib.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
-		arm1176-mmu.o \
 		syscalls.o \
-		interrupts.o memory.o process.o scheduler.o time.o wait.o \
+		interrupts.o process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot-arm1176.a \
 		drivers/drivers.arm1176.a \
 		debug/debug.a \
 		fs/fs.a \
+		memory/memory-arm1176.a \
 		syscalls/syscalls.a \
 		lib/lib.a \
 		-Map kernel.map -o kernel.elf
 
 kernel7.elf:	kernel_main.o \
-	idle_task.o arm1176-mmu.o syscalls.o \
-	interrupts.o memory.o process.o scheduler.o time.o wait.o \
+	idle_task.o syscalls.o \
+	interrupts.o process.o scheduler.o time.o wait.o \
 	swi_handler.o irq_handler.o \
 	boot/boot-armv7.a \
 	debug/debug.a \
 	drivers/drivers.armv7.a \
 	fs/fs.a \
+	memory/memory-armv7.a \
 	syscalls/syscalls.a \
 	lib/lib.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
-		arm1176-mmu.o \
-		syscalls.o interrupts.o memory.o \
+		syscalls.o interrupts.o \
 		process.o scheduler.o time.o wait.o \
 		swi_handler.o irq_handler.o \
 		boot/boot-armv7.a \
 		drivers/drivers.armv7.a \
 		debug/debug.a \
 		fs/fs.a \
+		memory/memory-arm1176.a \
 		syscalls/syscalls.a \
 		lib/lib.a \
 		-Map kernel7.map -o kernel7.elf
@@ -111,6 +113,9 @@ boot/boot-arm1176.a:	force_look
 drivers/drivers.arm1176.a:	force_look
 	cd drivers && make
 
+memory/memory-arm1176.a:	force_look
+	cd memory && make
+
 ### ARMV7
 
 boot/boot-armv7.a:	force_look
@@ -118,6 +123,9 @@ boot/boot-armv7.a:	force_look
 
 drivers/drivers.armv7.a:	force_look
 	cd drivers && make
+
+memory/memory-armv7.a:	force_look
+	cd memory && make
 
 ###
 
@@ -131,11 +139,13 @@ debug/debug.a:	force_look
 fs/fs.a:	force_look
 	cd fs && make
 
+lib/lib.a:	force_look
+	cd lib && make
+
 syscalls/syscalls.a:	force_look
 	cd syscalls && make
 
-lib/lib.a:	force_look
-	cd lib && make
+
 
 
 
@@ -154,5 +164,6 @@ clean:
 	cd debug && make clean
 	cd drivers && make clean
 	cd fs && make clean
+	cd memory && make clean
 	cd syscalls && make clean
 	cd lib && make clean
