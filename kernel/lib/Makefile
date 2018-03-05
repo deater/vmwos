@@ -3,29 +3,57 @@ include ../Makefile_kernel.inc
 
 INCLUDE = -I../include
 
-all:	lib.a
+all:	lib-arm1176.a lib-armv7.a
 
-lib.a:	div.o memcpy.o memory_benchmark.o memset.o printk.o string.o
-	$(CROSS)$(AR) crs lib.a div.o memcpy.o memory_benchmark.o memset.o \
-		printk.o string.o
+### ARM1176
 
-div.o:	div.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o div.o -c div.c
+lib-arm1176.a:	div.arm1176.o memcpy.arm1176.o memory_benchmark.arm1176.o memset.arm1176.o printk.arm1176.o string.arm1176.o
+	$(CROSS)$(AR) crs lib-arm1176.a div.arm1176.o memcpy.arm1176.o memory_benchmark.arm1176.o memset.arm1176.o \
+		printk.arm1176.o string.arm1176.o
 
-memcpy.o:	memcpy.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o memcpy.o -c memcpy.c
+div.arm1176.o:	div.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o div.arm1176.o -c div.c
 
-memory_benchmark.o:	memory_benchmark.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o memory_benchmark.o -c memory_benchmark.c
+memcpy.arm1176.o:	memcpy.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o memcpy.arm1176.o -c memcpy.c
 
-memset.o:	memset.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o memset.o -c memset.c
+memory_benchmark.arm1176.o:	memory_benchmark.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o memory_benchmark.arm1176.o -c memory_benchmark.c
 
-printk.o:	printk.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o printk.o -c printk.c
+memset.arm1176.o:	memset.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o memset.arm1176.o -c memset.c
 
-string.o:	string.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o string.o -c string.c
+printk.arm1176.o:	printk.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o printk.arm1176.o -c printk.c
+
+string.arm1176.o:	string.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o string.arm1176.o -c string.c
+
+### ARMV7
+
+lib-armv7.a:	div.armv7.o memcpy.armv7.o memory_benchmark.armv7.o memset.armv7.o printk.armv7.o string.armv7.o
+	$(CROSS)$(AR) crs lib-armv7.a div.armv7.o memcpy.armv7.o memory_benchmark.armv7.o memset.armv7.o \
+		printk.armv7.o string.armv7.o
+
+div.armv7.o:	div.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o div.armv7.o -c div.c
+
+memcpy.armv7.o:	memcpy.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o memcpy.armv7.o -c memcpy.c
+
+memory_benchmark.armv7.o:	memory_benchmark.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o memory_benchmark.armv7.o -c memory_benchmark.c
+
+memset.armv7.o:	memset.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o memset.armv7.o -c memset.c
+
+printk.armv7.o:	printk.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o printk.armv7.o -c printk.c
+
+string.armv7.o:	string.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o string.armv7.o -c string.c
+
+###
 
 clean:
 	rm -f *~ *.o *.a

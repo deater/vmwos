@@ -23,7 +23,7 @@ kernel.elf:	kernel_main.o \
 	fs/fs.a \
 	memory/memory-arm1176.a \
 	syscalls/syscalls.a \
-	lib/lib.a
+	lib/lib-arm1176.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
@@ -36,7 +36,7 @@ kernel.elf:	kernel_main.o \
 		fs/fs.a \
 		memory/memory-arm1176.a \
 		syscalls/syscalls.a \
-		lib/lib.a \
+		lib/lib-arm1176.a \
 		-Map kernel.map -o kernel.elf
 
 kernel7.elf:	kernel_main.o \
@@ -49,7 +49,7 @@ kernel7.elf:	kernel_main.o \
 	fs/fs.a \
 	memory/memory-armv7.a \
 	syscalls/syscalls.a \
-	lib/lib.a
+	lib/lib-armv7.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
@@ -62,7 +62,7 @@ kernel7.elf:	kernel_main.o \
 		fs/fs.a \
 		memory/memory-arm1176.a \
 		syscalls/syscalls.a \
-		lib/lib.a \
+		lib/lib-armv7.a \
 		-Map kernel7.map -o kernel7.elf
 
 kernel_main.o:	kernel_main.c version.h
@@ -113,6 +113,9 @@ boot/boot-arm1176.a:	force_look
 drivers/drivers.arm1176.a:	force_look
 	cd drivers && make
 
+lib/lib-arm1176.a:	force_look
+	cd lib && make
+
 memory/memory-arm1176.a:	force_look
 	cd memory && make
 
@@ -124,6 +127,9 @@ boot/boot-armv7.a:	force_look
 drivers/drivers.armv7.a:	force_look
 	cd drivers && make
 
+lib/lib-armv7.a:	force_look
+	cd lib && make
+
 memory/memory-armv7.a:	force_look
 	cd memory && make
 
@@ -134,13 +140,8 @@ memory/memory-armv7.a:	force_look
 debug/debug.a:	force_look
 	cd debug && make
 
-
-
 fs/fs.a:	force_look
 	cd fs && make
-
-lib/lib.a:	force_look
-	cd lib && make
 
 syscalls/syscalls.a:	force_look
 	cd syscalls && make
