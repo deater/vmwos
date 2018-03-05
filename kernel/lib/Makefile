@@ -29,6 +29,10 @@ printk.arm1176.o:	printk.c
 string.arm1176.o:	string.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o string.arm1176.o -c string.c
 
+#locks.o:        locks.s
+#	$(CROSS)as $(ASFLAGS) -o locks.o locks.s
+
+
 ### ARMV7
 
 lib-armv7.a:	div.armv7.o memcpy.armv7.o memory_benchmark.armv7.o memset.armv7.o printk.armv7.o string.armv7.o
