@@ -1,9 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 #include "drivers/block/ramdisk.h"
-
 #include "drivers/serial/serial.h"
 
 #include "lib/printk.h"
@@ -11,7 +9,6 @@
 #include "boot/hardware_detect.h"
 
 #include "drivers/led/led.h"
-//#include "delay.h"
 #include "drivers/timer/timer.h"
 #include "interrupts/interrupts.h"
 #include "drivers/bcm2835/bcm2835_io.h"
@@ -109,19 +106,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Print command line */
 	hardware_print_commandline();
 
-	/* Print ATAGS */
-//	if (atags_found) {
-//		printk("ATAGS values:\n");
-//		atags_dump((uint32_t *)r2);
-//	}
-//	if (device_tree_found) {
-//		printk("Device Tree values:\n");
-		//devicetree_dump();
-		//devicetree_raw_dump((uint32_t *)r2);
-//	}
-
-//	printk("\n");
-
 	/**************************/
 	/* Device Drivers	  */
 	/**************************/
@@ -146,15 +130,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	framebuffer_init(framebuffer_width,framebuffer_height,24);
 	framebuffer_console_init();
-#endif
-
-#if 0
-	/* Delay to allow time for serial port to settle */
-	/* So we can actually see the output on the terminal */
-	delay(0x3f0000);
-
-	printk("\nWaiting for serial port to be ready (press any key)\n");
-	uart_getc();
 #endif
 
 	serial_enable_interrupts();

@@ -1,11 +1,11 @@
 include ../../Makefile.inc
 include ../Makefile_kernel.inc
 
-all:	drivers.arm1176.a drivers.armv7.a
+all:	drivers-arm1176.a drivers-armv7.a
 
 #### ARM1176
 
-drivers.arm1176.a:	\
+drivers-arm1176.a:	\
 		bcm2835/bcm2835.arm1176.a \
 		block/block.arm1176.a \
 		console/console.arm1176.a \
@@ -20,7 +20,7 @@ drivers.arm1176.a:	\
 		thermal/thermal.arm1176.a \
 		timer/timer.arm1176.a
 
-	$(CROSS)$(AR) crsT drivers.arm1176.a \
+	$(CROSS)$(AR) crsT drivers-arm1176.a \
 		bcm2835/bcm2835.arm1176.a \
 		block/block.arm1176.a \
 		console/console.arm1176.a \
@@ -78,7 +78,7 @@ timer/timer.arm1176.a:	force_look
 
 #### ARMV7
 
-drivers.armv7.a:	\
+drivers-armv7.a:	\
 		bcm2835/bcm2835.armv7.a \
 		block/block.armv7.a \
 		console/console.armv7.a \
@@ -93,7 +93,7 @@ drivers.armv7.a:	\
 		thermal/thermal.armv7.a \
 		timer/timer.armv7.a
 
-	$(CROSS)$(AR) crsT drivers.armv7.a \
+	$(CROSS)$(AR) crsT drivers-armv7.a \
 		bcm2835/bcm2835.armv7.a \
 		block/block.armv7.a \
 		console/console.armv7.a \
