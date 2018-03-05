@@ -2,7 +2,7 @@
 
 #include "syscalls/times.h"
 
-#include "process.h"
+#include "processes/process.h"
 
 int32_t times(struct tms *buf) {
 

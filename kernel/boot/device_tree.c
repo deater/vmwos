@@ -26,9 +26,7 @@
 #include "lib/string.h"
 #include "lib/memset.h"
 #include "lib/memcpy.h"
-
-#include "errors.h"
-
+#include "lib/errors.h"
 #include "lib/printk.h"
 
 #include "boot/device_tree.h"

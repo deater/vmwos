@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "process.h"
+#include "processes/process.h"
 #include "lib/printk.h"
 
 void dump_saved_user_state(struct process_control_block_type *proc) {

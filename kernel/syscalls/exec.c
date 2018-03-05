@@ -1,20 +1,21 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "memory.h"
+#include "memory/memory.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"
+#include "lib/errors.h"
 
 #include "drivers/block/ramdisk.h"
 
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
 
-#include "process.h"
+#include "processes/process.h"
 #include "syscalls/exit.h"
 
-#include "errors.h"
+
 
 static int debug=0;
 

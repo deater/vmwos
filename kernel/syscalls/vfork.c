@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "process.h"
-#include "scheduler.h"
+#include "processes/process.h"
+#include "processes/scheduler.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"

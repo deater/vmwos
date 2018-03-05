@@ -7,7 +7,7 @@
 #include "boot/hardware_detect.h"
 #include "drivers/gpio/gpio.h"
 #include "lib/printk.h"
-#include "errors.h"
+#include "lib/errors.h"
 
 /* Default for Model B */
 static uint32_t led_gpio=16;

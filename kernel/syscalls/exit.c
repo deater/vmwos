@@ -4,8 +4,8 @@
 #include "lib/printk.h"
 #include "lib/string.h"
 
-#include "process.h"
-#include "scheduler.h"
+#include "processes/process.h"
+#include "processes/scheduler.h"
 
 #include "syscalls/wait.h"
 

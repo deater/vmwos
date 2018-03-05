@@ -1,14 +1,16 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "errors.h"
-
-#include "drivers/console/console_io.h"
-#include "fs/files.h"
-#include "fs/romfs/romfs.h"
+#include "lib/errors.h"
 #include "lib/printk.h"
 #include "lib/string.h"
-#include "process.h"
+
+#include "drivers/console/console_io.h"
+
+#include "fs/files.h"
+#include "fs/romfs/romfs.h"
+
+#include "processes/process.h"
 
 static int debug=0;
 

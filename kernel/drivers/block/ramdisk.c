@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "errors.h"
+#include "lib/errors.h"
 #include "lib/printk.h"
 #include "lib/string.h"
 #include "lib/memcpy.h"

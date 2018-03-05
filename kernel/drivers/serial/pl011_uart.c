@@ -7,18 +7,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "drivers/bcm2835/bcm2835_io.h"
-#include "drivers/bcm2835/bcm2835_periph.h"
-
-#include "delay.h"
 #include "drivers/gpio/gpio.h"
 #include "drivers/console/console_io.h"
-#include "interrupts.h"
-#include "lib/printk.h"
-
+#include "drivers/bcm2835/bcm2835_io.h"
+#include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/serial/serial.h"
 #include "drivers/serial/pl011_uart.h"
 
+#include "lib/delay.h"
+#include "lib/printk.h"
+
+#include "interrupts/interrupts.h"
 
 static int pl011_uart_initialized=0;
 

@@ -1,10 +1,10 @@
 #include <stdint.h>
 
 #include "syscalls/sysinfo.h"
-#include "time.h"
-#include "memory.h"
+#include "time/time.h"
+#include "memory/memory.h"
 #include "lib/memset.h"
-#include "process.h"
+#include "processes/process.h"
 
 int32_t sysinfo(struct sysinfo *buf) {
 

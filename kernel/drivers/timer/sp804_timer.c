@@ -5,9 +5,9 @@
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/led/led.h"
-#include "time.h"
-#include "wait.h"
-#include "process.h"
+#include "time/time.h"
+#include "processes/wait.h"
+#include "processes/process.h"
 
 /* This is the standard ARM timer */
 /* Described in Chapter 14 of the BCM2835 ARM Peripherals Document */

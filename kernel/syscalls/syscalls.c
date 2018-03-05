@@ -1,28 +1,36 @@
 #include <stddef.h>
 #include <stdint.h>
+
 #include "lib/printk.h"
-#include "syscalls.h"
+
+#include "syscalls/syscalls.h"
+
 #include "drivers/console/console_io.h"
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
-#include "fs/files.h"
-#include "time.h"
-#include "interrupts.h"
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/thermal/thermal.h"
 #include "drivers/random/bcm2835_rng.h"
-#include "process.h"
+#include "fs/files.h"
+
+#include "time/time.h"
+
+#include "interrupts/interrupts.h"
+
+#include "processes/process.h"
+#include "processes/scheduler.h"
+
 #include "syscalls/vfork.h"
 #include "syscalls/exec.h"
 #include "syscalls/exit.h"
 #include "syscalls/wait.h"
-#include "scheduler.h"
 #include "syscalls/uname.h"
 #include "syscalls/sysinfo.h"
 #include "syscalls/times.h"
 #include "syscalls/nanosleep.h"
-#include "memory.h"
+
+#include "memory/memory.h"
 
 extern int blinking_enabled;
 

@@ -4,13 +4,13 @@
 
 #include "drivers/serial/serial.h"
 #include "drivers/framebuffer/framebuffer_console.h"
-#include "locks.h"
+#include "lib/locks.h"
 
-#include "process.h"
+#include "processes/process.h"
+#include "processes/wait.h"
+#include "processes/scheduler.h"
+
 #include "debug/panic.h"
-#include "wait.h"
-
-#include "scheduler.h"
 
 #define INPUT_BUFFER_SIZE	256
 

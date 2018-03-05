@@ -1,15 +1,17 @@
 #include <stddef.h>
 #include <stdint.h>
+
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
-#include "lib/printk.h"
-#include "time.h"
-#include "scheduler.h"
-
 #include "drivers/keyboard/ps2-keyboard.h"
 #include "drivers/timer/timer.h"
-
 #include "drivers/serial/serial.h"
+
+#include "lib/printk.h"
+#include "time/time.h"
+#include "processes/scheduler.h"
+
+
 
 #define MAX_IRQ	64
 

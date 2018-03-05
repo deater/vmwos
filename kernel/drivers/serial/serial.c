@@ -7,7 +7,7 @@
 #include "drivers/serial/pl011_uart.h"
 #include "drivers/serial/mini_uart.h"
 
-#include "errors.h"
+#include "lib/errors.h"
 
 static struct serial_type serial;
 

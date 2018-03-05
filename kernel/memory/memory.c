@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "memory.h"
+#include "memory/memory.h"
 
 #include "lib/printk.h"
 

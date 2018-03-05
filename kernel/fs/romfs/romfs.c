@@ -23,13 +23,12 @@
 #include "lib/string.h"
 #include "lib/memset.h"
 #include "lib/endian.h"
+#include "lib/errors.h"
 
 #include "drivers/block/ramdisk.h"
 
 #include "fs/files.h"
 #include "fs/romfs/romfs.h"
-
-#include "errors.h"
 
 #define MAX_FILENAME_SIZE	256
 

@@ -5,12 +5,16 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "drivers/gpio/gpio.h"
+
 #include "lib/printk.h"
+
+#include "drivers/gpio/gpio.h"
 #include "drivers/keyboard/ps2-keyboard.h"
-#include "interrupts.h"
 #include "drivers/console/console_io.h"
-#include "time.h"
+
+#include "interrupts/interrupts.h"
+
+#include "time/time.h"
 
 static int irq_num;
 

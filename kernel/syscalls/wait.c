@@ -4,10 +4,9 @@
 #include "lib/printk.h"
 #include "lib/string.h"
 
-#include "process.h"
-#include "scheduler.h"
-
-#include "wait.h"
+#include "processes/process.h"
+#include "processes/scheduler.h"
+#include "processes/wait.h"
 
 static int debug=1;
 
