@@ -7,8 +7,15 @@ all:	syscalls-arm1176.a syscalls-armv7.a
 
 ### ARM1176
 
-syscalls-arm1176.a:	exec.arm1176.o exit.arm1176.o nanosleep.arm1176.o sysinfo.arm1176.o times.arm1176.o uname.arm1176.o vfork.arm1176.o wait.arm1176.o
-	$(CROSS)$(AR) crs syscalls-arm1176.a exec.arm1176.o exit.arm1176.o nanosleep.arm1176.o sysinfo.arm1176.o times.arm1176.o uname.arm1176.o vfork.arm1176.o wait.arm1176.o
+syscalls-arm1176.a:	syscalls.arm1176.o swi_handler.arm1176.o exec.arm1176.o exit.arm1176.o nanosleep.arm1176.o sysinfo.arm1176.o times.arm1176.o uname.arm1176.o vfork.arm1176.o wait.arm1176.o
+	$(CROSS)$(AR) crs syscalls-arm1176.a syscalls.arm1176.o swi_handler.arm1176.o exec.arm1176.o exit.arm1176.o nanosleep.arm1176.o sysinfo.arm1176.o times.arm1176.o uname.arm1176.o vfork.arm1176.o wait.arm1176.o
+
+
+syscalls.arm1176.o:	syscalls.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o syscalls.arm1176.o -c syscalls.c
+
+swi_handler.arm1176.o:  swi_handler.s
+	$(CROSS)as $(ASFLAGS_ARM1176) -o swi_handler.arm1176.o swi_handler.s
 
 exec.arm1176.o:	exec.c ../include/syscalls/exec.h
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o exec.arm1176.o -c exec.c
@@ -25,7 +32,7 @@ sysinfo.arm1176.o:	sysinfo.c ../include/syscalls/sysinfo.h
 times.arm1176.o:	times.c ../include/syscalls/times.h
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o times.arm1176.o -c times.c
 
-uname.arm1176.o:	uname.c ../include/syscalls/uname.h date.h
+uname.arm1176.o:	uname.c ../include/syscalls/uname.h ../date.h
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o uname.arm1176.o -c uname.c
 
 vfork.arm1176.o:	vfork.c ../include/syscalls/vfork.h
@@ -37,8 +44,15 @@ wait.arm1176.o:	wait.c ../include/syscalls/wait.h
 
 ### ARMV7
 
-syscalls-armv7.a:	exec.armv7.o exit.armv7.o nanosleep.armv7.o sysinfo.armv7.o times.armv7.o uname.armv7.o vfork.armv7.o wait.armv7.o
-	$(CROSS)$(AR) crs syscalls-armv7.a exec.armv7.o exit.armv7.o nanosleep.armv7.o sysinfo.armv7.o times.armv7.o uname.armv7.o vfork.armv7.o wait.armv7.o
+syscalls-armv7.a:	syscalls.armv7.o swi_handler.armv7.o exec.armv7.o exit.armv7.o nanosleep.armv7.o sysinfo.armv7.o times.armv7.o uname.armv7.o vfork.armv7.o wait.armv7.o
+	$(CROSS)$(AR) crs syscalls-armv7.a syscalls.armv7.o swi_handler.armv7.o exec.armv7.o exit.armv7.o nanosleep.armv7.o sysinfo.armv7.o times.armv7.o uname.armv7.o vfork.armv7.o wait.armv7.o
+
+
+syscalls.armv7.o:	syscalls.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o syscalls.armv7.o -c syscalls.c
+
+swi_handler.armv7.o:  swi_handler.s
+	$(CROSS)as $(ASFLAGS_ARMV7) -o swi_handler.armv7.o swi_handler.s
 
 exec.armv7.o:	exec.c ../include/syscalls/exec.h
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o exec.armv7.o -c exec.c
@@ -55,7 +69,7 @@ sysinfo.armv7.o:	sysinfo.c ../include/syscalls/sysinfo.h
 times.armv7.o:	times.c ../include/syscalls/times.h
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o times.armv7.o -c times.c
 
-uname.armv7.o:	uname.c ../include/syscalls/uname.h date.h
+uname.armv7.o:	uname.c ../include/syscalls/uname.h ../date.h
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o uname.armv7.o -c uname.c
 
 vfork.armv7.o:	vfork.c ../include/syscalls/vfork.h
@@ -67,13 +81,13 @@ wait.armv7.o:	wait.c ../include/syscalls/wait.h
 ###
 
 clean:
-	rm -f *~ *.o *.a date.h
+	rm -f *~ *.o *.a ../date.h
 
 force_look:
 	true
 
-date.h:	force_look
-	echo -n "#define COMPILE_DATE \"" > date.h
-	date | tr -d '\n' >> date.h
-	echo "\"" >> date.h
+../date.h:	force_look
+	echo -n "#define COMPILE_DATE \"" > ../date.h
+	date | tr -d '\n' >> ../date.h
+	echo "\"" >> ../date.h
 

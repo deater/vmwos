@@ -14,7 +14,7 @@ kernel7.img:	kernel7.elf
 	$(CROSS)objcopy kernel7.elf -O binary kernel7.img
 
 kernel.elf:	kernel_main.o \
-	syscalls.o time.o wait.o swi_handler.o \
+	time.o wait.o \
 	boot/boot-arm1176.a \
 	debug/debug-arm1176.a \
 	drivers/drivers.arm1176.a \
@@ -25,20 +25,20 @@ kernel.elf:	kernel_main.o \
 	syscalls/syscalls-arm1176.a \
 	lib/lib-arm1176.a
 	$(CROSS)ld $(LFLAGS) \
-		kernel_main.o syscalls.o time.o wait.o swi_handler.o \
+		kernel_main.o time.o wait.o \
 		boot/boot-arm1176.a \
 		fs/fs-arm1176.a \
+		syscalls/syscalls-arm1176.a \
 		interrupts/interrupts-arm1176.a \
 		drivers/drivers.arm1176.a \
 		debug/debug-arm1176.a \
 		memory/memory-arm1176.a \
 		processes/processes-arm1176.a \
-		syscalls/syscalls-arm1176.a \
 		lib/lib-arm1176.a \
 		-Map kernel.map -o kernel.elf
 
 kernel7.elf:	kernel_main.o \
-	syscalls.o time.o wait.o swi_handler.o \
+	time.o wait.o \
 	boot/boot-armv7.a \
 	debug/debug-armv7.a \
 	drivers/drivers.armv7.a \
@@ -49,15 +49,15 @@ kernel7.elf:	kernel_main.o \
 	syscalls/syscalls-armv7.a \
 	lib/lib-armv7.a
 	$(CROSS)ld $(LFLAGS) \
-		kernel_main.o syscalls.o time.o wait.o swi_handler.o \
+		kernel_main.o time.o wait.o \
 		boot/boot-armv7.a \
 		fs/fs-armv7.a \
+		syscalls/syscalls-armv7.a \
 		interrupts/interrupts-armv7.a \
 		drivers/drivers.armv7.a \
 		debug/debug-armv7.a \
 		memory/memory-armv7.a \
 		processes/processes-armv7.a \
-		syscalls/syscalls-armv7.a \
 		lib/lib-armv7.a \
 		-Map kernel7.map -o kernel7.elf
 
