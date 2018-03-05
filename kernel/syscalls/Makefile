@@ -3,34 +3,68 @@ include ../Makefile_kernel.inc
 
 INCLUDE = -I../include
 
-all:	syscalls.a
+all:	syscalls-arm1176.a syscalls-armv7.a
 
-syscalls.a:	exec.o exit.o nanosleep.o sysinfo.o times.o uname.o vfork.o wait.o
-	$(CROSS)$(AR) crs syscalls.a exec.o exit.o nanosleep.o sysinfo.o times.o uname.o vfork.o wait.o
+### ARM1176
 
-exec.o:	exec.c ../include/syscalls/exec.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o exec.o -c exec.c
+syscalls-arm1176.a:	exec.arm1176.o exit.arm1176.o nanosleep.arm1176.o sysinfo.arm1176.o times.arm1176.o uname.arm1176.o vfork.arm1176.o wait.arm1176.o
+	$(CROSS)$(AR) crs syscalls-arm1176.a exec.arm1176.o exit.arm1176.o nanosleep.arm1176.o sysinfo.arm1176.o times.arm1176.o uname.arm1176.o vfork.arm1176.o wait.arm1176.o
 
-exit.o:	exit.c ../include/syscalls/exit.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o exit.o -c exit.c
+exec.arm1176.o:	exec.c ../include/syscalls/exec.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o exec.arm1176.o -c exec.c
 
-nanosleep.o:	nanosleep.c ../include/syscalls/nanosleep.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o nanosleep.o -c nanosleep.c
+exit.arm1176.o:	exit.c ../include/syscalls/exit.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o exit.arm1176.o -c exit.c
 
-sysinfo.o:	sysinfo.c ../include/syscalls/sysinfo.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o sysinfo.o -c sysinfo.c
+nanosleep.arm1176.o:	nanosleep.c ../include/syscalls/nanosleep.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o nanosleep.arm1176.o -c nanosleep.c
 
-times.o:	times.c ../include/syscalls/times.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o times.o -c times.c
+sysinfo.arm1176.o:	sysinfo.c ../include/syscalls/sysinfo.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o sysinfo.arm1176.o -c sysinfo.c
 
-uname.o:	uname.c ../include/syscalls/uname.h date.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o uname.o -c uname.c
+times.arm1176.o:	times.c ../include/syscalls/times.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o times.arm1176.o -c times.c
 
-vfork.o:	vfork.c ../include/syscalls/vfork.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o vfork.o -c vfork.c
+uname.arm1176.o:	uname.c ../include/syscalls/uname.h date.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o uname.arm1176.o -c uname.c
 
-wait.o:	wait.c ../include/syscalls/wait.h
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o wait.o -c wait.c
+vfork.arm1176.o:	vfork.c ../include/syscalls/vfork.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o vfork.arm1176.o -c vfork.c
+
+wait.arm1176.o:	wait.c ../include/syscalls/wait.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o wait.arm1176.o -c wait.c
+
+
+### ARMV7
+
+syscalls-armv7.a:	exec.armv7.o exit.armv7.o nanosleep.armv7.o sysinfo.armv7.o times.armv7.o uname.armv7.o vfork.armv7.o wait.armv7.o
+	$(CROSS)$(AR) crs syscalls-armv7.a exec.armv7.o exit.armv7.o nanosleep.armv7.o sysinfo.armv7.o times.armv7.o uname.armv7.o vfork.armv7.o wait.armv7.o
+
+exec.armv7.o:	exec.c ../include/syscalls/exec.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o exec.armv7.o -c exec.c
+
+exit.armv7.o:	exit.c ../include/syscalls/exit.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o exit.armv7.o -c exit.c
+
+nanosleep.armv7.o:	nanosleep.c ../include/syscalls/nanosleep.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o nanosleep.armv7.o -c nanosleep.c
+
+sysinfo.armv7.o:	sysinfo.c ../include/syscalls/sysinfo.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o sysinfo.armv7.o -c sysinfo.c
+
+times.armv7.o:	times.c ../include/syscalls/times.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o times.armv7.o -c times.c
+
+uname.armv7.o:	uname.c ../include/syscalls/uname.h date.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o uname.armv7.o -c uname.c
+
+vfork.armv7.o:	vfork.c ../include/syscalls/vfork.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o vfork.armv7.o -c vfork.c
+
+wait.armv7.o:	wait.c ../include/syscalls/wait.h
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o wait.armv7.o -c wait.c
+
+###
 
 clean:
 	rm -f *~ *.o *.a date.h

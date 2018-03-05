@@ -22,7 +22,7 @@ kernel.elf:	kernel_main.o \
 	interrupts/interrupts-arm1176.a \
 	memory/memory-arm1176.a \
 	processes/processes-arm1176.a \
-	syscalls/syscalls.a \
+	syscalls/syscalls-arm1176.a \
 	lib/lib-arm1176.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o syscalls.o time.o wait.o swi_handler.o \
@@ -33,7 +33,7 @@ kernel.elf:	kernel_main.o \
 		debug/debug-arm1176.a \
 		memory/memory-arm1176.a \
 		processes/processes-arm1176.a \
-		syscalls/syscalls.a \
+		syscalls/syscalls-arm1176.a \
 		lib/lib-arm1176.a \
 		-Map kernel.map -o kernel.elf
 
@@ -46,7 +46,7 @@ kernel7.elf:	kernel_main.o \
 	interrupts/interrupts-armv7.a \
 	memory/memory-armv7.a \
 	processes/processes-armv7.a \
-	syscalls/syscalls.a \
+	syscalls/syscalls-armv7.a \
 	lib/lib-armv7.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o syscalls.o time.o wait.o swi_handler.o \
@@ -57,7 +57,7 @@ kernel7.elf:	kernel_main.o \
 		debug/debug-armv7.a \
 		memory/memory-armv7.a \
 		processes/processes-armv7.a \
-		syscalls/syscalls.a \
+		syscalls/syscalls-armv7.a \
 		lib/lib-armv7.a \
 		-Map kernel7.map -o kernel7.elf
 
@@ -106,6 +106,9 @@ memory/memory-arm1176.a:	force_look
 processes/processes-arm1176.a:	force_look
 	cd processes && make
 
+syscalls/syscalls-arm1176.a:	force_look
+	cd syscalls && make
+
 ### ARMV7
 
 boot/boot-armv7.a:	force_look
@@ -132,19 +135,10 @@ memory/memory-armv7.a:	force_look
 processes/processes-armv7.a:	force_look
 	cd processes && make
 
-###
-
-
-
-
-
-
-syscalls/syscalls.a:	force_look
+syscalls/syscalls-armv7.a:	force_look
 	cd syscalls && make
 
-
-
-
+###
 
 force_look:
 		true
