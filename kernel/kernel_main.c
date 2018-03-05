@@ -1,40 +1,27 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "drivers/block/ramdisk.h"
-#include "drivers/serial/serial.h"
-
 #include "lib/printk.h"
+#include "lib/string.h"
 
 #include "boot/hardware_detect.h"
 
-#include "drivers/led/led.h"
-#include "drivers/timer/timer.h"
-#include "interrupts/interrupts.h"
-#include "drivers/bcm2835/bcm2835_io.h"
-#include "memory/memory.h"
-#include "syscalls/syscalls.h"
-#include "drivers/framebuffer/framebuffer.h"
-#include "drivers/framebuffer/framebuffer_console.h"
-#include "drivers/pmu/arm-pmu.h"
-#include "lib/string.h"
-#include "processes/process.h"
-#include "processes/scheduler.h"
-#include "processes/idle_task.h"
-#include "drivers/keyboard/ps2-keyboard.h"
-#include "time/time.h"
-#include "lib/div.h"
-#include "arch/arm1176/arm1176-mmu.h"
-#include "drivers/thermal/thermal.h"
+#include "drivers/drivers.h"
+#include "drivers/block/ramdisk.h"
+#include "drivers/serial/serial.h"
+
 #include "fs/files.h"
-#include "fs/romfs/romfs.h"
-#include "lib/memset.h"
-#include "lib/memory_benchmark.h"
-#include "drivers/random/bcm2835_rng.h"
+
+#include "memory/memory.h"
+
+#include "processes/idle_task.h"
+#include "processes/process.h"
+
 #include "syscalls/exec.h"
-#include "debug/panic.h"
-#include "debug/early_debug.h"
-#include "lib/errors.h"
+
+#include "time/time.h"
+
+#include "arch/arm1176/arm1176-mmu.h"
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
@@ -67,8 +54,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		uint32_t memory_kernel) {
 
 	struct process_control_block_type *init_process,*idle_process;
-	uint32_t framebuffer_width=800,framebuffer_height=600;
-	uint32_t temperature;
 	int32_t result;
 
 	(void) r0;	/* Ignore boot method */
@@ -107,50 +92,11 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	hardware_print_commandline();
 
 	/**************************/
-	/* Device Drivers	  */
+	/* Init Device Drivers	  */
 	/**************************/
-
-	/* Set up ACT LED */
-	led_init();
-
-	/* Set up timer */
-	timer_init();
-
-#if 0
-	/* Set up keyboard */
-	ps2_keyboard_init();
-
-	/* Enable the Framebuffer */
-	if (atag_info.framebuffer_x!=0) {
-		framebuffer_width=atag_info.framebuffer_x;
-	}
-	if (atag_info.framebuffer_y!=0) {
-		framebuffer_height=atag_info.framebuffer_y;
-	}
-
-	framebuffer_init(framebuffer_width,framebuffer_height,24);
-	framebuffer_console_init();
-#endif
-
-	serial_enable_interrupts();
-
-	/* Enable Interrupts */
-
-	/* Note, we do not need to enable this in kernel space? */
-	/* In fact we possibly don't want to enable this in kernel space? */
-	/* It is enabled while running in user mode elsewhere? */
-
-//	enable_interrupts();
+	drivers_init_all();
 
 
-	/* Enable HW random number generator */
-	bcm2835_rng_init();
-
-	/* Check temperature */
-	temperature=thermal_read();
-	printk("CPU Temperature: %dC, %dF\n",
-		temperature/1000,
-		((temperature*9)/5000)+32);
 
 	/* Get amount of RAM from ATAGs */
 	/* FIXME: pi3 detect this properly */
@@ -161,9 +107,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
-
-	/* Start HW Perf Counters */
-	pmu_init();
 
 	if ((hardware_get_type()==RPI_MODEL_2B) ||
 		(hardware_get_type()==RPI_MODEL_3B)) {
