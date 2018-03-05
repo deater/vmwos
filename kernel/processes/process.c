@@ -2,9 +2,9 @@
 #include <stdint.h>
 
 #include "syscalls/exec.h"
-#include "memory.h"
-#include "process.h"
-#include "time.h"
+#include "memory/memory.h"
+#include "processes/process.h"
+#include "time/time.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"

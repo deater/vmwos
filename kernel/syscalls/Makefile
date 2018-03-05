@@ -48,6 +48,7 @@ syscalls-armv7.a:	syscalls.armv7.o swi_handler.armv7.o exec.armv7.o exit.armv7.o
 	$(CROSS)$(AR) crs syscalls-armv7.a syscalls.armv7.o swi_handler.armv7.o exec.armv7.o exit.armv7.o nanosleep.armv7.o sysinfo.armv7.o times.armv7.o uname.armv7.o vfork.armv7.o wait.armv7.o
 
 
+
 syscalls.armv7.o:	syscalls.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o syscalls.armv7.o -c syscalls.c
 

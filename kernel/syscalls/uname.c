@@ -5,7 +5,7 @@
 #include "syscalls/uname.h"
 #include "lib/string.h"
 
-#include "date.h"
+#include "../date.h"
 
 int32_t uname(struct utsname *buf) {
 

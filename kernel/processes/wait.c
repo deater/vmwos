@@ -11,9 +11,9 @@ http://www.makelinux.net/ldd3/chp-6-sect-2
 #include <stdint.h>
 #include <stddef.h>
 
-#include "process.h"
-#include "scheduler.h"
-#include "wait.h"
+#include "processes/process.h"
+#include "processes/scheduler.h"
+#include "processes/wait.h"
 
 #include "lib/printk.h"
 
