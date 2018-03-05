@@ -4,7 +4,7 @@
 
 #include "drivers/pmu/arm-pmu.h"
 #include "lib/printk.h"
-#include "errors.h"
+#include "lib/errors.h"
 
 int pmu_init(void) {
 

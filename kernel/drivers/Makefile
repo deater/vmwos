@@ -174,6 +174,7 @@ clean:
 	cd gpio && make clean
 	cd keyboard && make clean
 	cd led && make clean
+	cd pmu && make clean
 	cd random && make clean
 	cd serial && make clean
 	cd thermal && make clean

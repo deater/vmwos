@@ -91,12 +91,12 @@ kernel7.elf:	kernel_main.armv7.o \
 		kernel_main.armv7.o \
 		boot/boot-armv7.a \
 		fs/fs-armv7.a \
-		syscalls/syscalls-armv7.a \
 		interrupts/interrupts-armv7.a \
 		drivers/drivers-armv7.a \
 		debug/debug-armv7.a \
-		memory/memory-armv7.a \
 		processes/processes-armv7.a \
+		memory/memory-armv7.a \
+		syscalls/syscalls-armv7.a \
 		time/time-armv7.a \
 		lib/lib-armv7.a \
 		-Map kernel7.map -o kernel7.elf
@@ -154,4 +154,5 @@ clean:
 	cd interrupts && make clean
 	cd memory && make clean
 	cd syscalls && make clean
+	cd time && make clean
 	cd lib && make clean
