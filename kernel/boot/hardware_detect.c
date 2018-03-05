@@ -100,10 +100,10 @@ void hardware_print_model(uint32_t version) {
 
 	if (device_tree_found) {
 		devicetree_find_string(NULL,"model",string,DT_STRING_MAXSIZE);
-		printk("Device Tree reports: %s\n",string);
+		printk("\tDevice Tree reports: %s\n",string);
 	}
 
-	printk("VMWos detects as: Model ");
+	printk("\tVMWos detects as: Model ");
 	switch(hardware_type) {
 		case RPI_MODEL_A:	printk("A"); break;
 		case RPI_MODEL_APLUS:	printk("A+"); break;

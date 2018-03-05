@@ -61,20 +61,23 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 //	early_debug_init();
 //	early_debug_dump_memory(0x14d764,4096);
 
-	/* Initialize Software Structures */
 
+	/*******************/
 	/* Detect Hardware */
-	printk("Detecting hardware:\n");
+	/*******************/
+
 	result=hardware_detect((uint32_t *)r2);
 
-	/* Initialize Hardware */
+	/*****************************/
+	/* Initialize Serial Console */
+	/*****************************/
 
 	/* Serial console is most important so do that first */
 	serial_init(SERIAL_UART_PL011);
 	serial_printk("\n\n\nUsing pl011-uart\n");
 
 	/************************/
-	/* Boot message!	*/
+	/* Boot messages!	*/
 	/************************/
 
 	printk("From bootloader: r0=%x r1=%x r2=%x\n",
@@ -84,6 +87,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Print boot message */
 	printk("\033[0;41m   \033[42m \033[44m   \033[42m \033[44m   \033[0m VMW OS\n");
 	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version %s\n\n",VERSION);
+
+	printk("Detected hardware:\n");
 
 	/* Print model info */
 	hardware_print_model(r1);
@@ -96,10 +101,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/**************************/
 	drivers_init_all();
 
-
-
-	/* Get amount of RAM from ATAGs */
-	/* FIXME: pi3 detect this properly */
+	/**************************/
+	/* Init Memory Hierarchy  */
+	/**************************/
 
 	memory_total=256*1024*1024;
 
