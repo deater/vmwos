@@ -14,53 +14,51 @@ kernel7.img:	kernel7.elf
 	$(CROSS)objcopy kernel7.elf -O binary kernel7.img
 
 kernel.elf:	kernel_main.o \
-	idle_task.o syscalls.o \
-	interrupts.o process.o scheduler.o time.o wait.o \
-	swi_handler.o irq_handler.o \
+	idle_task.o syscalls.o process.o scheduler.o time.o wait.o \
+	swi_handler.o \
 	boot/boot-arm1176.a \
 	debug/debug.a \
 	drivers/drivers.arm1176.a \
 	fs/fs.a \
+	interrupts/interrupts-arm1176.a \
 	memory/memory-arm1176.a \
 	syscalls/syscalls.a \
 	lib/lib-arm1176.a
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.o \
 		idle_task.o \
-		syscalls.o \
-		interrupts.o process.o scheduler.o time.o wait.o \
-		swi_handler.o irq_handler.o \
+		syscalls.o process.o scheduler.o time.o wait.o \
+		swi_handler.o \
 		boot/boot-arm1176.a \
+		fs/fs.a \
+		interrupts/interrupts-arm1176.a \
 		drivers/drivers.arm1176.a \
 		debug/debug.a \
-		fs/fs.a \
 		memory/memory-arm1176.a \
 		syscalls/syscalls.a \
 		lib/lib-arm1176.a \
 		-Map kernel.map -o kernel.elf
 
 kernel7.elf:	kernel_main.o \
-	idle_task.o syscalls.o \
-	interrupts.o process.o scheduler.o time.o wait.o \
-	swi_handler.o irq_handler.o \
+	idle_task.o syscalls.o process.o scheduler.o time.o wait.o \
+	swi_handler.o \
 	boot/boot-armv7.a \
 	debug/debug.a \
 	drivers/drivers.armv7.a \
 	fs/fs.a \
+	interrupts/interrupts-armv7.a \
 	memory/memory-armv7.a \
 	syscalls/syscalls.a \
 	lib/lib-armv7.a
 	$(CROSS)ld $(LFLAGS) \
-		kernel_main.o \
-		idle_task.o \
-		syscalls.o interrupts.o \
-		process.o scheduler.o time.o wait.o \
-		swi_handler.o irq_handler.o \
+		kernel_main.o idle_task.o syscalls.o \
+		process.o scheduler.o time.o wait.o swi_handler.o \
 		boot/boot-armv7.a \
+		fs/fs.a \
+		interrupts/interrupts-armv7.a \
 		drivers/drivers.armv7.a \
 		debug/debug.a \
-		fs/fs.a \
-		memory/memory-arm1176.a \
+		memory/memory-armv7.a \
 		syscalls/syscalls.a \
 		lib/lib-armv7.a \
 		-Map kernel7.map -o kernel7.elf
@@ -70,15 +68,6 @@ kernel_main.o:	kernel_main.c version.h
 
 idle_task.o:	idle_task.c
 	$(CROSS)$(CC) $(CFLAGS) -o idle_task.o -c idle_task.c
-
-interrupts.o:	interrupts.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o interrupts.o -c interrupts.c
-
-memory.o:	memory.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o memory.o -c memory.c
-
-arm1176-mmu.o:	arm1176-mmu.c
-	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o arm1176-mmu.o -c arm1176-mmu.c
 
 process.o:	process.c include/process.h
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o process.o -c process.c
@@ -95,9 +84,6 @@ wait.o:	wait.c include/wait.h
 syscalls.o:	syscalls.c
 	$(CROSS)$(CC) $(CFLAGS) $(INCLUDE) -o syscalls.o -c syscalls.c
 
-irq_handler.o:	irq_handler.s
-	$(CROSS)as $(ASFLAGS) -o irq_handler.o irq_handler.s
-
 swi_handler.o:	swi_handler.s
 	$(CROSS)as $(ASFLAGS) -o swi_handler.o swi_handler.s
 
@@ -113,6 +99,9 @@ boot/boot-arm1176.a:	force_look
 drivers/drivers.arm1176.a:	force_look
 	cd drivers && make
 
+interrupts/interrupts-arm1176.a:	force_look
+	cd interrupts && make
+
 lib/lib-arm1176.a:	force_look
 	cd lib && make
 
@@ -126,6 +115,9 @@ boot/boot-armv7.a:	force_look
 
 drivers/drivers.armv7.a:	force_look
 	cd drivers && make
+
+interrupts/interrupts-armv7.a:	force_look
+	cd interrupts && make
 
 lib/lib-armv7.a:	force_look
 	cd lib && make
@@ -165,6 +157,7 @@ clean:
 	cd debug && make clean
 	cd drivers && make clean
 	cd fs && make clean
+	cd interrupts && make clean
 	cd memory && make clean
 	cd syscalls && make clean
 	cd lib && make clean

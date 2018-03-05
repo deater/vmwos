@@ -72,11 +72,11 @@ void enter_userspace(void) {
 }
 
 
-void pl011_uart_putc(unsigned char byte);
-uint32_t pl011_write(const char* buffer, size_t size);
-void pl011_uart_putc_extra(unsigned char byte, unsigned int extra);
-uint32_t old_pl011_uart_init(void);
-extern int gpio_clk;
+//void pl011_uart_putc(unsigned char byte);
+//uint32_t pl011_write(const char* buffer, size_t size);
+//void pl011_uart_putc_extra(unsigned char byte, unsigned int extra);
+//uint32_t old_pl011_uart_init(void);
+//extern int gpio_clk;
 
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
