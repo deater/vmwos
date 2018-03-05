@@ -19,7 +19,7 @@ kernel.elf:	kernel_main.o \
 	boot/boot-arm1176.a \
 	debug/debug-arm1176.a \
 	drivers/drivers.arm1176.a \
-	fs/fs.a \
+	fs/fs-arm1176.a \
 	interrupts/interrupts-arm1176.a \
 	memory/memory-arm1176.a \
 	syscalls/syscalls.a \
@@ -30,7 +30,7 @@ kernel.elf:	kernel_main.o \
 		syscalls.o process.o scheduler.o time.o wait.o \
 		swi_handler.o \
 		boot/boot-arm1176.a \
-		fs/fs.a \
+		fs/fs-arm1176.a \
 		interrupts/interrupts-arm1176.a \
 		drivers/drivers.arm1176.a \
 		debug/debug-arm1176.a \
@@ -45,7 +45,7 @@ kernel7.elf:	kernel_main.o \
 	boot/boot-armv7.a \
 	debug/debug-armv7.a \
 	drivers/drivers.armv7.a \
-	fs/fs.a \
+	fs/fs-armv7.a \
 	interrupts/interrupts-armv7.a \
 	memory/memory-armv7.a \
 	syscalls/syscalls.a \
@@ -54,7 +54,7 @@ kernel7.elf:	kernel_main.o \
 		kernel_main.o idle_task.o syscalls.o \
 		process.o scheduler.o time.o wait.o swi_handler.o \
 		boot/boot-armv7.a \
-		fs/fs.a \
+		fs/fs-armv7.a \
 		interrupts/interrupts-armv7.a \
 		drivers/drivers.armv7.a \
 		debug/debug-armv7.a \
@@ -102,6 +102,9 @@ debug/debug-arm1176.a:	force_look
 drivers/drivers.arm1176.a:	force_look
 	cd drivers && make
 
+fs/fs-arm1176.a:	force_look
+	cd fs && make
+
 interrupts/interrupts-arm1176.a:	force_look
 	cd interrupts && make
 
@@ -122,6 +125,9 @@ debug/debug-armv7.a:	force_look
 drivers/drivers.armv7.a:	force_look
 	cd drivers && make
 
+fs/fs-armv7.a:	force_look
+	cd fs && make
+
 interrupts/interrupts-armv7.a:	force_look
 	cd interrupts && make
 
@@ -137,8 +143,6 @@ memory/memory-armv7.a:	force_look
 
 
 
-fs/fs.a:	force_look
-	cd fs && make
 
 syscalls/syscalls.a:	force_look
 	cd syscalls && make
