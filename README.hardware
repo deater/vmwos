@@ -1,4 +1,39 @@
-This OS has been developed on Raspberry Pi Model B/B+/A+.
+
+	It is hard running a backward compatible bare-metal OS on 
+	Pi as things keep changing.
+
+	Some of this is mitigated if you parse the device tree
+	found on newer setups.
+
+	Hardware Changes:
+	=================
+	+ On 1GB systems the IO_BASE moved 
+		from 0x20000000 to 0x3f0000000
+	+ Processor architecture changed from ARMv6 to ARMv7 to ARMv8
+	+ On Pi3 the pl011 is hooked to bluetooth, so
+		mini-uart is the default (pl011 is mapped to gpio 32/33)
+	+ ACT LED:
+		Model B was GPIO16, Active Low
+		On 2/B+/A+ was GPIO47, Active High
+		On 3 it is on an i2c/GPIO expander controlled by GPU
+	+ TODO: The Framebuffer address moved on Pi3 (?)
+
+	+ Pi3 the Arasan MMC interface is enabled, and mapped to GPIOs 48-53,
+		Used by wifi?
+	+ Pi3 GPCLK2 is mapped to GPIO 43.
+	+ Pi2/Pi3, firmware brings system up in HYP (hypervisor) mode
+
+	Firmware Changes:
+	=================
+	+ Older firmware, the framebuffer byte order was GRB instead of RGB
+	+ Older firmware, the UART_CLOCK was 3MHz, it's 48MHz on newer
+	+ Older firmware, did ATAGS, newer use device-tree
+	+ Have issue on older-firmware loading kernel image >15MB
+		not sure if bug or not
+
+
+
+
 
 It should be possible to port to Model 2-B with minimal impact:
 	+ Change mmio base address
@@ -14,3 +49,4 @@ Model 3-B support will be harder:
 		changes poorly
 	+ SD card I/O via different (undocumented?) interface
 	+ Full 64-bit and SMP support will be 
+

@@ -24,7 +24,7 @@ Building:
 	It is possible to build this on OSX and Windows,
 	I should update with instructions.
 
-	Running "make" should build kernel/kernel.img
+	Running "make" should build kernel/kernel.img and kernel/kernel7.img
 	
 Installing:
 ~~~~~~~~~~~
@@ -34,25 +34,27 @@ Installing:
 	Mount the boot directory on that SD card, and copy
 	the existing kernel.img to a safe place.
 
-	Now copy your vmwos kernel/kernel.img overtop
-	of the existing kernel.img
+	Now copy your vmwos kernel/kernel.img and kernel/kernel7.img overtop
+	the existing kernel.img and kernel7.img
 
 
 Required Hardware:
 ~~~~~~~~~~~~~~~~~~
 
 	Currently VMWos runs on any Raspberry Pi 
-	Model A, B, B+ or A+.
+	Model1 ( A, B, B+ or A+), Model 2, and Model 3
 
-	I am currently working on Pi2/Pi3 support.
+	I have not tested on Pi Zero.
 
-	It will drive an HDMI screen, but has no support
-	for USB input.
+	It has a driver that cna output to the HDMI screen, but that is
+	disabled by default currently (it is slow and buggy).
+	It has no support for USB input.
 
-	To get full input/output you will need to buy a USB/Serial
+	To get full input/output you will need to get a USB/Serial
 	adapter and connect to another machine running a terminal
 	program such as minicom.
 
+	Configure your serial device for 115200,8N1
 
 Using:
 ~~~~~~
@@ -82,6 +84,8 @@ For more information:
 
 Changes that break older Bare-metal 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	See README.hardware
 
 	It is hard running a backward compatible bare-metal OS on 
 	Pi as things keep changing.
@@ -122,4 +126,4 @@ Changes that break older Bare-metal
 
 Vince Weaver
 vince@deater.net
-6 Febryary 2018
+5 March 2018
