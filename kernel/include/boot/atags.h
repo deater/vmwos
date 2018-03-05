@@ -8,7 +8,7 @@ struct atag_info_t {
 
 
 void atags_dump(uint32_t *atags);
-void atags_detect(uint32_t *atags, struct atag_info_t *info);
+void atags_detect(uint32_t *atags);
 
 #define ATAG_NONE	0x00000000	// 2	Empty tag used to end list
 #define ATAG_CORE	0x54410001	// 5 (2 if empty)	First tag used to start list
@@ -20,4 +20,7 @@ void atags_detect(uint32_t *atags, struct atag_info_t *info);
 #define ATAG_REVISION	0x54410007	// 3	32 bit board revision number
 #define ATAG_VIDEOLFB	0x54410008	// 8	Initial values for vesafb-type framebuffers
 #define ATAG_CMDLINE	0x54410009	// 2 + ((length_of_cmdline + 3) / 4)	Command line to pass to kernel 
+
+uint32_t atags_get_memory(void);
+uint32_t atags_get_revision(void);
 

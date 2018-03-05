@@ -99,46 +99,18 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/**************************/
 	/* Init Device Drivers	  */
 	/**************************/
+
 	drivers_init_all();
 
 	/**************************/
 	/* Init Memory Hierarchy  */
 	/**************************/
 
-	memory_total=256*1024*1024;
+	memory_hierarchy_init(memory_kernel);
 
-//	memory_total=atag_info.ramsize;
-
-	/* Init memory subsystem */
-	memory_init(memory_total,memory_kernel);
-
-	if ((hardware_get_type()==RPI_MODEL_2B) ||
-		(hardware_get_type()==RPI_MODEL_3B)) {
-
-		/* Enable L1 d-cache */
-		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
-		enable_mmu(0,memory_total,memory_kernel);
-	}
-	else {
-
-		/* Setup Memory Hierarchy */
-
-		// memset_benchmark(memory_total);
-
-		/* Enable L1 i-cache */
-		printk("Enabling L1 icache\n");
-		enable_l1_icache();
-
-		/* Enable branch predictor */
-		printk("Enabling branch predictor\n");
-		enable_branch_predictor();
-
-		/* Enable L1 d-cache */
-		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
-		enable_mmu(0,memory_total,memory_kernel);
-		printk("Enabling L1 dcache\n");
-		enable_l1_dcache();
-	}
+	/************************/
+	/* Other init		*/
+	/************************/
 
 	/* Init the file descriptor table */
 	fd_table_init();

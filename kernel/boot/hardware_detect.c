@@ -70,7 +70,6 @@ static uint32_t hardware_convert_type(uint32_t revision) {
 uint32_t hardware_detect(void *info_ptr) {
 
 	uint32_t result;
-	struct atag_info_t atag_info;
 
 	result=devicetree_setup((uint32_t *)info_ptr);
 
@@ -80,9 +79,9 @@ uint32_t hardware_detect(void *info_ptr) {
 		hardware_type=hardware_convert_type(hardware_revision);
 	} else {
 		/* Atags is being deprecated on new Pis */
-		atags_detect((uint32_t *)info_ptr,&atag_info);
+		atags_detect((uint32_t *)info_ptr);
 		atags_found=1;
-		hardware_type=hardware_convert_type(atag_info.revision);
+		hardware_type=hardware_convert_type(atags_get_revision());
 	}
 
 	return 0;
@@ -128,4 +127,20 @@ uint32_t hardware_get_type(void) {
 	return hardware_type;
 }
 
+/* FIXME: more advanced hardware returns multiple ranges */
+void hardware_get_memory(uint32_t *start, uint32_t *length) {
 
+	if (device_tree_found) {
+		*start=0;
+		*length=devicetree_get_memory();
+	}
+	else if (atags_found) {
+		*start=0;
+		*length=atags_get_memory();
+	}
+	else {
+		printk("ERROR: did not detect memory, assuming 256MB\n");
+		*start=0;
+		*length=256*1024*1024;
+	}
+}

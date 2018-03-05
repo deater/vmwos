@@ -12,4 +12,5 @@ uint32_t hardware_detect(void *info_ptr);
 void hardware_print_model(uint32_t version);
 void hardware_print_commandline(void);
 uint32_t hardware_get_type(void);
+void hardware_get_memory(uint32_t *start, uint32_t *length);
 

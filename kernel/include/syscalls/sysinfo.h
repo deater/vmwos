@@ -10,7 +10,8 @@ struct sysinfo {
 	uint32_t totalswap;	/* Total swap */
 	uint32_t freeswap;	/* Free swap */
 	uint32_t procs;		/* Processes */
-	uint32_t padding[3];	/* pad to 60-bytes */
+	uint32_t padding[2];	/* pad to 60-bytes */
+	uint32_t mem_unit;	/* Units the above are given in */
 	uint32_t procs_ready;	/* vmwos custom */
 	uint32_t idle_time;	/* vmwos custom */
 };

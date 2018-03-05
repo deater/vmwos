@@ -18,7 +18,7 @@ int32_t sysinfo(struct sysinfo *buf) {
 	/* no loadavg info */
 
 	/* Total RAM */
-	buf->total_ram=memory_total;
+	buf->total_ram=memory_get_total();
 
 	/* Free RAM */
 	buf->free_ram=memory_total_free();

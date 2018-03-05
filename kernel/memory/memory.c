@@ -1,6 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "arch/arm1176/arm1176-mmu.h"
+
+#include "boot/hardware_detect.h"
+
 #include "memory/memory.h"
 
 #include "lib/printk.h"
@@ -8,9 +12,9 @@
 #define MAX_MEMORY	(1024*1024*1024)
 #define CHUNK_SIZE	4096
 
-unsigned int memory_total;
+static unsigned int memory_total;
 
-unsigned int memory_map[MAX_MEMORY/CHUNK_SIZE/32];
+static unsigned int memory_map[MAX_MEMORY/CHUNK_SIZE/32];
 
 static unsigned int max_chunk=0;
 
@@ -36,7 +40,7 @@ static int memory_test_used(int chunk) {
 	return memory_map[element] & (1<<bit);
 }
 
-int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
+static int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
 
 	int i;
 
@@ -54,7 +58,7 @@ int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
 	max_chunk=(memory_total/CHUNK_SIZE);
 
 	/* Clear it out, probably not necessary */
-	for(i=0;i<max_chunk;i++) {
+	for(i=0;i<max_chunk/32;i++) {
 		memory_map[i]=0;
 	}
 
@@ -96,8 +100,6 @@ int32_t memory_total_free(void) {
 
 }
 
-
-
 void *memory_allocate(uint32_t size) {
 
 	int first_chunk;
@@ -130,4 +132,54 @@ int32_t memory_free(void *location, uint32_t size) {
 	printk("ERROR: memory_free not implemented yet.\n");
 
 	return 0;
+}
+
+uint32_t memory_get_total(void) {
+
+	return memory_total;
+}
+
+void memory_hierarchy_init(unsigned long memory_kernel) {
+
+	uint32_t start,length;
+
+	/**************************/
+	/* Init Memory Hierarchy  */
+	/**************************/
+
+	hardware_get_memory(&start,&length);
+
+	memory_total=length;
+
+	/* Init memory subsystem */
+	memory_init(memory_total,memory_kernel);
+
+	if ((hardware_get_type()==RPI_MODEL_2B) ||
+		(hardware_get_type()==RPI_MODEL_3B)) {
+
+		/* Enable L1 d-cache */
+		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
+		enable_mmu(0,memory_total,memory_kernel);
+	}
+	else {
+
+		/* Setup Memory Hierarchy */
+
+		// memset_benchmark(memory_total);
+
+		/* Enable L1 i-cache */
+		printk("Enabling L1 icache\n");
+		enable_l1_icache();
+
+		/* Enable branch predictor */
+		printk("Enabling branch predictor\n");
+		enable_branch_predictor();
+
+		/* Enable L1 d-cache */
+		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
+		enable_mmu(0,memory_total,memory_kernel);
+		printk("Enabling L1 dcache\n");
+		enable_l1_dcache();
+	}
+
 }
