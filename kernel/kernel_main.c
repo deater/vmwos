@@ -24,7 +24,7 @@
 #include "lib/string.h"
 #include "process.h"
 #include "scheduler.h"
-#include "idle_task.h"
+#include "processes/idle_task.h"
 #include "drivers/keyboard/ps2-keyboard.h"
 #include "time.h"
 #include "lib/div.h"
