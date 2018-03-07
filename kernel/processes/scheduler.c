@@ -24,9 +24,9 @@ void schedule(void) {
 
 //	if (proc->pid==2) schedule_debug=1;
 
-//	if (schedule_debug)
-//		printk("Attempting to schedule, current proc=%d (%x)\n",
-//			proc->pid,(long)proc);
+	if (schedule_debug)
+		printk("Attempting to schedule, current proc=%d (%x)\n",
+			proc->pid,(long)proc);
 
 	/* find next available process */
 	/* Should we have an idle process (process 0) */
@@ -41,7 +41,8 @@ void schedule(void) {
 
 	while(1) {
 //		if (schedule_debug)
-//			printk("proc=%x, proc->next=%x\n",(long)proc,(long)proc->next);
+//			printk("proc=%x, proc->next=%x\n",
+//					(long)proc,(long)proc->next);
 		proc=proc->next;
 //		if (schedule_debug)
 //			printk("What about proc->next %x?\n",(long)proc);
@@ -78,8 +79,8 @@ void schedule(void) {
 		/* Nothing was ready, run idle task */
 		if (proc==orig_proc) {
 			proc=proc_first;
-			if (schedule_debug)
-				printk("SCHEDULER: running idle task %d\n",proc->pid);
+//			if (schedule_debug)
+//				printk("SCHEDULER: running idle task %d\n",proc->pid);
 			break;
 		}
 
@@ -97,6 +98,11 @@ void schedule(void) {
 				current_process->pid,(long)current_process,
 				proc->pid,(long)proc);
 		process_switch(current_process,proc);
+	}
+
+	if (schedule_debug) {
+		printk("SCHEDULER: Sticking with proc %d\n",
+			current_process->pid);
 	}
 
 	/* ARM documentation says we can put a */

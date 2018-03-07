@@ -111,11 +111,17 @@ void interrupt_handler_c(void) {
 		return;
 	}
 
+//	printk("About to handle timer interrupt\n");
+
 	// timer_interrupt
 
 	timer_interrupt_handler();
 
+//	printk("Returned from timer interrupt\n");
+
 	if (scheduling_enabled) schedule();
+
+//	printk("Exiting interrupt_c\n");
 
 	return;
 }
@@ -130,6 +136,9 @@ void __attribute__((interrupt("ABORT"))) abort_handler(void) {
 }
 
 void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
-	printk("UNHANDLED UNDEF\n");
+
+	register long lr asm ("lr");
+
+	printk("UNHANDLED UNDEF %x\n",lr);
 }
 
