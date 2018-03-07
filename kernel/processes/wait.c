@@ -17,18 +17,28 @@ http://www.makelinux.net/ldd3/chp-6-sect-2
 
 #include "lib/printk.h"
 
-int32_t wait_queue_add(struct wait_queue_t *queue, struct process_control_block_type *proc) {
+static int wait_debug=0;
+
+int32_t wait_queue_add(struct wait_queue_t *queue,
+		struct process_control_block_type *proc) {
 
 	struct process_control_block_type *next;
 
 	if (queue->first==NULL) {
-//		printk("NULL: Adding %d to wait queue\n",proc->pid);
+		if (wait_debug) printk("NULL: Adding %d to wait queue\n",proc->pid);
 		queue->first=proc;
 	}
 	else {
-//		printk("Adding %d to wait queue\n",proc->pid);
+		if (wait_debug) printk("Adding %d to wait queue\n",proc->pid);
 		next=queue->first;
 		while(1) {
+			if (wait_debug) printk("%x %x\n",
+				next,next->wait_queue_next);
+			if (next==proc) {
+				if (wait_debug) printk("ERROR! Proc %d already on wait queue!\n",
+					proc->pid);
+				break;
+			}
 			if (next->wait_queue_next==NULL) {
 				next->wait_queue_next=proc;
 				break;
@@ -36,7 +46,7 @@ int32_t wait_queue_add(struct wait_queue_t *queue, struct process_control_block_
 			next=next->wait_queue_next;
 		}
 	}
-//	printk("Putting %d to sleep\n",proc->pid);
+	if (wait_debug) printk("Putting %d to sleep\n",proc->pid);
 	proc->status=PROCESS_STATUS_SLEEPING;
 	// why did we do this?
 //	proc->wait_queue_next=NULL;

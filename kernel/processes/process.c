@@ -9,6 +9,7 @@
 #include "lib/printk.h"
 #include "lib/string.h"
 #include "lib/memcpy.h"
+#include "lib/memset.h"
 
 static int debug=0;
 
@@ -89,6 +90,9 @@ struct process_control_block_type *process_create(void) {
 		return NULL;
 	}
 
+	/* clear to zero */
+	memset(new_proc,0,sizeof(struct process_control_block_type));
+
 	if (debug) printk("process_create: allocated %d bytes for PCB at %x\n",
 		sizeof(struct process_control_block_type),
 		(long)new_proc);
@@ -124,7 +128,9 @@ struct process_control_block_type *process_create(void) {
 
 	/* Clear out LR (saved pc) */
 	/* exec should set this for us */
-	//new_proc->reg_state.lr=0;
+
+	/* Should point this to PANIC in case init or idle_task exit? */
+	new_proc->user_state.r[14]=0;
 
 	/* Insert into linked list */
 	process_insert(new_proc);
