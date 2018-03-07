@@ -17,6 +17,8 @@
 #include "processes/idle_task.h"
 #include "processes/process.h"
 
+#include "debug/panic.h"
+
 #include "syscalls/exec.h"
 
 #include "time/time.h"
@@ -48,6 +50,23 @@ void enter_userspace(void) {
 		: /* output */
 		: [shell] "r"(shell_address) /* input */
 		: "r0", "lr", "memory");        /* clobbers */
+}
+
+
+void dump_memory(uint32_t address,uint32_t size) {
+
+	unsigned char *ptr;
+	int i;
+
+	ptr=(unsigned char *)address;
+
+        for(i=0;i<size;i++) {
+                if ((i&0xf)==0) {
+                         printk("\n%x: ",ptr);
+                }
+		printk("%x ",*ptr);
+                ptr++;
+        }
 }
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
@@ -90,6 +109,17 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	printk("Detected hardware:\n");
 
+	{
+		uint32_t *ptr;
+
+		ptr=0;
+
+		printk("IRQ vectors: ud:%x sw:%x pf:%x da:%x "
+			"un: %x irq: %x fiq: %x\n",
+			ptr[1],ptr[2],ptr[3],ptr[4],ptr[5],ptr[6],ptr[7]);
+	}
+
+
 	/* Print model info */
 	hardware_print_model(r1);
 
@@ -129,11 +159,17 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	idle_process->total_time=0;
 	idle_process->start_time=ticks_since_boot();
 	idle_process->last_scheduled=idle_process->start_time;
+	idle_process->stack=memory_allocate(4096);
+	/* Point to end, as stack grows down */
+	idle_process->user_state.r[13]=(idle_process->stack+4096);
+
 	strncpy(idle_process->name,"idle",5);
 	idle_process->kernel_state.r[14]=(long)enter_userspace;
 	printk("Created idle thread: %d\n",idle_process->pid);
-	//dump_saved_user_state(idle_process);
-	//dump_saved_kernel_state(idle_process);
+	dump_saved_user_state(idle_process);
+	dump_saved_kernel_state(idle_process);
+
+//	dump_memory(0x9000,4096);
 
 	/* Enter our "init" process*/
 	init_process=process_create();
@@ -141,6 +177,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Should this be NULL instead? */
 	init_process->parent=init_process;
 	init_process->current_dir=get_inode("/");
+
 	result=execve("shell",NULL,NULL);
 	if (result<0) {
 		goto error_init;
