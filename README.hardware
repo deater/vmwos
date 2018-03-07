@@ -23,6 +23,11 @@
 	+ Pi3 GPCLK2 is mapped to GPIO 43.
 	+ Pi2/Pi3, firmware brings system up in HYP (hypervisor) mode
 
+	Processor Changes:
+	==================
+	+ On ARM1176 the "wfi" instruction is a nop, you need to
+		use a MSR write to wait for instruction
+
 	Firmware Changes:
 	=================
 	+ Older firmware, the framebuffer byte order was GRB instead of RGB

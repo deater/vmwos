@@ -11,6 +11,9 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 #include "lib/memset.h"
+#include "lib/errors.h"
+
+static uint32_t framebuffer_console_initialized=0;
 
 //static int debug=1;
 
@@ -70,6 +73,8 @@ int framebuffer_console_putchar(int fore_color, int back_color,
 			int ch, int x, int y) {
 
 	int xx,yy;
+
+	if (!framebuffer_console_initialized) return -ENODEV;
 
 	for(yy=0;yy<font_ysize;yy++) {
 		for(xx=0;xx<8;xx++) {
@@ -178,6 +183,8 @@ int framebuffer_console_write(const char *buffer, int length) {
 	int distance;
 	int x;
 	int c;
+
+	if (!framebuffer_console_initialized) return -ENODEV;
 
 	while(1) {
 		if (ansi_state==ANSI_STATE_NORMAL) {
