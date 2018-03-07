@@ -161,7 +161,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	idle_process->last_scheduled=idle_process->start_time;
 	idle_process->stack=memory_allocate(4096);
 	/* Point to end, as stack grows down */
-	idle_process->user_state.r[13]=(idle_process->stack+4096);
+	idle_process->user_state.r[13]=(long)(idle_process->stack)+4096;
 
 	strncpy(idle_process->name,"idle",5);
 	idle_process->kernel_state.r[14]=(long)enter_userspace;
