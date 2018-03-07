@@ -63,7 +63,7 @@ static int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
 	}
 
 	/* Mark OS area as used */
-	for(i=0;i<memory_kernel/CHUNK_SIZE;i++) {
+	for(i=0;i<(memory_kernel/CHUNK_SIZE)+1;i++) {
 		memory_mark_used(i);
 	}
 
@@ -123,6 +123,8 @@ void *memory_allocate(uint32_t size) {
 		memory_mark_used(first_chunk+i);
 	}
 
+//	printk("MEM: Allocated %d bytes at %x\n",size,first_chunk*CHUNK_SIZE);
+
 	return (void *)(first_chunk*CHUNK_SIZE);
 
 }
@@ -157,7 +159,6 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 	if ((hardware_get_type()==RPI_MODEL_2B) ||
 		(hardware_get_type()==RPI_MODEL_3B)) {
 
-		/* Enable L1 d-cache */
 		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
 		enable_mmu(0,memory_total,memory_kernel);
 	}
