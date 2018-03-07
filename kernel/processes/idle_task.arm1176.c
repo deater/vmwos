@@ -17,7 +17,7 @@ void idle_task(void) {
 		/* Rn value SBZ should be zero */
 		/* Works by having the interrupt handler return +8 instead */
 		/* of +4 */
-		asm volatile("MCR p15, 0, %0, c7, c0, 4\n" ::"r"(0):);
+//		asm volatile("MCR p15, 0, %0, c7, c0, 4\n" ::"r"(0):);
 		asm volatile("wfi\n" :::);
 
 	}
