@@ -246,23 +246,23 @@ static int parse_input(char *string) {
 
 		else {
 			if (is_relative(string)) {
-				result=stat(string,&stat_buf);
+				sprintf(temp_string,"%s",string);
 			}
 			else {
 				/* Look in /bin */
 				sprintf(temp_string,"/bin/%s",string);
-				result=stat(temp_string,&stat_buf);
 			}
 
+			result=stat(temp_string,&stat_buf);
 			if (result<0) {
-				printf("\nCommmand not found: \"%s\"!\n",string);
+				printf("\nCommmand not found: \"%s\"!\n",
+								temp_string);
 			}
 			else {
 				/* Fork a child */
 				pid=vfork();
 				if (pid==0) {
-
-					execve(string,arguments,NULL);
+					execve(temp_string,arguments,NULL);
 				}
 				else {
 					printf("Waiting for %d to finish\n",pid);

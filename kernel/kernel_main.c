@@ -178,7 +178,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	init_process->parent=init_process;
 	init_process->current_dir=get_inode("/");
 
-	result=execve("shell",NULL,NULL);
+	result=execve("/bin/shell",NULL,NULL);
 	if (result<0) {
 		goto error_init;
 	}

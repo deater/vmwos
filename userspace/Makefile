@@ -8,10 +8,12 @@ all:	shell \
 image:	shell \
 	cat cat_count hello ll ls printa printb pwd slideshow sysinfo uname
 	mkdir -p image
-	mkdir -p image/ansis
-	cp shell \
-	cat cat_count hello ll ls printa printb pwd slideshow sysinfo uname \
-	CATME ./image
+	mkdir -p image/bin
+	mkdir -p image/home
+	mkdir -p image/home/ansis
+	cp shell cat cat_count hello ll ls printa printb pwd slideshow \
+		sysinfo uname ./image/bin
+	cp CATME ./image/home
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
