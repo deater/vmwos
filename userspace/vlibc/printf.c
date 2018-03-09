@@ -9,12 +9,13 @@
 
 int vsprintf(char *buffer, char *string, va_list ap) {
 
-	char int_buffer[10];
+	char int_buffer[18];
 	int int_pointer=0;
 
 	int buffer_pointer=0;
 	int i;
 	unsigned long x;
+	uint64_t lx;
 	char pad_value,pad_len,printed_size;
 
 	while(1) {
@@ -63,9 +64,11 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 
 				if (pad_len>printed_size) {
 					for(i=0;i<pad_len-printed_size;i++) {
-						buffer[buffer_pointer]=pad_value;
+						buffer[buffer_pointer]=
+							pad_value;
 						buffer_pointer++;
-						if (buffer_pointer==MAX_PRINT_SIZE) break;
+						if (buffer_pointer
+							==MAX_PRINT_SIZE) break;
 					}
 				}
 
@@ -73,6 +76,35 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
 					if (buffer_pointer==MAX_PRINT_SIZE) break;
+				}
+			}
+			/* long long x (FIXME!) */
+			else if (*string=='l') {
+				string++;
+				if (*string!='l'); // FIXME: indicate error
+				string++;
+				if (*string!='x'); // FIXME: indicate error
+				string++;
+
+				lx=va_arg(ap, uint64_t);
+				int_pointer=17;
+				do {
+					if ((lx%16)<10) {
+						int_buffer[int_pointer]=
+								(lx%16)+'0';
+					}
+					else {
+						int_buffer[int_pointer]=
+								(lx%16)-10+'a';
+					}
+					int_pointer--;
+					lx/=16;
+				} while(lx!=0);
+				for(i=int_pointer+1;i<18;i++) {
+					buffer[buffer_pointer]=int_buffer[i];
+					buffer_pointer++;
+					if (buffer_pointer==MAX_PRINT_SIZE)
+						break;
 				}
 			}
 			/* Hex */
@@ -94,16 +126,19 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 
 				if (pad_len>printed_size) {
 					for(i=0;i<pad_len-printed_size;i++) {
-						buffer[buffer_pointer]=pad_value;
+						buffer[buffer_pointer]=
+							pad_value;
 						buffer_pointer++;
-						if (buffer_pointer==MAX_PRINT_SIZE) break;
+						if (buffer_pointer==
+							MAX_PRINT_SIZE) break;
 					}
 				}
 
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
-					if (buffer_pointer==MAX_PRINT_SIZE) break;
+					if (buffer_pointer==
+							MAX_PRINT_SIZE) break;
 				}
 			}
 			/* char */
@@ -130,7 +165,8 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 					buffer[buffer_pointer]=*s;
 					s++;
 					buffer_pointer++;
-					if (buffer_pointer==MAX_PRINT_SIZE) break;
+					if (buffer_pointer==
+						MAX_PRINT_SIZE) break;
 				}
 			}
 		}
@@ -214,6 +250,9 @@ int main(int argc, char **argv) {
 
 	printf("Trying %%05d padding, should be *00123*\n");
 	printf("\t*%05d*\n",123);
+
+	printf("Trying %%llx, should be 0xdeadbeefcafebabe\n");
+	printf("\t%llx\n",0xdeadbeefcafebabeULL);
 
 
 }
