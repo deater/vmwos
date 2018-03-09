@@ -12,7 +12,7 @@ static int parse_input(char *string);
 
 static int debug=0;
 
-#define VERSION "13.0"
+#define VERSION "13.1"
 
 int main(int argc, char **argv) {
 
@@ -41,10 +41,6 @@ int main(int argc, char **argv) {
 		while(1) {
 
 			ch=getchar();
-
-//			printf("VMW: input %d\n",input_pointer);
-
-//			printf("VMW: %d\n",ch);
 
 			if ((ch=='\n') || (ch=='\r')) {
 				printf("\n");
@@ -145,17 +141,29 @@ static int create_argv(char *string) {
 	return count;
 }
 
+/* Check if a relative path */
+/* i.e., it contains a / */
+static int is_relative(char *string) {
+
+	int result=0,i;
+
+	for(i=0;i<strlen(string);i++) if (string[i]=='/') result++;
+
+	return result;
+
+}
 
 
 static int parse_input(char *string) {
 
 	int result=0;
+	char temp_string[256];
 
 	if (!strncmp(string,"echo",4)) {
 		if (string[4]!=0) printf("%s\n",string+5);
 	}
 	else if (!strncmp(string,"cls",3)) {
-		printf("\n\r\033[2J\n");
+		printf("\n\r\033[2J");
 	}
 	else if (!strncmp(string,"cd",2)) {
 		if (strlen(string)>3) {
@@ -237,7 +245,15 @@ static int parse_input(char *string) {
 		}
 
 		else {
-			result=stat(string,&stat_buf);
+			if (is_relative(string)) {
+				result=stat(string,&stat_buf);
+			}
+			else {
+				/* Look in /bin */
+				sprintf(temp_string,"/bin/%s",string);
+				result=stat(temp_string,&stat_buf);
+			}
+
 			if (result<0) {
 				printf("\nCommmand not found: \"%s\"!\n",string);
 			}
