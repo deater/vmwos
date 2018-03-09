@@ -58,18 +58,25 @@ int32_t fd_allocate(uint32_t inode) {
 }
 
 
-static const char *split_filename(const char *start_ptr, char *name) {
+/* Split a filename into the path part and the actual name part */
+static const char *split_filename(const char *start_ptr, char *name,
+			int len) {
 
 	const char *ptr=start_ptr;
 	char *out=name;
-
-	/* FIXME: check if overflow size */
+	int length=0;
 
 	while(1) {
 		if (*ptr==0) {
 			*out=0;
 			return NULL;
 		}
+
+		if (length>=(len-1)) {
+			*out=0;
+			return NULL;
+		}
+
 		if (*ptr=='/') {
 			*out=0;
 			ptr++;
@@ -78,6 +85,7 @@ static const char *split_filename(const char *start_ptr, char *name) {
 		*out=*ptr;
 		ptr++;
 		out++;
+		length++;
 	}
 	return ptr;
 }
@@ -103,8 +111,17 @@ int32_t get_inode(const char *pathname) {
 	}
 
 	while(1) {
-		ptr=split_filename(ptr,name);
-		if (debug) printk("get_inode: di=%x path_part %s\n",dir_inode,name);
+		if (debug) {
+			printk("get_inode: about to split %s\n",ptr);
+		}
+
+		ptr=split_filename(ptr,name,MAX_FILENAME_SIZE);
+
+		if (debug) {
+			printk("get_inode: di=%x path_part %s\n",
+							dir_inode,name);
+		}
+
 		if (ptr==NULL) break;
 		dir_inode=romfs_get_inode(dir_inode,name);
 	}
@@ -211,6 +228,10 @@ int32_t stat(const char *pathname, struct stat *buf) {
 
 	int32_t inode;
 	int32_t result;
+
+	if (debug) {
+		printk("### Trying to stat %s\n",pathname);
+	}
 
 	inode=get_inode(pathname);
 	if (inode<0) {
