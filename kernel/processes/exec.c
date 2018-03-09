@@ -151,12 +151,13 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
         current_process->text=binary_start;
         current_process->textsize=size;
 
-        printk("Execed process %s current_process %x pid %d "
-                "allocated %dkB at %x and %dkB stack at %x\n",
-                filename,(long)current_process,current_process->pid,
-                size/1024,binary_start,
-                stack_size/1024,stack_page);
-
+	if (debug) {
+		printk("Execed process %s current_process %x pid %d "
+			"allocated %dkB at %x and %dkB stack at %x\n",
+			filename,(long)current_process,current_process->pid,
+			size/1024,binary_start,
+			stack_size/1024,stack_page);
+	}
 
 	/* r0 gets overwritten with syscall result */
 	/* at end of syscall handler */
