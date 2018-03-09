@@ -11,8 +11,8 @@ lib-arm1176.a:	div.arm1176.o memcpy.arm1176.o memory_benchmark.arm1176.o memset.
 	$(CROSS)$(AR) crs lib-arm1176.a div.arm1176.o memcpy.arm1176.o memory_benchmark.arm1176.o memset.arm1176.o \
 		printk.arm1176.o string.arm1176.o
 
-div.arm1176.o:	div.c
-	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o div.arm1176.o -c div.c
+div.arm1176.o:	div.arm1176.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o div.arm1176.o -c div.arm1176.c
 
 memcpy.arm1176.o:	memcpy.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o memcpy.arm1176.o -c memcpy.c
@@ -35,12 +35,9 @@ string.arm1176.o:	string.c
 
 ### ARMV7
 
-lib-armv7.a:	div.armv7.o memcpy.armv7.o memory_benchmark.armv7.o memset.armv7.o printk.armv7.o string.armv7.o
-	$(CROSS)$(AR) crs lib-armv7.a div.armv7.o memcpy.armv7.o memory_benchmark.armv7.o memset.armv7.o \
+lib-armv7.a:	memcpy.armv7.o memory_benchmark.armv7.o memset.armv7.o printk.armv7.o string.armv7.o
+	$(CROSS)$(AR) crs lib-armv7.a memcpy.armv7.o memory_benchmark.armv7.o memset.armv7.o \
 		printk.armv7.o string.armv7.o
-
-div.armv7.o:	div.c
-	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o div.armv7.o -c div.c
 
 memcpy.armv7.o:	memcpy.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o memcpy.armv7.o -c memcpy.c

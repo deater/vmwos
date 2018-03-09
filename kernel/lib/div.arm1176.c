@@ -5,7 +5,7 @@
 /* ARMV6 has no division instruction	*/
 /* calculate  q=(dividend/divisor)	*/
 /* Not necessarily meant to be speedy 	*/
-uint32_t div32(uint32_t dividend, uint32_t divisor) {
+uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor) {
 
 	uint32_t q;
 	uint32_t new_d;
