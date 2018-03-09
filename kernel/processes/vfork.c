@@ -8,7 +8,7 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
-static int debug=1;
+static int debug=0;
 
 int32_t vfork(void) {
 

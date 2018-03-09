@@ -24,7 +24,7 @@
 #include "syscalls/vfork.h"
 #include "syscalls/exec.h"
 #include "syscalls/exit.h"
-#include "syscalls/wait.h"
+#include "syscalls/waitpid.h"
 #include "syscalls/uname.h"
 #include "syscalls/sysinfo.h"
 #include "syscalls/times.h"

@@ -25,7 +25,8 @@ int32_t wait_queue_add(struct wait_queue_t *queue,
 	struct process_control_block_type *next;
 
 	if (queue->first==NULL) {
-		if (wait_debug) printk("NULL: Adding %d to wait queue\n",proc->pid);
+		if (wait_debug) printk("NULL: Adding %d to wait queue\n",
+								proc->pid);
 		queue->first=proc;
 	}
 	else {
@@ -35,8 +36,11 @@ int32_t wait_queue_add(struct wait_queue_t *queue,
 			if (wait_debug) printk("%x %x\n",
 				next,next->wait_queue_next);
 			if (next==proc) {
-				if (wait_debug) printk("ERROR! Proc %d already on wait queue!\n",
-					proc->pid);
+				if (wait_debug) {
+					printk("ERROR! Proc %d already "
+						"on wait queue!\n",
+						proc->pid);
+				}
 				break;
 			}
 			if (next->wait_queue_next==NULL) {

@@ -8,7 +8,7 @@
 #include "processes/scheduler.h"
 #include "processes/wait.h"
 
-static int debug=1;
+static int debug=0;
 
 struct wait_queue_t waitpid_wait_queue = {
 	NULL
