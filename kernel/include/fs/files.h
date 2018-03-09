@@ -66,3 +66,4 @@ void fd_table_init(void);
 int32_t get_inode(const char *pathname);
 
 int32_t chdir(const char *pathname);
+char *getcwd(char *buf, size_t size);

@@ -166,10 +166,20 @@ uint32_t swi_handler_c(
 			result=nanosleep((struct timespec *)r0,(struct timespec *)r1);
 			break;
 
+		case SYSCALL_GETCWD:
+			result=(uint32_t)getcwd((char *)r0,r1);
+			break;
+
 		case SYSCALL_VFORK:
 			//printk("Trying to vfork\n");
 			result=vfork();
 			break;
+
+
+		/******************/
+		/* VMWOS SPECIFIC */
+		/******************/
+
 
 		case SYSCALL_BLINK:
 			if (r0==0) {

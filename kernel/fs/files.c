@@ -306,6 +306,7 @@ int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 
 }
 
+/* Change current working directory */
 int32_t chdir(const char *path) {
 
 	int32_t inode,result;
@@ -329,4 +330,22 @@ int32_t chdir(const char *path) {
 	current_process->current_dir=inode;
 
 	return 0;
+}
+
+
+/* Get name of current working directory */
+char *getcwd(char *buf, size_t size) {
+
+	struct stat stat_buf;
+
+	int32_t inode,result;
+
+	inode=current_process->current_dir;
+
+	result=romfs_stat(inode, &stat_buf);
+
+	strncpy(buf,"BROKEN",size);
+
+	return buf;
+
 }

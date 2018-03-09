@@ -23,6 +23,7 @@
 #define SYSCALL_UNAME		122
 #define SYSCALL_GETDENTS	141
 #define SYSCALL_NANOSLEEP	162
+#define SYSCALL_GETCWD		183
 #define SYSCALL_VFORK		190
 
 /* VMW syscalls */

@@ -22,6 +22,8 @@
 #define	__NR_uname	122
 #define __NR_getdents	141
 #define __NR_nanosleep  162
+#define __NR_nanosleep  162
+#define __NR_getcwd	183
 #define __NR_vfork	190
 
 int32_t exit(int32_t status) {
@@ -150,6 +152,21 @@ int32_t chdir(const char *path) {
 		: "memory");
 
 	return r0;
+}
+
+char *getcwd(char *buf, uint32_t size) {
+
+	register long r7 __asm__("r7") = __NR_getcwd;
+	register long r0 __asm__("r0") = (long)buf;
+	register long r1 __asm__("r1") = (long)size;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return (char *)r0;
 }
 
 int32_t getpid(void) {

@@ -95,6 +95,7 @@ int32_t close(uint32_t fd);
 int32_t vfork(void);
 int32_t exit(int32_t status);
 int32_t chdir(const char *path);
+char *getcwd(char *buf,uint32_t size);
 
 #define NCCS 32
 

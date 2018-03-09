@@ -2,12 +2,16 @@ include ../Makefile.inc
 
 include Makefile_user.inc
 
-all:	shell cat cat_count hello ll ls printa printb slideshow sysinfo uname
+all:	shell \
+	cat cat_count hello ll ls printa printb pwd slideshow sysinfo uname
 
-image:	shell cat cat_count hello ll ls printa printb slideshow sysinfo uname
+image:	shell \
+	cat cat_count hello ll ls printa printb pwd slideshow sysinfo uname
 	mkdir -p image
 	mkdir -p image/ansis
-	cp shell cat cat_count printa printb slideshow sysinfo uname hello ll ls CATME ./image
+	cp shell \
+	cat cat_count hello ll ls printa printb pwd slideshow sysinfo uname \
+	CATME ./image
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
@@ -36,6 +40,9 @@ printa:	printa.elf
 
 printb:	printb.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) printb.elf -O binary printb
+
+pwd:	pwd.elf
+	$(CROSS)objcopy $(OBJCOPYFLAGS) pwd.elf -O binary pwd
 
 slideshow:	slideshow.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) slideshow.elf -O binary slideshow
@@ -72,6 +79,9 @@ printa.elf:	printa.o ./vlibc/vlibc.a
 printb.elf:	printb.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printb.elf printb.o ./vlibc/vlibc.a
 
+pwd.elf:	pwd.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o pwd.elf pwd.o ./vlibc/vlibc.a
+
 slideshow.elf:	slideshow.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o slideshow.elf slideshow.o ./vlibc/vlibc.a
 
@@ -98,6 +108,9 @@ printa.o:	printa.c
 printb.o:	printb.c
 	$(CROSS)$(CC) $(CFLAGS) -c printb.c
 
+pwd.o:	pwd.c
+	$(CROSS)$(CC) $(CFLAGS) -c pwd.c
+
 slideshow.o:	slideshow.c
 	$(CROSS)$(CC) $(CFLAGS) -c slideshow.c
 
@@ -121,7 +134,8 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 
 clean:
 	rm -f *~ *.o *.elf \
-		hello cat cat_count ll ls printa printb shell slideshow sysinfo uname \
+		hello cat cat_count ll ls printa printb \
+		pwd shell slideshow sysinfo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
 
