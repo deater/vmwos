@@ -283,8 +283,8 @@ static int ls_plain(char *path) {
 	int offset;
 	struct vmwos_dirent *d;
 	struct stat stat_buf;
-	int max_filename_len=0;
-	int columns,colwidth,i,whichcol=0;
+	unsigned int max_filename_len=0;
+	unsigned int columns,colwidth,i,whichcol=0;
 
 	result=stat(path,&stat_buf);
 	if (result<0) {

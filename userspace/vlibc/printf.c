@@ -15,18 +15,39 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 	int buffer_pointer=0;
 	int i;
 	unsigned long x;
+	char pad_value,pad_len,printed_size;
 
 	while(1) {
 		if (*string==0) break;
 
 		if (*string=='%') {
 			string++;
+
+			pad_len=0;
+			pad_value=' ';
+			printed_size=0;
+
+			/* Padding */
+			if ((*string>='0') && (*string<='9')) {
+				if (*string=='0') pad_value='0';
+				else pad_value=' ';
+				pad_len=*string-'0';
+				string++;
+				while((*string>='0') && (*string<='9')) {
+					pad_len*=10;
+					pad_len+=*string-'0';
+					string++;
+				}
+			}
+
+			/* Unsigned integer */
 			if ((*string=='d') || (*string=='i')) {
 				string++;
 				x=va_arg(ap, unsigned long);
 				if (x&0x80000000) {
 					buffer[buffer_pointer]='-';
 					buffer_pointer++;
+					printed_size++;
 					if (buffer_pointer==MAX_PRINT_SIZE) break;
 
 					x=~x;
@@ -36,15 +57,25 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 				do {
 					int_buffer[int_pointer]=(x%10)+'0';
 					int_pointer--;
+					printed_size++;
 					x/=10;
 				} while(x!=0);
+
+				if (pad_len>printed_size) {
+					for(i=0;i<pad_len-printed_size;i++) {
+						buffer[buffer_pointer]=pad_value;
+						buffer_pointer++;
+						if (buffer_pointer==MAX_PRINT_SIZE) break;
+					}
+				}
+
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
 					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
-
 			}
+			/* Hex */
 			else if ((*string=='x') || (*string=='p')) {
 				string++;
 				x=va_arg(ap, unsigned long);
@@ -56,15 +87,26 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 					else {
 						int_buffer[int_pointer]=(x%16)-10+'a';
 					}
+					printed_size++;
 					int_pointer--;
 					x/=16;
 				} while(x!=0);
+
+				if (pad_len>printed_size) {
+					for(i=0;i<pad_len-printed_size;i++) {
+						buffer[buffer_pointer]=pad_value;
+						buffer_pointer++;
+						if (buffer_pointer==MAX_PRINT_SIZE) break;
+					}
+				}
+
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
 					if (buffer_pointer==MAX_PRINT_SIZE) break;
 				}
 			}
+			/* char */
 			else if (*string=='c') {
 				string++;
 				x=va_arg(ap, unsigned long);
@@ -72,6 +114,14 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 				buffer_pointer++;
 				if (buffer_pointer==MAX_PRINT_SIZE) break;
 			}
+			/* %% */
+			else if (*string=='%') {
+				string++;
+				buffer[buffer_pointer]='%';
+				buffer_pointer++;
+				if (buffer_pointer==MAX_PRINT_SIZE) break;
+			}
+			/* string */
 			else if (*string=='s') {
 				char *s;
 				string++;
@@ -132,3 +182,39 @@ int sprintf(char *string, char *fmt, ...) {
 
 }
 
+#if 0
+
+int main(int argc, char **argv) {
+
+	char *p = (char *)0xdeadbeef;
+
+	printf("Hello World!\n");
+	printf("Trying 12345\n");
+	printf("\t%d\n",12345);
+	printf("\t%i\n",12345);
+	printf("Trying -12345\n");
+	printf("\t%d\n",-12345);
+	printf("\t%i\n",-12345);
+	printf("Trying 0xdeadbeef\n");
+	printf("\t%x\n",0xdeadbeef);
+	printf("\t%p\n",p);
+	printf("Trying c 65 (A)\n");
+	printf("\t%c\n",65);
+	printf("Trying s HELLO WORLD\n");
+	printf("\t%s\n","HELLO WORLD");
+
+	printf("Trying %%5x padding, should be *  b0b*\n");
+	printf("\t*%5x*\n",0xb0b);
+
+	printf("Trying %%5d padding, should be *  123*\n");
+	printf("\t*%5d*\n",123);
+
+	printf("Trying %%05x padding, should be *00b0b*\n");
+	printf("\t*%05x*\n",0xb0b);
+
+	printf("Trying %%05d padding, should be *00123*\n");
+	printf("\t*%05d*\n",123);
+
+
+}
+#endif
