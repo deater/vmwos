@@ -13,11 +13,13 @@ int32_t uname(struct utsname *buf) {
 	strlcpy(buf->nodename,"pi",UTSNAME_SIZE);
 	strlcpy(buf->release,VERSION,UTSNAME_SIZE);
 	strlcpy(buf->version,COMPILE_DATE,UTSNAME_SIZE);
-	strlcpy(buf->machine,"arm6",UTSNAME_SIZE);
+#ifdef ARMV7
+	strlcpy(buf->machine,"armv7",UTSNAME_SIZE);
+#else
+	strlcpy(buf->machine,"armv6",UTSNAME_SIZE);
+#endif
 	strlcpy(buf->domainname,"none",UTSNAME_SIZE);
 
 	return 0;
 
 }
-
-
