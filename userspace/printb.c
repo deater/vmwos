@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
 	printf("\nTime running B: "
 		"Wallclock: %d seconds, User: %d seconds, Running %d%% of time\n",
-		current_time-start_time,buf.tms_utime,buf.tms_utime/64,
+		current_time-start_time,buf.tms_utime/64,
 		(buf.tms_utime/64)*100U/(current_time-start_time));
 
 	return 0;
