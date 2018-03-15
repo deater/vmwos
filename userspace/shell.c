@@ -10,82 +10,9 @@
 
 static int parse_input(char *string);
 
-static int debug=0;
+//static int debug=0;
 
 #define VERSION "13.1"
-
-int main(int argc, char **argv) {
-
-	char input_string[256];
-	int input_pointer,result;
-	int ch,done=0;
-	int32_t status;
-
-	struct termios oldt, newt;
-
-//	register long sp asm ("sp");
-
-//	printf("Our sp=%x\n",sp);
-
-	tcgetattr( 0, &oldt);
-	newt = oldt;
-
-	cfmakeraw(&newt);
-
-	tcsetattr(0, TCSANOW, &newt);
-
-	while (1) {
-		input_pointer=0;
-
-		printf("] ");
-
-		while(1) {
-
-			ch=getchar();
-
-			if ((ch=='\n') || (ch=='\r')) {
-				printf("\n");
-				input_string[input_pointer]=0;
-				result=parse_input(input_string);
-				if (result==1) done=1;
-				break;
-			}
-
-			/* ctrl-D? */
-			if (ch==4) {
-				done=1;
-				break;
-			}
-
-			/* Backspace */
-			if ((ch==0x7f) || (ch=='\b')) {
-
-				if (input_pointer>0) {
-					input_pointer--;
-					printf("\b \b");
-				}
-			}
-			else {
-				input_string[input_pointer]=ch;
-				input_pointer++;
-				putchar(ch);
-			}
-		}
-
-		/* See if any background childen have finished */
-		/* We should loop here until no more reported? */
-		result=waitpid(-1,&status,WNOHANG);
-		if (result>0) {
-			printf("Child %d exited with %d\n",result,status);
-		}
-
-		if (done) break;
-	}
-	tcsetattr( 0, TCSANOW, &oldt);
-
-	return 0;
-}
-
 
 static int print_help(void) {
 
@@ -114,25 +41,45 @@ static int print_help(void) {
 
 static char *arguments[MAX_ARGUMENTS];
 
-static int create_argv(char *string) {
+static int create_argv(char *string, int32_t *background) {
 
 	int count=0;
 	int ptr=0;
 	int i;
+	int argv_debug=0;
+
+	*background=0;
 
 	while(1) {
 		arguments[count]=&(string[ptr]);
-		if (debug) printf("shell:argv: %d %x %s\n",count,(long)(&string[ptr]),
-			&string[ptr]);
+		if (argv_debug) {
+			printf("shell:argv: %d %x %s\n",count,
+				(long)(&string[ptr]),&string[ptr]);
+		}
 
+		/* check if starts with ampersand */
+		/* if so, truncate argv and run in background */
+		if (string[ptr]=='&') {
+			if (argv_debug) {
+				printf("Found &, running in background!\n");
+			}
+			arguments[count]=NULL;
+			*background=1;
+			break;
+		}
+
+		/* Break at first space */
 		/* TODO: handle all whitespace? */
-		while((string[ptr]!=' ')&&(string[ptr]!=0)) ptr++;
+		while((string[ptr]!=' ')&&(string[ptr]!=0)) {
+			ptr++;
+		}
 		count++;
 
 		if (string[ptr]==0) {
 			arguments[count]=NULL;
 			break;
 		}
+
 		/* NUL terminate */
 		string[ptr]=0;
 		ptr++;
@@ -140,7 +87,7 @@ static int create_argv(char *string) {
 
 	}
 
-	if (debug) {
+	if (argv_debug) {
 		printf("Found %d arguments\n",count);
 		for(i=0;i<count;i++) {
 			printf("%d: %s\n",i,arguments[i]);
@@ -244,11 +191,11 @@ static int parse_input(char *string) {
 		/* do nothing */
 	}
 	else {
-		int32_t pid,status,result;
+		int32_t pid,status,result,background;
 		struct stat stat_buf;
 
 		/* Convert string to argv format */
-		result=create_argv(string);
+		result=create_argv(string,&background);
 		if (result<0) {
 			printf("Too many command line arguments\n");
 		}
@@ -274,9 +221,13 @@ static int parse_input(char *string) {
 					execve(temp_string,arguments,NULL);
 				}
 				else {
-					printf("Waiting for %d to finish\n",pid);
-					waitpid(pid,&status,0);
-					printf("Child exited with %d\n",status);
+					if (background) {
+					}
+					else {
+						printf("Waiting for %d to finish\n",pid);
+						waitpid(pid,&status,0);
+						printf("Child exited with %d\n",status);
+					}
 				}
 			}
 		}
@@ -284,3 +235,77 @@ static int parse_input(char *string) {
 
 	return result;
 }
+
+int main(int argc, char **argv) {
+
+	char input_string[256];
+	int input_pointer,result;
+	int ch,done=0;
+	int32_t status;
+
+	struct termios oldt, newt;
+
+//	register long sp asm ("sp");
+
+//	printf("Our sp=%x\n",sp);
+
+	tcgetattr( 0, &oldt);
+	newt = oldt;
+
+	cfmakeraw(&newt);
+
+	tcsetattr(0, TCSANOW, &newt);
+
+	while (1) {
+		input_pointer=0;
+
+		printf("] ");
+
+		while(1) {
+
+			ch=getchar();
+
+			if ((ch=='\n') || (ch=='\r')) {
+				printf("\n");
+				input_string[input_pointer]=0;
+				result=parse_input(input_string);
+				if (result==1) done=1;
+				break;
+			}
+
+			/* ctrl-D? */
+			if (ch==4) {
+				done=1;
+				break;
+			}
+
+			/* Backspace */
+			if ((ch==0x7f) || (ch=='\b')) {
+
+				if (input_pointer>0) {
+					input_pointer--;
+					printf("\b \b");
+				}
+			}
+			else {
+				input_string[input_pointer]=ch;
+				input_pointer++;
+				putchar(ch);
+			}
+		}
+
+		/* See if any background childen have finished */
+		/* We should loop here until no more reported? */
+		result=waitpid(-1,&status,WNOHANG);
+		if (result>0) {
+			printf("Child %d exited with %d\n",result,status);
+		}
+
+		if (done) break;
+	}
+	tcsetattr( 0, TCSANOW, &oldt);
+
+	return 0;
+}
+
+
