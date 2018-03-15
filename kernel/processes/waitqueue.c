@@ -13,7 +13,7 @@ http://www.makelinux.net/ldd3/chp-6-sect-2
 
 #include "processes/process.h"
 #include "processes/scheduler.h"
-#include "processes/wait.h"
+#include "processes/waitqueue.h"
 
 #include "lib/printk.h"
 

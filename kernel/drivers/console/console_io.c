@@ -7,7 +7,7 @@
 #include "lib/locks.h"
 
 #include "processes/process.h"
-#include "processes/wait.h"
+#include "processes/waitqueue.h"
 #include "processes/scheduler.h"
 
 #include "debug/panic.h"

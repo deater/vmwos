@@ -6,7 +6,7 @@
 #include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/led/led.h"
 #include "time/time.h"
-#include "processes/wait.h"
+#include "processes/waitqueue.h"
 #include "processes/process.h"
 
 /* This is the standard ARM timer */

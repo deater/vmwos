@@ -52,6 +52,23 @@ struct process_control_block_type *process_lookup(int32_t pid) {
 
 }
 
+struct process_control_block_type *process_lookup_child(
+	struct process_control_block_type *caller) {
+
+	struct process_control_block_type *result=NULL;
+
+	result=proc_first;
+	while(result!=NULL) {
+		if (result->parent==caller) return result;
+
+		result=result->next;
+	}
+
+	return result;
+
+}
+
+
 static int32_t process_insert(struct process_control_block_type *proc) {
 
 	struct process_control_block_type *last;

@@ -9,11 +9,11 @@ all:	processes-arm1176.a processes-armv7.a
 
 processes-arm1176.a:	process.arm1176.o exec.arm1176.o \
 		idle_task.arm1176.o scheduler.arm1176.o vfork.arm1176.o \
-		wait.arm1176.o
+		waitpid.arm1176.o waitqueue.arm1176.o
 	$(CROSS)$(AR) crs processes-arm1176.a \
 			process.arm1176.o exec.arm1176.o \
 		idle_task.arm1176.o scheduler.arm1176.o vfork.arm1176.o \
-		wait.arm1176.o
+		waitpid.arm1176.o waitqueue.arm1176.o
 
 
 exec.arm1176.o:	exec.c
@@ -31,18 +31,21 @@ scheduler.arm1176.o:	scheduler.c
 vfork.arm1176.o:	vfork.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o vfork.arm1176.o -c vfork.c
 
-wait.arm1176.o:	wait.c
-	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o wait.arm1176.o -c wait.c
+waitpid.arm1176.o:	waitpid.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o waitpid.arm1176.o -c waitpid.c
+
+waitqueue.arm1176.o:	waitqueue.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o waitqueue.arm1176.o -c waitqueue.c
 
 ### ARMV7
 
 processes-armv7.a:	process.armv7.o exec.armv7.o \
 		idle_task.armv7.o scheduler.armv7.o vfork.armv7.o \
-		wait.armv7.o
+		waitpid.armv7.o waitqueue.armv7.o
 	$(CROSS)$(AR) crs processes-armv7.a \
 			process.armv7.o exec.armv7.o \
 			idle_task.armv7.o scheduler.armv7.o vfork.armv7.o \
-			wait.armv7.o
+			waitpid.armv7.o waitqueue.armv7.o
 
 
 exec.armv7.o:	exec.c
@@ -60,8 +63,11 @@ scheduler.armv7.o:	scheduler.c
 vfork.armv7.o:	vfork.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o vfork.armv7.o -c vfork.c
 
-wait.armv7.o:	wait.c
-	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o wait.armv7.o -c wait.c
+waitpid.armv7.o:	waitpid.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o waitpid.armv7.o -c waitpid.c
+
+waitqueue.armv7.o:	waitqueue.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o waitqueue.armv7.o -c waitqueue.c
 
 ###
 

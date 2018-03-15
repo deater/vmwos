@@ -20,11 +20,11 @@
 
 #include "processes/process.h"
 #include "processes/scheduler.h"
+#include "processes/waitpid.h"
 
 #include "syscalls/vfork.h"
 #include "syscalls/exec.h"
 #include "syscalls/exit.h"
-#include "syscalls/waitpid.h"
 #include "syscalls/uname.h"
 #include "syscalls/sysinfo.h"
 #include "syscalls/times.h"
@@ -106,7 +106,7 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_WAITPID:
 			//printk("Trying to waitpid on pid %d\n",r0);
-			waitpid(r0,(int32_t *)r1,r2);
+			waitpid(r0,(int32_t *)r1,r2,current_process);
 			break;
 
 		case SYSCALL_EXECVE:

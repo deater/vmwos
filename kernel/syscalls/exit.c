@@ -6,8 +6,7 @@
 
 #include "processes/process.h"
 #include "processes/scheduler.h"
-
-#include "syscalls/waitpid.h"
+#include "processes/waitpid.h"
 
 static int debug=0;
 

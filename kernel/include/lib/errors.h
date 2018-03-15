@@ -4,6 +4,7 @@
 
 #define ENOENT	2	/* File not found..... */
 #define EBADF	9	/* Bad file descriptor */
+#define ECHILD	10      /* No child process... */
 #define ENOMEM	12	/* Not enough memory.. */
 #define ENODEV	19	/* No such device..... */
 #define ENOTDIR	20	/* Not a directory.... */

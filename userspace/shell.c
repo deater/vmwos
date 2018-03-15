@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
 	char input_string[256];
 	int input_pointer,result;
 	int ch,done=0;
+	int32_t status;
 
 	struct termios oldt, newt;
 
@@ -70,6 +71,14 @@ int main(int argc, char **argv) {
 				putchar(ch);
 			}
 		}
+
+		/* See if any background childen have finished */
+		/* We should loop here until no more reported? */
+		result=waitpid(-1,&status,WNOHANG);
+		if (result>0) {
+			printf("Child %d exited with %d\n",result,status);
+		}
+
 		if (done) break;
 	}
 	tcsetattr( 0, TCSANOW, &oldt);

@@ -60,6 +60,9 @@ struct process_control_block_type *process_create(void);
 int32_t process_destroy(struct process_control_block_type *proc);
 
 struct process_control_block_type *process_lookup(int32_t pid);
+struct process_control_block_type *process_lookup_child(
+        struct process_control_block_type *caller);
+
 
 int32_t process_switch(struct process_control_block_type *old,
 		struct process_control_block_type *new);

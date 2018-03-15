@@ -178,6 +178,15 @@ int32_t ioctl4(int d, unsigned long request, unsigned long req2, unsigned long r
 int32_t getpid(void);
 int32_t sys_time(void);
 int32_t sys_reboot(void);
+
+
+#define WNOHANG         0x00000001
+#define WUNTRACED       0x00000002
+#define WSTOPPED        WUNTRACED
+#define WEXITED         0x00000004
+#define WCONTINUED      0x00000008
+#define WNOWAIT         0x01000000
+
 int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options);
 int32_t execve(const char *filename, char *const argv[], char *const envp[]);
 
