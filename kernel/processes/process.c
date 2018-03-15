@@ -11,7 +11,7 @@
 #include "lib/memcpy.h"
 #include "lib/memset.h"
 
-static int debug=0;
+static int process_debug=0;
 
 int userspace_started=0;
 static int avail_pid=0;
@@ -72,13 +72,15 @@ struct process_control_block_type *process_lookup_child(
 
 }
 
-
+/* Insert process into linked list */
 static int32_t process_insert(struct process_control_block_type *proc) {
 
 	struct process_control_block_type *last;
 
 	if (proc_first==NULL) {
-		if (debug) printk("Creating first process %d\n",proc->pid);
+		if (process_debug) {
+			printk("Creating first process %d\n",proc->pid);
+		}
 		proc_first=proc;
 		proc->next=NULL;
 		proc->prev=NULL;
@@ -92,12 +94,49 @@ static int32_t process_insert(struct process_control_block_type *proc) {
 	last->next=proc;
 	proc->next=NULL;
 	proc->prev=last;
-	if (debug) printk("Putting new process %d after %d\n",proc->pid,last->pid);
+	if (process_debug) {
+		printk("Putting new process %d after %d\n",proc->pid,last->pid);
+	}
 //	printk("proc %x proc->next %x proc->prev %x\n",
 //		(long)proc,(long)proc->next,(long)proc->prev);
 
 	return 0;
 }
+
+
+/* Delete process from linked list */
+static int32_t process_remove(struct process_control_block_type *proc) {
+
+	struct process_control_block_type *current;
+
+	if (proc_first==NULL) {
+		printk("Attempting to delete from empty list!\n");
+		return -1;
+	}
+
+	if (proc_first==proc) {
+		printk("Deleting first process!\n");
+		proc_first=proc->next;
+		return 0;
+	}
+
+	current=proc_first;
+
+	while(current!=NULL) {
+		if (current==proc) {
+			current->prev->next=proc->next;
+			if (proc->next!=NULL) {
+				proc->next->prev=proc->prev;
+			}
+			return 0;
+		}
+		current=current->next;
+	}
+	printk("process_remove: ERROR could not remove!\n");
+
+	return 0;
+}
+
 
 struct process_control_block_type *process_create(void) {
 
@@ -114,10 +153,11 @@ struct process_control_block_type *process_create(void) {
 	/* clear to zero */
 	memset(new_proc,0,sizeof(struct process_control_block_type));
 
-	if (debug) printk("process_create: allocated %d bytes for PCB at %x\n",
-		sizeof(struct process_control_block_type),
-		(long)new_proc);
-
+	if (process_debug) {
+		printk("process_create: allocated %d bytes for PCB at %x\n",
+			sizeof(struct process_control_block_type),
+			(long)new_proc);
+	}
 
 	/* Set up initial conditions */
 	new_proc->running=0;
@@ -161,8 +201,18 @@ struct process_control_block_type *process_create(void) {
 
 int32_t process_destroy(struct process_control_block_type *proc) {
 
+	if (process_debug) {
+		printk("ATTEMPTING TO DESTROY PROCESS %d\n",proc->pid);
+	}
+
+	/* mark as no longer valid */
+	proc->valid=0;
+
+	/* remove from linked list? */
+	process_remove(proc);
+
 	/* close open files */
-	/* TODO */
+	/* FIXME */
 
 	/* free memory */
 	if (proc->stack) {
@@ -171,10 +221,9 @@ int32_t process_destroy(struct process_control_block_type *proc) {
 	if (proc->text) {
 		memory_free(proc->text,proc->textsize);
 	}
-	/* mark as no longer valid */
-	proc->valid=0;
 
-	/* remove from linked list? */
+	/* Delete proc struct itself */
+	memory_free(proc,sizeof(struct process_control_block_type));
 
 	return 0;
 }
