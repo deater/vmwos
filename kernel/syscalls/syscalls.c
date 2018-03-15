@@ -106,7 +106,7 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_WAITPID:
 			//printk("Trying to waitpid on pid %d\n",r0);
-			waitpid(r0,(int32_t *)r1,r2,current_process);
+			result=waitpid(r0,(int32_t *)r1,r2,current_process);
 			break;
 
 		case SYSCALL_EXECVE:

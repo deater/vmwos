@@ -37,7 +37,11 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options,
 	/* Wait for any child */
 	if (pid==-1) {
 		proc=process_lookup_child(caller);
-		if (proc==NULL) return -ECHILD;
+		printk("WAITPID -1: found child %d\n",proc->pid);
+		if (proc==NULL) {
+			printk("WAITPID -1: Couldn't find any children\n");
+			return -ECHILD;
+		}
 	}
 	else if (pid<0) {
 		printk("WAITPID: UNSUPPORTED NEGATIVE PID %d\n",pid);
@@ -51,8 +55,10 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options,
 		if (proc->status==PROCESS_STATUS_EXITED) {
 			if (wstatus!=NULL) *wstatus=proc->exit_value;
 			return_value=proc->pid;
+			printk("WNOHANG: %d has exited\n",proc->pid);
 		}
 		else {
+			printk("WNOHANG: %d has not exited\n",proc->pid);
 			return_value=0;
 		}
 	}

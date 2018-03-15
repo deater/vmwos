@@ -59,7 +59,11 @@ struct process_control_block_type *process_lookup_child(
 
 	result=proc_first;
 	while(result!=NULL) {
-		if (result->parent==caller) return result;
+
+		/* Init is own parent? */
+		if ((result!=caller) && (result->parent==caller)) {
+			return result;
+		}
 
 		result=result->next;
 	}
