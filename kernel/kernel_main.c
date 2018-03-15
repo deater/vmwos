@@ -30,10 +30,6 @@
 
 #include "version.h"
 
-/* For memory benchmark */
-#define BENCH_SIZE (1024*1024)
-//uint8_t benchmark[BENCH_SIZE];
-
 void enter_userspace(void) {
 
 	/* enter userspace */
@@ -77,10 +73,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	(void) r0;	/* Ignore boot method */
 
-//	early_debug_init();
-//	early_debug_dump_memory(0x14d764,4096);
-
-
 	/*******************/
 	/* Detect Hardware */
 	/*******************/
@@ -99,8 +91,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Boot messages!	*/
 	/************************/
 
-	printk("From bootloader: r0=%x r1=%x r2=%x\n",
-		r0,r1,r2);
+	printk("From bootloader: r0=%x r1=%x r2=%x\n",r0,r1,r2);
 	printk("\nBooting VMWos...\n");
 
 	/* Print boot message */
@@ -108,17 +99,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	printk(" \033[0;41m \033[42m   \033[44m \033[42m   \033[44m \033[0m  Version %s\n\n",VERSION);
 
 	printk("Detected hardware:\n");
-
-	{
-		uint32_t *ptr;
-
-		ptr=0;
-
-		printk("IRQ vectors: ud:%x sw:%x pf:%x da:%x "
-			"un: %x irq: %x fiq: %x\n",
-			ptr[1],ptr[2],ptr[3],ptr[4],ptr[5],ptr[6],ptr[7]);
-	}
-
 
 	/* Print model info */
 	hardware_print_model(r1);
@@ -166,10 +146,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	strncpy(idle_process->name,"idle",5);
 	idle_process->kernel_state.r[14]=(long)enter_userspace;
 	printk("Created idle thread: %d\n",idle_process->pid);
-	dump_saved_user_state(idle_process);
-	dump_saved_kernel_state(idle_process);
-
-//	dump_memory(0x9000,4096);
 
 	/* Enter our "init" process*/
 	init_process=process_create();
@@ -192,23 +168,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	long *shell_stack=(long *)init_process->user_state.r[13];
 
-
-
-#if 0
-	/* Setup userspace to point to process 1 */
-	/* process_run(r1,&stack); */
-	asm volatile(
-		"sub sp,sp,#64\n"	/* Put place for reg state on stack*/
-		"mov r0,#1\n"		/* Run process 1 */
-		"mov r1,sp\n"		/* point to stack */
-		"bl process_run\n"
-		: /* output */
-		: /* input */
-		: "sp", "memory");      /* clobbers */
-
-
-#endif
-
+#if 1
 	asm volatile(
                 "msr CPSR_c, #0xDF\n" /* System mode, like user but privldg */
                 "mov sp, %[stack]\n"
@@ -218,15 +178,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
                 : [stack] "r"(shell_stack) /* input */
                 : "sp", "memory");      /* clobbers */
 
+#endif
 
 	enter_userspace();
+
+
 
 error_init:
 
 	/* we should never get here */
 	printk("Error starting init!\n");
-
-
 
 	while(1) {
 
