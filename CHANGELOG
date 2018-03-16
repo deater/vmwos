@@ -1,3 +1,8 @@
+0.17 -- 16 March 2018
++ Actually free process resources on exit/waitpid
++ Lots of code cleanup
++ waitpid WNOHANG support
+
 0.16 -- ?? March 2018
 + Pi2/Pi3 support
 + device-tree support
