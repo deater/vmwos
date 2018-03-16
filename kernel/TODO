@@ -1,8 +1,9 @@
+known bugs:
++ something is still off about the chdir code
++ getcwd() is still not implemented
+
 For pi2/pi3 support
 + Add mini-uart driver
-+ Make the framebuffer use 0x40000000 vs 0xc0000000 appropriately
-+ Make the bcm2835 I/O use 0x3f000000 instead of 0x20000000
-+ Fix up boot code
-+ Only use the 1176 specific drivers (PMU, MMU, etc) on right architecture
++ Make the framebuffer use 0x40000000 vs 0xc0000000 appropriately(?)
 
 
