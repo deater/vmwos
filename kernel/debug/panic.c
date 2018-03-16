@@ -64,3 +64,20 @@ void dump_kernel_regs(void) {
 	printk("r12: %x r13: %x r14: %x\n",r12,r13,r14);
 
 }
+
+void dump_memory(uint32_t address,uint32_t size) {
+
+	unsigned char *ptr;
+	int i;
+
+	ptr=(unsigned char *)address;
+
+	for(i=0;i<size;i++) {
+		if ((i&0xf)==0) {
+			printk("\n%x: ",ptr);
+		}
+		printk("%x ",*ptr);
+		ptr++;
+	}
+}
+

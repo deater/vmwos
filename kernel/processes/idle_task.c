@@ -1,8 +1,16 @@
 #include <stdint.h>
+
 #include "lib/printk.h"
 #include "lib/delay.h"
+#include "lib/string.h"
 
-void idle_task(void) {
+#include "processes/process.h"
+#include "processes/idle_task.h"
+#include "processes/userspace.h"
+#include "memory/memory.h"
+#include "time/time.h"
+
+static void idle_task(void) {
 
 //	printk("Idle Task!\n");
 
@@ -32,3 +40,30 @@ void idle_task(void) {
 //			"b idle_loop\n"
 //			:::);
 }
+
+
+
+void create_idle_task(void) {
+
+	struct process_control_block_type *idle_process;
+
+	idle_process=process_create();
+	idle_process->text=(void *)&idle_task;
+	idle_process->user_state.pc=(long)&idle_task;
+	idle_process->running=1;
+	idle_process->total_time=0;
+	idle_process->start_time=ticks_since_boot();
+	idle_process->last_scheduled=idle_process->start_time;
+	idle_process->stack=memory_allocate(4096);
+	/* Point to end, as stack grows down */
+	idle_process->user_state.r[13]=(long)(idle_process->stack)+4096;
+
+	strncpy(idle_process->name,"idle",5);
+	idle_process->kernel_state.r[14]=(long)enter_userspace;
+
+	idle_process->status=PROCESS_STATUS_READY;
+
+	printk("Created idle thread: %d\n",idle_process->pid);
+}
+
+

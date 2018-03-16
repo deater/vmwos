@@ -1,1 +1,2 @@
-void idle_task(void);
+void create_idle_task(void);
+
