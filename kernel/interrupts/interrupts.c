@@ -140,5 +140,6 @@ void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
 	register long lr asm ("lr");
 
 	printk("UNHANDLED UNDEF %x\n",lr);
+
 }
 

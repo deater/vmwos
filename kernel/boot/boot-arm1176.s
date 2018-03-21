@@ -1,6 +1,21 @@
 /* Minimal assembly language startup code */
 /* Sets up a Raspberry Pi-1 for launching into C */
 
+/* Definitions for Mode bits and Interrupt Flags */
+
+.equ    CPSR_MODE_USER,         0x10
+.equ    CPSR_MODE_FIQ,          0x11
+.equ    CPSR_MODE_IRQ,          0x12
+.equ    CPSR_MODE_SVC,          0x13
+.equ    CPSR_MODE_ABORT,        0x17
+.equ    CPSR_MODE_UNDEFINED,    0x1b
+.equ    CPSR_MODE_SYSTEM,       0x1f
+
+.equ    CPSR_MODE_FIQ_DISABLE,  (1<<6)          @ F set, FIQ disabled
+.equ    CPSR_MODE_IRQ_DISABLE,  (1<<7)          @ I set, IRQ disabled
+.equ    CPSR_MODE_ABORT_DISABLE,(1<<8)          @ A set, ABT disabled
+
+
 /* Put this in the boot section, this matches */
 /* The declaration in the linker script       */
 .section ".text.boot"
@@ -46,28 +61,33 @@ reset:
 	/* (it grows down)			*/
 	mov	sp, #0x8000
 
-.equ	CPSR_MODE_USER,		0x10
-.equ	CPSR_MODE_FIQ,		0x11
-.equ	CPSR_MODE_IRQ,		0x12
-.equ	CPSR_MODE_SVR,		0x13
-.equ	CPSR_MODE_ABORT,	0x17
-.equ	CPSR_MODE_UNDEFINED,	0x1b
-.equ	CPSR_MODE_SYSTEM,	0x1f
-
-.equ	CPSR_MODE_IRQ_DISABLE,	(1<<7)
-.equ	CPSR_MODE_FIQ_DISABLE,	(1<<6)
-
 	/* Set up the Interrupt Mode Stack	*/
 	/* First switch to interrupt mode, then update stack pointer */
 	mov	r3, #(CPSR_MODE_IRQ | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
 	msr	cpsr_c, r3
 	mov	sp, #0x4000
-
 	/* Switch back to supervisor mode */
-	mov	r3, #(CPSR_MODE_SVR | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
 	msr	cpsr_c, r3
 
-	/* TODO: setup the other stacks?	*/
+
+	/* Setup the other stacks.  Share a stack               */
+	/* is that an issue?  hopefully these are unlikely      */
+
+	/* Set up the Undefined Mode Stack      */
+	mov	r3, #(CPSR_MODE_UNDEFINED | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+	mov	sp, #0x2000
+        mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+
+        /* Set up the Abort Mode Stack  */
+	mov	r3, #(CPSR_MODE_ABORT | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+	mov	sp, #0x2000
+	mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+
 
 	/* copy irq vector2 into place.  Preserve r0,r1,r2 */
 	ldr	r3, =_start

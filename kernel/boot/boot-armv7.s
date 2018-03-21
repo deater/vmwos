@@ -129,7 +129,28 @@ done_pi2:
 	mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
 	msr	cpsr_c, r3
 
-	/* TODO: setup the other stacks?	*/
+	/* Setup the other stacks.  Share a stack		*/
+	/* is that an issue?  hopefully these are unlikely	*/
+
+	/* Set up the Undefined Mode Stack	*/
+	mov	r3, #(CPSR_MODE_UNDEFINED | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+	mov	sp, #0x2000
+	/* Switch back to supervisor mode */
+	mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+
+	/* Set up the Abort Mode Stack	*/
+	/* First switch to interrupt mode, then update stack pointer */
+	mov	r3, #(CPSR_MODE_ABORT | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+	mov	sp, #0x2000
+	/* Switch back to supervisor mode */
+	mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+
+
+
 
 	/* copy irq vector into place.  Preserve r0,r1,r2 */
 	/* Note: irq vector defaults to 0x000000 but this is */

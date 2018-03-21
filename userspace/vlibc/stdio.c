@@ -12,8 +12,12 @@ int putchar(int c) {
 }
 
 int puts(char *s) {
+	int32_t len;
+	unsigned char lf='\n';
 
-	printf("%s\n",s);
+	len=strlen(s);
+	write(1,s,len);
+	write(1,&lf,1);
 
 	return 1;
 }
