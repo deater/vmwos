@@ -3,15 +3,18 @@ include ../Makefile.inc
 include Makefile_user.inc
 
 all:	shell \
-	cat cat_count hello ll ls printa printb pwd slideshow sysinfo uname
+	cat cat_count cause_error \
+	hello ll ls printa printb pwd slideshow sysinfo uname
 
 image:	shell \
-	cat cat_count hello ll ls printa printb pwd slideshow sysinfo uname
+	cat cat_count cause_error \
+	hello ll ls printa printb pwd slideshow sysinfo uname
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
 	mkdir -p image/home/ansis
-	cp shell cat cat_count hello ll ls printa printb pwd slideshow \
+	cp shell cat cat_count cause_error \
+		hello ll ls printa printb pwd slideshow \
 		sysinfo uname ./image/bin
 	cp CATME ./image/home
 	genromfs -f initrd.romfs -d image -V VMWos
@@ -27,6 +30,9 @@ cat:	cat.elf
 
 cat_count:	cat_count.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) cat_count.elf -O binary cat_count
+
+cause_error:	cause_error.elf
+	$(CROSS)objcopy $(OBJCOPYFLAGS) cause_error.elf -O binary cause_error
 
 hello:	hello.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) hello.elf -O binary hello
@@ -66,6 +72,9 @@ cat.elf:	cat.o ./vlibc/vlibc.a
 cat_count.elf:	cat_count.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cat_count.elf cat_count.o ./vlibc/vlibc.a
 
+cause_error.elf:	cause_error.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cause_error.elf cause_error.o ./vlibc/vlibc.a
+
 hello.elf:	hello.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf hello.o ./vlibc/vlibc.a
 
@@ -100,6 +109,9 @@ cat.o:	cat.c
 
 cat_count.o:	cat_count.c
 	$(CROSS)$(CC) $(CFLAGS) -c cat_count.c
+
+cause_error.o:	cause_error.c
+	$(CROSS)$(CC) $(CFLAGS) -c cause_error.c
 
 hello.o:	hello.c
 	$(CROSS)$(CC) $(CFLAGS) -c hello.c
@@ -136,7 +148,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 
 clean:
 	rm -f *~ *.o *.elf \
-		hello cat cat_count ll ls printa printb \
+		hello cat cat_count cause_error ll ls printa printb \
 		pwd shell slideshow sysinfo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
