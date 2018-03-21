@@ -355,3 +355,12 @@ int32_t sys_reboot(void) {
 	return r0;
 
 }
+
+int32_t fcntl(int fd, int cmd, ... /* arg */ ) {
+
+        /* FIXME */
+
+        return 0;
+}
+
+

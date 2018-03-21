@@ -84,9 +84,15 @@ struct timespec {
 int32_t nanosleep(const struct timespec *req, struct timespec *rem);
 
 /* See /usr/include/bits/fcntl-linux.h */
-#define O_RDONLY             00
-#define O_WRONLY             01
-#define O_RDWR               02
+#define O_RDONLY	0x0000
+#define O_WRONLY	0x0001
+#define O_RDWR		0x0002
+#define O_CREAT		0x0040
+#define O_EXCL		0x0080
+#define O_NOCTTY	0x0100
+#define O_TRUNC		0x0200
+#define O_APPEND	0x0400
+#define O_NONBLOCK	0x0800
 
 int32_t write(int fd, const void *buf, uint32_t count);
 int32_t read(int fd, void *buf, size_t count);
@@ -100,6 +106,15 @@ char *getcwd(char *buf,uint32_t size);
 #define NCCS 32
 
 #define TCSANOW 0
+
+/* c_cc characters */
+#define VINTR 0
+#define VQUIT 1
+#define VERASE 2
+#define VKILL 3
+#define VEOF 4
+#define VTIME 5
+#define VMIN 6
 
 /* c_iflag bits */
 #define IGNBRK  0000001
@@ -192,3 +207,12 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]);
 
 
 int32_t sys_random(uint32_t *buffer);
+
+/* Values for second arg to fcntl */
+#define F_DUPFD	0	/* Duplicate fd    */
+#define F_GETFD	1	/* Get fd flags    */
+#define F_SETFD	2	/* Set fd flags    */
+#define F_GETFL	3       /* Get file status */
+#define F_SETFL	4       /* Set file status */
+
+int32_t fcntl(int fd, int cmd, ... /* arg */ );

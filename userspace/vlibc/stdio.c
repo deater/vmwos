@@ -4,10 +4,18 @@
 
 #include "syscalls.h"
 #include "vmwos.h"
+#include "vlibc.h"
 
 int putchar(int c) {
 
 	return write(1,&c,1);
+}
+
+int puts(char *s) {
+
+	printf("%s\n",s);
+
+	return 1;
 }
 
 int getchar(void) {

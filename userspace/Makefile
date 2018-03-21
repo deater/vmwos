@@ -4,18 +4,18 @@ include Makefile_user.inc
 
 all:	shell \
 	cat cat_count cause_error \
-	hello ll ls printa printb pwd slideshow sysinfo uname
+	hello ll ls printa printb pwd slideshow sysinfo tbo uname
 
 image:	shell \
 	cat cat_count cause_error \
-	hello ll ls printa printb pwd slideshow sysinfo uname
+	hello ll ls printa printb pwd slideshow sysinfo tbo uname
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
 	mkdir -p image/home/ansis
 	cp shell cat cat_count cause_error \
 		hello ll ls printa printb pwd slideshow \
-		sysinfo uname ./image/bin
+		sysinfo tbo uname ./image/bin
 	cp CATME ./image/home
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
@@ -58,6 +58,9 @@ slideshow:	slideshow.elf
 sysinfo:	sysinfo.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) sysinfo.elf -O binary sysinfo
 
+tbo:	tbo.elf
+	$(CROSS)objcopy $(OBJCOPYFLAGS) tbo.elf -O binary tbo
+
 uname:	uname.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) uname.elf -O binary uname
 
@@ -99,6 +102,9 @@ slideshow.elf:	slideshow.o ./vlibc/vlibc.a
 sysinfo.elf:	sysinfo.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o sysinfo.elf sysinfo.o ./vlibc/vlibc.a
 
+tbo.elf:	tbo.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o tbo.elf tbo.o ./vlibc/vlibc.a
+
 uname.elf:	uname.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o uname.elf uname.o ./vlibc/vlibc.a
 
@@ -128,6 +134,9 @@ pwd.o:	pwd.c
 slideshow.o:	slideshow.c
 	$(CROSS)$(CC) $(CFLAGS) -c slideshow.c
 
+tbo.o:	tbo.c
+	$(CROSS)$(CC) $(CFLAGS) -Wno-misleading-indentation -c tbo.c
+
 uname.o:	uname.c
 	$(CROSS)$(CC) $(CFLAGS) -c uname.c
 
@@ -149,7 +158,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error ll ls printa printb \
-		pwd shell slideshow sysinfo uname \
+		pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
 

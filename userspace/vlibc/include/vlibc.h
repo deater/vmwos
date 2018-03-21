@@ -1,5 +1,6 @@
 /* div.c */
 uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor);
+int32_t __aeabi_idiv(int32_t dividend, int32_t divisor);
 
 /* error.c */
 int errno;
@@ -14,6 +15,7 @@ int32_t rand(void);
 
 /* stdio.c */
 int putchar(int c);
+int puts(char *s);
 int getchar(void);
 
 /* string.c */
