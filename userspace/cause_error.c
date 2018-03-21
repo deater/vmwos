@@ -59,8 +59,11 @@ int main(int argc, char **argv) {
 	}
 	else if (!strncmp(argv[1],"kernelmem",9)) {
 		printf("Trying to write kernel from userspace\n");
-		ptr=(char *)0x1000;
-		for(i=0;i<65536;i++) *ptr='v';
+		ptr=(char *)0x8000;
+		for(i=0;i<65536;i++) {
+			*ptr='v';
+			ptr++;
+		}
 	}
 	else if (!strncmp(argv[1],"memtest",7)) {
 		printf("memtest not implemented yet\n");

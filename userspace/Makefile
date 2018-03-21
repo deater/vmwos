@@ -3,18 +3,18 @@ include ../Makefile.inc
 include Makefile_user.inc
 
 all:	shell \
-	cat cat_count cause_error \
-	hello ll ls printa printb pwd slideshow sysinfo tbo uname
+	cat cat_count cause_error hello ll ls \
+	memory_test printa printb pwd slideshow sysinfo tbo uname
 
 image:	shell \
-	cat cat_count cause_error \
-	hello ll ls printa printb pwd slideshow sysinfo tbo uname
+	cat cat_count cause_error hello ll ls \
+	memory_test printa printb pwd slideshow sysinfo tbo uname
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
 	mkdir -p image/home/ansis
 	cp shell cat cat_count cause_error \
-		hello ll ls printa printb pwd slideshow \
+		hello ll ls memory_test printa printb pwd slideshow \
 		sysinfo tbo uname ./image/bin
 	cp CATME ./image/home
 	genromfs -f initrd.romfs -d image -V VMWos
@@ -42,6 +42,9 @@ ls:	ls.elf
 
 ll:	ll.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) ll.elf -O binary ll
+
+memory_test:	memory_test.elf
+	$(CROSS)objcopy $(OBJCOPYFLAGS) memory_test.elf -O binary memory_test
 
 printa:	printa.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) printa.elf -O binary printa
@@ -87,6 +90,9 @@ ls.elf:	ls.o ./vlibc/vlibc.a
 ll.elf:	ll.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ll.elf ll.o
 
+memory_test.elf:	memory_test.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o memory_test.elf memory_test.o ./vlibc/vlibc.a
+
 printa.elf:	printa.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o printa.elf printa.o ./vlibc/vlibc.a
 
@@ -121,6 +127,9 @@ cause_error.o:	cause_error.c
 
 hello.o:	hello.c
 	$(CROSS)$(CC) $(CFLAGS) -c hello.c
+
+memory_test.o:	memory_test.c
+	$(CROSS)$(CC) $(CFLAGS) -c memory_test.c
 
 printa.o:	printa.c
 	$(CROSS)$(CC) $(CFLAGS) -c printa.c
@@ -157,8 +166,8 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 
 clean:
 	rm -f *~ *.o *.elf \
-		hello cat cat_count cause_error ll ls printa printb \
-		pwd shell slideshow sysinfo tbo uname \
+		hello cat cat_count cause_error ll ls memory_test \
+		printa printb pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
 
