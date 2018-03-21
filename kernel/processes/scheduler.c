@@ -22,15 +22,11 @@ void schedule(void) {
 	orig_proc=current_process;
 	proc=current_process;
 
-//	if (proc->pid==2) schedule_debug=1;
-
 	if (schedule_debug)
 		printk("Attempting to schedule, current proc=%d (%x)\n",
 			proc->pid,(long)proc);
 
 	/* find next available process */
-	/* Should we have an idle process (process 0) */
-	/* That is special cased and just runs wfi?   */
 
 	/* Special case if in idle thread */
 	if (proc==proc_first) {
@@ -40,13 +36,15 @@ void schedule(void) {
 	}
 
 	while(1) {
-//		if (schedule_debug)
-//			printk("proc=%x, proc->next=%x\n",
-//					(long)proc,(long)proc->next);
-		proc=proc->next;
-//		if (schedule_debug)
-//			printk("What about proc->next %x?\n",(long)proc);
+		if (schedule_debug) {
+			printk("proc=%x, proc->next=%x\n",
+					(long)proc,(long)proc->next);
+		}
 
+		proc=proc->next;
+		if (schedule_debug) {
+			printk("What about proc->next %x?\n",(long)proc);
+		}
 
 		/* wrap around if off end */
 		if (proc==NULL) {
