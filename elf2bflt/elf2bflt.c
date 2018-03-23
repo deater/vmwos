@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -18,6 +20,7 @@ int main(int argc, char **argv) {
 	struct stat sb;
 	char *addr;
 	uint32_t temp;
+	uint16_t temp16;
 
 	if (argc<3) {
 		print_usage(argv[0]);
@@ -61,6 +64,34 @@ int main(int argc, char **argv) {
 	printf("ABI %d\n",addr[7]);
 	printf("Type %d:%d\n",addr[0x10],addr[0x11]);
 	printf("ISA %d:%d (40==ARM)\n",addr[0x12],addr[0x13]);
+	memcpy(&temp,&addr[0x14],4);
+	printf("Version again %d\n",temp);
+	memcpy(&temp,&addr[0x18],4);
+	printf("Entry %x\n",temp);
+	memcpy(&temp,&addr[0x1c],4);
+	printf("Phoff %x\n",temp);
+	memcpy(&temp,&addr[0x20],4);
+	printf("Shoff %x\n",temp);
+	memcpy(&temp,&addr[0x24],4);
+	printf("Flags %x\n",temp);
+	memcpy(&temp16,&addr[0x28],2);
+	printf("ehsize %x\n",temp16);
+	memcpy(&temp16,&addr[0x2a],2);
+	printf("phentsize %x\n",temp16);
+	memcpy(&temp16,&addr[0x2c],2);
+	printf("phnum %x\n",temp16);
+	memcpy(&temp16,&addr[0x2e],2);
+	printf("shentsize %x\n",temp16);
+	memcpy(&temp16,&addr[0x30],2);
+	printf("shnum %x\n",temp16);
+	memcpy(&temp16,&addr[0x32],2);
+	printf("shstrndx %x\n",temp16);
+
+
+
+	/***************************/
+	/* Write out the bflt file */
+	/***************************/
 
 	/* magic */
 	write(out,"bFLT",4);
