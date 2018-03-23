@@ -22,9 +22,6 @@ image:	shell \
 	xxd -i < initrd.romfs >> initrd.h
 	echo "};" >> initrd.h
 
-shell:	shell.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) shell.elf -O binary shell
-
 cat:	cat.elf
 	$(ELF2BFLT) cat.elf cat
 
@@ -38,10 +35,10 @@ hello:	hello.elf
 	$(ELF2BFLT) hello.elf hello
 
 ls:	ls.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) ls.elf -O binary ls
+	$(ELF2BFLT) ls.elf ls
 
 ll:	ll.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) ll.elf -O binary ll
+	$(ELF2BFLT) ll.elf ll
 
 memory_test:	memory_test.elf
 	$(ELF2BFLT) memory_test.elf memory_test
@@ -50,13 +47,16 @@ printa:	printa.elf
 	$(ELF2BFLT) printa.elf printa
 
 printb:	printb.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) printb.elf -O binary printb
+	$(ELF2BFLT) printb.elf printb
 
 pwd:	pwd.elf
 	$(ELF2BFLT) pwd.elf pwd
 
+shell:	shell.elf
+	$(ELF2BFLT) shell.elf shell
+
 slideshow:	slideshow.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) slideshow.elf -O binary slideshow
+	$(ELF2BFLT) slideshow.elf slideshow
 
 sysinfo:	sysinfo.elf
 	$(ELF2BFLT) sysinfo.elf sysinfo
@@ -66,6 +66,8 @@ tbo:	tbo.elf
 
 uname:	uname.elf
 	$(ELF2BFLT) uname.elf uname
+
+###
 
 
 shell.elf:	shell.o ./vlibc/vlibc.a
