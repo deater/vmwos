@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 	uint32_t phoff,phnum;
 	uint32_t shnum,shoff,shsize,strindex;
 
-	uint32_t bss_size=0;
+	uint32_t bss_size=0,data_size=0;
 	uint32_t text_start=0,data_start=0,bss_start=0,bss_end=0;
 //	uint32_t data_offset=0,text_offset=0,bss_offset=0;
 	uint32_t entry=0,size,offset;
@@ -215,8 +215,13 @@ int main(int argc, char **argv) {
 
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
+
+				memcpy(&temp,&shptr[0x14],4);
+				data_size=temp;
+
 				data_start=offset-entry;
-				if (debug) printf("\tdata_start: %x, %x\n",data_start,offset);
+				if (debug) printf("\tdata_start: %x, %x %d\n",
+						data_start,offset,size);
 
 			}
 			else {
@@ -258,9 +263,19 @@ int main(int argc, char **argv) {
 	/***************************/
 
 	text_start=0x40;
-	data_start+=text_start;
-	bss_start+=text_start;
-	bss_end=bss_start+bss_size;
+	if (data_start==0) {
+		printf("ERROR! DATA SIZE==0\n");
+	} else {
+		data_start+=text_start;
+	}
+	if (bss_start==0) {
+		bss_start=data_start+data_size;
+		bss_end=data_start+data_size;
+	}
+	else {
+		bss_start+=text_start;
+		bss_end=bss_start+bss_size;
+	}
 
 	/* magic */
 	write(out,"bFLT",4);
