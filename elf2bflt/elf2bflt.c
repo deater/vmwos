@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 		printf("Could not delete %s\n",argv[2]);
 	}
 
-	out=open(argv[2],O_CREAT|O_WRONLY,0666);
+	out=open(argv[2],O_CREAT|O_WRONLY,0777);
 	if (out<0) {
 		printf("Error opening file %s\n",argv[2]);
 		return 7;
