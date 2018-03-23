@@ -76,9 +76,9 @@ int main(int argc, char **argv) {
 	uint32_t phoff,phnum;
 	uint32_t shnum,shoff,shsize,strindex;
 
-	uint32_t text_size=0,data_size=0,bss_size=0;
+	uint32_t bss_size=0;
 	uint32_t text_start=0,data_start=0,bss_start=0,bss_end=0;
-	uint32_t data_offset=0,text_offset=0,bss_offset=0;
+//	uint32_t data_offset=0,text_offset=0,bss_offset=0;
 	uint32_t entry=0,size,offset;
 
 	if (argc<3) {
@@ -187,34 +187,79 @@ int main(int argc, char **argv) {
 
 	string_pointer=&addr[temp];
 
+	/* get sizes */
 	for(i=0;i<shnum;i++) {
-		if (debug) printf("Section header %d\n",i);
-
-		memcpy(&temp,&shptr[0x0],4);
-		if (debug) printf("\tname: %s\n",string_pointer+temp);
-
 		memcpy(&temp,&shptr[0x4],4);
 		if (debug) {
-			printf("\ttype: "); print_type_name(temp); printf("\n");
+			printf("\ttype: ");
+			print_type_name(temp);
+			printf("\n");
 		}
-		memcpy(&temp,&shptr[0x10],4);
-		if (debug) printf("\toffset: %x\n",temp);
-		memcpy(&temp,&shptr[0x14],4);
-		if (debug) printf("\tsize: %x\n",temp);
 
+		if (temp==SHT_PROGBITS) {
+			if (debug) printf("Section header %d\n",i);
+
+			memcpy(&temp,&shptr[0x0],4);
+			name=string_pointer+temp;
+
+			/* Don't write out comment */
+			if (!strcmp(name,".comment")) {
+			}
+			else if (!strncmp(name,".text",6)) {
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
+				if (debug) printf("\ttext_start: %x\n",offset);
+
+			}
+			else if (!strncmp(name,".data",6)) {
+
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
+				data_start=offset-entry;
+				if (debug) printf("\tdata_start: %x, %x\n",data_start,offset);
+
+			}
+			else {
+				//printf("What to do with %s\n",name);
+			}
+
+		}
+
+		/* Handle bss */
+		if (temp==SHT_NOBITS) {
+			if (debug) printf("Section header %d\n",i);
+
+			memcpy(&temp,&shptr[0x0],4);
+			name=string_pointer+temp;
+
+			/* Don't write out comment */
+			if (!strncmp(name,".bss",4)) {
+				memcpy(&temp,&shptr[0x0c],4);
+				offset=temp;
+				bss_start=offset-entry;
+
+				memcpy(&temp,&shptr[0x14],4);
+				bss_size=temp;
+				if (debug) printf("\tbss_start,size: %x %d\n",
+					bss_start,bss_size);
+
+			}
+			else {
+				printf("bss: what to do with %s\n",name);
+			}
+
+		}
 		shptr+=shsize;
+
 	}
 
 	/***************************/
 	/* Write out the bflt file */
 	/***************************/
 
-	text_size=data_offset-text_offset;
-	data_size=bss_offset-data_offset;
-
 	text_start=0x40;
-	data_start=text_start+text_size;
-	bss_start=data_start+data_size;
+	data_start+=text_start;
+	bss_start+=text_start;
 	bss_end=bss_start+bss_size;
 
 	/* magic */
@@ -225,18 +270,22 @@ int main(int argc, char **argv) {
 	write(out,&temp,4);
 
 	/* entry.  Entry after end of header */
+	if (debug) printf("BFLT: text_start %x\n",text_start);
 	temp=htonl(text_start);
 	write(out,&temp,4);
 
 	/* data_start */
+	if (debug) printf("BFLT: data_start %x\n",data_start);
 	temp=htonl(data_start);
 	write(out,&temp,4);
 
 	/* data_end */
+	if (debug) printf("BFLT: data_end %x\n",bss_start);
 	temp=htonl(bss_start);
 	write(out,&temp,4);
 
 	/* bss_end */
+	if (debug) printf("BFLT: bss_end %x\n",bss_end);
 	temp=htonl(bss_end);
 	write(out,&temp,4);
 
