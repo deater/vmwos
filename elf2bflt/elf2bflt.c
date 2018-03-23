@@ -28,6 +28,7 @@
 #define	SHT_NUM			0x13	// Number of defined types.
 #define	SHT_LOOS		0x60000000 // Start OS-specific.
 #define SHT_ARM_ATTRIBUTES	0x70000003
+
 static void print_type_name(uint32_t type) {
 
 	switch(type) {
@@ -62,17 +63,23 @@ static void print_usage(char *name) {
 
 }
 
+static int debug=0;
+
 int main(int argc, char **argv) {
 
-	int fd,out,i;
+	int fd,out,i,result;
 	struct stat sb;
-	char *addr,*shptr,*string_pointer;
+	char *addr,*shptr,*string_pointer,*name;
 	uint32_t temp;
 	uint16_t temp16;
 
 	uint32_t phoff,phnum;
 	uint32_t shnum,shoff,shsize,strindex;
 
+	uint32_t text_size=0,data_size=0,bss_size=0;
+	uint32_t text_start=0,data_start=0,bss_start=0,bss_end=0;
+	uint32_t data_offset=0,text_offset=0,bss_offset=0;
+	uint32_t entry=0,size,offset;
 
 	if (argc<3) {
 		print_usage(argv[0]);
@@ -83,6 +90,12 @@ int main(int argc, char **argv) {
 	if (fd<0) {
 		printf("Error opening file %s\n",argv[1]);
 		return 6;
+	}
+
+	/* Delete old file */
+	result=unlink(argv[2]);
+	if (result<0) {
+		printf("Could not delete %s\n",argv[2]);
 	}
 
 	out=open(argv[2],O_CREAT|O_WRONLY,0666);
@@ -104,54 +117,67 @@ int main(int argc, char **argv) {
 
 	if ((addr[0]==0x7f) &&
 		(addr[1]=='E') && (addr[2]=='L') && (addr[3]=='F')) {
-		printf("Found elf\n");
+		if (debug) printf("Found elf\n");
 	}
 	else {
 		printf("NOT AN ELF FILE!\n");
 		return 9;
 	}
-	printf("Size: %d bit\n",addr[4]==1?32:64);
-	printf("Endian: %s\n",addr[5]==1?"little":"big");
-	printf("Version %d\n",addr[6]);
-	printf("ABI %d\n",addr[7]);
-	printf("Type %d:%d\n",addr[0x10],addr[0x11]);
-	printf("ISA %d:%d (40==ARM)\n",addr[0x12],addr[0x13]);
-	memcpy(&temp,&addr[0x14],4);
-	printf("Version again %d\n",temp);
+
+	if (debug) {
+		printf("Size: %d bit\n",addr[4]==1?32:64);
+		printf("Endian: %s\n",addr[5]==1?"little":"big");
+		printf("Version %d\n",addr[6]);
+		printf("ABI %d\n",addr[7]);
+		printf("Type %d:%d\n",addr[0x10],addr[0x11]);
+		printf("ISA %d:%d (40==ARM)\n",addr[0x12],addr[0x13]);
+		memcpy(&temp,&addr[0x14],4);
+		printf("Version again %d\n",temp);
+	}
+
 	memcpy(&temp,&addr[0x18],4);
-	printf("Entry %x\n",temp);
+	entry=temp;
+	if (debug) printf("Entry %x\n",temp);
+
 	memcpy(&temp,&addr[0x1c],4);
 	phoff=temp;
-	printf("Phoff %x\n",phoff);
+	if (debug) printf("Phoff %x\n",phoff);
 
 	memcpy(&temp,&addr[0x20],4);
 	shoff=temp;
+	if (debug) printf("Shoff %x\n",temp);
 
-	printf("Shoff %x\n",temp);
-	memcpy(&temp,&addr[0x24],4);
-	printf("Flags %x\n",temp);
-	memcpy(&temp16,&addr[0x28],2);
-	printf("ehsize %x\n",temp16);
-	memcpy(&temp16,&addr[0x2a],2);
-	printf("phentsize %x\n",temp16);
+	if (debug) {
+		memcpy(&temp,&addr[0x24],4);
+		printf("Flags %x\n",temp);
+		memcpy(&temp16,&addr[0x28],2);
+		printf("ehsize %x\n",temp16);
+		memcpy(&temp16,&addr[0x2a],2);
+		printf("phentsize %x\n",temp16);
+	}
+
 	memcpy(&temp16,&addr[0x2c],2);
 	phnum=temp16;
-	printf("phnum %x\n",temp16);
+	if (debug) printf("phnum %x\n",temp16);
+
 	memcpy(&temp16,&addr[0x2e],2);
-	printf("shentsize %x\n",temp16);
 	shsize=temp16;
+	if (debug) printf("shentsize %x\n",temp16);
 
 	memcpy(&temp16,&addr[0x30],2);
 	shnum=temp16;
-	printf("shnum %x\n",temp16);
+	if (debug) printf("shnum %x\n",temp16);
+
 	memcpy(&temp16,&addr[0x32],2);
 	strindex=temp16;
-	printf("shstrndx %x\n",temp16);
+	if (debug) printf("shstrndx %x\n",temp16);
 
-	printf("%d ph entries starting at %x\n",phnum,phoff);
+	if (debug) {
+		printf("%d ph entries starting at %x\n",phnum,phoff);
 
-	printf("%d sh entries starting at %x, size %d\n",
-		shnum,shoff,shsize);
+		printf("%d sh entries starting at %x, size %d\n",
+			shnum,shoff,shsize);
+	}
 
 	shptr=&addr[shoff];
 
@@ -161,20 +187,20 @@ int main(int argc, char **argv) {
 
 	string_pointer=&addr[temp];
 
-
 	for(i=0;i<shnum;i++) {
-		printf("Section header %d\n",i);
+		if (debug) printf("Section header %d\n",i);
 
 		memcpy(&temp,&shptr[0x0],4);
-		printf("\tname: %s\n",string_pointer+temp);
+		if (debug) printf("\tname: %s\n",string_pointer+temp);
 
 		memcpy(&temp,&shptr[0x4],4);
-		printf("\ttype: "); print_type_name(temp); printf("\n");
+		if (debug) {
+			printf("\ttype: "); print_type_name(temp); printf("\n");
+		}
 		memcpy(&temp,&shptr[0x10],4);
-		printf("\toffset: %x\n",temp);
+		if (debug) printf("\toffset: %x\n",temp);
 		memcpy(&temp,&shptr[0x14],4);
-		printf("\tsize: %x\n",temp);
-
+		if (debug) printf("\tsize: %x\n",temp);
 
 		shptr+=shsize;
 	}
@@ -183,31 +209,43 @@ int main(int argc, char **argv) {
 	/* Write out the bflt file */
 	/***************************/
 
+	text_size=data_offset-text_offset;
+	data_size=bss_offset-data_offset;
+
+	text_start=0x40;
+	data_start=text_start+text_size;
+	bss_start=data_start+data_size;
+	bss_end=bss_start+bss_size;
+
 	/* magic */
 	write(out,"bFLT",4);
 
-	/* version */
+	/* version.  We're version 4 for now */
 	temp=htonl(4);
 	write(out,&temp,4);
 
-	/* entry */
-	temp=htonl(0x40);
+	/* entry.  Entry after end of header */
+	temp=htonl(text_start);
 	write(out,&temp,4);
 
-	/* data-start */
-	temp=htonl(0x80);
+	/* data_start */
+	temp=htonl(data_start);
 	write(out,&temp,4);
 
-	/* bss-start */
-	temp=htonl(0x90);
+	/* data_end */
+	temp=htonl(bss_start);
 	write(out,&temp,4);
 
-	/* bss-end */
-	temp=htonl(0xa0);
+	/* bss_end */
+	temp=htonl(bss_end);
 	write(out,&temp,4);
 
 	/* stack size */
-	temp=htonl(4096);
+	temp=htonl(8192);
+	write(out,&temp,4);
+
+	/* reloc start */
+	temp=0;
 	write(out,&temp,4);
 
 	/* reloc count */
@@ -222,6 +260,66 @@ int main(int argc, char **argv) {
 	for(i=0;i<6;i++) {
 		write(out,&temp,4);
 	}
+
+	/* write out data */
+	shptr=&addr[shoff];
+	if (debug) printf("Writing data:\n");
+	for(i=0;i<shnum;i++) {
+		memcpy(&temp,&shptr[0x4],4);
+		if (temp==SHT_PROGBITS) {
+			if (debug) printf("Section header %d\n",i);
+
+			memcpy(&temp,&shptr[0x0],4);
+			name=string_pointer+temp;
+
+			/* Don't write out comment */
+			if (!strcmp(name,".comment")) {
+			}
+			else if ((!strncmp(name,".text",5)) ||
+				 (!strncmp(name,".rodata",6))) {
+				if (debug) printf("Writing text: %s!\n",name);
+
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
+				if (debug) printf("\toffset: %x\n",offset);
+
+				memcpy(&temp,&shptr[0x14],4);
+				size=temp;
+				if (debug) printf("\tsize: %x\n",size);
+
+				if (debug) printf("Seeking to %x\n",
+					text_start+offset-entry);
+				lseek(out,text_start+offset-entry,SEEK_SET);
+				write(out,&addr[offset],size);
+			}
+			else if (!strncmp(name,".data",5)) {
+				if (debug) printf("Writing data: %s\n",name);
+
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
+				if (debug) printf("\toffset: %x\n",offset);
+
+				memcpy(&temp,&shptr[0x14],4);
+				size=temp;
+				if (debug) printf("\tsize: %x\n",size);
+
+				if (debug) printf("Seeking to %x\n",
+					text_start+offset-entry);
+				lseek(out,text_start+offset-entry,SEEK_SET);
+				write(out,&addr[offset],size);
+
+
+			}
+			else {
+				printf("What to do with %s\n",name);
+			}
+
+		}
+
+		shptr+=shsize;
+	}
+
+
 
 	munmap(addr, sb.st_size);
 
