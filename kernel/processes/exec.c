@@ -17,12 +17,8 @@
 #include "processes/process.h"
 #include "syscalls/exit.h"
 
+static int debug=1;
 
-
-static int debug=0;
-
-/* Load raw executable */
-/* We don't have a file format yet */
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	int result,i;
@@ -59,34 +55,34 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		uint32_t data_start;
 		uint32_t bss_start,bss_end;
 
-		printk("Found BFLT executable!\n");
+		if (debug) printk("Found BFLT executable!\n");
 
 		result=romfs_read_file(inode,0,&bflt_header,64);
 
 		/* Find stack size */
 		memcpy(&temp_int,&bflt_header[24],4);
 		stack_size=ntohl(temp_int);
-		printk("BFLT: stack size=%d\n",stack_size);
+		if (debug) printk("BFLT: stack size=%d\n",stack_size);
 
 		/* Find binary size */
 		memcpy(&temp_int,&bflt_header[8],4);
 		text_start=ntohl(temp_int);
-		printk("BFLT: text_start=%x\n",text_start);
+		if (debug) printk("BFLT: text_start=%x\n",text_start);
 
 		memcpy(&temp_int,&bflt_header[12],4);
 		data_start=ntohl(temp_int);
-		printk("BFLT: data_start=%x\n",data_start);
+		if (debug) printk("BFLT: data_start=%x\n",data_start);
 
 		memcpy(&temp_int,&bflt_header[16],4);
 		bss_start=ntohl(temp_int);
-		printk("BFLT: bss_start=%x\n",bss_start);
+		if (debug) printk("BFLT: bss_start=%x\n",bss_start);
 
 		memcpy(&temp_int,&bflt_header[20],4);
 		bss_end=ntohl(temp_int);
-		printk("BFLT: bss_end=%x\n",bss_end);
+		if (debug) printk("BFLT: bss_end=%x\n",bss_end);
 
 		size=bss_end-text_start;
-		printk("BFLT: total size=%x (%d)\n",size,size);
+		if (debug) printk("BFLT: total size=%x (%d)\n",size,size);
 
 		current_process->datasize=bss_start-data_start;
 		current_process->bsssize=bss_end-bss_start;
@@ -95,11 +91,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	}
 	/* Otherwise, treat as raw binary */
 	else {
-		printk("Assuming RAW executable!\n");
+		if (debug) printk("Assuming RAW executable!\n");
 
 		/* Allocate stack */
 		stack_size=DEFAULT_USER_STACK_SIZE;
-		printk("RAW: stack size = %d\n",stack_size);
+		if (debug) printk("RAW: stack size = %d\n",stack_size);
 
 		result=romfs_stat(inode,&stat_info);
 		if (result<0) {
@@ -109,8 +105,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 		text_start=0;
 		size=stat_info.st_size;
-		printk("RAW: total size = %d\n",size);
-
+		if (debug) printk("RAW: total size = %d\n",size);
 	}
 
 
