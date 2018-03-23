@@ -6,6 +6,8 @@
 #include "lib/printk.h"
 #include "lib/string.h"
 #include "lib/errors.h"
+#include "lib/endian.h"
+#include "lib/memcpy.h"
 
 #include "drivers/block/ramdisk.h"
 
@@ -33,6 +35,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	int32_t argv_length=0;
 	uint32_t *stack_argv;
 	char *argv_ptr;
+	char magic[16];
+	uint32_t text_start;
+
 
 	if (debug) printk("Entering execve\n");
 
@@ -42,31 +47,90 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		return inode;
 	}
 
-	result=romfs_stat(inode,&stat_info);
-	if (result<0) {
-		if (debug) printk("Error stat()\n");
-		return result;
+	/* See what kind of file it is */
+	result=romfs_read_file(inode,0,&magic,16);
+
+	/* see if a bFLT file */
+	if ((magic[0]=='b') && (magic[1]=='F') &&
+		(magic[2]=='L') && (magic[3]=='T')) {
+
+		char bflt_header[64];
+		uint32_t temp_int;
+		uint32_t data_start;
+		uint32_t bss_start,bss_end;
+
+		printk("Found BFLT executable!\n");
+
+		result=romfs_read_file(inode,0,&bflt_header,64);
+
+		/* Find stack size */
+		memcpy(&temp_int,&bflt_header[24],4);
+		stack_size=ntohl(temp_int);
+		printk("BFLT: stack size=%d\n",stack_size);
+
+		/* Find binary size */
+		memcpy(&temp_int,&bflt_header[8],4);
+		text_start=ntohl(temp_int);
+		printk("BFLT: text_start=%x\n",text_start);
+
+		memcpy(&temp_int,&bflt_header[12],4);
+		data_start=ntohl(temp_int);
+		printk("BFLT: data_start=%x\n",data_start);
+
+		memcpy(&temp_int,&bflt_header[16],4);
+		bss_start=ntohl(temp_int);
+		printk("BFLT: bss_start=%x\n",bss_start);
+
+		memcpy(&temp_int,&bflt_header[20],4);
+		bss_end=ntohl(temp_int);
+		printk("BFLT: bss_end=%x\n",bss_end);
+
+		size=bss_end-text_start;
+		printk("BFLT: total size=%x (%d)\n",size,size);
+
+		current_process->datasize=bss_start-data_start;
+		current_process->bsssize=bss_end-bss_start;
+
+
+	}
+	/* Otherwise, treat as raw binary */
+	else {
+		printk("Assuming RAW executable!\n");
+
+		/* Allocate stack */
+		stack_size=DEFAULT_USER_STACK_SIZE;
+		printk("RAW: stack size = %d\n",stack_size);
+
+		result=romfs_stat(inode,&stat_info);
+		if (result<0) {
+			if (debug) printk("Error stat()\n");
+			return result;
+		}
+
+		text_start=0;
+		size=stat_info.st_size;
+		printk("RAW: total size = %d\n",size);
+
 	}
 
-	size=stat_info.st_size;
 
-	/* TODO: get from executable */
-	stack_size=DEFAULT_USER_STACK_SIZE;
-
-	/* Allocate Memory */
-	binary_start=memory_allocate(size);
+	/* Allocate stack */
 	stack_page=memory_allocate(stack_size);
 
+	/* Allocate text memory */
+	binary_start=memory_allocate(size);
+
 	if ((binary_start==NULL) || (stack_page==NULL)) {
+
+		if (binary_start!=NULL) memory_free(binary_start,size);
+		if (stack_page!=NULL) memory_free(stack_page,stack_size);
 
 		if (debug) printk("execve: no memory\n");
 		return -ENOMEM;
 	}
 
-	/* FIXME: handle memory allocation failure */
-
 	/* Load executable */
-	romfs_read_file(inode,0,binary_start,size);
+	romfs_read_file(inode,text_start,binary_start,size);
 
 	/* Set name */
 	/* FIXME: strip off path before setting filename */

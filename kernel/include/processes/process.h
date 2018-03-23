@@ -40,11 +40,15 @@ struct process_control_block_type {
 	uint32_t stacksize;				/* 188 */
 	void *text;					/* 192 */
 	uint32_t textsize;				/* 196 */
-	char name[32];					/* 200 */
-							/* 232 */
+	void *data;					/* 200 */
+	uint32_t datasize;				/* 204 */
+	void *bss;					/* 208 */
+	uint32_t bsssize;				/* 212 */
+	char name[32];					/* 216 */
+							/* 248 */
 	/* Current size = 232 */
 
-	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-232)/4];
+	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-248)/4];
 
 };
 

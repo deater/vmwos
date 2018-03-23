@@ -47,7 +47,7 @@ memory_test:	memory_test.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) memory_test.elf -O binary memory_test
 
 printa:	printa.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) printa.elf -O binary printa
+	$(ELF2BFLT) printa.elf printa
 
 printb:	printb.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) printb.elf -O binary printb
