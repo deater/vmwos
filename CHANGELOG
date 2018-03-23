@@ -1,3 +1,6 @@
+0.18 -- ??
++ Add bFLT binary support
+
 0.17 -- 16 March 2018
 + Actually free process resources on exit/waitpid
 + Lots of code cleanup
