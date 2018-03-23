@@ -46,7 +46,7 @@ struct process_control_block_type {
 	uint32_t bsssize;				/* 212 */
 	char name[32];					/* 216 */
 							/* 248 */
-	/* Current size = 232 */
+	/* Current size = 248 */
 
 	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-248)/4];
 

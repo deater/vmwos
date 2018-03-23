@@ -26,16 +26,16 @@ shell:	shell.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) shell.elf -O binary shell
 
 cat:	cat.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) cat.elf -O binary cat
+	$(ELF2BFLT) cat.elf cat
 
 cat_count:	cat_count.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) cat_count.elf -O binary cat_count
+	$(ELF2BFLT) cat_count.elf cat_count
 
 cause_error:	cause_error.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) cause_error.elf -O binary cause_error
+	$(ELF2BFLT) cause_error.elf cause_error
 
 hello:	hello.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) hello.elf -O binary hello
+	$(ELF2BFLT) hello.elf hello
 
 ls:	ls.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) ls.elf -O binary ls
@@ -44,7 +44,7 @@ ll:	ll.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) ll.elf -O binary ll
 
 memory_test:	memory_test.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) memory_test.elf -O binary memory_test
+	$(ELF2BFLT) memory_test.elf memory_test
 
 printa:	printa.elf
 	$(ELF2BFLT) printa.elf printa
@@ -53,20 +53,19 @@ printb:	printb.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) printb.elf -O binary printb
 
 pwd:	pwd.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) pwd.elf -O binary pwd
+	$(ELF2BFLT) pwd.elf pwd
 
 slideshow:	slideshow.elf
 	$(CROSS)objcopy $(OBJCOPYFLAGS) slideshow.elf -O binary slideshow
 
 sysinfo:	sysinfo.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) sysinfo.elf -O binary sysinfo
+	$(ELF2BFLT) sysinfo.elf sysinfo
 
 tbo:	tbo.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) tbo.elf -O binary tbo
+	$(ELF2BFLT) tbo.elf tbo
 
 uname:	uname.elf
-	$(CROSS)objcopy $(OBJCOPYFLAGS) uname.elf -O binary uname
-
+	$(ELF2BFLT) uname.elf uname
 
 
 shell.elf:	shell.o ./vlibc/vlibc.a
