@@ -378,7 +378,7 @@ int main(int argc, char **argv) {
 	char *file_to_list=NULL;
 	int list_long=0;
 
-	printf("%d\n",errno);
+//	printf("%d\n",errno);
 
 	if (debug) {
 		printf("ls: argc=%d\n",argc);

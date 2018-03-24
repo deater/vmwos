@@ -34,11 +34,17 @@ int main(int argc, char **argv) {
 
 	int32_t temp,i;
 	char *ptr;
+	int32_t number=0;
 
 	if (argc<2) {
 		print_help(argv[0]);
 		return -1;
 	}
+
+	if (argc==3) {
+		number=atoi(argv[2]);
+	}
+
 
 	if (!strncmp(argv[1],"cpsr",4)) {
 
@@ -58,9 +64,13 @@ int main(int argc, char **argv) {
 		asm volatile (".word 0xe7f0def0\n");
 	}
 	else if (!strncmp(argv[1],"kernelmem",9)) {
-		printf("Trying to write kernel from userspace\n");
 		ptr=(char *)0x8000;
-		for(i=0;i<65536;i++) {
+		printf("Trying to read kernel from userspace, [%x]= %x\n",
+			number,*ptr);
+		if (number==0) number=65536;
+		printf("Trying to write kernel from userspace, %d @ %x\n",
+			number,ptr);
+		for(i=0;i<number;i++) {
 			*ptr='v';
 			ptr++;
 		}

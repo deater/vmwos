@@ -10,3 +10,42 @@ Assembly 64-bit copy
 	MEMSPEED: 16 MB took 15107us =  1110MB/s
 	Testing: Passed!
 
+
+On pi3-vmwos, no cache
+
+8-bit memset
+Waiting for 4 to finish
+        MEMSPEED: 16 MB took 3093750us = 5MB/s
+        Testing: Passed!
+32-bit memset
+        MEMSPEED: 16 MB took 890625us = 18MB/s
+        Testing: Passed!
+Assembly 64-bit copy
+        MEMSPEED: 16 MB took 93750us =  178MB/s
+        Testing: Passed!
+
+
+
+
+Memory protection:
+	cause_error cpsr
+
+	Read CPSR as 60000010
+	Writing back CPSR
+	UNHANDLED UNDEF c5189c, insn=e59f00b0
+	Trying to read cache config c50e88
+
+	cause_error undefined
+	UNHANDLED UNDEF c51820, insn=e1a00004
+
+	cause_error kernelmem
+	Trying to write kernel from userspace
+	(crash)
+
+
+
+
+
+
+
+

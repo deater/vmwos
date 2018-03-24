@@ -1,11 +1,9 @@
-/* From discussion here:
- http://stackoverflow.com/questions/3439708/how-to-enable-arm1136jfs-arm-v6-mmu-to-have-one-to-one-mapping-between-physica
-*/
-
 #include <stdint.h>
 
 #include "lib/printk.h"
-#include "arch/arm1176/arm1176-mmu.h"
+#include "arch/armv7/armv7-mmu.h"
+
+static int debug=1;
 
 /* From the ARM1176JZF-S Technical Reference Manual	*/
 /* The processor has separate L1I and L1D caches	*/
@@ -29,91 +27,121 @@
 /* we're assuming here that 14 bits are reserved? */
 uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 
-/* We want a 1MB coarse ARMv5 page table descriptor */
-/* see 6.11.1 and 6.12.2 and 6.6.1 */
+/* We want a 1MB coarse page table descriptor */
+/* B.3.5.1, p1326 */
 /* All mappings global and executable */
 /* 31-20 = section base address
-   19 = NS (not shared)
-   18 = 0
-   17-15 = SBZ (should be zero)
-   14-12 = TEX = Type extension field
-   11-10 - AP (access permission bits)
-   9 = P - has to do with alizaing
+   19 = NS (not secure)
+   18 = 0 (section 0 or supersection 1)
+   17 = NG (not global)
+   16 = S (sharable)
+   15 = AP[2]
+   14-12 = TEX[2:0] = Type extension field
+   11-10 - AP[1:0] (access permission bits)
+   9 = Implementation defined
    8-5 = domain
-   4 = 0
-   3,2 = C,B determinte caching behavior, see Tables 6.2 and 6.3
-   1,0 = 1,0 - for ARMv5 1MB pages
+   4 = XN
+   3,2 = C,B determinte caching behavior, see Table b3-10
+   1,0 = 1,0 - for coarse section 1MB pages
 */
 
-/* Domain=1, C=0,B=0, noncachable (Table 6.3) */
-#define CACHE_DISABLED		0x12
-/* Domain=1, C=1,B=1, writeback cache, no alloc on write (Table 6.3) */
-#define CACHE_WRITEBACK		0x1e
+/* TEX=0 */
+/* Domain=1, C=0,B=0, noncachable (Table B3-10) */
+#define CACHE_DISABLED		0x22		// 0010 0010
+/* Domain=1, C=1,B=1, writeback cache, no alloc on write (Table B3-10) */
+#define CACHE_WRITEBACK		0x2e		// 0010 1110
 
-/* Table 3-151 */
-#define AP_NO_ACCESS		0x0
-#define AP_SUPERVISOR_ONLY	0x1
-#define AP_USER_READ_ONLY	0x2
-#define AP_FULL_ACCESS		0x3
+/* Table B3-6 */
+#define AP_RW_KERNEL		((0<<15)|(0<<11))
+#define AP_RW_ANY		((0<<15)|(1<<11))
+#define AP_RO_KERNEL		((1<<15)|(0<<11))
+#define AP_RW_ANY		((1<<15)|(1<<11))
 
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
 /* This uses the ARMv5 compatible interface, not native ARMv6 */
 /* Mark RAM has writeback, but disable cache for non-RAM */
 void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
-	/* TODO */
-#if 0
 
 	int i;
 	uint32_t reg;
 
-	/* Set up an identity-mapping for all 4GB, ARMv5 1MB pages */
-	/* See figure 6-12 */
-	/* See table 3-151 for list of AP bit settings */
+	/* Set up an identity-mapping for all 4GB */
+	/* section-short descriptor 1MB pages */
+	/* See table B3-6 for list of AP bit settings */
+	/* On bootup SCTLR.AFE is set to 0 meaning simplified values */
 
-
-	/* AP (bits 11 and 10) = 11 = R/W for everyone */
+	/* AP[2:1] (bits 15 and 11) */
+	/* 00 read/write kernel */
+	/* 01 read/write any */
+	/* 10 read-only kernel */
+	/* 11 read-only any */
 
 	/* As a baseline, Set 1:1 mapping for all memory */
 	/* Cache disabled, supervisor access only */
+
+	printk("\tSetting 1:1, cache disabled for %d page table entries\n",
+			NUM_PAGE_TABLE_ENTRIES);
+
 	for (i = 0; i < NUM_PAGE_TABLE_ENTRIES; i++) {
-		page_table[i] = i << 20 | (AP_SUPERVISOR_ONLY << 10)
+		page_table[i] = i << 20 | (AP_RW_KERNEL)
 					| CACHE_DISABLED;
 	}
 
+	printk("\tSetting cachable+kernel only for addresses %x to %x\n",
+			mem_start,kernel_end);
+
 	/* Enanble supervisor only and cachable for kernel */
 	for (i = (mem_start >> 20); i < (kernel_end >> 20); i++) {
-		page_table[i] = i << 20 | (AP_SUPERVISOR_ONLY << 10)
+		page_table[i] = i << 20 | (AP_RW_KERNEL)
 					| CACHE_WRITEBACK;
 	}
 
-	/* Enanble cachable and readable by all for rest */
+	printk("\tSetting cachable+any access for addresses %x to %x\n",
+			kernel_end,mem_end);
+
+	/* Enable cachable and readable by all for rest */
 	for (i = kernel_end >> 20; i < mem_end >> 20; i++) {
-		page_table[i] = i << 20 | (3 << 10) | CACHE_WRITEBACK;
+		page_table[i] = i << 20 | (AP_RW_ANY) | CACHE_WRITEBACK;
 	}
 
-	/* Copy the page table address to cp15 */
-	/* Translation Table, Base 0 */
-	/* See 3.2.13 */
+//1404
+	/* TTBCR : Translation Table Base Control Register */
+	/* B3.5.4 (1330) */
+	/* Choice of using TTBR0 (user) vs TTBR1 (kernel) */
+	/* This is based on address range, also TTBCR.N */
+	/* N is bottom 3 bits, if 000 then TTBR1 not used */
+	// MRC p15, 0, <Rt>, c2, c0, 2
+	// MCR p15, 0, <Rt>, c2, c0, 2
+
+	/* TTBR0 (VMSA): Translation Table Base Register 0 */
+	/* See B.4.1.154 (page 1729) */
+	/* This is the userspace pagetable, can be per-process */
+
 	/* Bits 31-N are the address of the table */
 	/* Low bits are various config options, we leave them at 0 */
+	/* FIXME: might need to do something if SMP support added */
+	printk("\tSetting page table to %x\n",page_table);
+	printk("\tPTE[0] = %x\n",page_table[0]);
+
 	asm volatile("mcr p15, 0, %0, c2, c0, 0"
 		: : "r" (page_table) : "memory");
 
-	/* See 3.2.16 */
-	/* Set the access control register */
+
+	/* See B.4.1.43 */
+	/* DACR: Domain Access Control Register */
 	/* All domains, set manager access (no faults for accesses) */
 	asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (~0));
 
-	/* See 3.2.7 */
-	/* Set the Control Register */
-	/* Enable the MMU by setting the M bit */
+	/* See B.4.1.130 on page 1707 */
+	/* SCTLR, VMSA: System Control Register */
+	/* Enable the MMU by setting the M bit (bit 1) */
 	asm("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
-	reg|=0x1;
+	printk("\tSCTLR before = %x\n",reg);
+	reg|=SCTLR_MMU_ENABLE;
 	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
-#endif
+
 }
 
-/* See 1176 manual, 3.2.7 */
 
 /* Also note that you *must* enable the MMU before using the dcache	*/
 /* Why?  hard to find in ARM manuals.  They do have a FAQ for ARM9	*/
