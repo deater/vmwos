@@ -152,6 +152,9 @@ void *memory_allocate(uint32_t size) {
 		memory_mark_used(first_chunk+i);
 	}
 
+	/* clear memory to zero, both for bss and also security reasons */
+	memset((void *)(first_chunk*CHUNK_SIZE),0,num_chunks*CHUNK_SIZE);
+
 	if (memory_debug) {
 		printk("MEM: Allocated %d bytes at %x\n",
 			size,first_chunk*CHUNK_SIZE);
