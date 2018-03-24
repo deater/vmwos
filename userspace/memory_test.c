@@ -1,9 +1,52 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef VMWOS
 #include "syscalls.h"
 #include "vlibc.h"
 #include "vmwos.h"
+
+
+/* FIXME: implement cycle counters */
+/* Or at least, clock_gettime() */
+static int64_t get_time_us(void) {
+
+	int64_t value;
+
+	struct timespec {
+		uint64_t	tv_sec;
+		uint32_t	tv_nsec;
+	} t;
+
+	clock_gettime(CLOCK_REALTIME,&t);
+
+	value=(t.tv_sec*1000000ULL)+t.tv_nsec/1000;
+
+	return value;
+}
+
+#else
+
+#include <stdio.h>
+#include <time.h>
+
+
+/* FIXME: implement cycle counters */
+/* Or at least, clock_gettime() */
+static int64_t get_time_us(void) {
+
+	int64_t value;
+
+	struct timespec t;
+
+	clock_gettime(CLOCK_REALTIME,&t);
+
+	value=(t.tv_sec*1000000ULL)+t.tv_nsec/1000;
+
+	return value;
+}
+
+#endif
 
 #define BENCH_SIZE (1024*1024)
 #define BENCH_ITERATIONS 16
@@ -12,19 +55,10 @@ static uint8_t __attribute__((aligned(64))) benchmark[BENCH_SIZE+16];
 
 #define OFFSET 0
 
-/* FIXME: implement cycle counters */
-/* Or at least, clock_gettime() */
-static int64_t get_time_us(void) {
-
-	int64_t value;
-
-	value=time(NULL)*1000000ULL;
-
-	return value;
-}
 
 
-static void *memset_byte(void *s, int c, uint32_t n) {
+
+void *memset_byte(void *s, int c, uint32_t n) {
 
 	uint32_t i;
 	char *b;
@@ -37,7 +71,7 @@ static void *memset_byte(void *s, int c, uint32_t n) {
 }
 
 
-static void *memset_4byte(void *s, int c, uint32_t n) {
+void *memset_4byte(void *s, int c, uint32_t n) {
 
 	uint32_t i;
 	uint32_t *b;
@@ -83,7 +117,7 @@ static void *memset_4byte(void *s, int c, uint32_t n) {
 /* based on the version in the Linux kernel */
 /* arch/arm/lib/memset.S */
 //void *memset_64byte(void *s, int c, uint32_t n) {
-static void *memset_asm(void *s, int c, uint32_t n) {
+void *memset_asm(void *s, int c, uint32_t n) {
 
 	asm("stmfd	sp!, {r4-r8, lr}");	// save registers on stack
 
@@ -206,7 +240,7 @@ static void memset_test(void *addr, int value, int size) {
 
 
 /* Test setting per-byte memory set */
-static void run_memory_benchmark(void) {
+static void run_memory_benchmark8(void) {
 
 	int i;
 	uint64_t before,after;
@@ -222,10 +256,10 @@ static void run_memory_benchmark(void) {
 
 	diff=after-before;
 
-	printf("\tMEMSPEED: %d MB took %d cycles %dMB/s\n",
-		BENCH_SIZE*BENCH_ITERATIONS,
+	printf("\tMEMSPEED: %d MB took %dus = %dMB/s\n",
+		(BENCH_SIZE*BENCH_ITERATIONS)/1024/1024,
 		(diff),
-		(16*700000)/(diff)/1000 );
+		(BENCH_SIZE*BENCH_ITERATIONS)/(diff));
 
 	memset_test(benchmark+OFFSET,0xfe,BENCH_SIZE);
 
@@ -247,10 +281,10 @@ static void run_memory_benchmark32(void) {
 
 	diff=after-before;
 
-	printf("\tMEMSPEED: %d MB took %d cycles %dMB/s\n",
-		BENCH_SIZE*BENCH_ITERATIONS,
+	printf("\tMEMSPEED: %d MB took %dus = %dMB/s\n",
+		(BENCH_SIZE*BENCH_ITERATIONS)/1024/1024,
 		(diff),
-		(16*700000)/((diff)/1000));
+		(BENCH_SIZE*BENCH_ITERATIONS)/diff);
 
 	memset_test(benchmark+OFFSET,0xa5,BENCH_SIZE);
 }
@@ -271,10 +305,10 @@ static void run_memory_benchmark_asm(void) {
 
 	diff=after-before;
 
-	printf("\tMEMSPEED: %d MB took %d cycles %dMB/s\n",
-		BENCH_SIZE*BENCH_ITERATIONS,
+	printf("\tMEMSPEED: %d MB took %dus =  %dMB/s\n",
+		BENCH_SIZE*BENCH_ITERATIONS/1024/1024,
 		(diff),
-		(16*700000)/((diff)/1000));
+		(BENCH_SIZE*BENCH_ITERATIONS)/(diff));
 
 	memset_test(benchmark+OFFSET,0x78,BENCH_SIZE);
 }
@@ -282,11 +316,11 @@ static void run_memory_benchmark_asm(void) {
 static void memset_benchmark(void) {
 
 	/* Naive version */
-	printf("8-bit copy\n");
-	run_memory_benchmark();
+	printf("8-bit memset\n");
+	run_memory_benchmark8();
 
 	/* 32-bit version */
-	printf("32-bit copy\n");
+	printf("32-bit memset\n");
 	run_memory_benchmark32();
 
 	/* asm version */
