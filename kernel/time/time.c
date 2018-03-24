@@ -24,7 +24,7 @@ int32_t clock_gettime(uint32_t clkid, struct timespec *t) {
 
 	remainder*=1000000;
 	remainder/=64;		// us
-	remainder/=1000;	// ns
+	remainder*=1000;	// ns
 
 	t->seconds=seconds;
 	t->ns=remainder;
