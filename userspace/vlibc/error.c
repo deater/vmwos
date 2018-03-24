@@ -16,18 +16,19 @@
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */
 
-static char error_none[]=	"No error";
-static char error_enoent[]=	"File not found";
-static char error_ebadf[]=	"Bad file descriptor";
-static char error_enomem[]=	"Not enougn memory";
-static char error_enodev[]=	"No such device";
-static char error_enotdir[]=	"Not a directory";
-static char error_enfile[]=	"Not enough fds";
-static char error_erange[]=	"Result out of range";
-static char error_enosys[]=	"No such system call";
-static char error_generic[]=	"Unknown error";
+static const char error_none[]=	"No error";
+static const char error_enoent[]=	"File not found";
+static const char error_ebadf[]=	"Bad file descriptor";
+static const char error_enomem[]=	"Not enougn memory";
+static const char error_enodev[]=	"No such device";
+static const char error_enotdir[]=	"Not a directory";
+static const char error_enfile[]=	"Not enough fds";
+static const char error_erange[]=	"Result out of range";
+static const char error_enosys[]=	"No such system call";
+static const char error_generic[]=	"Unknown error";
 
-static char *error_table[MAX_ERRNO]={
+
+static const char *error_table[MAX_ERRNO]={
 	error_none,	/* 0 */
 	error_generic,	/* 1 */
 	error_enoent,	/* 2 ENOENT */
@@ -71,9 +72,9 @@ static char *error_table[MAX_ERRNO]={
 };
 
 
-int errno=0;
+//int errno=0;
 
-char *strerror(int errnum) {
+const char *strerror(int errnum) {
 
 	if (errnum<0) errnum=-errnum;
 

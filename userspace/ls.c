@@ -2,6 +2,9 @@
 #include <stdint.h>
 
 #ifdef VMWOS
+/* hack */
+static int errno;
+
 #include "syscalls.h"
 #include "vlibc.h"
 #include "vmwos.h"
@@ -374,6 +377,8 @@ int main(int argc, char **argv) {
 	int i;
 	char *file_to_list=NULL;
 	int list_long=0;
+
+	printf("%d\n",errno);
 
 	if (debug) {
 		printf("ls: argc=%d\n",argc);

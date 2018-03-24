@@ -13,7 +13,7 @@
 #endif
 #define p putchar
 
-		     char w[]="4_6N4_L XSQ$FSQFIQ SFJ"
+		     static char w[]="4_6N4_L XSQ$FSQFIQ SFJ"
 		     "YWGEXIH f} zq{9Dgsvripp l$jsv$l"
 		     "ipt ... 3'` 5WGSVI>$$$ 5WLMIPHW"
 		     ">$ 555KEQI$SZIV% 5LMX$VEXMS>$ 4"
@@ -30,12 +30,12 @@
 
 
 
-			       _,*O;int i,s=
+			       _,*O;static int i,s=
 			       0,H=5,T,F=0,Z
 			       =0,N=1,X=0,E=
 			       0,x=7,V[8],M[
 			         8],W[8],m
-			         ,a;int r(
+			         ,a;static int r(
 			         int s){if
 			          (s)a=s;
 			          while(!
@@ -56,7 +56,7 @@
                         Q(int x){I(114,x/100);p(67
                         );P(x%100);}void B(int c){
                         printf("\033[%d;%d;40m",c>
-                        37,c&63);}struct termios o
+                        37,c&63);}static struct termios o
                       ,n;void b(int w,int c){B(c);p(
                     w);B ('%');}int main(){O=w;do if(*
                   O==32) *O = 0; else if (*O==52) *O=27;

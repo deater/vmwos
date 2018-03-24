@@ -67,7 +67,7 @@ static int debug=0;
 
 int main(int argc, char **argv) {
 
-	int fd,out,i,result;
+	int fd,out,i;
 	struct stat sb;
 	char *addr,*shptr,*string_pointer,*name;
 	uint32_t temp;
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 	uint32_t phoff,phnum;
 	uint32_t shnum,shoff,shsize,strindex;
 
-	uint32_t bss_size=0,data_size=0;
+	uint32_t bss_size=0,data_size=0,text_size=0;
 	uint32_t text_start=0,data_start=0,bss_start=0,bss_end=0;
 //	uint32_t data_offset=0,text_offset=0,bss_offset=0;
 	uint32_t entry=0,size,offset;
@@ -92,13 +92,7 @@ int main(int argc, char **argv) {
 		return 6;
 	}
 
-	/* Delete old file */
-	result=unlink(argv[2]);
-	if (result<0) {
-		printf("Could not delete %s\n",argv[2]);
-	}
-
-	out=open(argv[2],O_CREAT|O_WRONLY,0777);
+	out=open(argv[2],O_CREAT|O_TRUNC|O_WRONLY,0777);
 	if (out<0) {
 		printf("Error opening file %s\n",argv[2]);
 		return 7;
@@ -208,6 +202,11 @@ int main(int argc, char **argv) {
 			else if (!strncmp(name,".text",6)) {
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
+
+				memcpy(&temp,&shptr[0x14],4);
+				text_size=temp;
+
+
 				if (debug) printf("\ttext_start: %x\n",offset);
 
 			}
@@ -264,10 +263,11 @@ int main(int argc, char **argv) {
 
 	text_start=0x40;
 	if (data_start==0) {
-		printf("ERROR! DATA SIZE==0\n");
+		data_start=text_start+text_size;
 	} else {
 		data_start+=text_start;
 	}
+
 	if (bss_start==0) {
 		bss_start=data_start+data_size;
 		bss_end=data_start+data_size;
@@ -376,6 +376,7 @@ int main(int argc, char **argv) {
 			}
 			else {
 				printf("What to do with %s\n",name);
+				return -1;
 			}
 
 		}

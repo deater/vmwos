@@ -8,7 +8,7 @@
 #define BENCH_SIZE (1024*1024)
 #define BENCH_ITERATIONS 16
 
-uint8_t __attribute__((aligned(64))) benchmark[BENCH_SIZE+16];
+static uint8_t __attribute__((aligned(64))) benchmark[BENCH_SIZE+16];
 
 #define OFFSET 0
 

@@ -19,7 +19,7 @@
 
 #define BUF_SIZE 8192
 
-char buffer[BUF_SIZE];
+static char buffer[BUF_SIZE];
 
 #if 0
 int32_t atoiX(char *string) {
