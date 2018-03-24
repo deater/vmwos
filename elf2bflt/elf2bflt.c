@@ -8,6 +8,8 @@
 #include <sys/mman.h>
 #include <arpa/inet.h>
 
+static int debug=0;
+
 #define SHT_NULL		0x0 	// Section header entry unused
 #define SHT_PROGBITS		0x1	// Program data
 #define SHT_SYMTAB		0x2 	// Symbol table
@@ -63,7 +65,7 @@ static void print_usage(char *name) {
 
 }
 
-static int debug=0;
+
 
 int main(int argc, char **argv) {
 
@@ -206,9 +208,22 @@ int main(int argc, char **argv) {
 				memcpy(&temp,&shptr[0x14],4);
 				text_size=temp;
 
+				if (debug) {
+					printf("\ttext_start: %x\n",text_start);
+					printf("\ttext_size: %x\n",text_size);
+				}
+			}
+			else if (!strncmp(name,".rodata",6)) {
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
 
-				if (debug) printf("\ttext_start: %x\n",offset);
+				memcpy(&temp,&shptr[0x14],4);
+				text_size=(offset-entry)+temp;
 
+				if (debug) {
+					printf("\trodata_start: %x\n",offset);
+					printf("\ttext_size: %x\n",text_size);
+				}
 			}
 			else if (!strncmp(name,".data",6)) {
 
@@ -219,8 +234,10 @@ int main(int argc, char **argv) {
 				data_size=temp;
 
 				data_start=offset-entry;
-				if (debug) printf("\tdata_start: %x, %x %d\n",
-						data_start,offset,size);
+				if (debug) {
+					printf("\tdata_start: %x, %x %d\n",
+						data_start,offset,data_size);
+				}
 
 			}
 			else {
