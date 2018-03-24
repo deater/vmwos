@@ -1,0 +1,12 @@
+On pi2-linux
+
+8-bit memset
+	MEMSPEED: 16 MB took 86887us = 193MB/s
+	Testing: Passed!
+32-bit memset
+	MEMSPEED: 16 MB took 21126us = 794MB/s
+	Testing: Passed!
+Assembly 64-bit copy
+	MEMSPEED: 16 MB took 15107us =  1110MB/s
+	Testing: Passed!
+
