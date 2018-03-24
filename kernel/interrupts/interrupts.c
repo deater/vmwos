@@ -143,7 +143,10 @@ void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
 
 	long *ptr=(long *)lr;
 
-	printk("UNHANDLED UNDEF %x, insn=%x\n",lr,*ptr);
+	/* point back 4 bytes */
+	ptr--;
+
+	printk("UNHANDLED UNDEF %x, insn=%x\n",lr-4,*ptr);
 
 }
 
