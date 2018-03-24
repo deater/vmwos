@@ -16,6 +16,8 @@
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */
 
+//int errno=0;
+
 static const char error_none[]=	"No error";
 static const char error_enoent[]=	"File not found";
 static const char error_ebadf[]=	"Bad file descriptor";
@@ -72,7 +74,7 @@ static const char *error_table[MAX_ERRNO]={
 };
 
 
-//int errno=0;
+
 
 const char *strerror(int errnum) {
 

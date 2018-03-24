@@ -25,6 +25,7 @@
 #define __NR_nanosleep  162
 #define __NR_getcwd	183
 #define __NR_vfork	190
+#define __NR_clock_gettime	263
 
 int32_t exit(int32_t status) {
 
@@ -338,6 +339,21 @@ int32_t sys_time(void) {
 
 	return r0;
 
+}
+
+int32_t clock_gettime(uint32_t clk_id, struct timespec *t) {
+
+	register long r7 __asm__("r7") = __NR_clock_gettime;
+	register long r0 __asm__("r0") = clk_id;
+	register long r1 __asm__("r1") = (long)t;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return r0;
 }
 
 

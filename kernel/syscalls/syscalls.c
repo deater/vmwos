@@ -175,6 +175,10 @@ uint32_t swi_handler_c(
 			result=vfork();
 			break;
 
+		case SYSCALL_CLOCK_GETTIME:
+			result=clock_gettime(r0,(struct timespec *)r1);
+			break;
+
 
 		/******************/
 		/* VMWOS SPECIFIC */

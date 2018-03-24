@@ -12,11 +12,7 @@
 static int64_t get_time_us(void) {
 
 	int64_t value;
-
-	struct timespec {
-		uint64_t	tv_sec;
-		uint32_t	tv_nsec;
-	} t;
+	struct timespec t;
 
 	clock_gettime(CLOCK_REALTIME,&t);
 

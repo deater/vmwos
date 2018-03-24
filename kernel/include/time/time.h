@@ -13,3 +13,5 @@ extern uint32_t tick_counter;
 uint32_t time_since_boot(void);
 
 uint32_t ticks_since_boot(void);
+
+int32_t clock_gettime(uint32_t clk_id,struct timespec *t);

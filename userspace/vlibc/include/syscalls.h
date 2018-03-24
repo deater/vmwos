@@ -216,3 +216,9 @@ int32_t sys_random(uint32_t *buffer);
 #define F_SETFL	4       /* Set file status */
 
 int32_t fcntl(int fd, int cmd, ... /* arg */ );
+
+
+#define CLOCK_REALTIME		0
+#define CLOCK_MONOTONIC		1
+
+int32_t clock_gettime(uint32_t clk_id, struct timespec *tp);
