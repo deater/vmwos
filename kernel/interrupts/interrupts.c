@@ -132,14 +132,18 @@ void __attribute__((interrupt("FIQ"))) fiq_handler(void) {
 }
 
 void __attribute__((interrupt("ABORT"))) abort_handler(void) {
-	printk("UNHANDLED ABORT\n");
+	register long lr asm ("lr");
+
+	printk("UNHANDLED ABORT %x\n",lr);
 }
 
 void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
 
 	register long lr asm ("lr");
 
-	printk("UNHANDLED UNDEF %x\n",lr);
+	long *ptr=(long *)lr;
+
+	printk("UNHANDLED UNDEF %x, insn=%x\n",lr,*ptr);
 
 }
 
