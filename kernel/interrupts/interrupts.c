@@ -131,11 +131,47 @@ void __attribute__((interrupt("FIQ"))) fiq_handler(void) {
 	printk("UNHANDLED FIQ\n");
 }
 
-void __attribute__((interrupt("ABORT"))) abort_handler(void) {
+/* 1415 */
+void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
+	uint32_t dfsr,dfar,fs;
 	register long lr asm ("lr");
 
-	printk("UNHANDLED ABORT %x\n",lr);
+	printk("MEMORY ABORT at PC=%x\n",lr-8);
+
+	/* Read DFSR reg (see B4.1.52) */
+	asm volatile("mrc p15, 0, %0, c5, c0, 0" : "=r" (dfsr) : : "cc");
+
+	/* Read DFAR reg (see B4.1.52) */
+	asm volatile("mrc p15, 0, %0, c6, c0, 0" : "=r" (dfar) : : "cc");
+
+	fs=dfsr&0xf;
+
+	if (fs==1) printk("\tAlignment fault\n");
+	if (fs==2) printk("\tDebug event\n");
+	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",dfar);
+
 }
+
+/* 1637 */
+void __attribute__((interrupt("ABORT"))) prefetch_abort_handler(void) {
+	uint32_t ifsr,ifar,fs;
+	register long lr asm ("lr");
+
+	printk("PREFETCH ABORT at PC=%x\n",lr-8);
+
+	/* Read IFSR reg (see B4.1.96) */
+	asm volatile("mrc p15, 0, %0, c5, c0, 1" : "=r" (ifsr) : : "cc");
+
+	/* Read IFAR reg (see B4.1.96) */
+	asm volatile("mrc p15, 0, %0, c6, c0, 2" : "=r" (ifar) : : "cc");
+
+	fs=ifsr&0xf;
+
+	if (fs==2) printk("\tDebug event\n");
+	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",ifar);
+
+}
+
 
 void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
 
@@ -146,7 +182,7 @@ void __attribute__((interrupt("UNDEF"))) undef_handler(void) {
 	/* point back 4 bytes */
 	ptr--;
 
-	printk("UNHANDLED UNDEF %x, insn=%x\n",lr-4,*ptr);
+	printk("UNDEFINED INSTRUCTION, PC=%x, insn=%x\n",lr-4,*ptr);
 
 }
 

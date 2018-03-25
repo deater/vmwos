@@ -54,8 +54,8 @@ _start:
 reset_addr:			.word	reset
 undefined_instruction_addr:	.word	undef_handler
 software_interrupt_addr:	.word	swi_handler
-prefetch_abort_addr:		.word	abort_handler
-data_abort_addr:		.word	abort_handler
+prefetch_abort_addr:		.word	prefetch_abort_handler
+data_abort_addr:		.word	data_abort_handler
 unused_handler_addr:		.word	undef_handler
 interrupt_addr:			.word	interrupt_handler
 fast_interrupt_addr:		.word	fiq_handler
