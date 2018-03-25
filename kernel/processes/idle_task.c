@@ -42,6 +42,24 @@ static void idle_task(void) {
 }
 
 
+static void enter_kernelspace(void) {
+
+        /* enter userspace */
+
+        long shell_address=current_process->user_state.pc;
+
+        asm volatile(
+                "mov    lr, %[shell]\n"
+                "ldr    sp,=current_process\n"
+                "ldr    sp,[sp]\n"
+                "mov    r0, #0x13\n"    /* Userspace, IRQ enabled */
+                "msr    SPSR_cxsf, r0\n"
+                "movs   pc,lr\n"
+                : /* output */
+                : [shell] "r"(shell_address) /* input */
+                : "r0", "lr", "memory");        /* clobbers */
+}
+
 
 void create_idle_task(void) {
 
@@ -58,8 +76,10 @@ void create_idle_task(void) {
 	/* Point to end, as stack grows down */
 	idle_process->user_state.r[13]=(long)(idle_process->stack)+4096;
 
+	idle_process->user_state.spsr=0x13;
+
 	strncpy(idle_process->name,"idle",5);
-	idle_process->kernel_state.r[14]=(long)enter_userspace;
+	idle_process->kernel_state.r[14]=(long)enter_kernelspace;
 
 	idle_process->status=PROCESS_STATUS_READY;
 
