@@ -69,7 +69,7 @@ static int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
 	}
 
 	printk("Initializing %dMB of memory.  "
-		"%dkB used by kernel, %dkB used by memory map\n",
+		"%dkB reserved kernel (%dkB used by memory map)\n",
 		memory_total/1024/1024,
 		memory_kernel/1024,
 		(MAX_MEMORY/CHUNK_SIZE/32)/1024);
@@ -82,7 +82,7 @@ static int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
 	}
 
 	/* Mark OS area as used */
-	for(i=0;i<(memory_kernel/CHUNK_SIZE)+1;i++) {
+	for(i=0;i<(memory_kernel/CHUNK_SIZE);i++) {
 		memory_mark_used(i);
 	}
 

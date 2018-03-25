@@ -28,6 +28,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		uint32_t memory_kernel) {
 
 	(void) r0;	/* Ignore boot method */
+	uint32_t rounded_memory;
 
 	/*******************/
 	/* Detect Hardware */
@@ -71,8 +72,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/**************************/
 	/* Init Memory Hierarchy  */
 	/**************************/
-
-	memory_hierarchy_init(memory_kernel);
+	/* round to 1MB granularity for mem protection reasons */
+	rounded_memory=memory_kernel/(1024*1024);
+	rounded_memory+=1;
+	rounded_memory*=(1024*1024);
+	printk("Initializing memory: kernel=0x%x bytes, rounded up to 0x%x\n",
+		memory_kernel,rounded_memory);
+	memory_hierarchy_init(rounded_memory);
 
 	/************************/
 	/* Other init		*/
