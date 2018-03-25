@@ -2,6 +2,8 @@ known bugs:
 + something is still off about the chdir code
 + getcwd() is still not implemented
 
++ fcntl O_NONBLOCK support (for tbo)
+
 For pi2/pi3 support
 + Add mini-uart driver
 + Make the framebuffer use 0x40000000 vs 0xc0000000 appropriately(?)
