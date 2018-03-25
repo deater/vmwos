@@ -15,7 +15,7 @@
 #include "fs/romfs/romfs.h"
 
 #include "processes/process.h"
-#include "syscalls/exit.h"
+#include "processes/exit.h"
 
 static int debug=0;
 

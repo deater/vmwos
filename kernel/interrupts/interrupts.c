@@ -10,7 +10,7 @@
 #include "lib/printk.h"
 #include "time/time.h"
 #include "processes/scheduler.h"
-
+#include "processes/exit.h"
 
 
 #define MAX_IRQ	64
@@ -149,6 +149,8 @@ void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
 	if (fs==1) printk("\tAlignment fault\n");
 	if (fs==2) printk("\tDebug event\n");
 	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",dfar);
+
+	exit(-1);
 
 }
 

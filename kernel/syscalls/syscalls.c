@@ -21,10 +21,10 @@
 #include "processes/process.h"
 #include "processes/scheduler.h"
 #include "processes/waitpid.h"
+#include "processes/exit.h"
 
 #include "syscalls/vfork.h"
 #include "syscalls/exec.h"
-#include "syscalls/exit.h"
 #include "syscalls/uname.h"
 #include "syscalls/sysinfo.h"
 #include "syscalls/times.h"
