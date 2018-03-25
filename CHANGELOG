@@ -1,5 +1,6 @@
-0.18 -- ??
+0.18 -- 25 March 2018
 + Add bFLT binary support
++ Memory protection on Pi3 works
 
 0.17 -- 16 March 2018
 + Actually free process resources on exit/waitpid
