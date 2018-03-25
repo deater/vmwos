@@ -1,11 +1,23 @@
+/* This is actually mostly tested on armv8-32 (pi3).  Need to try pi2 */
+
+/* References:
+	Bare-metal Boot Code for ARMv8-A Processors
+
+   The page/section references are referring to this:
+	ARM Architecture Reference Manual ARMv7-A and ARMv7-R edition
+
+   This pi-forum topic was extremely helpful:
+	https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=205179
+*/
+
 #include <stdint.h>
 
 #include "lib/printk.h"
 #include "arch/armv7/armv7-mmu.h"
 
-static int debug=1;
+static int mmu_debug=1;
 
-void tlb_invalidate_all(void) {
+static void tlb_invalidate_all(void) {
 	uint32_t reg=0;
 
 	/* TLBIALL */
@@ -13,7 +25,7 @@ void tlb_invalidate_all(void) {
 		: : "r" (reg) : "memory");
 }
 
-void icache_invalidate_all(void) {
+static void icache_invalidate_all(void) {
 	uint32_t reg=0;
 
 	/* ICIALLU */
@@ -71,7 +83,8 @@ void disable_l1_dcache(void) {
 #define NUM_PAGE_TABLE_ENTRIES 4096
 
 /* make sure properly aligned, as the low bits are reserved  */
-/* we're assuming here that 14 bits are reserved? */
+/* This means we need 14-bit (16k) allignment */
+
 uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 
 /* We want a 1MB coarse page table descriptor */
@@ -94,8 +107,16 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 90c0e = 1001 0000 1100 0000 1110  011=full access
 9080e = 1001 0000 1000 0000 1110  010=only root can write
 9040e = 1001 0000 0100 0000 1110  001=only root can read/write
-90c16 = 1001 0000 1100 0001 0110  011=full access
+90c16 = 1001 0000 1100 0001 0110  011=full access, no cache
+
+The above work.  Other values I tried didn't :(
+This is: not-secure, shareable, domain 0, and the rest as described.
 */
+
+#define SECTION_ROOT_ONLY_CACHED	0x9040e
+#define SECTION_FULL_ACCESS_CACHED	0x90c0e
+#define SECTION_FULL_ACCESS_NO_CACHE	0x90c16
+
 
 /* TEX=0 */
 /* Domain=1, C=0,B=0, noncachable (Table B3-10) */
@@ -103,6 +124,7 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 /* Domain=1, C=1,B=1, writeback cache, no alloc on write (Table B3-10) */
 #define CACHE_WRITEBACK		0x2e		// 0010 1110
 
+/* See table B3-6 for list of AP bit settings */
 /* Table B3-6 */
 #define AP_RW_KERNEL		((0<<15)|(0<<11))
 #define AP_RW_ANY		((0<<15)|(1<<11))
@@ -110,95 +132,89 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 #define AP_RO_ANY		((1<<15)|(1<<11))
 
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
-/* This uses the ARMv5 compatible interface, not native ARMv6 */
-/* Mark RAM has writeback, but disable cache for non-RAM */
+
 void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
 	int i;
-	uint32_t reg,reg2;
+	uint32_t reg;
 
 	/* Set up an identity-mapping for all 4GB */
 	/* section-short descriptor 1MB pages */
-	/* See table B3-6 for list of AP bit settings */
-	/* On bootup SCTLR.AFE is set to 0 meaning simplified values */
 
-	/* AP[2:1] (bits 15 and 11) */
-	/* 00 read/write kernel */
-	/* 01 read/write any */
-	/* 10 read-only kernel */
-	/* 11 read-only any */
 
 	/* Flush TLB */
-	printk("\tInvalidating TLB\n");
+	if (mmu_debug) printk("\tInvalidating TLB\n");
 	tlb_invalidate_all();
 	/* Flush l1-icache */
-	printk("\tInvalidating icache\n");
+	if (mmu_debug) printk("\tInvalidating icache\n");
 	icache_invalidate_all();
 	/* Flush l1-dcache */
-	printk("\tInvalidating dcache\n");
+	if (mmu_debug) printk("\tInvalidating dcache\n");
 	disable_l1_dcache();
-
+	/* Need to flush l2-cache too? */
 
 	/* As a baseline, Set 1:1 mapping for all memory */
 	/* Cache disabled, supervisor access only */
 
-	printk("\tSetting 1:1, cache disabled for %d page table entries\n",
+	if (mmu_debug) {
+		printk("\tSetting 1:1, cache disabled "
+			"for %d page table entries\n",
 			NUM_PAGE_TABLE_ENTRIES);
-
-	/* 90c0e */
+	}
 
 	for (i = 0; i < NUM_PAGE_TABLE_ENTRIES; i++) {
-		//page_table[i] = i << 20 | (AP_RW_KERNEL)
-		//			| CACHE_DISABLED;
-		page_table[i] = i << 20 | 0x90c16;
+		page_table[i] = i << 20 | SECTION_FULL_ACCESS_NO_CACHE;
 
 	}
 
-	printk("\tSetting cachable+kernel only for %x to %x, "
-		"actual %x to %x\n",
-			mem_start,kernel_end,mem_start&0xfff00000,
+	if (mmu_debug) {
+		printk("\tSetting cachable+kernel only for %x to %x, "
+			"actual %x to %x\n",
+			mem_start,kernel_end,
+			mem_start&0xfff00000,
 			kernel_end&0xfff00000);
+	}
 
 	/* Enanble supervisor only and cachable for kernel */
 	for (i = (mem_start >> 20); i < (kernel_end >> 20); i++) {
-//		page_table[i] = i << 20 | (AP_RW_KERNEL)
-//					| CACHE_WRITEBACK;
-
-		page_table[i] = i << 20 | 0x9040e;
+		page_table[i] = i << 20 | SECTION_ROOT_ONLY_CACHED;
 	}
 
-	printk("\tSetting cachable+any for %x to %x, "
-		"actual %x to %x\n",
+	if (mmu_debug) {
+		printk("\tSetting cachable+any for %x to %x, "
+			"actual %x to %x\n",
 			kernel_end,mem_end,
 			kernel_end&0xfff00000,mem_end&0xfff00000);
+	}
 
 	/* Enable cachable and readable by all for rest */
 	for (i = kernel_end >> 20; i < mem_end >> 20; i++) {
-//		page_table[i] = i << 20 | (AP_RW_ANY) | CACHE_WRITEBACK;
-		page_table[i] = i << 20 | 0x90c0e;
+		page_table[i] = i << 20 | SECTION_FULL_ACCESS_CACHED;
 	}
+
 	/* TTBCR : Translation Table Base Control Register */
 	/* B3.5.4 (1330) */
 	/* Choice of using TTBR0 (user) vs TTBR1 (kernel) */
 	/* This is based on address range, also TTBCR.N */
 	/* N is bottom 3 bits, if 000 then TTBR1 not used */
+	/* We set N to 0, meaning only use TTBR0 */
 	asm volatile("mrc p15, 0, %0, c2, c0, 2" : "=r" (reg) : : "cc");
-	printk("\tTTBCR before = %x\n",reg);
+	if (mmu_debug) printk("\tTTBCR before = %x\n",reg);
 	reg=0;
 	asm volatile("mcr p15, 0, %0, c2, c0, 2" : : "r" (reg) : "cc");
 
 	/* See B.4.1.43 */
 	/* DACR: Domain Access Control Register */
 	/* All domains, set manager access (no faults for accesses) */
-	printk("\tInitialize DACR\n");
-//	reg=0xffffffff;	// all domains, manager access
+	if (mmu_debug) printk("\tInitialize DACR\n");
 	reg=0x55555555;	// all domains, client access
 	asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (reg): "cc");
 
 	/* Initialize SCTLR.AFE */
-	printk("\tInitialize SCTLR.AFE\n");
+	/* This boots with value 0, but set to 0 anyway */
+	if (mmu_debug) printk("\tInitialize SCTLR.AFE\n");
 	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
-	printk("\tSCTLR before AFE = %x\n",reg);
+	if (mmu_debug) printk("\tSCTLR before AFE = %x\n",reg);
 	reg&=~SCTLR_ACCESS_FLAG_ENABLE;
 	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
 
@@ -209,20 +225,25 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	/* Bits 31-N are the address of the table */
 	/* Low bits are various config options, we leave them at 0 */
 	/* FIXME: might need to do something if SMP support added */
-	printk("\tSetting page table to %x\n",page_table);
-	printk("\tPTE[0] = %x\n",page_table[0]);
+	if (mmu_debug) {
+		printk("\tSetting page table to %x\n",page_table);
+		printk("\tPTE[0] = %x\n",page_table[0]);
+	}
 
 	reg=(uint32_t)page_table;
-//	reg|=0x2b;		// table walk normal, inner+outer cache
-				// wb, wa, inner sharable
-
-	reg|=0x6a;
+	reg|=0x6a;		// 0110 1010
+				// IRGN = 10 : inner write-through cache
+				// NOS = 1 : inner sharable
+				// RGN = 01 : normal mem, outer writeback/allocate
+				// S = 1 : sharable
 	asm volatile("mcr p15, 0, %0, c2, c0, 0"
 		: : "r" (reg) : "memory");
 
 #if 0
-	/* SMP is implemented in the CPUECTLR register. */
-	printk("Enabling SMPEN\n");
+	/* SMP is implemented in the CPUECTLR register on armv8? */
+	uint32_t reg2;
+
+	if (mmu_debug) printk("Enabling SMPEN\n");
 	asm volatile("mrrc p15, 1, %0, %1, c15" :  "=r" (reg), "=r"(reg2):: "cc");
 	reg|=(1<<6);	// Set SMPEN.
 	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
@@ -233,30 +254,26 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	/* SCTLR, VMSA: System Control Register */
 	/* Enable the MMU by setting the M bit (bit 1) */
 	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
-	printk("\tSCTLR before = %x\n",reg);
+	if (mmu_debug) printk("\tSCTLR before = %x\n",reg);
 	reg|=SCTLR_MMU_ENABLE;
+
+/* Enable caches!  Doesn't quite work */
+#if 0
 //	reg|=SCTLR_CACHE_ENABLE;
 //	reg|=SCTLR_ICACHE_ENABLE;
+#endif
 	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
 
-//	tlb_invalidate_all();
-//	icache_invalidate_all();
 	asm volatile("dsb");	/* barrier */
 	asm volatile("isb");	/* barrier */
 
 	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
-	printk("\tSCTLR after = %x\n",reg);
+	if (mmu_debug) printk("\tSCTLR after = %x\n",reg);
 }
 
-
-/* Also note that you *must* enable the MMU before using the dcache	*/
-/* Why?  hard to find in ARM manuals.  They do have a FAQ for ARM9	*/
-/* Why must I enable the MMU to use the D-Cache but not for the I-Cache?*/
-/* TLDR: by default the dcache would cache everything, including MMIO	*/
-/*       accesses, so you need the MMU enabled so you can mark the MMIO */
-/*       regions as non-cachable					*/
-
 void enable_l1_dcache(void) {
+
+	/* still issues with this on pi3 */
 
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
@@ -269,21 +286,31 @@ void enable_l1_dcache(void) {
 
 void enable_l1_icache(void) {
 
+	/* still issues with this on pi3 */
+
+#if 0
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* set bit 12: enable icache */
 	asm volatile( "orr r0, r0, #4096" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
+#endif
+
 }
 
 void disable_l1_icache(void) {
+
+	/* Still not sure how to do this on Pi3 */
+
+#if 0
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* clear bit 12: enable icache */
 	asm volatile( "bic r0, r0, #4096" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
+#endif
 }
 
 /* Z-bit */
@@ -293,24 +320,21 @@ void disable_l1_icache(void) {
 /* Bit 0 (RS) = return stack prediction (on by default) */
 void enable_branch_predictor(void) {
 
-	/* On Pi2 this comes up already enabled? */
+	/* On Pi3 this comes up already enabled? */
 
+#if 0
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* set bit 11: enable branch predictor */
 	asm volatile( "orr r0, r0, #2048" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
+#endif
 }
 
 void disable_branch_predictor(void) {
 
-	/* load control register to r0 */
-	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
-	/* clear bit 12: enable icache */
-	asm volatile( "bic r0, r0, #2048" );
-	/* store back out to control register */
-	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
+	/* Not, it's probably not possible to disable on ARMv8 */
 
 }
 
