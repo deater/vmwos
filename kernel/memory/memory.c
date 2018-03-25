@@ -224,17 +224,27 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 	/* Init memory subsystem */
 	memory_init(memory_total,memory_kernel);
 
+	/* Setup Memory Hierarchy */
 	if ((hardware_get_type()==RPI_MODEL_2B) ||
 		(hardware_get_type()==RPI_MODEL_3B)) {
 
+		/* Enable L1 i-cache */
+//		printk("Enabling L1 icache\n");
+//		enable_l1_icache();
+
+		/* Enable branch predictor */
+		/* already enabled on pi3 at boot? */
+//		printk("Enabling branch predictor\n");
+//		enable_branch_predictor();
+
 		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
 		enable_mmu(0,memory_total,memory_kernel);
+
+//		printk("Enabling dcache\n");
+//		enable_l1_dcache();
+
 	}
 	else {
-
-		/* Setup Memory Hierarchy */
-
-		// memset_benchmark(memory_total);
 
 		/* Enable L1 i-cache */
 		printk("Enabling L1 icache\n");

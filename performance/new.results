@@ -47,5 +47,34 @@ Memory protection:
 
 
 
+pi3-cache on?
 
+memory_test
+Waiting for 2 to finish
+8-bit memset
+        MEMSPEED: 64 MB took 218750us = 306MB/s
+        Testing: Passed!
+32-bit memset
+        MEMSPEED: 64 MB took 78125us = 858MB/s
+        Testing: Passed!
+Assembly 64-bit copy
+Unknown interrupt happened 0!
+Unknown interrupt happened 0!
+Unknown interrupt happened 0!
+        MEMSPEED: 64 MB took 62500us =  1073MB/s
+        Testing: Passed!
+
+pi3-cache off
+ memory_test
+
+8-bit memset
+Waiting for 4 to finish
+        MEMSPEED: 64 MB took 11937500us = 5MB/s
+        Testing: Passed!
+32-bit memset
+        MEMSPEED: 64 MB took 2796875us = 23MB/s
+        Testing: Passed!
+Assembly 64-bit copy
+        MEMSPEED: 64 MB took 343750us =  195MB/s
+        Testing: Passed!
 

@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
 	int32_t temp,i;
 	char *ptr;
 	int32_t number=0;
+	int32_t *int_ptr;
 
 	if (argc<2) {
 		print_help(argv[0]);
@@ -65,8 +66,9 @@ int main(int argc, char **argv) {
 	}
 	else if (!strncmp(argv[1],"kernelmem",9)) {
 		ptr=(char *)0x8000;
+		int_ptr=(int32_t *)0x8000;
 		printf("Trying to read kernel from userspace, [%x]= %x\n",
-			number,*ptr);
+			int_ptr,*int_ptr);
 		if (number==0) number=65536;
 		printf("Trying to write kernel from userspace, %d @ %x\n",
 			number,ptr);

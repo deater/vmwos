@@ -5,14 +5,61 @@
 
 static int debug=1;
 
-/* From the ARM1176JZF-S Technical Reference Manual	*/
-/* The processor has separate L1I and L1D caches	*/
-/* Separate I and D tightly-coupled memory (TCM)	*/
-/* Two micro-TLBs backed by a main TLB			*/
+void tlb_invalidate_all(void) {
+	uint32_t reg=0;
 
-/* Caches are VIPT */
-/* Linesize is 32 bytes (8 words) */
-/* On BCM2835 cache sizes are 16kb and 4-way */
+	/* TLBIALL */
+	asm volatile("mcr p15, 0, %0, c8, c7, 0"
+		: : "r" (reg) : "memory");
+}
+
+void icache_invalidate_all(void) {
+	uint32_t reg=0;
+
+	/* ICIALLU */
+	asm volatile("mcr p15, 0, %0, c7, c5, 1"
+		: : "r" (reg) : "memory");
+}
+
+
+/* Code from "Bare-metal Boot Code for ARMv8-A document */
+void disable_l1_dcache(void) {
+	// Disable L1 Caches.
+	asm volatile(
+	"push	{r4, r5, r6, r7, r8, lr}\n"
+	"MRC	P15, 0, R1, C1, C0, 0	// Read SCTLR.\n"
+	"BIC	R1, R1, #(0x1 << 2)	// Disable D Cache.\n"
+	"MCR	P15, 0, R1, C1, C0, 0	// Write SCTLR.\n"
+	"// Invalidate Data cache to create general-purpose code.\n"
+	"// Calculate the cache size first and loop through each set + way\n"
+	"MOV	R0, #0x0	// R0 = 0x0 for L1 dcache 0x2 for L2 dcache\n"
+	"MCR	P15, 2, R0, C0, C0, 0 // CSSELR Cache Size Selection Register\n"
+	"MRC	P15, 1, R4, C0, C0, 0 // CCSIDR read Cache Size\n"
+	"AND	R1, R4, #0x7\n"
+	"ADD	R1, R1, #0x4	// r1 = cache line size\n"
+	"LDR	R3, =0x7FFF\n"
+	"AND	R2, R3, R4, LSR #13 // r2 = cache set size\n"
+	"LDR	R3, =0x3FF\n"
+	"AND	R3, R3, R4, LSR #3 // R3 = Cache Associativity Number – 1.\n"
+	"CLZ	R4, R3 // R4 = way position in CISW instruction.\n"
+	"MOV	R5, #0 // R5 = way loop counter.\n"
+	"way_loop:\n"
+	"MOV	R6, #0 // R6 = set loop counter\n"
+	"set_loop:\n"
+	"ORR	R7, R0, R5, LSL R4	// Set way.\n"
+	"ORR	R7, R7, R6, LSL R1 // Set set.\n"
+	"MCR	P15, 0, R7, C7, C6, 2 // DCCISW R7.\n"
+	"ADD	R6, R6, #1 // Increment set counter.\n"
+	"CMP	R6, R2 // Last set reached yet?\n"
+	"BLE	set_loop // If not, iterate set_loop,\n"
+	"ADD	R5, R5, #1 // else, next way.\n"
+	"CMP	R5, R3 // Last way reached yet?\n"
+	"BLE	way_loop // if not, iterate way_loop.\n"
+	"pop	{r4, r5, r6, r7, r8, lr}\n"
+	);
+}
+
+
 
 /* By default caches have pseudo-random replacement */
 /* This can be configured to round-robin in the control register (bit 14) */
@@ -43,6 +90,10 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
    4 = XN
    3,2 = C,B determinte caching behavior, see Table b3-10
    1,0 = 1,0 - for coarse section 1MB pages
+          16         8
+90c0e = 1001 0000 1100 0000 1110  011=full access
+9080e = 1001 0000 1000 0000 1110  010=read/write root
+90c16 = 1001 0000 1100 0001 0110  011=full access
 */
 
 /* TEX=0 */
@@ -55,7 +106,7 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 #define AP_RW_KERNEL		((0<<15)|(0<<11))
 #define AP_RW_ANY		((0<<15)|(1<<11))
 #define AP_RO_KERNEL		((1<<15)|(0<<11))
-#define AP_RW_ANY		((1<<15)|(1<<11))
+#define AP_RO_ANY		((1<<15)|(1<<11))
 
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
 /* This uses the ARMv5 compatible interface, not native ARMv6 */
@@ -63,7 +114,7 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
 	int i;
-	uint32_t reg;
+	uint32_t reg,reg2;
 
 	/* Set up an identity-mapping for all 4GB */
 	/* section-short descriptor 1MB pages */
@@ -76,42 +127,79 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	/* 10 read-only kernel */
 	/* 11 read-only any */
 
+	/* Flush TLB */
+	printk("\tInvalidating TLB\n");
+	tlb_invalidate_all();
+	/* Flush l1-icache */
+	printk("\tInvalidating icache\n");
+	icache_invalidate_all();
+	/* Flush l1-dcache */
+	printk("\tInvalidating dcache\n");
+	disable_l1_dcache();
+
+
 	/* As a baseline, Set 1:1 mapping for all memory */
 	/* Cache disabled, supervisor access only */
 
 	printk("\tSetting 1:1, cache disabled for %d page table entries\n",
 			NUM_PAGE_TABLE_ENTRIES);
 
+	/* 90c0e */
+
 	for (i = 0; i < NUM_PAGE_TABLE_ENTRIES; i++) {
-		page_table[i] = i << 20 | (AP_RW_KERNEL)
-					| CACHE_DISABLED;
+		//page_table[i] = i << 20 | (AP_RW_KERNEL)
+		//			| CACHE_DISABLED;
+		page_table[i] = i << 20 | 0x90c16;
+
 	}
 
-	printk("\tSetting cachable+kernel only for addresses %x to %x\n",
-			mem_start,kernel_end);
+	printk("\tSetting cachable+kernel only for %x to %x, "
+		"actual %x to %x\n",
+			mem_start,kernel_end,mem_start&0xfff00000,
+			kernel_end&0xfff00000);
 
 	/* Enanble supervisor only and cachable for kernel */
 	for (i = (mem_start >> 20); i < (kernel_end >> 20); i++) {
-		page_table[i] = i << 20 | (AP_RW_KERNEL)
-					| CACHE_WRITEBACK;
+//		page_table[i] = i << 20 | (AP_RW_KERNEL)
+//					| CACHE_WRITEBACK;
+
+		page_table[i] = i << 20 | 0x9080e;
 	}
 
-	printk("\tSetting cachable+any access for addresses %x to %x\n",
-			kernel_end,mem_end);
+	printk("\tSetting cachable+any for %x to %x, "
+		"actual %x to %x\n",
+			kernel_end,mem_end,
+			kernel_end&0xfff00000,mem_end&0xfff00000);
 
 	/* Enable cachable and readable by all for rest */
 	for (i = kernel_end >> 20; i < mem_end >> 20; i++) {
-		page_table[i] = i << 20 | (AP_RW_ANY) | CACHE_WRITEBACK;
+//		page_table[i] = i << 20 | (AP_RW_ANY) | CACHE_WRITEBACK;
+		page_table[i] = i << 20 | 0x90c0e;
 	}
-
-//1404
 	/* TTBCR : Translation Table Base Control Register */
 	/* B3.5.4 (1330) */
 	/* Choice of using TTBR0 (user) vs TTBR1 (kernel) */
 	/* This is based on address range, also TTBCR.N */
 	/* N is bottom 3 bits, if 000 then TTBR1 not used */
-	// MRC p15, 0, <Rt>, c2, c0, 2
-	// MCR p15, 0, <Rt>, c2, c0, 2
+	asm volatile("mrc p15, 0, %0, c2, c0, 2" : "=r" (reg) : : "cc");
+	printk("\tTTBCR before = %x\n",reg);
+	reg=0;
+	asm volatile("mcr p15, 0, %0, c2, c0, 2" : : "r" (reg) : "cc");
+
+	/* See B.4.1.43 */
+	/* DACR: Domain Access Control Register */
+	/* All domains, set manager access (no faults for accesses) */
+	printk("\tInitialize DACR\n");
+//	reg=0xffffffff;	// all domains, manager access
+	reg=0x55555555;	// all domains, client access
+	asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (reg): "cc");
+
+	/* Initialize SCTLR.AFE */
+	printk("\tInitialize SCTLR.AFE\n");
+	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
+	printk("\tSCTLR before AFE = %x\n",reg);
+	reg&=~SCTLR_ACCESS_FLAG_ENABLE;
+	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
 
 	/* TTBR0 (VMSA): Translation Table Base Register 0 */
 	/* See B.4.1.154 (page 1729) */
@@ -123,23 +211,40 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	printk("\tSetting page table to %x\n",page_table);
 	printk("\tPTE[0] = %x\n",page_table[0]);
 
+	reg=(uint32_t)page_table;
+//	reg|=0x2b;		// table walk normal, inner+outer cache
+				// wb, wa, inner sharable
+
+	reg|=0x6a;
 	asm volatile("mcr p15, 0, %0, c2, c0, 0"
-		: : "r" (page_table) : "memory");
+		: : "r" (reg) : "memory");
 
+#if 0
+	/* SMP is implemented in the CPUECTLR register. */
+	printk("Enabling SMPEN\n");
+	asm volatile("mrrc p15, 1, %0, %1, c15" :  "=r" (reg), "=r"(reg2):: "cc");
+	reg|=(1<<6);	// Set SMPEN.
+	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
+#endif
 
-	/* See B.4.1.43 */
-	/* DACR: Domain Access Control Register */
-	/* All domains, set manager access (no faults for accesses) */
-	asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (~0));
 
 	/* See B.4.1.130 on page 1707 */
 	/* SCTLR, VMSA: System Control Register */
 	/* Enable the MMU by setting the M bit (bit 1) */
-	asm("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
+	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
 	printk("\tSCTLR before = %x\n",reg);
 	reg|=SCTLR_MMU_ENABLE;
+//	reg|=SCTLR_CACHE_ENABLE;
+//	reg|=SCTLR_ICACHE_ENABLE;
 	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
 
+//	tlb_invalidate_all();
+//	icache_invalidate_all();
+	asm volatile("dsb");	/* barrier */
+	asm volatile("isb");	/* barrier */
+
+	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
+	printk("\tSCTLR after = %x\n",reg);
 }
 
 
@@ -151,80 +256,61 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 /*       regions as non-cachable					*/
 
 void enable_l1_dcache(void) {
-	/* TODO */
-#if 0
+
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* set bit 12: enable dcache */
 	asm volatile( "orr r0, r0, #4" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
-#endif
 }
 
-/* See 3.2.22 */
-void disable_l1_dcache(void) {
-	/* FIXME */
-	/* Need to clear out and invalidate all entries in cache first */
-	/* Also may need to disable L1 icache and branch-target buffer too */
-}
 
-/* See 1176 manual, 3.2.7 */
 void enable_l1_icache(void) {
-	/* TODO */
-#if 0
+
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* set bit 12: enable icache */
 	asm volatile( "orr r0, r0, #4096" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
-#endif
 }
 
 void disable_l1_icache(void) {
-	/* TODO */
-#if 0
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* clear bit 12: enable icache */
 	asm volatile( "bic r0, r0, #4096" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
-#endif
 }
 
-/* See 1176 manual, 3.2.7 */
 /* Z-bit */
 /* Also see 3.2.8 Auxiliary Control Register */
 /* Bit 2 (SB) = static branch prediction (on by default) */
 /* Bit 1 (DB) = dynamic branch prediction (on by default) */
 /* Bit 0 (RS) = return stack prediction (on by default) */
 void enable_branch_predictor(void) {
-	/* TODO */
 
-#if 0
+	/* On Pi2 this comes up already enabled? */
+
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* set bit 11: enable branch predictor */
 	asm volatile( "orr r0, r0, #2048" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
-#endif
 }
 
 void disable_branch_predictor(void) {
 
-	/* TODO */
-
-#if 0
 	/* load control register to r0 */
 	asm volatile( "mrc p15, 0, r0, c1, c0, 0" );
 	/* clear bit 12: enable icache */
 	asm volatile( "bic r0, r0, #2048" );
 	/* store back out to control register */
 	asm volatile( "mcr p15, 0, r0, c1, c0, 0" );
-#endif
+
 }
 
 

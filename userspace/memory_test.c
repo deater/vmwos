@@ -1,6 +1,15 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
+#define BENCH_SIZE (4*1024*1024)
+#define BENCH_ITERATIONS 16
+
+static uint8_t __attribute__((aligned(64))) benchmark[BENCH_SIZE+16];
+
+#define OFFSET 0
+
+
 #ifdef VMWOS
 #include "syscalls.h"
 #include "vlibc.h"
@@ -44,12 +53,7 @@ static int64_t get_time_us(void) {
 
 #endif
 
-#define BENCH_SIZE (1024*1024)
-#define BENCH_ITERATIONS 16
 
-static uint8_t __attribute__((aligned(64))) benchmark[BENCH_SIZE+16];
-
-#define OFFSET 0
 
 
 
@@ -236,7 +240,7 @@ static void memset_test(void *addr, int value, int size) {
 
 
 /* Test setting per-byte memory set */
-static void run_memory_benchmark8(void) {
+static void run_memory_benchmark8(int32_t reps) {
 
 	int i;
 	uint64_t before,after;
@@ -244,7 +248,7 @@ static void run_memory_benchmark8(void) {
 
 	before=get_time_us();
 
-	for(i=0;i<BENCH_ITERATIONS;i++) {
+	for(i=0;i<reps;i++) {
 		memset_byte(benchmark+OFFSET,0xfe,BENCH_SIZE);
 	}
 
@@ -253,15 +257,15 @@ static void run_memory_benchmark8(void) {
 	diff=after-before;
 
 	printf("\tMEMSPEED: %d MB took %dus = %dMB/s\n",
-		(BENCH_SIZE*BENCH_ITERATIONS)/1024/1024,
+		(BENCH_SIZE*reps)/1024/1024,
 		(diff),
-		(BENCH_SIZE*BENCH_ITERATIONS)/(diff));
+		(BENCH_SIZE*reps)/(diff));
 
 	memset_test(benchmark+OFFSET,0xfe,BENCH_SIZE);
 
 }
 
-static void run_memory_benchmark32(void) {
+static void run_memory_benchmark32(int32_t reps) {
 
 	int i;
 	uint64_t before,after;
@@ -269,7 +273,7 @@ static void run_memory_benchmark32(void) {
 
 	before=get_time_us();
 
-	for(i=0;i<BENCH_ITERATIONS;i++) {
+	for(i=0;i<reps;i++) {
 		memset_4byte(benchmark+OFFSET,0xa5,BENCH_SIZE);
 	}
 
@@ -278,14 +282,14 @@ static void run_memory_benchmark32(void) {
 	diff=after-before;
 
 	printf("\tMEMSPEED: %d MB took %dus = %dMB/s\n",
-		(BENCH_SIZE*BENCH_ITERATIONS)/1024/1024,
+		(BENCH_SIZE*reps)/1024/1024,
 		(diff),
-		(BENCH_SIZE*BENCH_ITERATIONS)/diff);
+		(BENCH_SIZE*reps)/diff);
 
 	memset_test(benchmark+OFFSET,0xa5,BENCH_SIZE);
 }
 
-static void run_memory_benchmark_asm(void) {
+static void run_memory_benchmark_asm(int32_t reps) {
 
 	int i;
 	uint64_t before,after;
@@ -293,7 +297,7 @@ static void run_memory_benchmark_asm(void) {
 
 	before=get_time_us();
 
-	for(i=0;i<BENCH_ITERATIONS;i++) {
+	for(i=0;i<reps;i++) {
 		memset_asm(benchmark+OFFSET,0x78,BENCH_SIZE);
 	}
 
@@ -302,33 +306,42 @@ static void run_memory_benchmark_asm(void) {
 	diff=after-before;
 
 	printf("\tMEMSPEED: %d MB took %dus =  %dMB/s\n",
-		BENCH_SIZE*BENCH_ITERATIONS/1024/1024,
+		BENCH_SIZE*reps/1024/1024,
 		(diff),
-		(BENCH_SIZE*BENCH_ITERATIONS)/(diff));
+		(BENCH_SIZE*reps)/(diff));
 
 	memset_test(benchmark+OFFSET,0x78,BENCH_SIZE);
 }
 
-static void memset_benchmark(void) {
+static void memset_benchmark(int32_t reps) {
 
 	/* Naive version */
 	printf("8-bit memset\n");
-	run_memory_benchmark8();
+	run_memory_benchmark8(reps);
 
 	/* 32-bit version */
 	printf("32-bit memset\n");
-	run_memory_benchmark32();
+	run_memory_benchmark32(reps);
 
 	/* asm version */
 	printf("Assembly 64-bit copy\n");
-	run_memory_benchmark_asm();
+	run_memory_benchmark_asm(reps);
 
 }
 
 
 int main(int argc, char **argv) {
 
-	memset_benchmark();
+	int32_t reps;
+
+	if (argc>1) {
+		reps=atoi(argv[1]);
+	}
+	else {
+		reps=BENCH_ITERATIONS;
+	}
+
+	memset_benchmark(reps);
 
 	return 0;
 }
