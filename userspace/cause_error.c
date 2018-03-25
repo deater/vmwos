@@ -7,11 +7,11 @@
 
 static int print_help(char *prog_name) {
 
-	printf("%s [cpsr] [kernelmem] [undefined] [memtest]\n",prog_name);
-	printf("* cpsr -- try to modify CPSR (should fail)\n");
-	printf("* kernelmem -- try writing to kernel memory\n");
+	printf("%s [cpsr] [kernelwrite] [kernelread] [undefined]\n",prog_name);
+	printf("* cpsr -- try to modify CPSR\n");
+	printf("* kernelwrite -- try writing to kernel memory\n");
+	printf("* kernelread -- try writing to kernel memory\n");
 	printf("* undefined -- try running undefined instruction\n");
-	printf("* memtest -- TODO\n");
 
 	return 0;
 }
@@ -64,11 +64,8 @@ int main(int argc, char **argv) {
 		/* arm / thumb illegal instruction */
 		asm volatile (".word 0xe7f0def0\n");
 	}
-	else if (!strncmp(argv[1],"kernelmem",9)) {
+	else if (!strncmp(argv[1],"kernelwrite",9)) {
 		ptr=(char *)0x8000;
-		int_ptr=(int32_t *)0x8000;
-		printf("Trying to read kernel from userspace, [%x]= %x\n",
-			int_ptr,*int_ptr);
 		if (number==0) number=65536;
 		printf("Trying to write kernel from userspace, %d @ %x\n",
 			number,ptr);
@@ -77,8 +74,10 @@ int main(int argc, char **argv) {
 			ptr++;
 		}
 	}
-	else if (!strncmp(argv[1],"memtest",7)) {
-		printf("memtest not implemented yet\n");
+	else if (!strncmp(argv[1],"kernelread",9)) {
+		int_ptr=(int32_t *)0x8000;
+		printf("Trying to read kernel from userspace, [%x]= %x\n",
+			int_ptr,*int_ptr);
 	}
 	else {
 		printf("Unknown command %s\n",argv[1]);

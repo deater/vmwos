@@ -92,7 +92,8 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
    1,0 = 1,0 - for coarse section 1MB pages
           16         8
 90c0e = 1001 0000 1100 0000 1110  011=full access
-9080e = 1001 0000 1000 0000 1110  010=read/write root
+9080e = 1001 0000 1000 0000 1110  010=only root can write
+9040e = 1001 0000 0100 0000 1110  001=only root can read/write
 90c16 = 1001 0000 1100 0001 0110  011=full access
 */
 
@@ -163,7 +164,7 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 //		page_table[i] = i << 20 | (AP_RW_KERNEL)
 //					| CACHE_WRITEBACK;
 
-		page_table[i] = i << 20 | 0x9080e;
+		page_table[i] = i << 20 | 0x9040e;
 	}
 
 	printk("\tSetting cachable+any for %x to %x, "
