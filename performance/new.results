@@ -78,3 +78,15 @@ Assembly 64-bit copy
         MEMSPEED: 64 MB took 343750us =  195MB/s
         Testing: Passed!
 
+pi3-icache
+8-bit memset
+        MEMSPEED: 64 MB took 218750us = 306MB/s
+        Testing: Passed!
+32-bit memset
+        MEMSPEED: 64 MB took 93750us = 715MB/s
+        Testing: Passed!
+Assembly 64-bit copy
+        MEMSPEED: 64 MB took 46875us =  1431MB/s
+        Testing: Passed!
+Child exited with 0
+

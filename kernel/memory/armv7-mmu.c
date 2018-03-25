@@ -259,8 +259,8 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
 /* Enable caches!  Doesn't quite work */
 #if 0
-//	reg|=SCTLR_CACHE_ENABLE;
-//	reg|=SCTLR_ICACHE_ENABLE;
+	reg|=SCTLR_CACHE_ENABLE;
+	reg|=SCTLR_ICACHE_ENABLE;
 #endif
 	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
 
