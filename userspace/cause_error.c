@@ -7,10 +7,11 @@
 
 static int print_help(char *prog_name) {
 
-	printf("%s [cpsr] [kernelwrite] [kernelread] [undefined]\n",prog_name);
+	printf("%s [cpsr] [kernelwrite] [kernelread] [kernelexec] [undefined]\n",prog_name);
 	printf("* cpsr -- try to modify CPSR\n");
 	printf("* kernelwrite -- try writing to kernel memory\n");
-	printf("* kernelread -- try writing to kernel memory\n");
+	printf("* kernelread -- try reading kernel memory\n");
+	printf("* kernelexec -- try jumping to kernel memory\n");
 	printf("* undefined -- try running undefined instruction\n");
 
 	return 0;
@@ -78,6 +79,10 @@ int main(int argc, char **argv) {
 		int_ptr=(int32_t *)0x8000;
 		printf("Trying to read kernel from userspace, [%x]= %x\n",
 			int_ptr,*int_ptr);
+	}
+	else if (!strncmp(argv[1],"kernelexec",9)) {
+		printf("Trying to jump to address 0x8000\n");
+		((void (*)(void))0x8000)();
 	}
 	else {
 		printf("Unknown command %s\n",argv[1]);

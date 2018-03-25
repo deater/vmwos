@@ -159,7 +159,7 @@ void __attribute__((interrupt("ABORT"))) prefetch_abort_handler(void) {
 	uint32_t ifsr,ifar,fs;
 	register long lr asm ("lr");
 
-	printk("PREFETCH ABORT at PC=%x\n",lr-8);
+	printk("PREFETCH ABORT at PC=%x\n",lr-4);
 
 	/* Read IFSR reg (see B4.1.96) */
 	asm volatile("mrc p15, 0, %0, c5, c0, 1" : "=r" (ifsr) : : "cc");
@@ -171,6 +171,8 @@ void __attribute__((interrupt("ABORT"))) prefetch_abort_handler(void) {
 
 	if (fs==2) printk("\tDebug event\n");
 	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",ifar);
+
+	exit(-1);
 
 }
 
