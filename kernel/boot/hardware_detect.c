@@ -59,6 +59,9 @@ static uint32_t hardware_convert_type(uint32_t revision) {
 		case 0xa22082:
 				type=RPI_MODEL_3B;
 				break;
+		case 0xa020d3:
+				type=RPI_MODEL_3BPLUS;
+				break;
 		default:	type=RPI_UNKNOWN;
 				break;
 	}
@@ -110,9 +113,10 @@ void hardware_print_model(uint32_t version) {
 		case RPI_MODEL_BPLUS:	printk("B+"); break;
 		case RPI_MODEL_2B:	printk("2B"); break;
 		case RPI_MODEL_3B:	printk("3B"); break;
+		case RPI_MODEL_3BPLUS:	printk("3B+"); break;
 		case RPI_MODEL_ZERO:	printk("Zero"); break;
 		case RPI_COMPUTE_NODE:	printk("Compute Node"); break;
-		default:		printk("Unknown %x",hardware_type);
+		default:		printk("Unknown %x",hardware_revision);
 					break;
 	}
 	printk("\n");

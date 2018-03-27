@@ -7,6 +7,7 @@
 #define RPI_MODEL_2B		7
 #define RPI_MODEL_ZERO		8
 #define RPI_MODEL_3B		9
+#define RPI_MODEL_3BPLUS	10
 
 uint32_t hardware_detect(void *info_ptr);
 void hardware_print_model(uint32_t version);

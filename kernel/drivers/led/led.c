@@ -33,7 +33,8 @@ int led_init(void) {
 		led_gpio=47;
 		led_active_low=0;
 	}
-	else if ((hardware_get_type()==RPI_MODEL_3B)) {
+	else if ((hardware_get_type()==RPI_MODEL_3B) ||
+		(hardware_get_type()==RPI_MODEL_3BPLUS)) {
 		/* Not ACT LED, just one we have hooked to GPIO18 */
 		led_gpio=18;
 		led_active_low=0;

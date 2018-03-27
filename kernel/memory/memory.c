@@ -226,7 +226,8 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 
 	/* Setup Memory Hierarchy */
 	if ((hardware_get_type()==RPI_MODEL_2B) ||
-		(hardware_get_type()==RPI_MODEL_3B)) {
+		(hardware_get_type()==RPI_MODEL_3B) ||
+		(hardware_get_type()==RPI_MODEL_3BPLUS)) {
 
 		/* Enable L1 i-cache */
 //		printk("Enabling L1 icache\n");
