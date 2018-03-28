@@ -73,7 +73,7 @@ force_look:
 	true
 
 ../date.h:	force_look
-	echo -n "#define COMPILE_DATE \"" > ../date.h
+	/bin/echo -n "#define COMPILE_DATE \"" > ../date.h
 	date | tr -d '\n' >> ../date.h
-	echo "\"" >> ../date.h
+	/bin/echo "\"" >> ../date.h
 
