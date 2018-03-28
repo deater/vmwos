@@ -78,7 +78,7 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 					| CACHE_DISABLED;
 	}
 
-	/* Enanble supervisor only and cachable for kernel */
+	/* Enable supervisor only and cachable for kernel */
 	for (i = (mem_start >> 20); i < (kernel_end >> 20); i++) {
 		page_table[i] = i << 20 | (AP_SUPERVISOR_ONLY << 10)
 					| CACHE_WRITEBACK;
@@ -99,8 +99,9 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
 	/* See 3.2.16 */
 	/* Set the access control register */
-	/* All domains, set manager access (no faults for accesses) */
-	asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (~0));
+	/* All domains, set client access (no faults for accesses) */
+	reg=0x55555555;
+	asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (reg));
 
 	/* See 3.2.7 */
 	/* Set the Control Register */
@@ -235,24 +236,17 @@ void flush_icache(void) {
 
 	/* On ARM1176 this uses the cache operations register */
 
-	// DSB = MCR p15, 0, <Rd>, c7, c10, 4
-	// ISB = 
-	// Flush prefetch buffer = MCR p15, 0, <Rd>, c7, c5, 4
-
+	// DSB
+	//	MCR p15, 0, <Rd>, c7, c10, 4
+	// Flush prefetch buffer
+	//	MCR p15, 0, <Rd>, c7, c5, 4
 	// Invalidate both caches plus branch target:
 	//	MCR p15, 0, <Rd>, c7, c7, 0
-
-//	asm volatile("mcr p15, 0, %0, c7, c7, 0\n"
-//			"mcr p15,0,%0,c7,c10,4\n"   //DSB
-//		: : "r" (0) : "memory");
-
-
 	// Invalidate Instruction Cache and branch target cache
-	//MCR p15, 0, <Rd>, c7, c5, 0
+	//	MCR p15, 0, <Rd>, c7, c5, 0
 
-	asm volatile("mcr p15, 0, %0, c7, c5, 0\n"
-			"mcr p15,0,%0,c7,c10,4\n"   //DSB
+	asm volatile("mcr p15, 0, %0, c7, c5, 0\n" // invalidate icache+btc
+			"mcr p15,0,%0,c7,c10,4\n"  // DSB
 		: : "r" (0) : "memory");
 
 }
-
