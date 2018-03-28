@@ -26,6 +26,8 @@ static void idle_task(void) {
 		/* Works by having the interrupt handler return +8 instead */
 		/* of +4 */
 //		asm volatile("MCR p15, 0, %0, c7, c0, 4\n" ::"r"(0):);
+//Wait For Interrupt	SBZ	MCR p15, 0, <Rd>, c7, c0, 4
+
 		asm volatile("wfi\n" :::);
 
 	}

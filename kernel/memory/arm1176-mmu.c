@@ -228,3 +228,31 @@ void l1_cache_detect(void) {
 }
 
 
+/* If we-reuse memory for executable code we need to flush out of icache */
+/* as when we store out to memory it goes in dcache but icache doesn't see */
+/* the update and we end up running old code */
+void flush_icache(void) {
+
+	/* On ARM1176 this uses the cache operations register */
+
+	// DSB = MCR p15, 0, <Rd>, c7, c10, 4
+	// ISB = 
+	// Flush prefetch buffer = MCR p15, 0, <Rd>, c7, c5, 4
+
+	// Invalidate both caches plus branch target:
+	//	MCR p15, 0, <Rd>, c7, c7, 0
+
+//	asm volatile("mcr p15, 0, %0, c7, c7, 0\n"
+//			"mcr p15,0,%0,c7,c10,4\n"   //DSB
+//		: : "r" (0) : "memory");
+
+
+	// Invalidate Instruction Cache and branch target cache
+	//MCR p15, 0, <Rd>, c7, c5, 0
+
+	asm volatile("mcr p15, 0, %0, c7, c5, 0\n"
+			"mcr p15,0,%0,c7,c10,4\n"   //DSB
+		: : "r" (0) : "memory");
+
+}
+
