@@ -8,6 +8,8 @@
 #include "drivers/serial/serial.h"
 
 #include "lib/printk.h"
+#include "lib/mmio.h"
+
 #include "time/time.h"
 #include "processes/scheduler.h"
 #include "processes/exit.h"
@@ -79,9 +81,9 @@ static void user_reg_dump(void) {
 
 #endif
 
-void interrupt_handler_c(void) {
+void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 
-	uint32_t basic_pending,pending2;
+	uint32_t basic_pending,pending1,pending2;
 	uint32_t handled=0;
 
 	// Check if GPIO23 (ps2 keyboard) (irq49)
@@ -106,7 +108,45 @@ void interrupt_handler_c(void) {
 	}
 	else {
 		if (!handled) {
-			printk("Unknown interrupt happened %x!\n",basic_pending);
+			pending1=bcm2835_read(IRQ_PENDING1);
+			pending2=bcm2835_read(IRQ_PENDING2);
+			printk("Unknown interrupt happened %x/%x/%x @%x!\n",
+				basic_pending,
+				pending1,
+				pending2,r1);
+#ifdef ARMV7
+/*
+0x4000_0060 Core0 interrupt source
+Address: 0x4000_0064 Core1 interrupt source
+Address: 0x4000_0068 Core2 interrupt source
+Address: 0x4000_006C Core3 interrupt source
+Reset: 0x0000_0000
+Bits	Description
+31-28	<Reserved>
+17:12	Peripheral 1..15 interrupt (Currently not used)
+11	Local timer interrupt
+10	AXI-outstanding interrupt <For core 0 only!> all others are 0
+9	PMU interrupt
+8	GPU interrupt <Can be high in one core only>
+7	Mailbox 3 interrupt
+6	Mailbox 2 interrupt
+5	Mailbox 1 interrupt
+4	Mailbox 0 interrupt
+3	CNTVIRQ interrupt
+2	CNTHPIRQ interrupt
+1	CNTPNSIRQ interrupt
+0	CNTPSIRQ interrupt (Physical Timer -1)
+*/
+	uint32_t per_core[4];
+	per_core[0]=mmio_read(0x40000060);
+	per_core[1]=mmio_read(0x40000064);
+	per_core[2]=mmio_read(0x40000068);
+	per_core[3]=mmio_read(0x4000006c);
+	printk("per core source %x %x %x %x\n",
+		per_core[0],per_core[1],per_core[2],per_core[3]);
+
+#endif
+
 		}
 		return;
 	}

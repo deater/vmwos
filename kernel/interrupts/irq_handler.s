@@ -17,6 +17,7 @@ interrupt_handler:
 	mrs	r0, SPSR		@ load SPSR
 	str	r0,[sp,#64]		@ store on stack
 
+	mov	r1,lr
 
 	add	sp,sp,#8192
 
