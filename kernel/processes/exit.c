@@ -20,7 +20,7 @@ void exit(int32_t status) {
         current_process->status=PROCESS_STATUS_EXITED;
 	current_process->exit_value=status;
 
-	/* Free resources now? */
+	/* Free resources now? No wait until waitpid() */
 	/* process_destroy(current_process); */
 
 	/* Wake anyone waiting in waitpid */

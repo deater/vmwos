@@ -258,7 +258,7 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	reg|=SCTLR_MMU_ENABLE;
 
 /* Enable caches!  Doesn't quite work */
-#if 0
+#if 1
 	reg|=SCTLR_CACHE_ENABLE;
 	reg|=SCTLR_ICACHE_ENABLE;
 #endif
@@ -400,17 +400,27 @@ void l1_cache_detect(void) {
 /* the update and we end up running old code */
 void flush_icache(void) {
 
-        /* On ARM1176 this uses the cache operations register */
+	uint32_t reg=0;
 
-        // DSB = MCR p15, 0, <Rd>, c7, c10, 4
-        // ISB = 
-        // Flush prefetch buffer = MCR p15, 0, <Rd>, c7, c5, 4
+//; Enter this code with <Rx> containing the new 32-bit instruction.
+// STR <Rx>, [instruction location]
+// DCCMVAU [instruction location] ; Clean data cache by MVA to point of unification
+// DSB
+//; Ensure visibility of the data cleaned from the cache
+// ICIMVAU [instruction location] ; Invalidate instruction cache by MVA to PoU
+// BPIMVAU [instruction location] ; Invalidate branch predictor by MVA to PoU
+//DSB ; Ensure completion of the invalidations
+// ISB ; Synchronize fetched instruction stream
 
-        // Invalidate both caches plus branch target:
-        //      MCR p15, 0, <Rd>, c7, c7, 0
 
-//        asm volatile("mcr p15, 0, %0, c7, c7, 0"
-  //              : : "r" (0) : "memory");
+//	ICIALLU c c7 0 c5 0 32-bit WO Instruction cache invalidate all
+//	BPIALL c c7 0 c5 6 32-bit WO Branch predictor invalidate all -
+
+	asm volatile(	"mcr p15, 0, %0, c7, c5, 0\n"	// ICIALLU
+			"mcr p15, 0, %0, c7, c5, 6\n"	// BPIALL
+			"dsb\n"
+			"isb\n"
+			: : "r" (reg): "cc");
 
 }
 
