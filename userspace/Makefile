@@ -13,10 +13,12 @@ image:	shell \
 	mkdir -p image/bin
 	mkdir -p image/home
 	mkdir -p image/home/ansis
+	mkdir -p image/proc
 	cp shell cat cat_count cause_error \
 		hello ll ls memory_test printa printb pwd slideshow \
 		sysinfo tbo uname ./image/bin
 	cp CATME ./image/home
+	cp cpuinfo ./image/proc
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
