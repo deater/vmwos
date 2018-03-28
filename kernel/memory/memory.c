@@ -1,11 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
-
-#include "arch/arm1176/arm1176-mmu.h"
-
 #include "boot/hardware_detect.h"
 
 #include "memory/memory.h"
+#include "memory/mmu-common.h"
 
 #include "lib/printk.h"
 #include "lib/memset.h"
@@ -229,20 +227,10 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 		(hardware_get_type()==RPI_MODEL_3B) ||
 		(hardware_get_type()==RPI_MODEL_3BPLUS)) {
 
-		/* Enable L1 i-cache */
-//		printk("Enabling L1 icache\n");
-//		enable_l1_icache();
-
-		/* Enable branch predictor */
-		/* already enabled on pi3 at boot? */
-//		printk("Enabling branch predictor\n");
-//		enable_branch_predictor();
-
+		/* Enable MMU plus caches */
 		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
+		printk("Enabling I/D caches\n");
 		enable_mmu(0,memory_total,memory_kernel);
-
-//		printk("Enabling dcache\n");
-//		enable_l1_dcache();
 
 	}
 	else {

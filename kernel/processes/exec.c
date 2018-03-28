@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "memory/memory.h"
+#include "memory/mmu-common.h"
 
 #include "lib/printk.h"
 #include "lib/string.h"
