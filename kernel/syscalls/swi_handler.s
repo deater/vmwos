@@ -14,11 +14,8 @@
 	@	entry-armv.S and entry-common.S
 
 swi_handler:
-	@ and	sp,sp,#0xffffe000
-	@ sub	sp,sp,#56
-
-	ldr     sp,=current_process
-        ldr     sp,[sp]
+	ldr     sp,=current_process	@ get pointer to current process
+        ldr     sp,[sp]			@ and de-reference (sp==current_process)
 
 	stmia	sp,{r0-lr}^		@ Save all user registers r0-lr
 					@ (the ^ means user registers)
@@ -29,7 +26,8 @@ swi_handler:
 	str	ip,[sp,#64]		@ store on stack
 
 
-	add	sp,sp,#8192
+	add	sp,sp,#8192		@ our kernel stack is now at the
+					@ end of the 8kB process struct
 
 	@ Call the C version of the handler
 
@@ -38,9 +36,9 @@ swi_handler:
 	@ Put our return value of r0 on the stack so it is
 	@ restored with the rest of the saved registers
 
-	sub	sp,sp,#8192
+	sub	sp,sp,#8192		@ restore stack pointer to beginning
 
-	str	r0,[sp]
+	str	r0,[sp]			@ ????
 
 	ldr	r0,[sp,#64]		@ pop saved CPSR
 	msr	SPSR_cxsf, r0		@ move it into place

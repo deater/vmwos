@@ -19,6 +19,11 @@ static int avail_pid=0;
 struct process_control_block_type *proc_first=NULL;
 struct process_control_block_type *current_process=NULL;
 
+#define MAX_PROCS	16
+static struct process_control_block_type __attribute__((aligned(4096)))
+	all_processes[MAX_PROCS];
+
+
 
 int32_t process_get_totals(int32_t type, int32_t *count) {
 
@@ -141,10 +146,16 @@ static int32_t process_remove(struct process_control_block_type *proc) {
 struct process_control_block_type *process_create(void) {
 
 	int i;
-	struct process_control_block_type *new_proc;
+	struct process_control_block_type *new_proc=NULL;
 
+	for(i=0;i<MAX_PROCS;i++) {
+		if (all_processes[i].valid==0) {
+			new_proc=&all_processes[i];
+			break;
+		}
+	}
 
-	new_proc=memory_allocate(sizeof(struct process_control_block_type));
+//	new_proc=memory_allocate(sizeof(struct process_control_block_type));
 	if (new_proc==NULL) {
 		printk("process_create: out of memory\n");
 		return NULL;
@@ -152,6 +163,9 @@ struct process_control_block_type *process_create(void) {
 
 	/* clear to zero */
 	memset(new_proc,0,sizeof(struct process_control_block_type));
+
+	/* Mark as valid */
+	new_proc->valid=1;
 
 	if (process_debug) {
 		printk("process_create: allocated %d bytes for PCB at %x\n",
@@ -223,7 +237,8 @@ int32_t process_destroy(struct process_control_block_type *proc) {
 	}
 
 	/* Delete proc struct itself */
-	memory_free(proc,sizeof(struct process_control_block_type));
+	/* Not needed anymore */
+//	memory_free(proc,sizeof(struct process_control_block_type));
 
 	return 0;
 }

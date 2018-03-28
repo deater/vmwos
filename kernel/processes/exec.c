@@ -18,7 +18,8 @@
 #include "processes/process.h"
 #include "processes/exit.h"
 
-static int debug=0;
+static int exec_debug=0;
+static int exec_summary_debug=1;
 
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
@@ -36,11 +37,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	uint32_t text_start;
 
 
-	if (debug) printk("Entering execve\n");
+	if (exec_debug) printk("Entering execve\n");
 
 	inode=get_inode(filename);
 	if (inode<0) {
-		if (debug) printk("Error get_inode(%s)\n",filename);
+		if (exec_debug) printk("Error get_inode(%s)\n",filename);
 		return inode;
 	}
 
@@ -56,34 +57,34 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		uint32_t data_start;
 		uint32_t bss_start,bss_end;
 
-		if (debug) printk("Found BFLT executable!\n");
+		if (exec_debug) printk("Found BFLT executable!\n");
 
 		result=romfs_read_file(inode,0,&bflt_header,64);
 
 		/* Find stack size */
 		memcpy(&temp_int,&bflt_header[24],4);
 		stack_size=ntohl(temp_int);
-		if (debug) printk("BFLT: stack size=%d\n",stack_size);
+		if (exec_debug) printk("BFLT: stack size=%d\n",stack_size);
 
 		/* Find binary size */
 		memcpy(&temp_int,&bflt_header[8],4);
 		text_start=ntohl(temp_int);
-		if (debug) printk("BFLT: text_start=%x\n",text_start);
+		if (exec_debug) printk("BFLT: text_start=%x\n",text_start);
 
 		memcpy(&temp_int,&bflt_header[12],4);
 		data_start=ntohl(temp_int);
-		if (debug) printk("BFLT: data_start=%x\n",data_start);
+		if (exec_debug) printk("BFLT: data_start=%x\n",data_start);
 
 		memcpy(&temp_int,&bflt_header[16],4);
 		bss_start=ntohl(temp_int);
-		if (debug) printk("BFLT: bss_start=%x\n",bss_start);
+		if (exec_debug) printk("BFLT: bss_start=%x\n",bss_start);
 
 		memcpy(&temp_int,&bflt_header[20],4);
 		bss_end=ntohl(temp_int);
-		if (debug) printk("BFLT: bss_end=%x\n",bss_end);
+		if (exec_debug) printk("BFLT: bss_end=%x\n",bss_end);
 
 		size=bss_end-text_start;
-		if (debug) printk("BFLT: total size=%x (%d)\n",size,size);
+		if (exec_debug) printk("BFLT: total size=%x (%d)\n",size,size);
 
 		current_process->datasize=bss_start-data_start;
 		current_process->bsssize=bss_end-bss_start;
@@ -92,21 +93,21 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	}
 	/* Otherwise, treat as raw binary */
 	else {
-		if (debug) printk("Assuming RAW executable!\n");
+		if (exec_debug) printk("Assuming RAW executable!\n");
 
 		/* Allocate stack */
 		stack_size=DEFAULT_USER_STACK_SIZE;
-		if (debug) printk("RAW: stack size = %d\n",stack_size);
+		if (exec_debug) printk("RAW: stack size = %d\n",stack_size);
 
 		result=romfs_stat(inode,&stat_info);
 		if (result<0) {
-			if (debug) printk("Error stat()\n");
+			if (exec_debug) printk("Error stat()\n");
 			return result;
 		}
 
 		text_start=0;
 		size=stat_info.st_size;
-		if (debug) printk("RAW: total size = %d\n",size);
+		if (exec_debug) printk("RAW: total size = %d\n",size);
 	}
 
 
@@ -121,7 +122,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		if (binary_start!=NULL) memory_free(binary_start,size);
 		if (stack_page!=NULL) memory_free(stack_page,stack_size);
 
-		if (debug) printk("execve: no memory\n");
+		if (exec_debug) printk("execve: no memory\n");
 		return -ENOMEM;
 	}
 
@@ -150,7 +151,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			argc++;
 		}
 
-		if (debug) {
+		if (exec_debug) {
 			printk("vmwos:exec: found %d arguments\n",argc);
 			for(i=0;i<argc;i++) {
 				printk("%d: %x %s\n",i,(long)argv[i],argv[i]);
@@ -162,17 +163,17 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			(argv[argc-1]-argv[0])+	/* add size of N-1 strings */
 			strlen(argv[argc])+	/* add length of last string */
 			1;			/* 1 for last NUL terminator */
-		if (debug) printk("vmwos:exec: argv length %d\n",argv_length);
+		if (exec_debug) printk("vmwos:exec: argv length %d\n",argv_length);
 
 		/* Align to 8-byte boundary */
 		argv_length=((argv_length/8)+1)*8;
-		if (debug) {
+		if (exec_debug) {
 			printk("vmwos:exec: argv length aligned %d\n",
 								argv_length);
 		}
 
 		argv_location=(stack_page+stack_size-argv_length);
-		if (debug) {
+		if (exec_debug) {
 			printk("vmwos:exec: argv location: %x\n",argv_location);
 		}
 
@@ -185,7 +186,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			stack_argv[i]=(uint32_t)argv_ptr;
 			argv_ptr=strncpy(argv_ptr,argv[i],strlen(argv[i])+1);
 			argv_ptr+=(strlen(argv[i])+1);
-			if (debug) printk("vmwos: argv[%d]=%x %s\n",
+			if (exec_debug) printk("vmwos: argv[%d]=%x %s\n",
 				i,stack_argv[i],(char *)stack_argv[i]);
 		}
 	}
@@ -211,11 +212,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	/* Flush icache, as we have changed executable code */
 	/* so the various caches might be out of date */
-	if (debug) printk("About to flush icache\n");
+	if (exec_debug) printk("About to flush icache\n");
 	flush_icache();
-	if (debug) printk("Done flushing icache\n");
+	if (exec_debug) printk("Done flushing icache\n");
 
-	if (debug) {
+	if (exec_summary_debug) {
 		printk("Execed process %s current_process %x pid %d "
 			"allocated %dkB at %x and %dkB stack at %x\n",
 			filename,(long)current_process,current_process->pid,

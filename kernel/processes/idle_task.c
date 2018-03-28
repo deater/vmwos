@@ -54,7 +54,7 @@ static void enter_kernelspace(void) {
                 "mov    lr, %[shell]\n"
                 "ldr    sp,=current_process\n"
                 "ldr    sp,[sp]\n"
-                "mov    r0, #0x13\n"    /* Userspace, IRQ enabled */
+                "mov    r0, #0x1f\n"    /* system mode, IRQ enabled */
                 "msr    SPSR_cxsf, r0\n"
                 "movs   pc,lr\n"
                 : /* output */
@@ -75,17 +75,24 @@ void create_idle_task(void) {
 	idle_process->start_time=ticks_since_boot();
 	idle_process->last_scheduled=idle_process->start_time;
 	idle_process->stack=memory_allocate(4096);
+
 	/* Point to end, as stack grows down */
 	idle_process->user_state.r[13]=(long)(idle_process->stack)+4096;
 
-	idle_process->user_state.spsr=0x13;
+	/* SVC mode?  No we want system mode */
+	/* Otherwise the SVC stack pointer will get set to the idle tasks */
+	idle_process->user_state.spsr=0x1f;
 
 	strncpy(idle_process->name,"idle",5);
 	idle_process->kernel_state.r[14]=(long)enter_kernelspace;
 
 	idle_process->status=PROCESS_STATUS_READY;
 
-	printk("Created idle thread: %d\n",idle_process->pid);
+	printk("Created idle thread: %x pid=%d stack=%x text=%x\n",
+			idle_process,
+			idle_process->pid,
+			idle_process->stack,
+			idle_process->text);
 }
 
 

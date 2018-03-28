@@ -63,7 +63,7 @@ int thermal_read(void) {
 		temp = (uint32_t)msg.tag.val;
 	}
 	else {
-		printk("THERM: Failed to get temperature! (%d,%x)\n",
+		printk("THERM: Failed to get temperature! (%x,%x)\n",
 			result,msg.request_code);
 	}
 
