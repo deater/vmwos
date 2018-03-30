@@ -426,13 +426,21 @@ void flush_icache(void) {
 
 void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
 
-	uint32_t i;
+	uint32_t mva;
 
-	for(i=(start_addr&0xfffffff0);i<(end_addr&0xfffffff0);i+=16) {
+	// 1559
+	// DCCIMVAC, Data Cache Clean and Invalidate by MVA to PoC, VMSA
+	// 1643, 1496
+	// DCCIMVAC c c7 0 c14 1
+	// DCCIMVAU c c7 0 c14 1
 
-		// invalidate dcahce mva
-		//asm volatile("mcr p15, 0, %0, c7, c6, 1\n"
-		//: : "r" (i) : "memory");
+	// clean and invalidate data or unified cache line
+	// DCCIMVAC c c7 0 c14 1
+
+	for(mva=(start_addr&0xfffffff0);mva<=(end_addr&0xfffffff0);mva+=16) {
+
+		asm volatile("mcr p15, 0, %0, c7, c14, 1\n"
+			: : "r" (mva) : "memory");
 	}
 
 	asm volatile("dsb\n"  // DSB
