@@ -1,3 +1,6 @@
+0.19 -- ?? April 2018
++ Add df/statfs support
+
 0.18 -- 25 March 2018
 + Add bFLT binary support
 + Memory protection on Pi3 works

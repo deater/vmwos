@@ -404,8 +404,8 @@ int32_t romfs_statfs(struct superblock_t *superblock, struct statfs *buf) {
 	buf->f_flags=0;		/* Mount flags */
 
 
-	printk("romfs statfs: returning %d/%d bytes as size\n",
-			buf->f_bsize,buf->f_blocks);
+//	printk("romfs statfs: returning %d/%d bytes as size\n",
+//			buf->f_bsize,buf->f_blocks);
 
 
 	return 0;
