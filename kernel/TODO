@@ -1,7 +1,11 @@
 known bugs:
 + something is still off about the chdir code
 + getcwd() is still not implemented
++ kill of process on invalid memory access does something wrong
+	probably not restoring stack right
+	(this leads to weird behavior on pi1)
 
+feature requests:
 + fcntl O_NONBLOCK support (for tbo)
 
 For pi2/pi3 support

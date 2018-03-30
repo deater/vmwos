@@ -424,3 +424,18 @@ void flush_icache(void) {
 
 }
 
+void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
+
+	uint32_t i;
+
+	for(i=(start_addr&0xfffffff0);i<(end_addr&0xfffffff0);i+=16) {
+
+		// invalidate dcahce mva
+		//asm volatile("mcr p15, 0, %0, c7, c6, 1\n"
+		//: : "r" (i) : "memory");
+	}
+
+	asm volatile("dsb\n"  // DSB
+		: : : "memory");
+
+}

@@ -39,7 +39,7 @@ int thermal_read(void) {
 
 	struct vc_msg msg  __attribute__ ((aligned(16)));
 
-	uint32_t temp=0,result;
+	uint32_t temp=0,result,addr;
 
 	/* Clear the struct */
 	memset(&msg, 0, sizeof(msg));
@@ -51,12 +51,27 @@ int thermal_read(void) {
 	msg.tag.buffer_size = 8;
 
 	/* send the message */
-	result = mailbox_write((unsigned int)(&msg),
+	addr=(unsigned int)(&msg);
+
+	/* Flush dcache so value is in memory */
+	flush_dcache((uint32_t)&msg, (uint32_t)&msg+sizeof(msg));
+
+	result = mailbox_write(addr|0xc0000000,// non-cachable GPU range
 				MAILBOX_CHAN_PROPERTY);
 
 	if (result<0) printk("THERM: Mailbox write problem\n");
 
 	result=mailbox_read(MAILBOX_CHAN_PROPERTY);
+
+	/* GPU wrote to physical memory, but it is probably cached */
+	printk("Flushing from %x to %x (%x to %x)\n",
+			(uint32_t)&msg,
+			(uint32_t)&msg+sizeof(msg),
+			((uint32_t)&msg)&0xfffffff0,
+			((uint32_t)&msg+sizeof(msg))&0xfffffff0);
+
+	/* Flush dcache so we read in the value from memory */
+	flush_dcache((uint32_t)&msg, (uint32_t)&msg+sizeof(msg));
 
 	/* check if it was all ok and return the rate in milli degrees C */
 	if (msg.request_code & 0x80000000) {

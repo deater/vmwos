@@ -250,3 +250,32 @@ void flush_icache(void) {
 		: : "r" (0) : "memory");
 
 }
+
+void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
+
+	/* On ARM1176 this uses the cache operations register */
+
+	// DSB
+	//	MCR p15, 0, <Rd>, c7, c10, 4
+	// DB
+	//	MCR p15,0,<Rd>,c7,c10,5
+	// Invalidate Data Cache Line, using MVA
+	// MVA might be a fcse (fast-context switch extension) thing
+	// 	MCR p15, 0, <Rd>, c7, c6, 1
+	// Invalidate Data Cache Range
+	//	MCRR p15,0,<End Address>,<Start Address>,c6
+	// Clear and Invalidate Data Cache Range
+	//	MCRR p15,0,<End Address>,<Start Address>,c14
+
+
+
+	// invalidate dcahce range
+	asm volatile("mcrr p15, 0, %0, %1, c14\n"
+			: : "r" (end_addr), "r" (start_addr) : "memory");
+
+//	asm volatile("mcr p15,0,%0,c7,c10,5\n"  // DMB
+//		: : "r" (0) : "memory");
+
+	asm volatile("mcr p15,0,%0,c7,c10,4\n"  // DSB
+		: : "r" (0) : "memory");
+}

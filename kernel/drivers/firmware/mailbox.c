@@ -34,6 +34,10 @@ int mailbox_write(unsigned int value, unsigned int channel) {
 		printk("Write mailbox full!\n");
 	}
 
+#ifdef ARMV7
+	asm volatile("DMB ISHST");
+#endif
+
 	/* write the command */
 	bcm2835_write(MAILBOX_WRITE,channel|value);
 
@@ -59,6 +63,10 @@ int mailbox_read(unsigned int channel) {
 	while((bcm2835_read(MAILBOX0_STATUS) & MAIL_EMPTY) ) {
 		printk("mailbox_read: mail_empty\n");
 	}
+
+#ifdef ARMV7
+	asm volatile("DMB ISHST");
+#endif
 
 	mail=bcm2835_read(MAILBOX_READ);
 
