@@ -3,22 +3,24 @@ include ../Makefile.inc
 include Makefile_user.inc
 
 all:	shell \
-	cat cat_count cause_error hello ll ls \
+	cat cat_count cause_error df hello ll ls \
 	memory_test printa printb pwd slideshow sysinfo tbo uname
 
 image:	shell \
-	cat cat_count cause_error hello ll ls \
+	cat cat_count cause_error df hello ll ls \
 	memory_test printa printb pwd slideshow sysinfo tbo uname
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
 	mkdir -p image/home/ansis
 	mkdir -p image/proc
-	cp shell cat cat_count cause_error \
+	mkdir -p image/etc
+	cp shell cat cat_count cause_error df \
 		hello ll ls memory_test printa printb pwd slideshow \
 		sysinfo tbo uname ./image/bin
 	cp CATME ./image/home
-	cp cpuinfo ./image/proc
+	cp files/cpuinfo ./image/proc
+	cp files/fstab ./image/etc
 	genromfs -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
@@ -32,6 +34,9 @@ cat_count:	cat_count.elf
 
 cause_error:	cause_error.elf
 	$(ELF2BFLT) cause_error.elf cause_error
+
+df:	df.elf
+	$(ELF2BFLT) df.elf df
 
 hello:	hello.elf
 	$(ELF2BFLT) hello.elf hello
@@ -84,6 +89,9 @@ cat_count.elf:	cat_count.o ./vlibc/vlibc.a
 cause_error.elf:	cause_error.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cause_error.elf cause_error.o ./vlibc/vlibc.a
 
+df.elf:	df.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o df.elf df.o ./vlibc/vlibc.a
+
 hello.elf:	hello.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf hello.o ./vlibc/vlibc.a
 
@@ -128,6 +136,9 @@ cat_count.o:	cat_count.c
 cause_error.o:	cause_error.c
 	$(CROSS)$(CC) $(CFLAGS) -c cause_error.c
 
+df.o:	df.c
+	$(CROSS)$(CC) $(CFLAGS) -c df.c
+
 hello.o:	hello.c
 	$(CROSS)$(CC) $(CFLAGS) -c hello.c
 
@@ -169,7 +180,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 
 clean:
 	rm -f *~ *.o *.elf \
-		hello cat cat_count cause_error ll ls memory_test \
+		hello cat cat_count cause_error df ll ls memory_test \
 		printa printb pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean

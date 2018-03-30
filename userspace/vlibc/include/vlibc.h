@@ -14,9 +14,17 @@ int sprintf(char *string, char *fmt, ...);
 int32_t rand(void);
 
 /* stdio.c */
+struct file_struct {
+	int fd;
+};
+typedef struct file_struct FILE;
+
 int putchar(int c);
 int puts(char *s);
 int getchar(void);
+FILE *fopen(const char *pathname, const char *mode);
+char *fgets(char *s, int size, FILE *stream);
+int fclose(FILE *stream);
 
 /* string.c */
 int32_t atoi(char *string);

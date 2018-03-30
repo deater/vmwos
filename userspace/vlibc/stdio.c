@@ -31,3 +31,48 @@ int getchar(void) {
 	return c;
 
 }
+
+/* FIXME */
+#define MAXFILES	16
+static FILE open_files[MAXFILES];
+
+FILE *fopen(const char *pathname, const char *mode) {
+
+	int fd;
+
+	fd=open(pathname,O_RDONLY,0);
+	if (fd<0) return NULL;
+
+	open_files[0].fd=fd;
+
+	return &open_files[0];
+
+}
+
+char *fgets(char *s, int size, FILE *stream) {
+
+	char ch;
+	int32_t result,count=0;
+
+	while(1) {
+		result=read(stream->fd,&ch,1);
+		if (result<1) break;
+
+		if (count>=size) break;
+
+		s[count]=ch;
+
+		if (result=='\n') break;
+		count++;
+	}
+	if (count==0) return NULL;
+	s[count+1]=0;
+
+	return s;
+}
+
+int fclose(FILE *stream) {
+
+	return close(stream->fd);
+
+}

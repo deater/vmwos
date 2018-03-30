@@ -4,6 +4,8 @@
 #include "syscalls.h"
 
 /* From Linux kernel, arch/arm/include/uapi/asm/unistd.h */
+/* That is auto-generated so not always there */
+/* On a real pi2 look in /usr/include/arm-linux-gnueabihf/asm/unistd.h */
 #define __NR_exit	1
 #define __NR_read	3
 #define __NR_write	4
@@ -17,6 +19,7 @@
 #define __NR_times	43
 #define __NR_ioctl	54
 #define __NR_reboot	88
+#define __NR_statfs	99
 #define __NR_stat	106
 #define __NR_sysinfo	116
 #define	__NR_uname	122
@@ -26,6 +29,7 @@
 #define __NR_getcwd	183
 #define __NR_vfork	190
 #define __NR_clock_gettime	263
+#define __NS_statfs64	266
 
 int32_t exit(int32_t status) {
 
@@ -74,7 +78,7 @@ int32_t write(int fd, const void *buf, uint32_t size) {
 	return r0;
 }
 
-int32_t open(char *filename, uint32_t flags, uint32_t mode) {
+int32_t open(const char *filename, uint32_t flags, uint32_t mode) {
 
 	register long r7 __asm__("r7") = __NR_open;
 	register long r0 __asm__("r0") = (long)filename;
@@ -379,4 +383,17 @@ int32_t fcntl(int fd, int cmd, ... /* arg */ ) {
         return 0;
 }
 
+int statfs(const char *path, struct statfs *buf) {
 
+	register long r7 __asm__("r7") = __NR_read;
+	register long r0 __asm__("r0") = (long)path;
+	register long r1 __asm__("r1") = (long)buf;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return r0;
+}

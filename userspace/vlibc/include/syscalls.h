@@ -96,7 +96,7 @@ int32_t nanosleep(const struct timespec *req, struct timespec *rem);
 
 int32_t write(int fd, const void *buf, uint32_t count);
 int32_t read(int fd, void *buf, size_t count);
-int32_t open(char *filename, uint32_t flags, uint32_t mode);
+int32_t open(const char *filename, uint32_t flags, uint32_t mode);
 int32_t close(uint32_t fd);
 int32_t vfork(void);
 int32_t exit(int32_t status);
@@ -222,3 +222,20 @@ int32_t fcntl(int fd, int cmd, ... /* arg */ );
 #define CLOCK_MONOTONIC		1
 
 int32_t clock_gettime(uint32_t clk_id, struct timespec *tp);
+
+struct statfs {
+	uint32_t f_type;	/* Type of filesystem */
+	uint32_t f_bsize;	/* Block size */
+	uint32_t f_blocks;	/* Total data blocks in filesystem */
+	uint32_t f_bfree;	/* Total free blocks in filesystem */
+	uint32_t f_bavail;	/* Free blocks available to user */
+	uint32_t f_files;	/* Total inodes */
+	uint32_t f_ffree;	/* Free inodes */
+	uint32_t f_fsid;	/* Filesystem ID (?) */
+	uint32_t f_namelen;	/* Maximum length of filenames */
+	uint32_t f_frsize;	/* Fragment size (???) */
+	uint32_t f_flags;	/* Mount flags of filesystem */
+	uint32_t f_spare[5];	/* Padding bytes reserved */
+};
+
+int statfs(const char *path, struct statfs *buf);
