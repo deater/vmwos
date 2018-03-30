@@ -35,6 +35,10 @@ struct statfs {
 	uint32_t f_ffree;	/* Free file nodes */
 	uint32_t f_fsid;	/* Filesystem id */
 	uint32_t f_namelen;	/* Max filename length */
+	uint32_t f_frsize;	/* Fragment size */
+	uint32_t f_flags;	/* Flags */
+	uint32_t padding[5];
+
 };
 
 struct superblock_t {

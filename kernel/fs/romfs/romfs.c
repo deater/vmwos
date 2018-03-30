@@ -365,6 +365,19 @@ int32_t romfs_mount(struct superblock_t *superblock) {
 
 int32_t romfs_statfs(struct statfs *buf) {
 
+	buf->f_type=0x7275;	/* type (romfs) */
+	buf->f_bsize=1;		/* blocksize */
+        buf->f_blocks=10;	/* Total data blocks */
+        buf->f_bfree=0;		/* Free blocks in filesystem */
+	buf->f_bavail=0;	/* Free blocks available to user */
+	buf->f_files=10;	/* Total inodes */
+	buf->f_ffree=0;		/* Free inodes */
+	buf->f_fsid=0;		/* Filesystem ID */
+	buf->f_namelen=MAX_FILENAME_SIZE;
+				/* Maximum length of filenames */
+	buf->f_frsize=0;	/* Fragment size */
+	buf->f_flags=0;		/* Mount flags */
+
 	return 0;
 }
 

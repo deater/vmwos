@@ -349,3 +349,9 @@ char *getcwd(char *buf, size_t size) {
 	return buf;
 
 }
+
+int32_t statfs(const char *path, struct statfs *buf) {
+	/* FIXME: lookup path */
+
+	return romfs_statfs(buf);
+}

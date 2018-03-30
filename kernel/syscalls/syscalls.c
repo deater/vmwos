@@ -179,6 +179,11 @@ uint32_t swi_handler_c(
 			result=clock_gettime(r0,(struct timespec *)r1);
 			break;
 
+		case SYSCALL_STATFS:
+			result=statfs((const char *)r0,(struct statfs *)r1);
+			break;
+
+
 
 		/******************/
 		/* VMWOS SPECIFIC */
