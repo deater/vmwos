@@ -62,7 +62,7 @@ char *fgets(char *s, int size, FILE *stream) {
 
 		s[count]=ch;
 
-		if (result=='\n') break;
+		if (ch=='\n') break;
 		count++;
 	}
 	if (count==0) return NULL;

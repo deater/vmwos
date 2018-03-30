@@ -315,6 +315,30 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 	return -1;
 }
 
+static uint32_t romfs_get_size(struct superblock_t *superblock) {
+
+	int temp_int;
+	uint32_t offset=0;
+	struct romfs_header_t header;
+
+	/* Read header */
+	romfs_read_noinc(header.magic,offset,8);
+	if (memcmp(header.magic,"-rom1fs-",8)) {
+		printk("Wrong magic number!\n");
+		return -1;
+	}
+	offset+=8;
+	if (debug) printk("Found romfs filesystem!\n");
+
+	/* Read size */
+	romfs_read_noinc(&temp_int,offset,4);
+	header.size=ntohl(temp_int);
+	offset+=4;
+	if (debug) printk("\tSize: %d bytes\n",header.size);
+
+	return header.size;
+
+}
 
 int32_t romfs_mount(struct superblock_t *superblock) {
 
@@ -363,11 +387,12 @@ int32_t romfs_mount(struct superblock_t *superblock) {
 
 }
 
-int32_t romfs_statfs(struct statfs *buf) {
+int32_t romfs_statfs(struct superblock_t *superblock, struct statfs *buf) {
 
 	buf->f_type=0x7275;	/* type (romfs) */
-	buf->f_bsize=1;		/* blocksize */
-        buf->f_blocks=10;	/* Total data blocks */
+	buf->f_bsize=1024;	/* blocksize */
+        buf->f_blocks=romfs_get_size(superblock)/1024;
+				/* Total data blocks */
         buf->f_bfree=0;		/* Free blocks in filesystem */
 	buf->f_bavail=0;	/* Free blocks available to user */
 	buf->f_files=10;	/* Total inodes */
@@ -377,6 +402,11 @@ int32_t romfs_statfs(struct statfs *buf) {
 				/* Maximum length of filenames */
 	buf->f_frsize=0;	/* Fragment size */
 	buf->f_flags=0;		/* Mount flags */
+
+
+	printk("romfs statfs: returning %d/%d bytes as size\n",
+			buf->f_bsize,buf->f_blocks);
+
 
 	return 0;
 }

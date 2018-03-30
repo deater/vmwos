@@ -353,5 +353,5 @@ char *getcwd(char *buf, size_t size) {
 int32_t statfs(const char *path, struct statfs *buf) {
 	/* FIXME: lookup path */
 
-	return romfs_statfs(buf);
+	return romfs_statfs(&superblock_table[0],buf);
 }

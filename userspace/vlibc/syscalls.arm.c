@@ -385,7 +385,7 @@ int32_t fcntl(int fd, int cmd, ... /* arg */ ) {
 
 int statfs(const char *path, struct statfs *buf) {
 
-	register long r7 __asm__("r7") = __NR_read;
+	register long r7 __asm__("r7") = __NR_statfs;
 	register long r0 __asm__("r0") = (long)path;
 	register long r1 __asm__("r1") = (long)buf;
 

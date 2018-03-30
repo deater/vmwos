@@ -12,6 +12,8 @@
 #include <sys/vfs.h>
 #endif
 
+static int debug=0;
+
 static int prettyprint(uint64_t size) {
 
 	if (size<1024) {
@@ -40,6 +42,7 @@ static int df(char *device,char *mountpoint) {
 	uint32_t blocksize,totalblocks,freeblocks;
 	uint64_t totalsize,totalfree,totalused;
 
+	if (debug) printf("df: running with %s %s\n",device,mountpoint);
 
 	statfs(mountpoint, &buf);
 
@@ -52,7 +55,10 @@ static int df(char *device,char *mountpoint) {
 	totalused=totalsize-totalfree;
 
 
-	printf("Totalsize = %d*%d = %ld\n",blocksize,totalblocks,totalsize);
+	if (debug) {
+		printf("Totalsize = %d*%d = %ld\n",
+			blocksize,totalblocks,totalsize);
+	}
 
 	printf("%s\t",device);
 	prettyprint(totalsize);
@@ -61,7 +67,12 @@ static int df(char *device,char *mountpoint) {
 	printf("\t");
 	prettyprint(totalfree);
 
-	printf("\t%3d%%",100-(freeblocks/totalblocks));
+	if (totalblocks==0) {
+		printf("\t100%%");
+	}
+	else {
+		printf("\t%3d%%",100-(freeblocks/totalblocks));
+	}
 
 	printf("\t%s\n",mountpoint);
 
@@ -84,12 +95,19 @@ int main(int argc, char **argv) {
 
 	fff=fopen("/etc/fstab","r");
 	if (fff==NULL) {
+		if (debug) printf("df: Couldn't open fstab!\n");
 		df("/","/");
 		return 0;
 	}
 
 	while(1) {
 		result=fgets(buffer,256,fff);
+
+		if (debug) {
+			printf("fgets result: %x\n",result);
+			if (result!=NULL) printf("fgets result: %s\n",result);
+		}
+
 		if (result==NULL) break;
 		if (result[0]=='#') continue;
 
