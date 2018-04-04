@@ -178,11 +178,16 @@ static int parse_input(char *string) {
 		sleep(seconds);
 	}
 	else if (!strncmp(string,"temp",4)) {
-		uint32_t temperature;
+		int32_t temperature;
 		temperature=vmwos_get_temp();
-		printf("Current temperature %dC, %dF\n",
-			temperature/1000,
-			((temperature*9)/5000)+32);
+		if (temperature<-273000) {
+			printf("Invalid temperature %d\n",temperature);
+		}
+		else {
+			printf("Current temperature %dC, %dF\n",
+				temperature/1000,
+				((temperature*9)/5000)+32);
+		}
 	}
 	else if (!strncmp(string,"random",6)) {
 		printf("%d\n",rand());

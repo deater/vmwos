@@ -80,6 +80,7 @@ int thermal_read(void) {
 	else {
 		printk("THERM: Failed to get temperature! (%x,%x)\n",
 			result,msg.request_code);
+		temp=-300000;
 	}
 
 	return temp;
