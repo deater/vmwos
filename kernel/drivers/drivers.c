@@ -14,7 +14,7 @@
 
 void drivers_init_all(void) {
 
-//	uint32_t framebuffer_width=800,framebuffer_height=600;
+	uint32_t framebuffer_width=800,framebuffer_height=600;
 	uint32_t temperature;
 
 	/**************************/
@@ -30,18 +30,18 @@ void drivers_init_all(void) {
 	/* Set up keyboard */
 	ps2_keyboard_init();
 
-#if 0
 	/* Enable the Framebuffer */
+#if 0
 	if (atag_info.framebuffer_x!=0) {
 		framebuffer_width=atag_info.framebuffer_x;
 	}
 	if (atag_info.framebuffer_y!=0) {
 		framebuffer_height=atag_info.framebuffer_y;
 	}
+#endif
 
 	framebuffer_init(framebuffer_width,framebuffer_height,24);
 	framebuffer_console_init();
-#endif
 
 	serial_enable_interrupts();
 

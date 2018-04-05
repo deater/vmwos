@@ -123,7 +123,20 @@ void hardware_print_model(uint32_t version) {
 
 }
 
+#define CMDLINESIZE	1024
+static char cmdline[CMDLINESIZE];
+
 void hardware_print_commandline(void) {
+
+	printk("Command line from bootloader:\n");
+	if (device_tree_found) {
+		/* Print bootargs */
+		devicetree_find_string("chosen","bootargs",cmdline,CMDLINESIZE);
+		printk("%s\n",cmdline);
+	}
+	else if (atags_found) {
+		printk("FIXME: print command line\n");
+	}
 
 }
 

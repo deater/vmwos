@@ -4,9 +4,12 @@ known bugs:
 + kill of process on invalid memory access does something wrong
 	probably not restoring stack right
 	(this leads to weird behavior on pi1)
++ device_tree code truncates the command line at 255 bytes?
 
 feature requests:
 + fcntl O_NONBLOCK support (for tbo)
++ proper VFS for filesystems
++ mmap() support
 
 For pi2/pi3 support
 + Add mini-uart driver
