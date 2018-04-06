@@ -58,6 +58,7 @@ char *framebuffer_init(int x, int y, int depth) {
 	struct frame_buffer_info_type fb_info  __attribute__ ((aligned(16)));;
 
 	int result;
+	uint32_t addr;
 
 	fb_info.phys_x=x;
 	fb_info.phys_y=y;
@@ -77,16 +78,19 @@ char *framebuffer_init(int x, int y, int depth) {
 		dump_framebuffer_info(&fb_info);
 	}
 
+	addr=(uint32_t)&fb_info;
 
 	/* Flush dcache so value is in memory */
 	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
 
 	// pi2 vs pi1
-//	result=mailbox_write( (unsigned int)(&fb_info)+0x40000000 ,
-//		MAILBOX_CHAN_FRAMEBUFFER);
+#ifdef ARMV7
+	addr|=0xC0000000;
+#else
+	addr|=0x40000000;
+#endif
 
-	result=mailbox_write( ((unsigned int)(&fb_info))+0x40000000 ,
-		MAILBOX_CHAN_FRAMEBUFFER);
+	result=mailbox_write(addr,MAILBOX_CHAN_FRAMEBUFFER);
 
 	if (result<0) {
 		printk("Mailbox write failed\n");
@@ -107,6 +111,13 @@ char *framebuffer_init(int x, int y, int depth) {
 	/* Flush dcache again */
 	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
 
+#ifdef ARMV7
+	if (fb_info.pointer) {
+		printk("FB: pointer=%x\n",fb_info.pointer);
+		fb_info.pointer&=~0xc0000000;
+		printk("FB: pointer adjusted=%x\n",fb_info.pointer);
+	}
+#endif
 	current_fb.pointer=(int)(fb_info.pointer);
 	current_fb.phys_x=fb_info.phys_x;
 	current_fb.phys_y=fb_info.phys_y;

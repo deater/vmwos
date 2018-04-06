@@ -123,7 +123,8 @@ void invalidate_l1_dcache(void) {
 "loop3:\n"
 	"orr	r11, r10, r9, lsl r5		/* factor in the way number and cache number into r11 */\n"
 	"orr	r11, r11, r7, lsl r2		/* factor in the index number */\n"
-	"mcr	p15, 0, r11, c7, c6, 2		/* invalidate by set/way */\n"
+//	"mcr	p15, 0, r11, c7, c6, 2		/* invalidate by set/way */\n"
+	"mcr	p15, 0, r11, c7, c14, 2		/* clean+invalidate by set/way */\n"
 	"subs	r9, r9, #1			/* decrement the way number */\n"
 	"bge	loop3\n"
 	"subs	r7, r7, #1			/* decrement the index */\n"
@@ -184,9 +185,10 @@ This is: not-secure, shareable, domain 0, and the rest as described.
 
 #define SECTION_KERNEL	0x9040e		// shared, root-only, cached
 #define SECTION_USER	0x90c0e		// shared, any-access, cached
-#define SECTION_1GB	0x90c16		// non-cached
-#define SECTION_2GB	0x90c16		// non-cached
-#define SECTION_PERIPH	0x90c16		// non-cached
+#define SECTION_1GB	0x90416		// root-only, non-cached
+//92c10 = 1001 0010 1100 0001 0000
+#define SECTION_2GB	0x92c10		// root-only, non-cached
+#define SECTION_PERIPH	0x90416		// root-only, non-cached
 #define SECTION_DEFAULT	0x90c16		// any-access, non-cached
 
 //#define SECTION_FULL_ACCESS_NO_CACHE	0x10c16
@@ -509,14 +511,14 @@ void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
 	// clean and invalidate data or unified cache line
 	// DCCIMVAC c c7 0 c14 1
 
-//	invalidate_l1_dcache();
-
+	invalidate_l1_dcache();
+#if 0
 	for(mva=(start_addr&0xfffffff0);mva<=(end_addr&0xfffffff0);mva+=16) {
 
 		asm volatile("mcr p15, 0, %0, c7, c14, 1\n"
 			: : "r" (mva) : "memory");
 	}
-
+#endif
 	asm volatile("dsb\n"  // DSB
 		: : : "memory");
 	asm volatile("isb\n"  // ISB
