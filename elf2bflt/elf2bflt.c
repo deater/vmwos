@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
 					printf("\ttext_size: %x\n",text_size);
 				}
 			}
-			else if (!strncmp(name,".data",6)) {
+			else if (!strncmp(name,".data",5)) {
 
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;

@@ -511,8 +511,8 @@ void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
 	// clean and invalidate data or unified cache line
 	// DCCIMVAC c c7 0 c14 1
 
-	invalidate_l1_dcache();
-#if 0
+//	invalidate_l1_dcache();
+#if 1
 	for(mva=(start_addr&0xfffffff0);mva<=(end_addr&0xfffffff0);mva+=16) {
 
 		asm volatile("mcr p15, 0, %0, c7, c14, 1\n"
