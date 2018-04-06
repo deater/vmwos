@@ -6,18 +6,12 @@ int32_t __aeabi_idiv(int32_t dividend, int32_t divisor);
 extern int errno;
 char *strerror(int errnum);
 
-/* printf.c */
-int printf(char *string,...);
-int sprintf(char *string, char *fmt, ...);
-
-/* random.c */
-int32_t rand(void);
-
 /* stdio.c */
 struct file_struct {
 	int fd;
 };
 typedef struct file_struct FILE;
+FILE stdin,stdout,stderr;
 
 int putchar(int c);
 int puts(char *s);
@@ -25,6 +19,14 @@ int getchar(void);
 FILE *fopen(const char *pathname, const char *mode);
 char *fgets(char *s, int size, FILE *stream);
 int fclose(FILE *stream);
+
+/* printf.c */
+int printf(const char *string,...);
+int sprintf(char *string, char *fmt, ...);
+int fprintf(FILE *stream, const char *string, ...);
+
+/* random.c */
+int32_t rand(void);
 
 /* string.c */
 int32_t atoi(char *string);

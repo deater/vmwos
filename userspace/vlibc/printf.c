@@ -4,10 +4,11 @@
 
 #include "syscalls.h"
 #include "vmwos.h"
+#include "vlibc.h"
 
 #define MAX_PRINT_SIZE 256
 
-int vsprintf(char *buffer, char *string, va_list ap) {
+int vsprintf(char *buffer, const char *string, va_list ap) {
 
 	char int_buffer[18];
 	int int_pointer=0;
@@ -182,7 +183,7 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 	return buffer_pointer;
 }
 
-int printf(char *string,...) {
+int printf(const char *string,...) {
 
 	char buffer[MAX_PRINT_SIZE];
 	int result;
@@ -217,6 +218,25 @@ int sprintf(char *string, char *fmt, ...) {
 	return result;
 
 }
+
+int fprintf(FILE *stream, const char *string, ...) {
+
+	char buffer[MAX_PRINT_SIZE];
+	int result;
+
+	va_list argp;
+	va_start(argp, string);
+
+	result=vsprintf(buffer,string,argp);
+
+	va_end(argp);
+
+	write(stream->fd,buffer,result);
+
+	return result;
+
+}
+
 
 #if 0
 
