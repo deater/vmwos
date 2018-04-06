@@ -129,15 +129,6 @@ int framebuffer_console_home(void) {
 	return 0;
 }
 
-int framebuffer_console_init(void) {
-
-	framebuffer_console_clear();
-	framebuffer_console_home();
-
-	return 0;
-}
-
-
 
 int framebuffer_console_push(void) {
 
@@ -426,3 +417,14 @@ int framebuffer_console_val(int x, int y) {
 	return text_console[x+(y*CONSOLE_X)];
 
 }
+
+int framebuffer_console_init(void) {
+
+	framebuffer_console_clear();
+	framebuffer_console_home();
+
+	framebuffer_console_initialized=1;
+
+	return 0;
+}
+

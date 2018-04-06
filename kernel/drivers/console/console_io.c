@@ -57,6 +57,8 @@ int console_insert_char(int ch) {
 	/* Emergency debug if ^B */
 	if (ch==0x2) dump_saved_user_state(current_process);
 
+	/* TODO: kill if ^C? */
+
 	/* Force schedule if ^Z */
 	if (ch==26) scheduling_enabled=!scheduling_enabled;
 
@@ -106,11 +108,11 @@ int console_write(const void *buf, size_t count) {
 
 	int result;
 
-	/* Write to framebuffer */
-	result=framebuffer_console_write(buf, count);
-
 	/* Write to Serial port */
 	result=serial_write(buf, count);
+
+	/* Write to framebuffer */
+	result=framebuffer_console_write(buf, count);
 
 	return result;
 

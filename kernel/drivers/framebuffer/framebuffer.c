@@ -15,6 +15,8 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
+#include "memory/mmu-common.h"
+
 static uint32_t debug=1;
 
 static int framebuffer_initialized=0;
@@ -75,11 +77,15 @@ char *framebuffer_init(int x, int y, int depth) {
 		dump_framebuffer_info(&fb_info);
 	}
 
+
+	/* Flush dcache so value is in memory */
+	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
+
 	// pi2 vs pi1
 //	result=mailbox_write( (unsigned int)(&fb_info)+0x40000000 ,
 //		MAILBOX_CHAN_FRAMEBUFFER);
 
-	result=mailbox_write( (unsigned int)(&fb_info)+0xC0000000 ,
+	result=mailbox_write( ((unsigned int)(&fb_info))+0x40000000 ,
 		MAILBOX_CHAN_FRAMEBUFFER);
 
 	if (result<0) {
@@ -88,7 +94,6 @@ char *framebuffer_init(int x, int y, int depth) {
 	}
 
 	result=mailbox_read(MAILBOX_CHAN_FRAMEBUFFER);
-
 	if (debug) {
 		printk("fb: we got ");
 		dump_framebuffer_info(&fb_info);
@@ -99,13 +104,21 @@ char *framebuffer_init(int x, int y, int depth) {
 		return NULL;
 	}
 
+	/* Flush dcache again */
+	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
+
 	current_fb.pointer=(int)(fb_info.pointer);
 	current_fb.phys_x=fb_info.phys_x;
 	current_fb.phys_y=fb_info.phys_y;
 	current_fb.pitch=fb_info.pitch;
 	current_fb.depth=fb_info.depth;
 
-	framebuffer_initialized=1;
+	if (fb_info.pointer==0) {
+		printk("ERROR initializing framebuffer!\n");
+	}
+	else {
+		framebuffer_initialized=1;
+	}
 
 	return (char *)(fb_info.pointer);
 }

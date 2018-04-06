@@ -13,6 +13,8 @@
 #include "lib/string.h"
 #include "lib/memset.h"
 
+#include "memory/mmu-common.h"
+
 
 #define VC_TAG_GET_TEMP		0x00030006
 #define VC_TAG_GET_MAX_TEMP	0x0003000A
@@ -76,6 +78,7 @@ int thermal_read(void) {
 	/* check if it was all ok and return the rate in milli degrees C */
 	if (msg.request_code & 0x80000000) {
 		temp = (uint32_t)msg.tag.val;
+		printk("THERM worked: (%x,%x)\n",result,msg.request_code);
 	}
 	else {
 		printk("THERM: Failed to get temperature! (%x,%x)\n",
