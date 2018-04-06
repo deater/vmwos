@@ -9,7 +9,7 @@ all:	$(ELF2BFLT) \
 
 image:	shell \
 	cat cat_count cause_error df hello ll ls \
-	memory_test printa printb pwd slideshow sysinfo tbo uname \
+	memory_test printa printb pwd slideshow sysinfo tbo uname
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
