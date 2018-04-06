@@ -2,13 +2,14 @@ include ../Makefile.inc
 
 include Makefile_user.inc
 
-all:	shell \
+all:	$(ELF2BFLT) \
+	shell \
 	cat cat_count cause_error df hello ll ls \
 	memory_test printa printb pwd slideshow sysinfo tbo uname
 
 image:	shell \
 	cat cat_count cause_error df hello ll ls \
-	memory_test printa printb pwd slideshow sysinfo tbo uname
+	memory_test printa printb pwd slideshow sysinfo tbo uname \
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
@@ -25,6 +26,10 @@ image:	shell \
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
 	echo "};" >> initrd.h
+
+$(ELF2BFLT):
+	cd ../elf2bflt && make
+
 
 cat:	cat.elf
 	$(ELF2BFLT) cat.elf cat
