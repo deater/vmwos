@@ -52,15 +52,15 @@ int vmwos_setfont(int which) {
 	return r0;
 }
 
-int vmwos_gradient(void) {
+int vmwos_gradient(uint32_t type) {
 
 	register long r7 __asm__("r7") = __NR_gradient;
-	register long r0 __asm__("r0");
+	register long r0 __asm__("r0") = type;
 
 	asm volatile(
 		"svc #0\n"
 		: "=r"(r0) /* output */
-		: "r"(r7) /* input */
+		: "r"(r7), "r"(r0) /* input */
 		: "memory");
 
 	return r0;
