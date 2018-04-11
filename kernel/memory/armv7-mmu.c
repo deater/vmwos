@@ -198,7 +198,7 @@ This is: not-secure, shareable, domain 0, and the rest as described.
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
 void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
-	int i;
+	uint32_t i;
 	uint32_t reg;
 
 	/* Set up an identity-mapping for all 4GB */
@@ -260,7 +260,7 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	}
 
 	/* Set from 2GB-4GB */
-	for (i = 0x40000000 >> 20; i < 0x80000000 >> 20; i++) {
+	for (i = 0x80000000 >> 20; i <= 0xffffffff >> 20; i++) {
 		page_table[i] = i << 20 | SECTION_2GB;
 	}
 
