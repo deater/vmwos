@@ -6,14 +6,43 @@
 #include "syscalls.h"
 #include "vlibc.h"
 
-#define RUNTIME	5
+/* In microseconds */
+#define RUNTIME	5*1000000
+
+
+static void print_fixed(uint32_t value, int divider) {
+
+	int i=0,f=0;
+
+	if (divider==1000000) {
+		i=value/1000000;
+		f=(value%1000000)/1000;
+		printf("%d.%03d",i,f);
+	}
+	else if (divider==1000) {
+		i=value/1000;
+		f=value%1000;
+		printf("%d.%03d",i,f);
+	}
+	else if (divider==64) {
+		i=value/64;
+		f=((value%64)*1000)/64;
+		printf("%d.%03d",i,f);
+	}
+	else {
+
+	}
+
+}
 
 int main(int argc, char **argv) {
 
-	int start_time,current_time;
+	int64_t start_time,current_time;
 	struct tms buf;
+	struct timespec t;
 
-	start_time=time(NULL);
+	clock_gettime(CLOCK_REALTIME,&t);
+	start_time=(t.tv_sec*1000000ULL)+t.tv_nsec/1000;
 
 	while(1) {
 		printf("A");
@@ -23,16 +52,30 @@ int main(int argc, char **argv) {
 			"subs	r1,r1,#1\n"
 			"bne	a_loop\n"
 			:::);
-		current_time=time(NULL);
+		clock_gettime(CLOCK_REALTIME,&t);
+		current_time=(t.tv_sec*1000000ULL)+t.tv_nsec/1000;
 		if (current_time-start_time>RUNTIME) break;
 	}
 
 	times(&buf);
 
-	printf("\nTime running A: "
-		"Wallclock: %d seconds, User: %d seconds, Running %d%% of time\n",
-		current_time-start_time,buf.tms_utime/64,
-		(buf.tms_utime/64)*100U/(current_time-start_time));
+	int wallclock_ms,user_ms,percent=0;
+
+	printf("\nTime running A: Wallclock: ");
+	print_fixed((current_time-start_time),1000000);
+	printf(" seconds, User: ");
+	print_fixed(buf.tms_utime,64);
+	printf(" seconds, Running ");
+
+	wallclock_ms=(current_time-start_time);
+	wallclock_ms/=1000;
+	user_ms=(buf.tms_utime*1000)/64;
+
+	if (wallclock_ms!=0) {
+		percent=(100*user_ms)/wallclock_ms;
+	}
+
+	printf("%d%% of time\n",percent);
 
 	return 0;
 }
