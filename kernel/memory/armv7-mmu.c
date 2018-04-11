@@ -173,7 +173,7 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
    4 = XN
    3,2 = C,B determinte caching behavior, see Table b3-10
    1,0 = 1,0 - for coarse section 1MB pages
-          16         8
+          16         8            AP 15,11-10
 90c0e = 1001 0000 1100 0000 1110  011=full access
 9080e = 1001 0000 1000 0000 1110  010=only root can write
 9040e = 1001 0000 0100 0000 1110  001=only root can read/write
@@ -187,7 +187,8 @@ This is: not-secure, shareable, domain 0, and the rest as described.
 #define SECTION_USER	0x90c0e		// shared, any-access, cached
 #define SECTION_1GB	0x90416		// root-only, non-cached
 //92c10 = 1001 0010 1100 0001 0000
-#define SECTION_2GB	0x92c10		// root-only, non-cached
+//#define SECTION_2GB	0x92c10		// root-only, non-cached
+#define SECTION_2GB	0x90416		// root-only, non-cached
 #define SECTION_PERIPH	0x90416		// root-only, non-cached
 #define SECTION_DEFAULT	0x90c16		// any-access, non-cached
 

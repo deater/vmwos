@@ -116,7 +116,7 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 				pending2,r1);
 #ifdef ARMV7
 /*
-0x4000_0060 Core0 interrupt source
+Address: 0x4000_0060 Core0 interrupt source
 Address: 0x4000_0064 Core1 interrupt source
 Address: 0x4000_0068 Core2 interrupt source
 Address: 0x4000_006C Core3 interrupt source
@@ -142,6 +142,9 @@ Bits	Description
 	per_core[1]=mmio_read(0x40000064);
 	per_core[2]=mmio_read(0x40000068);
 	per_core[3]=mmio_read(0x4000006c);
+	if (per_core[0]&0x100) {
+		printk("Unhandled GPU interrupt (probably power sag)\n");
+	}
 	printk("per core source %x %x %x %x\n",
 		per_core[0],per_core[1],per_core[2],per_core[3]);
 
