@@ -211,15 +211,22 @@ int framebuffer_push(void) {
 
 }
 
-int framebuffer_gradient(void) {
+int framebuffer_gradient(uint32_t type) {
 
 	int x;
 
-	for(x=0;x<current_fb.phys_x;x++) {
-		framebuffer_vline( (x*256)/800, /* hardcoded, can't divide? */ 
-				0,current_fb.phys_y-1, x);
+	if (type==0) {
+
+		for(x=0;x<current_fb.phys_x;x++) {
+			/* hardcoded to 800, not guaranteed we have divide */
+			framebuffer_vline( (x*256)/800,
+					0,current_fb.phys_y-1, x);
+		}
+		framebuffer_push();
 	}
-	framebuffer_push();
+	else {
+		printk("Unknown gradient type %d\n",type);
+	}
 
 	return 0;
 }

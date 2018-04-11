@@ -5,6 +5,6 @@ int framebuffer_vline(int color, int y0, int y1, int x);
 int framebuffer_putpixel(int color, int x, int y);
 int framebuffer_push(void);
 int framebuffer_ready(void);
-int framebuffer_gradient(void);
+int framebuffer_gradient(uint32_t type);
 int framebuffer_load(int x, int y, int depth, char *pointer);
 
