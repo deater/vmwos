@@ -55,6 +55,8 @@ Userspace feature requests:
 		- malloc()
 		- write() file support
 
+	+ printa / printb
+		- make printb a hard link to printb
 	+ shell
 		- command history
 		- tab completion
