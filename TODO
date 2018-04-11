@@ -1,54 +1,69 @@
-Kernel routines:
-	way to kill process
-	better scheduler
+Global TODO
+~~~~~~~~~~~
+
+Known Kernel Bugs:
+	+ pi3: "temp" temperature stops working once virtual memory is enabled
+	+ something is still off about the chdir code
+	+ pi1: segfault kill on inavlid memory access causes weird behavior
+		(probably not restoring stack correctly)
+	+ device_tree code truncates the command line at 255 bytes
+	+ the occasional "unknown interrupt" (memtest triggers this on pi3)
+
+Known Userspace Bugs:
+	+
+
+Kernel feature requests:
+	+ system calls
+		- mmap() syscall
+		- getcwd() syscall
+		- fcntl O_NONBLOCK support (for tbo)
+	+ filesystems
+		- VFS filesystem abstraction
+		- fat filesystem driver
+		- ext2 filesystem driver
+		- dos33fs
+	+ block layer
+		- loopback device
+		- partition table support
+	+ device drivers
+		- i2c support
+		- sd card support
+		- spi support
+		- mini-uart driver
+		- 1-wire driver
+		- USB ( https://github.com/rsta2/uspi )
+		- sound
+	+ keyboard driver
+		- Properly generate ANSI escape chars for arrows, etc
+		- Use FIQ interrupt?
+
+Userspace feature requests:
+	+ vlibc
+		- scanf()
+		- malloc()
+		- write() file support
+
+	+ shell
+		- command history
+		- tab completion
+	+ New utilities/programs
+		- init (actual, rather than shell)
+		- text editor
+		- assembler
+		- compiler
+		- du
+		- grep
+		- less
+
+Pi Generational Support
+	+ Pi2 -- check that it works on both old (armv7) and new (armv8)
+	+ Pi2/Pi3 enhanced irqchip support, see:
+		[PATCH 4/4] irqchip: Add bcm2836 interrupt controller for Raspberry     Pi 2
+	+ Pi3 -- add ARMv8 (arm64) support
+	+ Pi3 ACT LED (behind i2c GPIO extender)
 
 Performance:
-	tophalf/bottomhalf IRQ split
-	optimized memcpy
-	optimize graphics routines
+	+ tophalf/bottomhalf IRQ split
+	+ optimized memcpy
+	+ optimize graphics routines
 
-Systemcalls to add:
-	statfs
-	mount
-	mmap
-	getcwd
-	fcntl O_NONBLOCK
-
-Filesystem support:
-	fat
-	dos33fs
-	partition table
-
-Hardware support:
-	i2c
-	spi
-	1-wire
-	SD card
-	USB ( https://github.com/rsta2/uspi )
-	sound
-
-Keyboard driver:
-	Properly generate ANSI escape chars for arrows, etc
-	Migrate to use FIQ interrupt
-
-BUGS to fix:
-	the occasional "unknown interrupt" bug
-	ls on subdirectories gives weird permission results
-
-Programs to write:
-	df
-	text editor
-	assembler
-	compiler
-
-Rapsberry Pi 2 support
-	Multi-core
-	Change I/O offset
-	Interrupt controller is more complex, see
-		[PATCH 4/4] irqchip: Add bcm2836 interrupt controller for Raspberry     Pi 2
-
-Raspberry Pi 3 support
-	ARMv8 (arm64)
-	ACT LED is behind an i2c GPIO extender
-	Thermal results are 5 degrees off?
-	Uses mini-tty (usual UART is used for bluetooth)
