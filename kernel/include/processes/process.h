@@ -28,27 +28,31 @@ struct process_control_block_type {
 	int32_t valid;					/* 144 */
 	int32_t running;				/* 148 */
 	int32_t status;					/* 152 */
-	int32_t start_time;				/* 156 */
-	int32_t last_scheduled;				/* 160 */
-	int32_t total_time;				/* 164 */
-	int32_t pid;					/* 168 */
-	int32_t exit_value;				/* 172 */
-	struct process_control_block_type *parent;	/* 176 */
-	int32_t current_dir;				/* 180 */
 
-	void *stack;					/* 184 */
-	uint32_t stacksize;				/* 188 */
-	void *text;					/* 192 */
-	uint32_t textsize;				/* 196 */
-	void *data;					/* 200 */
-	uint32_t datasize;				/* 204 */
-	void *bss;					/* 208 */
-	uint32_t bsssize;				/* 212 */
-	char name[32];					/* 216 */
-							/* 248 */
-	/* Current size = 248 */
+	/* Time Accounting */
+	uint32_t start_time;				/* 156 */
+	uint32_t user_time;				/* 160 */
+	uint32_t kernel_time;				/* 164 */
+	int32_t last_scheduled;				/* 168 */
 
-	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-248)/4];
+	int32_t pid;					/* 172 */
+	int32_t exit_value;				/* 176 */
+	struct process_control_block_type *parent;	/* 180 */
+	int32_t current_dir;				/* 184 */
+
+	void *stack;					/* 188 */
+	uint32_t stacksize;				/* 192 */
+	void *text;					/* 196 */
+	uint32_t textsize;				/* 200 */
+	void *data;					/* 204 */
+	uint32_t datasize;				/* 208 */
+	void *bss;					/* 212 */
+	uint32_t bsssize;				/* 216 */
+	char name[32];					/* 220 */
+							/* 252 */
+	/* Current size = 252 */
+
+	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-252)/4];
 
 };
 

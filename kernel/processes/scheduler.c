@@ -86,7 +86,12 @@ void schedule(void) {
 
 
 	/* Update time stats */
-	current_process->total_time+=(ticks_since_boot()-current_process->last_scheduled);
+
+	/* old process ran from time it started until now */
+	current_process->user_time+=
+		(ticks_since_boot()-current_process->last_scheduled);
+
+	/* new process is starting from right now */
 	proc->last_scheduled=ticks_since_boot();
 
 	/* switch to new process */

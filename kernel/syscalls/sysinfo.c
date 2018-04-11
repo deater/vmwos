@@ -37,7 +37,7 @@ int32_t sysinfo(struct sysinfo *buf) {
 	buf->procs_ready=ready_proc_count;
 
 	/* Idle time */
-	buf->idle_time=(proc_first->total_time)/TIMER_HZ;
+	buf->idle_time=(proc_first->user_time)/TIMER_HZ;
 
 	return 0;
 }

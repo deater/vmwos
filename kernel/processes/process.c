@@ -180,7 +180,8 @@ struct process_control_block_type *process_create(void) {
 	/* Set up process time accounting */
 	new_proc->start_time=ticks_since_boot();
 	new_proc->last_scheduled=new_proc->start_time;
-	new_proc->total_time=0;
+	new_proc->user_time=0;
+	new_proc->kernel_time=0;
 
 	/* LOCK */
 	/* FIXME: what happens when we rollover */
