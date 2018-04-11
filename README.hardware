@@ -16,12 +16,14 @@
 		Model B was GPIO16, Active Low
 		On 2/B+/A+ was GPIO47, Active High
 		On 3 it is on an i2c/GPIO expander controlled by GPU
-	+ TODO: The Framebuffer address moved on Pi3 (?)
+	+ When using mailbox to request firmware address, or the address
+		with 0xc0000000 instead of 0x40000000
 
 	+ Pi3 the Arasan MMC interface is enabled, and mapped to GPIOs 48-53,
 		Used by wifi?
 	+ Pi3 GPCLK2 is mapped to GPIO 43.
 	+ Pi2/Pi3, firmware brings system up in HYP (hypervisor) mode
+	+ Pi2/Pi3 have extra interrupt sources (PMU, etc)
 
 	Processor Changes:
 	==================
