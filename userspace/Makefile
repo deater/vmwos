@@ -2,9 +2,13 @@ include ../Makefile.inc
 
 include Makefile_user.inc
 
-all:	shell \
+GENROMFS = genromfs
+
+all:	$(ELF2BFLT) \
+	shell \
 	cat cat_count cause_error df hello ll ls \
 	memory_test printa printb pwd slideshow sysinfo tbo uname
+
 
 image:	shell \
 	cat cat_count cause_error df hello ll ls \
@@ -21,10 +25,13 @@ image:	shell \
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
 	cp files/fstab ./image/etc
-	genromfs -f initrd.romfs -d image -V VMWos
+	$(GENROMFS) -f initrd.romfs -d image -V VMWos
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
 	echo "};" >> initrd.h
+
+$(ELF2BFLT):
+	cd ../elf2bflt && make
 
 cat:	cat.elf
 	$(ELF2BFLT) cat.elf cat

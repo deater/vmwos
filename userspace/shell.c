@@ -136,7 +136,7 @@ static int parse_input(char *string) {
 		vmwos_setfont(string[5]);
 	}
 	else if (!strncmp(string,"gradient",8)) {
-		vmwos_gradient();
+		vmwos_gradient(0);
 	}
 	else if (!strncmp(string,"getpid",6)) {
 		printf("Current pid: %d\n",getpid());
