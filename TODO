@@ -45,6 +45,9 @@ Kernel feature requests:
 	+ keyboard driver
 		- Properly generate ANSI escape chars for arrows, etc
 		- Use FIQ interrupt?
+	+ framebuffer:
+		queue up updates off screen, have kernel thread update
+		maybe once a tick (64 fps)
 
 Userspace feature requests:
 	+ vlibc
