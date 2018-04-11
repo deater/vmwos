@@ -13,6 +13,8 @@ kernel.img:	kernel.elf
 kernel7.img:	kernel7.elf
 	$(CROSS)objcopy kernel7.elf -O binary kernel7.img
 
+../userspace/initrd.h:
+	cd ../userspace && make image
 
 ### ARM1176
 
@@ -41,8 +43,9 @@ kernel.elf:	kernel_main.arm1176.o \
 		lib/lib-arm1176.a \
 		-Map kernel.map -o kernel.elf
 
-kernel_main.arm1176.o:	kernel_main.c version.h
-	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o kernel_main.arm1176.o -c kernel_main.c
+kernel_main.arm1176.o:	kernel_main.c version.h ../userspace/initrd.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) \
+		-o kernel_main.arm1176.o -c kernel_main.c
 
 boot/boot-arm1176.a:	force_look
 	cd boot && make
@@ -101,8 +104,9 @@ kernel7.elf:	kernel_main.armv7.o \
 		lib/lib-armv7.a \
 		-Map kernel7.map -o kernel7.elf
 
-kernel_main.armv7.o:	kernel_main.c version.h
-	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o kernel_main.armv7.o -c kernel_main.c
+kernel_main.armv7.o:	kernel_main.c version.h ../userspace/initrd.h
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) \
+		-o kernel_main.armv7.o -c kernel_main.c
 
 boot/boot-armv7.a:	force_look
 	cd boot && make
