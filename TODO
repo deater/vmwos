@@ -8,6 +8,15 @@ Known Kernel Bugs:
 		(probably not restoring stack correctly)
 	+ device_tree code truncates the command line at 255 bytes
 	+ the occasional "unknown interrupt" (memtest triggers this on pi3)
+		The lightning bolt appears, so probably a low-power problem
+		(how do we read this source?)
+
+	+ Framebuffer access takes forever, should not do inside of a
+		syscall  (should buffer and only send out every 60 Hz or so?)
+	+ Interrupts are disabled during a syscall, so we can lose clock
+		ticks
+	+ user accounting resolution: how does the linux-kernel do this?
+		we can't account sub 16ms resolution
 
 Known Userspace Bugs:
 	+
