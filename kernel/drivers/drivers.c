@@ -43,7 +43,9 @@ void drivers_init_all(void) {
 #endif
 
 	framebuffer_init(framebuffer_width,framebuffer_height,24);
+#if 0
 	framebuffer_console_init();
+#endif
 
 	serial_enable_interrupts();
 
