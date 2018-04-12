@@ -1,5 +1,6 @@
-0.19 -- ?? April 2018
+0.19 -- 12 April 2018
 + Add df/statfs support
++ Framebuffer support mostly working on Pi3
 
 0.18 -- 25 March 2018
 + Add bFLT binary support
