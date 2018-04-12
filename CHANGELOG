@@ -1,5 +1,5 @@
 0.20 -- ?? April 2018
-+ SMP support?
++ multicore support
 
 0.19 -- 12 April 2018
 + Add df/statfs support
@@ -12,7 +12,7 @@
 0.17 -- 16 March 2018
 + Actually free process resources on exit/waitpid
 + Lots of code cleanup
-+ waitpid WNOHANG support
++ waitpid WNOHANG support (can run jobs in background)
 
 0.16 -- ?? March 2018
 + Pi2/Pi3 support
