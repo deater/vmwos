@@ -105,7 +105,7 @@ kernel7.elf:	kernel_main.armv7.o \
 		-Map kernel7.map -o kernel7.elf
 
 kernel_main.armv7.o:	kernel_main.c version.h ../userspace/initrd.h
-	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) \
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) \
 		-o kernel_main.armv7.o -c kernel_main.c
 
 boot/boot-armv7.a:	force_look
