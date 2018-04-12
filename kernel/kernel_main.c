@@ -4,6 +4,7 @@
 #include "lib/printk.h"
 
 #include "boot/hardware_detect.h"
+#include "boot/smp_boot.h"
 
 #include "drivers/drivers.h"
 #include "drivers/block/ramdisk.h"
@@ -68,6 +69,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/**************************/
 
 	drivers_init_all();
+
+	/**************************/
+	/* SMP Boot               */
+	/**************************/
+#ifdef ARMV7
+	smp_boot();
+#endif
 
 	/**************************/
 	/* Init Memory Hierarchy  */
