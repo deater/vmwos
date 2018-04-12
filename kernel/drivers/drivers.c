@@ -4,6 +4,8 @@
 #include "lib/printk.h"
 
 #include "drivers/drivers.h"
+#include "drivers/framebuffer/framebuffer.h"
+#include "drivers/framebuffer/framebuffer_console.h"
 #include "drivers/led/led.h"
 #include "drivers/timer/timer.h"
 #include "drivers/keyboard/ps2-keyboard.h"
