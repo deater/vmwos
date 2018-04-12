@@ -1,3 +1,6 @@
+0.20 -- ?? April 2018
++ SMP support?
+
 0.19 -- 12 April 2018
 + Add df/statfs support
 + Framebuffer support mostly working on Pi3
