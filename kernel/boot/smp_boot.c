@@ -12,8 +12,11 @@ void secondary_boot_c(int core) {
 
 	printk("Booting core %d\n",core);
 
+	/* Low power infinite loop for now */
+	/* Busy looping makes the GPU complain */
 	while(1) {
-
+		asm volatile("wfi\n"
+			: : : "memory");
 	}
 
 }
@@ -38,9 +41,14 @@ void smp_boot(void) {
 
 	for(i=1;i<NUMCORES;i++) {
 		mailbox_addr=0x4000008c+(i*0x10);
-		printk("Writing %x to mailbox %x\n",start_core_addr,mailbox_addr);
+		printk("\tWriting %x to mailbox %x\n",
+			start_core_addr,mailbox_addr);
 		mmio_write(mailbox_addr,start_core_addr);
-
 	}
+
+	/* Send event -- wake other cores sleeping in WFE */
+	asm volatile("sev\n"  // SEV
+		: : : "memory");
+
 	printk("Done SMP init from core0\n");
 }
