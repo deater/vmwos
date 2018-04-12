@@ -24,8 +24,11 @@ hardware_detect.arm1176.o:	hardware_detect.c
 
 #### AMV7
 
-boot-armv7.a:	atags.armv7.o boot-armv7.o device_tree.armv7.o hardware_detect.armv7.o
-	$(CROSS)$(AR) crs boot-armv7.a atags.armv7.o boot-armv7.o device_tree.armv7.o hardware_detect.armv7.o
+boot-armv7.a:	atags.armv7.o boot-armv7.o device_tree.armv7.o \
+		hardware_detect.armv7.o smp_boot.armv7.o
+	$(CROSS)$(AR) crs boot-armv7.a atags.armv7.o boot-armv7.o \
+			device_tree.armv7.o hardware_detect.armv7.o \
+			smp_boot.armv7.o
 
 atags.armv7.o:	atags.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o atags.armv7.o -c atags.c
@@ -38,6 +41,9 @@ device_tree.armv7.o:	device_tree.c
 
 hardware_detect.armv7.o:	hardware_detect.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o hardware_detect.armv7.o -c hardware_detect.c
+
+smp_boot.armv7.o:	smp_boot.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o smp_boot.armv7.o -c smp_boot.c
 
 ###
 
