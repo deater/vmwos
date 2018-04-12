@@ -74,6 +74,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* SMP Boot               */
 	/**************************/
 #ifdef ARMV7
+	printk("Starting multi-core:\n");
 	smp_boot();
 #endif
 

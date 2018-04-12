@@ -1,6 +1,6 @@
-.globl _start_smp
+.globl start_core
 
-start_smp:
+start_core:
 	 /* Get current CPUID */
 	/* From the Multiprocessor Affinity Register (MPIDR) */
 
