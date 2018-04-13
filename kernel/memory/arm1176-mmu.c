@@ -56,13 +56,13 @@ uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 #define AP_USER_READ_ONLY	0x2
 #define AP_FULL_ACCESS		0x3
 
+
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
 /* This uses the ARMv5 compatible interface, not native ARMv6 */
 /* Mark RAM has writeback, but disable cache for non-RAM */
-void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
+void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
 	int i;
-	uint32_t reg;
 
 	/* Set up an identity-mapping for all 4GB, ARMv5 1MB pages */
 	/* See figure 6-12 */
@@ -88,6 +88,15 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	for (i = kernel_end >> 20; i < mem_end >> 20; i++) {
 		page_table[i] = i << 20 | (3 << 10) | CACHE_WRITEBACK;
 	}
+
+}
+
+/* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
+/* This uses the ARMv5 compatible interface, not native ARMv6 */
+/* Mark RAM has writeback, but disable cache for non-RAM */
+void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
+
+	uint32_t reg;
 
 	/* Copy the page table address to cp15 */
 	/* Translation Table, Base 0 */

@@ -195,26 +195,14 @@ This is: not-secure, shareable, domain 0, and the rest as described.
 //#define SECTION_FULL_ACCESS_NO_CACHE	0x10c16
 
 
+
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
-void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
+void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 
 	uint32_t i;
-	uint32_t reg;
 
 	/* Set up an identity-mapping for all 4GB */
 	/* section-short descriptor 1MB pages */
-
-
-	/* Flush TLB */
-	if (mmu_debug) printk("\tInvalidating TLB\n");
-	tlb_invalidate_all();
-	/* Flush l1-icache */
-	if (mmu_debug) printk("\tInvalidating icache\n");
-	icache_invalidate_all();
-	/* Flush l1-dcache */
-	if (mmu_debug) printk("\tInvalidating dcache\n");
-	disable_l1_dcache();
-	/* Need to flush l2-cache too? */
 
 	/* As a baseline, Set 1:1 mapping for all memory */
 	/* Cache disabled, supervisor access only */
@@ -264,8 +252,23 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 		page_table[i] = i << 20 | SECTION_2GB;
 	}
 
+}
 
 
+void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
+
+	uint32_t reg;
+
+	/* Flush TLB */
+	if (mmu_debug) printk("\tInvalidating TLB\n");
+	tlb_invalidate_all();
+	/* Flush l1-icache */
+	if (mmu_debug) printk("\tInvalidating icache\n");
+	icache_invalidate_all();
+	/* Flush l1-dcache */
+	if (mmu_debug) printk("\tInvalidating dcache\n");
+	disable_l1_dcache();
+	/* Need to flush l2-cache too? */
 
 	/* TTBCR : Translation Table Base Control Register */
 	/* B3.5.4 (1330) */
@@ -332,11 +335,11 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	if (mmu_debug) printk("\tSCTLR before = %x\n",reg);
 	reg|=SCTLR_MMU_ENABLE;
 
-/* Enable caches!  Doesn't quite work */
-#if 1
+	/* Enable caches! */
+
 	reg|=SCTLR_CACHE_ENABLE;
 	reg|=SCTLR_ICACHE_ENABLE;
-#endif
+
 	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
 
 	asm volatile("dsb");	/* barrier */

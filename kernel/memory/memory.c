@@ -230,6 +230,7 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 		/* Enable MMU plus caches */
 		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
 		printk("Enabling I/D caches\n");
+		setup_pagetable(0,memory_total,memory_kernel);
 		enable_mmu(0,memory_total,memory_kernel);
 
 	}
@@ -245,6 +246,7 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 
 		/* Enable L1 d-cache */
 		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");
+		setup_pagetable(0,memory_total,memory_kernel);
 		enable_mmu(0,memory_total,memory_kernel);
 		printk("Enabling L1 dcache\n");
 		enable_l1_dcache();
