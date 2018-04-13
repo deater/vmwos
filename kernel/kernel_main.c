@@ -45,6 +45,19 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	serial_init(SERIAL_UART_PL011);
 	serial_printk("\n\n\nUsing pl011-uart\n");
 
+	/**************************/
+	/* Init Memory Hierarchy  */
+	/**************************/
+	/* round to 1MB granularity for mem protection reasons */
+	rounded_memory=memory_kernel/(1024*1024);
+	rounded_memory+=1;
+	rounded_memory*=(1024*1024);
+	printk("Initializing memory: kernel=0x%x bytes, rounded up to 0x%x\n",
+		memory_kernel,rounded_memory);
+	memory_hierarchy_init(rounded_memory);
+
+	serial_enable_locking();
+
 	/************************/
 	/* Boot messages!	*/
 	/************************/
@@ -77,17 +90,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	printk("Starting multi-core:\n");
 	smp_boot();
 #endif
-
-	/**************************/
-	/* Init Memory Hierarchy  */
-	/**************************/
-	/* round to 1MB granularity for mem protection reasons */
-	rounded_memory=memory_kernel/(1024*1024);
-	rounded_memory+=1;
-	rounded_memory*=(1024*1024);
-	printk("Initializing memory: kernel=0x%x bytes, rounded up to 0x%x\n",
-		memory_kernel,rounded_memory);
-	memory_hierarchy_init(rounded_memory);
 
 	/************************/
 	/* Other init		*/
