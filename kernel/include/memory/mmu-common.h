@@ -1,4 +1,4 @@
-void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end);
+void enable_mmu(void);
 void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end);
 
 

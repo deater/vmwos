@@ -155,7 +155,7 @@ void invalidate_l1_dcache(void) {
 /* make sure properly aligned, as the low bits are reserved  */
 /* This means we need 14-bit (16k) allignment */
 
-uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
+static uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRIES];
 
 /* We want a 1MB coarse page table descriptor */
 /* B.3.5.1, p1326 */
@@ -255,19 +255,22 @@ void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) 
 }
 
 
-void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
+void enable_mmu(void) {
 
 	uint32_t reg;
 
 	/* Flush TLB */
 	if (mmu_debug) printk("\tInvalidating TLB\n");
 	tlb_invalidate_all();
+
 	/* Flush l1-icache */
 	if (mmu_debug) printk("\tInvalidating icache\n");
 	icache_invalidate_all();
+
 	/* Flush l1-dcache */
 	if (mmu_debug) printk("\tInvalidating dcache\n");
 	disable_l1_dcache();
+
 	/* Need to flush l2-cache too? */
 
 	/* TTBCR : Translation Table Base Control Register */
@@ -316,9 +319,8 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 				// S = 1 : sharable
 	asm volatile("mcr p15, 0, %0, c2, c0, 0"
 		: : "r" (reg) : "memory");
-
 #if 0
-	/* SMP is implemented in the CPUECTLR register on armv8? */
+	/* Need to enable SMP cache coherency on ARMv8, maybe only in 64-bit? */
 	uint32_t reg2;
 
 	if (mmu_debug) printk("Enabling SMPEN\n");
@@ -327,6 +329,13 @@ void enable_mmu(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) {
 	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
 #endif
 
+	/* Need to enable SMP cache coherency in AUX register */
+	if (mmu_debug) printk("Enabling SMPEN\n");
+	asm volatile("mrc p15, 0, %0, c1, c0, 1" :  "=r" (reg):: "cc");
+	if (mmu_debug) printk("AUX was %x and SMPEN was %d\n",reg,
+		!!(reg&(1<<6)));
+	reg|=(1<<6);	// Set SMPEN.
+	asm volatile("mcr p15, 0, %0, c1, c0, 1" : : "r" (reg):"cc");
 
 	/* See B.4.1.130 on page 1707 */
 	/* SCTLR, VMSA: System Control Register */

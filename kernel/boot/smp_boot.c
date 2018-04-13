@@ -3,12 +3,14 @@
 #include "boot/smp_boot.h"
 #include "lib/printk.h"
 #include "lib/mmio.h"
+#include "memory/mmu-common.h"
 
 /* Boot up secondary cores */
 
 void secondary_boot_c(int core) {
 
 	/* Set up cache */
+	enable_mmu();
 
 	printk("Booting core %d\n",core);
 
