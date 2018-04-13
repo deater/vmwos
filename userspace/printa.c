@@ -46,8 +46,9 @@ int main(int argc, char **argv) {
 
 	while(1) {
 		printf("A");
+
 		asm volatile(
-			"mov r1,#65536\n"
+			"mov r1,#6553600\n"
 			"a_loop:\n"
 			"subs	r1,r1,#1\n"
 			"bne	a_loop\n"
