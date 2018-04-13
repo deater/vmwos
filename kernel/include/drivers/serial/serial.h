@@ -13,6 +13,7 @@ struct serial_type {
         uint32_t stop;
         uint32_t parity;
         void (*uart_enable_interrupts)(void);
+        void (*uart_enable_locking)(void);
         void (*uart_putc)(unsigned char byte);
         int32_t (*uart_getc)(void);
         int32_t (*uart_getc_noblock)(void);
@@ -27,3 +28,4 @@ uint32_t serial_getc(void);
 uint32_t serial_getc_noblock(void);
 void serial_enable_interrupts(void);
 int32_t serial_interrupt_handler(void);
+void serial_enable_locking(void);

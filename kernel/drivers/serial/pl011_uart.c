@@ -21,7 +21,12 @@
 #include "interrupts/interrupts.h"
 
 static int pl011_uart_initialized=0;
-//static uint32_t pl011_lock=0;
+static uint32_t pl011_lock=0;
+static int enable_locking=0;
+
+void pl011_uart_enable_locking(void) {
+	enable_locking=1;
+}
 
 uint32_t pl011_uart_init(struct serial_type *serial) {
 
@@ -35,6 +40,7 @@ uint32_t pl011_uart_init(struct serial_type *serial) {
 
 	/* Set up function pointers */
 	serial->uart_enable_interrupts=pl011_uart_enable_interrupts;
+	serial->uart_enable_locking=pl011_uart_enable_locking;
 	serial->uart_putc=pl011_uart_putc;
 	serial->uart_getc=pl011_uart_getc;
 	serial->uart_getc_noblock=pl011_uart_getc_noblock;
@@ -138,7 +144,7 @@ void pl011_uart_enable_interrupts(void) {
 
 void pl011_uart_putc(unsigned char byte) {
 
-//	mutex_lock(&pl011_lock);
+	if (enable_locking) mutex_lock(&pl011_lock);
 
 	/* Check Flags Register */
 	/* And wait until FIFO not full */
@@ -148,7 +154,7 @@ void pl011_uart_putc(unsigned char byte) {
 	/* Write our data byte out to the data register */
 	bcm2835_write(UART0_DR, byte);
 
-//	mutex_unlock(&pl011_lock);
+	if (enable_locking) mutex_unlock(&pl011_lock);
 }
 
 int32_t pl011_uart_getc(void) {

@@ -61,3 +61,9 @@ void serial_enable_interrupts(void) {
 	serial.uart_enable_interrupts();
 
 }
+
+void serial_enable_locking(void) {
+
+	serial.uart_enable_locking();
+
+}
