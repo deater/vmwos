@@ -2,15 +2,16 @@
 
 @ Based on exaples from the "ARM Synchronization Primitives Developmen Article"
 
-.equ	locked,1
-.equ	unlocked,0
+.equ	MUTEX_UNLOCKED,0
+.equ	MUTEX_LOCKED,1
 
-.global lock_mutex
+
+.global mutex_lock
 
 @ extern void lock_mutex(void *mutex);
 
-lock_mutex:
-	ldr	r1,=locked	@ Load 1 into r1
+mutex_lock:
+	ldr	r1,=MUTEX_LOCKED@ Load 1 into r1
 lock_retry:
 	ldrex	r2,[r0]		@ load/mark exclusive from mutex
 	cmp	r2,r1		@ is it locked?
@@ -39,10 +40,10 @@ lock_busy:
 @ unlock_mutex
 @ extern void unlock_mutex (void *mutex);
 
-.global unlock_mutex
+.global mutex_unlock
 
-unlock_mutex:
-	ldr	r1, =unlocked
+mutex_unlock:
+	ldr	r1, =MUTEX_UNLOCKED
 
 	@ dmb memory barrier insn not available on ARMv6
 	@ use the below instead

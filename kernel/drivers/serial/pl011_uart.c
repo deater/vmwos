@@ -16,10 +16,12 @@
 
 #include "lib/delay.h"
 #include "lib/printk.h"
+#include "lib/locks.h"
 
 #include "interrupts/interrupts.h"
 
 static int pl011_uart_initialized=0;
+//static uint32_t pl011_lock=0;
 
 uint32_t pl011_uart_init(struct serial_type *serial) {
 
@@ -136,6 +138,8 @@ void pl011_uart_enable_interrupts(void) {
 
 void pl011_uart_putc(unsigned char byte) {
 
+//	mutex_lock(&pl011_lock);
+
 	/* Check Flags Register */
 	/* And wait until FIFO not full */
 	while ( bcm2835_read(UART0_FR) & UART0_FR_TXFF ) {
@@ -143,6 +147,8 @@ void pl011_uart_putc(unsigned char byte) {
 
 	/* Write our data byte out to the data register */
 	bcm2835_write(UART0_DR, byte);
+
+//	mutex_unlock(&pl011_lock);
 }
 
 int32_t pl011_uart_getc(void) {
@@ -204,7 +210,7 @@ void pl011_uart_putc_extra(unsigned char byte,unsigned int extra) {
 	bcm2835_write(UART0_DR, byte+extra-extra);
 }
 
-#if 1
+#if 0
 
 int32_t pl011_write(const char* buffer, size_t size) {
 

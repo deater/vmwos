@@ -7,8 +7,11 @@ all:	lib-arm1176.a lib-armv7.a
 
 ### ARM1176
 
-lib-arm1176.a:	div.arm1176.o memcpy.arm1176.o memset.arm1176.o printk.arm1176.o string.arm1176.o
-	$(CROSS)$(AR) crs lib-arm1176.a div.arm1176.o memcpy.arm1176.o memset.arm1176.o \
+lib-arm1176.a:	div.arm1176.o locks.arm1176.o \
+		memcpy.arm1176.o memset.arm1176.o printk.arm1176.o \
+		string.arm1176.o
+	$(CROSS)$(AR) crs lib-arm1176.a div.arm1176.o locks.arm1176.o \
+		memcpy.arm1176.o memset.arm1176.o \
 		printk.arm1176.o string.arm1176.o
 
 div.arm1176.o:	div.arm1176.c
@@ -26,15 +29,20 @@ printk.arm1176.o:	printk.c
 string.arm1176.o:	string.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o string.arm1176.o -c string.c
 
-#locks.o:        locks.s
-#	$(CROSS)as $(ASFLAGS) -o locks.o locks.s
+locks.arm1176.o:        locks.arm1176.s
+	$(CROSS)$(AS) $(ASFLAGS) -o locks.arm1176.o locks.arm1176.s
 
 
 ### ARMV7
 
-lib-armv7.a:	memcpy.armv7.o memset.armv7.o printk.armv7.o string.armv7.o
-	$(CROSS)$(AR) crs lib-armv7.a memcpy.armv7.o memset.armv7.o \
+lib-armv7.a:	locks.armv7.o memcpy.armv7.o memset.armv7.o \
 		printk.armv7.o string.armv7.o
+	$(CROSS)$(AR) crs lib-armv7.a \
+		locks.armv7.o memcpy.armv7.o memset.armv7.o \
+		printk.armv7.o string.armv7.o
+
+locks.armv7.o:	locks.armv7.s
+	$(CROSS)$(AS) $(ASFLAGS_ARMV7) $(INCLUDE) -o locks.armv7.o locks.armv7.s
 
 memcpy.armv7.o:	memcpy.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o memcpy.armv7.o -c memcpy.c
