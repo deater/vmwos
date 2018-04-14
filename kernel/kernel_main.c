@@ -9,6 +9,7 @@
 #include "drivers/drivers.h"
 #include "drivers/block/ramdisk.h"
 #include "drivers/serial/serial.h"
+#include "drivers/console/console_io.h"
 
 #include "fs/files.h"
 
@@ -56,7 +57,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		memory_kernel,rounded_memory);
 	memory_hierarchy_init(rounded_memory);
 
-	serial_enable_locking();
+	console_enable_locking();
 
 	/************************/
 	/* Boot messages!	*/

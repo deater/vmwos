@@ -18,8 +18,16 @@ static char input_buffer[INPUT_BUFFER_SIZE];
 static uint32_t input_buffer_head=0;
 static uint32_t input_buffer_tail=0;
 
-uint32_t console_write_mutex = MUTEX_UNLOCKED;
-uint32_t console_read_mutex = MUTEX_UNLOCKED;
+static uint32_t console_buffer_write_mutex = MUTEX_UNLOCKED;
+//static uint32_t console_buffer_read_mutex = MUTEX_UNLOCKED;
+
+static uint32_t console_print_mutex = MUTEX_UNLOCKED;
+static uint32_t console_locking_enabled=0;
+
+void console_enable_locking(void) {
+	console_locking_enabled=1;
+}
+
 
 struct wait_queue_t console_wait_queue = {
 	NULL
@@ -36,7 +44,7 @@ int console_insert_char(int ch) {
 	/* and even if we did, if an interrupt got interrupted while */
 	/* the lock was held then we'd end up with deadlock.  hmmm */
 
-//	lock_mutex(&console_write_mutex);
+	mutex_lock(&console_buffer_write_mutex);
 
 	new_head=input_buffer_head+1;
 	if (new_head>=INPUT_BUFFER_SIZE) {
@@ -52,7 +60,7 @@ int console_insert_char(int ch) {
 	input_buffer_head=new_head;
 
 	/* RELEASE LOCK */
-//	unlock_mutex(&console_write_mutex);
+	mutex_unlock(&console_buffer_write_mutex);
 
 	/* Emergency debug if ^B */
 	if (ch==0x2) dump_saved_user_state(current_process);
@@ -70,7 +78,7 @@ int console_insert_char(int ch) {
 buffer_full:
 
 	/* RELEASE LOCK */
-//	unlock_mutex(&console_write_mutex);
+	mutex_unlock(&console_buffer_write_mutex);
 
 	return -1;
 }
@@ -108,11 +116,15 @@ int console_write(const void *buf, size_t count) {
 
 	int result;
 
+	if (console_locking_enabled) mutex_lock(&console_print_mutex);
+
 	/* Write to Serial port */
 	result=serial_write(buf, count);
 
 	/* Write to framebuffer */
 	result=framebuffer_console_write(buf, count);
+
+	if (console_locking_enabled) mutex_unlock(&console_print_mutex);
 
 	return result;
 

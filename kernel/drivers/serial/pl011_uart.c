@@ -21,6 +21,7 @@
 #include "interrupts/interrupts.h"
 
 static int pl011_uart_initialized=0;
+
 static uint32_t pl011_lock=0;
 static int enable_locking=0;
 
@@ -144,8 +145,6 @@ void pl011_uart_enable_interrupts(void) {
 
 void pl011_uart_putc(unsigned char byte) {
 
-	if (enable_locking) mutex_lock(&pl011_lock);
-
 	/* Check Flags Register */
 	/* And wait until FIFO not full */
 	while ( bcm2835_read(UART0_FR) & UART0_FR_TXFF ) {
@@ -154,7 +153,6 @@ void pl011_uart_putc(unsigned char byte) {
 	/* Write our data byte out to the data register */
 	bcm2835_write(UART0_DR, byte);
 
-	if (enable_locking) mutex_unlock(&pl011_lock);
 }
 
 int32_t pl011_uart_getc(void) {
