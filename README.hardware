@@ -15,7 +15,8 @@
 	+ ACT LED:
 		Model B was GPIO16, Active Low
 		On 2/B+/A+ was GPIO47, Active High
-		On 3 it is on an i2c/GPIO expander controlled by GPU
+		On 3B it is on an i2c/GPIO expander controlled by GPU
+		On 3B+ it is on GPIO29, Active??
 	+ When using mailbox to request firmware address, or the address
 		with 0xc0000000 instead of 0x40000000
 

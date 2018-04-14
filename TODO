@@ -48,6 +48,7 @@ Kernel feature requests:
 	+ framebuffer:
 		queue up updates off screen, have kernel thread update
 		maybe once a tick (64 fps)
+	+ heartbeat -- uses GPIO29 on 3B+?
 
 Userspace feature requests:
 	+ vlibc
