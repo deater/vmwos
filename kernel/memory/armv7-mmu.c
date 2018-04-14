@@ -183,6 +183,10 @@ The above work.  Other values I tried didn't :(
 This is: not-secure, shareable, domain 0, and the rest as described.
 */
 
+// https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=98904&start=25
+// someone online sets to 0140e or 1140e, maybe 1040a
+// 10416 for periph?
+
 #define SECTION_KERNEL	0x9040e		// shared, root-only, cached
 #define SECTION_USER	0x90c0e		// shared, any-access, cached
 #define SECTION_1GB	0x90416		// root-only, non-cached
@@ -259,6 +263,25 @@ void enable_mmu(void) {
 
 	uint32_t reg;
 
+
+#if 0
+	/* Need to enable SMP cache coherency on ARMv8, maybe only in 64-bit? */
+	uint32_t reg2;
+
+	if (mmu_debug) printk("\tEnabling SMPEN\n");
+	asm volatile("mrrc p15, 1, %0, %1, c15" :  "=r" (reg), "=r"(reg2):: "cc");
+	reg|=(1<<6);	// Set SMPEN.
+	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
+#endif
+
+	/* Need to enable SMP cache coherency in AUX register */
+	if (mmu_debug) printk("\tEnabling SMPEN in AUX\n");
+	asm volatile("mrc p15, 0, %0, c1, c0, 1" :  "=r" (reg):: "cc");
+	if (mmu_debug) printk("\tAUX was %x and SMPEN was %d\n",reg,
+		!!(reg&(1<<6)));
+	reg|=(1<<6);	// Set SMPEN.
+	asm volatile("mcr p15, 0, %0, c1, c0, 1" : : "r" (reg):"cc");
+
 	/* Flush TLB */
 	if (mmu_debug) printk("\tInvalidating TLB\n");
 	tlb_invalidate_all();
@@ -319,23 +342,6 @@ void enable_mmu(void) {
 				// S = 1 : sharable
 	asm volatile("mcr p15, 0, %0, c2, c0, 0"
 		: : "r" (reg) : "memory");
-#if 0
-	/* Need to enable SMP cache coherency on ARMv8, maybe only in 64-bit? */
-	uint32_t reg2;
-
-	if (mmu_debug) printk("Enabling SMPEN\n");
-	asm volatile("mrrc p15, 1, %0, %1, c15" :  "=r" (reg), "=r"(reg2):: "cc");
-	reg|=(1<<6);	// Set SMPEN.
-	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
-#endif
-
-	/* Need to enable SMP cache coherency in AUX register */
-	if (mmu_debug) printk("Enabling SMPEN\n");
-	asm volatile("mrc p15, 0, %0, c1, c0, 1" :  "=r" (reg):: "cc");
-	if (mmu_debug) printk("AUX was %x and SMPEN was %d\n",reg,
-		!!(reg&(1<<6)));
-	reg|=(1<<6);	// Set SMPEN.
-	asm volatile("mcr p15, 0, %0, c1, c0, 1" : : "r" (reg):"cc");
 
 	/* See B.4.1.130 on page 1707 */
 	/* SCTLR, VMSA: System Control Register */

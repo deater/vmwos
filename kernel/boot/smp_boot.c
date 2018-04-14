@@ -5,6 +5,11 @@
 #include "lib/mmio.h"
 #include "memory/mmu-common.h"
 
+/* For now, assume 4 cores */
+#define NUMCORES	4
+
+static volatile uint32_t core_booted[NUMCORES];
+
 /* Boot up secondary cores */
 
 void secondary_boot_c(int core) {
@@ -12,7 +17,10 @@ void secondary_boot_c(int core) {
 	/* Set up cache */
 	enable_mmu();
 
-	printk("Booting core %d\n",core);
+	printk("Booted core %d\n",core);
+
+	core_booted[core]=1;
+
 
 	/* Low power infinite loop for now */
 	/* Busy looping makes the GPU complain */
@@ -23,8 +31,7 @@ void secondary_boot_c(int core) {
 
 }
 
-/* For now, assume 4 cores */
-#define NUMCORES	4
+
 
 void smp_boot(void) {
 
@@ -46,11 +53,15 @@ void smp_boot(void) {
 		printk("\tWriting %x to mailbox %x\n",
 			start_core_addr,mailbox_addr);
 		mmio_write(mailbox_addr,start_core_addr);
+
+		/* Send event -- wake other cores sleeping in WFE */
+		asm volatile("sev\n"  // SEV
+			: : : "memory");
+
+		while(core_booted[i]==0) ;
+
 	}
 
-	/* Send event -- wake other cores sleeping in WFE */
-	asm volatile("sev\n"  // SEV
-		: : : "memory");
 
 	printk("Done SMP init from core0\n");
 }
