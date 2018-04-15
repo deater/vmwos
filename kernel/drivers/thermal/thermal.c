@@ -58,7 +58,7 @@ int thermal_read(void) {
 	/* Flush dcache so value is in memory */
 	flush_dcache((uint32_t)&msg, (uint32_t)&msg+sizeof(msg));
 
-	result = mailbox_write(addr|0xc0000000,// non-cachable GPU range
+	result = mailbox_write(firmware_phys_to_bus_address(addr),
 				MAILBOX_CHAN_PROPERTY);
 
 	if (result<0) printk("THERM: Mailbox write problem\n");

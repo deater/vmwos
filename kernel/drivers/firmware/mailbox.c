@@ -10,6 +10,17 @@
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/firmware/mailbox.h"
 
+
+/* See include/drivers/firmware/mailbox.h for a long explanation */
+uint32_t firmware_phys_to_bus_address(uint32_t addr) {
+
+#ifdef ARMV7
+	return (addr|0xC0000000);
+#else
+	return (addr|0x40000000);
+#endif
+}
+
 /* should always write mailbox1 */
 int mailbox_write(unsigned int value, unsigned int channel) {
 

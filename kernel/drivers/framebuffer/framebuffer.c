@@ -83,14 +83,8 @@ char *framebuffer_init(int x, int y, int depth) {
 	/* Flush dcache so value is in memory */
 	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
 
-	// pi2 vs pi1
-#ifdef ARMV7
-	addr|=0xC0000000;
-#else
-	addr|=0x40000000;
-#endif
-
-	result=mailbox_write(addr,MAILBOX_CHAN_FRAMEBUFFER);
+	result=mailbox_write(firmware_phys_to_bus_address(addr),
+			MAILBOX_CHAN_FRAMEBUFFER);
 
 	if (result<0) {
 		printk("Mailbox write failed\n");
