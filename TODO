@@ -84,4 +84,3 @@ Performance:
 	+ tophalf/bottomhalf IRQ split
 	+ optimized memcpy
 	+ optimize graphics routines
-
