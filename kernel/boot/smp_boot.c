@@ -17,15 +17,22 @@ void secondary_boot_c(int core) {
 	/* Set up cache */
 	enable_mmu(0);
 
-	printk("Booted core %d\n",core);
+	printk("Core %d MMU enabled\n",core);
 
 //	invalidate_l1_dcache();
 
 	core_booted[core]=1;
 
+	invalidate_l1_dcache();
+
 //	flush_dcache((uint32_t)&core_booted,
 //		((uint32_t)&core_booted)+sizeof(core_booted));
 
+	printk("Booted core %d, %d %d %d\n",
+		core,
+		core_booted[1],
+		core_booted[2],
+		core_booted[3]);
 
 	/* Low power infinite loop for now */
 	/* Busy looping makes the GPU complain */
@@ -63,16 +70,20 @@ void smp_boot(void) {
 		asm volatile("sev\n"  // SEV
 			: : : "memory");
 
+		printk("\tCore0 waiting for core %i to become ready (%d %d %d)\n",
+			i,core_booted[1],core_booted[2],core_booted[3]);
+		timeout=0;
+
 //		flush_dcache((uint32_t)&core_booted,
 //			((uint32_t)&core_booted)+sizeof(core_booted));
 
-		printk("Waiting for core %i to become ready\n",i);
-		timeout=0;
+		invalidate_l1_dcache();
 
 		while(core_booted[i]==0) {
 			timeout++;
 			if (timeout>1000000000) {
-				printk("Timed out!\n");
+				printk("\tCore0 timed out waiting for "
+					"core%d!\n",i);
 				break;
 			}
 		}

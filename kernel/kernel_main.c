@@ -57,7 +57,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 		memory_kernel,rounded_memory);
 	memory_hierarchy_init(rounded_memory);
 
-	console_enable_locking();
 
 	/************************/
 	/* Boot messages!	*/
@@ -90,6 +89,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 #ifdef ARMV7
 	printk("Starting multi-core:\n");
 	smp_boot();
+	console_enable_locking();
 #endif
 
 	/************************/

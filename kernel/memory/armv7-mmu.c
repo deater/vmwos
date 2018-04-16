@@ -18,7 +18,7 @@
 
 static int mmu_debug=1;
 
-static void tlb_invalidate_all(void) {
+void tlb_invalidate_all(void) {
 	uint32_t reg=0;
 
 	/* TLBIALL */
@@ -177,6 +177,10 @@ static uint32_t  __attribute__((aligned(16384))) page_table[NUM_PAGE_TABLE_ENTRI
 90c0e = 1001 0000 1100 0000 1110  011=full access
 9080e = 1001 0000 1000 0000 1110  010=only root can write
 9040e = 1001 0000 0100 0000 1110  001=only root can read/write
+				TEX/CB = 000/11 = outer/inner WB no WA
+9140e = 1001 0001 0100 0000 1110  001=only root can read/write
+				TEX/CB = 001/11 = outer/inner WB yes WA
+
 90c16 = 1001 0000 1100 0001 0110  011=full access, no cache
 
 The above work.  Other values I tried didn't :(
@@ -187,7 +191,8 @@ This is: not-secure, shareable, domain 0, and the rest as described.
 // someone online sets to 0140e or 1140e, maybe 1040a
 // 10416 for periph?
 
-#define SECTION_KERNEL	0x9040e		// shared, root-only, cached
+//#define SECTION_KERNEL	0x9040e		// shared, root-only, cached
+#define SECTION_KERNEL	0x9140e		// shared, root-only, cached
 #define SECTION_USER	0x90c0e		// shared, any-access, cached
 #define SECTION_1GB	0x90416		// root-only, non-cached
 //92c10 = 1001 0010 1100 0001 0000
@@ -272,15 +277,16 @@ void enable_mmu(int debug) {
 	asm volatile("mrrc p15, 1, %0, %1, c15" :  "=r" (reg), "=r"(reg2):: "cc");
 	reg|=(1<<6);	// Set SMPEN.
 	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
-#endif
+#else
 
-	/* Need to enable SMP cache coherency in AUX register */
-	if (debug) printk("\tEnabling SMPEN in AUX\n");
+	/* Need to enable SMP cache coherency in auxiliary control register (ACTLR) */
+	if (debug) printk("\tEnabling SMPEN in ACTLR\n");
 	asm volatile("mrc p15, 0, %0, c1, c0, 1" :  "=r" (reg):: "cc");
 	if (debug) printk("\tAUX was %x and SMPEN was %d\n",reg,
 		!!(reg&(1<<6)));
 	reg|=(1<<6);	// Set SMPEN.
 	asm volatile("mcr p15, 0, %0, c1, c0, 1" : : "r" (reg):"cc");
+#endif
 
 	/* Flush TLB */
 	if (debug) printk("\tInvalidating TLB\n");
@@ -335,11 +341,16 @@ void enable_mmu(int debug) {
 	}
 
 	reg=(uint32_t)page_table;
-	reg|=0x6a;		// 0110 1010
-				// IRGN = 10 : inner write-through cache
-				// NOS = 1 : inner sharable
-				// RGN = 01 : normal mem, outer writeback/allocate
-				// S = 1 : sharable
+			// Saw 0100 1010 online (0x4a?)
+			// which would be NOS=0 : outer sharable
+	reg|=0x4a;	// 0110 1010
+
+//	reg|=0x6a;	// 0110 1010
+			// IRGN = 10 -> 01 (note it's bit 0,6]
+			//   inner cache writeback/allocate
+			// NOS = 1 : inner sharable
+			// RGN = 01 : outer cache: writeback/allocate
+			// S = 1 : sharable
 	asm volatile("mcr p15, 0, %0, c2, c0, 0"
 		: : "r" (reg) : "memory");
 
@@ -348,6 +359,24 @@ void enable_mmu(int debug) {
 	/* Enable the MMU by setting the M bit (bit 1) */
 	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
 	if (debug) printk("\tSCTLR before = %x\n",reg);
+
+	/* on pi3 this appears to be c50838 at boot */
+	/* 0000 0000 1100 0101 0000 1000 0011 1000 */
+	/* TE (thumb exec) =0 */
+	/* AFE = 0 (no mess with AP bits) */
+	/* TRE = 0 TEX remap disabled (TEX+CB choose caching) */
+	/* EE = 0 (little-endian exceptions) */
+	/* RR = 0 random replacement */
+	/* V=0 vectors at 0x000000 */
+	/* I=0 icache disabled */
+	/* Z=1 branch predictor enabled */
+	/* SW=0 swap insn disabled */
+	/* CP15BEN=1 cp15 barriers enabled */
+	/* c=0 dcache disabed */
+	/* a=0 alignment check disabled */
+	/* m=0 mmu disabled */
+
+	/* Enable MMU 8 */
 	reg|=SCTLR_MMU_ENABLE;
 
 	/* Enable caches! */
