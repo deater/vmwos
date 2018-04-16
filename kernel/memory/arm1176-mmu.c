@@ -94,7 +94,7 @@ void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) 
 /* Enable a one-to-one physical to virtual mapping using 1MB pagetables */
 /* This uses the ARMv5 compatible interface, not native ARMv6 */
 /* Mark RAM has writeback, but disable cache for non-RAM */
-void enable_mmu(void) {
+void enable_mmu(int debug) {
 
 	uint32_t reg;
 

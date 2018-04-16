@@ -15,11 +15,16 @@ static volatile uint32_t core_booted[NUMCORES];
 void secondary_boot_c(int core) {
 
 	/* Set up cache */
-	enable_mmu();
+	enable_mmu(0);
 
 	printk("Booted core %d\n",core);
 
+//	invalidate_l1_dcache();
+
 	core_booted[core]=1;
+
+//	flush_dcache((uint32_t)&core_booted,
+//		((uint32_t)&core_booted)+sizeof(core_booted));
 
 
 	/* Low power infinite loop for now */
@@ -35,7 +40,7 @@ void secondary_boot_c(int core) {
 
 void smp_boot(void) {
 
-	int i;
+	int i,timeout;
 	uint32_t start_core_addr,mailbox_addr;
 
 	start_core_addr=(uint32_t)(&start_core);
@@ -58,10 +63,27 @@ void smp_boot(void) {
 		asm volatile("sev\n"  // SEV
 			: : : "memory");
 
-		while(core_booted[i]==0) ;
+//		flush_dcache((uint32_t)&core_booted,
+//			((uint32_t)&core_booted)+sizeof(core_booted));
+
+		printk("Waiting for core %i to become ready\n",i);
+		timeout=0;
+
+		while(core_booted[i]==0) {
+			timeout++;
+			if (timeout>1000000000) {
+				printk("Timed out!\n");
+				break;
+			}
+		}
 
 	}
 
 
-	printk("Done SMP init from core0\n");
+	printk("Done SMP init: ");
+	for(i=0;i<NUMCORES;i++) {
+		printk("core%d=%d ",i,core_booted[i]);
+	}
+	printk("\n");
+
 }

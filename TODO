@@ -49,6 +49,9 @@ Kernel feature requests:
 		queue up updates off screen, have kernel thread update
 		maybe once a tick (64 fps)
 	+ heartbeat -- uses GPIO29 on 3B+?
+	+ times() -- higher granularity on the system accounting
+		need a free-running timer (or PMU?)
+		Have timer count but only trigger overflow at higher value?
 
 Userspace feature requests:
 	+ vlibc

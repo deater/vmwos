@@ -259,7 +259,7 @@ void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) 
 }
 
 
-void enable_mmu(void) {
+void enable_mmu(int debug) {
 
 	uint32_t reg;
 
@@ -268,30 +268,30 @@ void enable_mmu(void) {
 	/* Need to enable SMP cache coherency on ARMv8, maybe only in 64-bit? */
 	uint32_t reg2;
 
-	if (mmu_debug) printk("\tEnabling SMPEN\n");
+	if (debug) printk("\tEnabling SMPEN\n");
 	asm volatile("mrrc p15, 1, %0, %1, c15" :  "=r" (reg), "=r"(reg2):: "cc");
 	reg|=(1<<6);	// Set SMPEN.
 	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
 #endif
 
 	/* Need to enable SMP cache coherency in AUX register */
-	if (mmu_debug) printk("\tEnabling SMPEN in AUX\n");
+	if (debug) printk("\tEnabling SMPEN in AUX\n");
 	asm volatile("mrc p15, 0, %0, c1, c0, 1" :  "=r" (reg):: "cc");
-	if (mmu_debug) printk("\tAUX was %x and SMPEN was %d\n",reg,
+	if (debug) printk("\tAUX was %x and SMPEN was %d\n",reg,
 		!!(reg&(1<<6)));
 	reg|=(1<<6);	// Set SMPEN.
 	asm volatile("mcr p15, 0, %0, c1, c0, 1" : : "r" (reg):"cc");
 
 	/* Flush TLB */
-	if (mmu_debug) printk("\tInvalidating TLB\n");
+	if (debug) printk("\tInvalidating TLB\n");
 	tlb_invalidate_all();
 
 	/* Flush l1-icache */
-	if (mmu_debug) printk("\tInvalidating icache\n");
+	if (debug) printk("\tInvalidating icache\n");
 	icache_invalidate_all();
 
 	/* Flush l1-dcache */
-	if (mmu_debug) printk("\tInvalidating dcache\n");
+	if (debug) printk("\tInvalidating dcache\n");
 	disable_l1_dcache();
 
 	/* Need to flush l2-cache too? */
@@ -303,22 +303,22 @@ void enable_mmu(void) {
 	/* N is bottom 3 bits, if 000 then TTBR1 not used */
 	/* We set N to 0, meaning only use TTBR0 */
 	asm volatile("mrc p15, 0, %0, c2, c0, 2" : "=r" (reg) : : "cc");
-	if (mmu_debug) printk("\tTTBCR before = %x\n",reg);
+	if (debug) printk("\tTTBCR before = %x\n",reg);
 	reg=0;
 	asm volatile("mcr p15, 0, %0, c2, c0, 2" : : "r" (reg) : "cc");
 
 	/* See B.4.1.43 */
 	/* DACR: Domain Access Control Register */
 	/* All domains, set manager access (no faults for accesses) */
-	if (mmu_debug) printk("\tInitialize DACR\n");
+	if (debug) printk("\tInitialize DACR\n");
 	reg=0x55555555;	// all domains, client access
 	asm volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (reg): "cc");
 
 	/* Initialize SCTLR.AFE */
 	/* This boots with value 0, but set to 0 anyway */
-	if (mmu_debug) printk("\tInitialize SCTLR.AFE\n");
+	if (debug) printk("\tInitialize SCTLR.AFE\n");
 	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
-	if (mmu_debug) printk("\tSCTLR before AFE = %x\n",reg);
+	if (debug) printk("\tSCTLR before AFE = %x\n",reg);
 	reg&=~SCTLR_ACCESS_FLAG_ENABLE;
 	asm volatile("mcr p15, 0, %0, c1, c0, 0" : : "r" (reg) : "cc");
 
@@ -329,7 +329,7 @@ void enable_mmu(void) {
 	/* Bits 31-N are the address of the table */
 	/* Low bits are various config options, we leave them at 0 */
 	/* FIXME: might need to do something if SMP support added */
-	if (mmu_debug) {
+	if (debug) {
 		printk("\tSetting page table to %x\n",page_table);
 		printk("\tPTE[0] = %x\n",page_table[0]);
 	}
@@ -347,7 +347,7 @@ void enable_mmu(void) {
 	/* SCTLR, VMSA: System Control Register */
 	/* Enable the MMU by setting the M bit (bit 1) */
 	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
-	if (mmu_debug) printk("\tSCTLR before = %x\n",reg);
+	if (debug) printk("\tSCTLR before = %x\n",reg);
 	reg|=SCTLR_MMU_ENABLE;
 
 	/* Enable caches! */
@@ -361,7 +361,7 @@ void enable_mmu(void) {
 	asm volatile("isb");	/* barrier */
 
 	asm volatile("mrc p15, 0, %0, c1, c0, 0" : "=r" (reg) : : "cc");
-	if (mmu_debug) printk("\tSCTLR after = %x\n",reg);
+	if (debug) printk("\tSCTLR after = %x\n",reg);
 }
 
 void enable_l1_dcache(void) {
@@ -520,6 +520,7 @@ void flush_icache(void) {
 void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
 
 	uint32_t mva;
+	uint32_t ctr,linesize,linemask;
 
 	// 1559
 	// DCCIMVAC, Data Cache Clean and Invalidate by MVA to PoC, VMSA
@@ -531,14 +532,30 @@ void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
 	// DCCIMVAC c c7 0 c14 1
 
 //	invalidate_l1_dcache();
-#if 1
-	for(mva=(start_addr&0xfffffff0);mva<=(end_addr&0xfffffff0);mva+=16) {
+
+
+	/* get cache line size from Cache-type Register (CTR) */
+	asm volatile("mrc	p15, 0, %0, c0, c0, 1\n"
+					: "=r" (ctr) : : "cc");
+	/* This is log2 of number of words in minimal cache line */
+	linesize=((ctr>>16)&0xf);
+	/* words are 4 bytes */
+	linesize=4<<linesize;
+	linemask=~(linesize-1);
+
+//	printk("\tDCACHE: linesize=%x linemask=%x\n",linesize,linemask);
+
+	/* errata? */
+	asm volatile("dsb\n"  // DSB
+		: : : "memory");
+
+	for(mva=(start_addr&linemask);mva<=(end_addr&linemask);mva+=linesize) {
 
 		asm volatile("mcr p15, 0, %0, c7, c14, 1\n"
 			: : "r" (mva) : "memory");
 	}
-#endif
-	asm volatile("dsb\n"  // DSB
+
+	asm volatile("dsb st\n"  // DSB
 		: : : "memory");
 	asm volatile("isb\n"  // ISB
 		: : : "memory");

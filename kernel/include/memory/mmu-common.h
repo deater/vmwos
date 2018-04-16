@@ -1,4 +1,4 @@
-void enable_mmu(void);
+void enable_mmu(int debug);
 void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end);
 
 
@@ -11,3 +11,5 @@ void disable_branch_predictor(void);
 
 void flush_icache(void);
 void flush_dcache(uint32_t start_addr, uint32_t end_addr);
+void invalidate_l1_dcache(void);
+
