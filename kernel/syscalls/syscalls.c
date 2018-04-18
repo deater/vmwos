@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "lib/printk.h"
+#include "lib/errors.h"
 
 #include "syscalls/syscalls.h"
 
@@ -75,7 +76,7 @@ uint32_t swi_handler_c(
 
 #endif
 
-	uint32_t result=0;
+	uint32_t result=-ENOSYS;
 
 //	printk("Starting syscall %d\n",r7);
 
@@ -179,11 +180,21 @@ uint32_t swi_handler_c(
 			result=clock_gettime(r0,(struct timespec *)r1);
 			break;
 
+		case SYSCALL_MMAP:
+			result=-ENOSYS;
+			break;
+
+		case SYSCALL_MUNMAP:
+			result=-ENOSYS;
+			break;
+
 		case SYSCALL_STATFS:
 			result=statfs((const char *)r0,(struct statfs *)r1);
 			break;
 
-
+		case SYSCALL_GETCPU:
+			result=-ENOSYS;
+			break;
 
 		/******************/
 		/* VMWOS SPECIFIC */
@@ -212,11 +223,7 @@ uint32_t swi_handler_c(
 		case SYSCALL_FRAMEBUFFER_LOAD:
 			result=framebuffer_load(r0,r1,r2,(char *)r3);
 			break;
-#if 0
-		case SYSCALL_TB1:
-			result=framebuffer_tb1();
-			break;
-#endif
+
 		case SYSCALL_REBOOT:
 			/* See https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=53862 */
 			bcm2835_write(PM_WDOG, PM_PASSWORD | 1);	/* timeout = 1/16th of a second? */
