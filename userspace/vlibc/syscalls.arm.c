@@ -19,6 +19,8 @@
 #define __NR_times	43
 #define __NR_ioctl	54
 #define __NR_reboot	88
+#define __NR_mmap	90
+#define __NR_munmap	91
 #define __NR_statfs	99
 #define __NR_stat	106
 #define __NR_sysinfo	116
@@ -29,8 +31,10 @@
 #define __NR_getcwd	183
 #define __NR_vfork	190
 #define __NR_clock_gettime	263
-#define __NS_statfs64	266
+#define __NR_statfs64	266
+#define __NR_getcpu	345
 
+/* 1 */
 int32_t exit(int32_t status) {
 
 	register long r7 __asm__("r7") = __NR_exit;
@@ -45,6 +49,7 @@ int32_t exit(int32_t status) {
 	return r0;
 }
 
+/* 3 */
 int32_t read(int fd, void *buf, size_t count) {
 
 	register long r7 __asm__("r7") = __NR_read;
@@ -383,6 +388,45 @@ int32_t fcntl(int fd, int cmd, ... /* arg */ ) {
         return 0;
 }
 
+/* 90 */
+void *mmap(void *addr, size_t length, int prot, int flags,
+                  int fd, int offset) {
+
+	register long r7 __asm__("r7") = __NR_mmap;
+	register long r0 __asm__("r0") = (long)addr;
+	register long r1 __asm__("r1") = (long)length;
+	register long r2 __asm__("r2") = (long)prot;
+	register long r3 __asm__("r3") = (long)flags;
+	register long r4 __asm__("r4") = (long)fd;
+	register long r5 __asm__("r5") = (long)offset;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4), "r"(r5)
+		: "memory");
+
+	return (void *)r0;
+}
+
+/* 91 */
+int munmap(void *addr, size_t length) {
+
+	register long r7 __asm__("r7") = __NR_munmap;
+	register long r0 __asm__("r0") = (long)addr;
+	register long r1 __asm__("r1") = (long)length;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return r0;
+}
+
+
+/* 99 */
 int statfs(const char *path, struct statfs *buf) {
 
 	register long r7 __asm__("r7") = __NR_statfs;
@@ -393,6 +437,23 @@ int statfs(const char *path, struct statfs *buf) {
 		"svc #0\n"
 		: "=r"(r0)
 		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return r0;
+}
+
+/* 345 */
+int getcpu(unsigned int *cpu, unsigned int *node, void *tcache) {
+
+	register long r7 __asm__("r7") = __NR_getcpu;
+	register long r0 __asm__("r0") = (long)cpu;
+	register long r1 __asm__("r1") = (long)node;
+	register long r2 __asm__("r2") = (long)tcache;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
 		: "memory");
 
 	return r0;

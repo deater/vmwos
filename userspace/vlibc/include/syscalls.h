@@ -238,4 +238,11 @@ struct statfs {
 	uint32_t f_spare[5];	/* Padding bytes reserved */
 };
 
+void *mmap(void *addr, size_t length, int prot, int flags,
+	int fd, int offset);
+
+int munmap(void *addr, size_t length);
+
 int statfs(const char *path, struct statfs *buf);
+
+int getcpu(unsigned int *cpu, unsigned int *node, void *tcache);
