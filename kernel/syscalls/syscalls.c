@@ -243,9 +243,9 @@ uint32_t swi_handler_c(
 			result=bcm2835_rng_read((uint32_t *)r0);
 			break;
 
-		case SYSCALL_MALLOC:
-			result=(uint32_t)memory_allocate(r0);
-			break;
+//		case SYSCALL_MALLOC:
+//			result=(uint32_t)memory_allocate(r0);
+//			break;
 
 		default:
 			printk("Unknown syscall %d\n",r7);

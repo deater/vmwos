@@ -112,10 +112,10 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 
 	/* Allocate stack */
-	stack_page=memory_allocate(stack_size);
+	stack_page=memory_allocate(stack_size,MEMORY_USER);
 
 	/* Allocate text memory */
-	binary_start=memory_allocate(size);
+	binary_start=memory_allocate(size,MEMORY_USER);
 
 	if ((binary_start==NULL) || (stack_page==NULL)) {
 

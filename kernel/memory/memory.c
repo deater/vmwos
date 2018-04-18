@@ -8,8 +8,11 @@
 #include "lib/printk.h"
 #include "lib/memset.h"
 #include "lib/locks.h"
+#include "lib/errors.h"
 
 #define MAX_MEMORY	(1024*1024*1024)		// 1GB
+#define RESERVED_KERNEL	(16*1024*1024)			// 16MB
+
 #define CHUNK_SIZE	4096
 
 static int memory_debug=0;
@@ -60,18 +63,25 @@ static int memory_test_used(int chunk) {
 }
 
 /* Initialize memory */
-static int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
+static int memory_init(unsigned long memory_total,
+				unsigned long memory_kernel) {
 
 	int i;
 
 	if (memory_total>MAX_MEMORY) {
 		printk("Error!  Too much memory!\n");
-		return -1;
+		return -ENOMEM;
+	}
+
+	if (memory_kernel>RESERVED_KERNEL) {
+		printk("Error!  Kernel too big!\n");
+		return -ENOMEM;
 	}
 
 	printk("Initializing %dMB of memory.  "
-		"%dkB reserved kernel (%dkB used by memory map)\n",
+		"%dkB reserved (%dKB kernel, %dkB memory map)\n",
 		memory_total/1024/1024,
+		RESERVED_KERNEL/1024,
 		memory_kernel/1024,
 		(MAX_MEMORY/CHUNK_SIZE/32)/1024);
 
@@ -91,16 +101,17 @@ static int memory_init(unsigned long memory_total,unsigned long memory_kernel) {
 }
 
 /* Find a free chunk of memory */
-static int find_free(int num_chunks) {
+/* FIXME: this might have bounds errors */
+static int find_free(int num_chunks, int start, int end) {
 
 	int i,j;
 
-	for(i=0;i<max_chunk;i++) {
+	for(i=start;i<end;i++) {
 		if (!memory_test_used(i)) {
 			for(j=0;j<num_chunks;j++) {
 				if (memory_test_used(i+j)) break;
 			}
-			if (j==num_chunks) {
+			if ((j==num_chunks) && (i+j<end)) {
 				return i;
 			}
 		}
@@ -124,11 +135,12 @@ int32_t memory_total_free(void) {
 
 /* allocate an area of memory */
 /* rounds up to nearest chunk size */
-void *memory_allocate(uint32_t size) {
+void *memory_allocate(uint32_t size, uint32_t type) {
 
 	int first_chunk;
 	int num_chunks;
 	int i;
+	int start,end;
 
 	if (memory_debug) {
 		printk("Allocating memory of size %d bytes\n",size);
@@ -142,9 +154,22 @@ void *memory_allocate(uint32_t size) {
 		printk("\tRounding up to %d %d chunks\n",num_chunks,CHUNK_SIZE);
 	}
 
+	if (type==MEMORY_KERNEL) {
+		start=0;
+		end=RESERVED_KERNEL/CHUNK_SIZE;
+	}
+	else if (type==MEMORY_USER) {
+		start=RESERVED_KERNEL/CHUNK_SIZE;
+		end=max_chunk;
+	}
+	else {
+		printk("\tUnknown memory allocation type %d\n",type);
+		return NULL;
+	}
+
 	mutex_lock(&memory_mutex);
 
-	first_chunk=find_free(num_chunks);
+	first_chunk=find_free(num_chunks,start,end);
 
 	if (first_chunk<0) {
 		printk("Error!  Could not allocate %d of memory!\n",size);

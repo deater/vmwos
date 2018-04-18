@@ -74,7 +74,7 @@ void create_idle_task(void) {
 	idle_process->user_time=0;
 	idle_process->start_time=ticks_since_boot();
 	idle_process->last_scheduled=idle_process->start_time;
-	idle_process->stack=memory_allocate(4096);
+	idle_process->stack=memory_allocate(4096,MEMORY_USER);
 
 	/* Point to end, as stack grows down */
 	idle_process->user_state.r[13]=(long)(idle_process->stack)+4096;
