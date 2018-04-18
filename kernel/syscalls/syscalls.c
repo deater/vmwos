@@ -26,6 +26,7 @@
 
 #include "syscalls/vfork.h"
 #include "syscalls/exec.h"
+#include "syscalls/getcpu.h"
 #include "syscalls/uname.h"
 #include "syscalls/sysinfo.h"
 #include "syscalls/times.h"
@@ -193,7 +194,9 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_GETCPU:
-			result=-ENOSYS;
+			result=getcpu((uint32_t *)r0,
+					(uint32_t *)r1,
+					(void *)r2);
 			break;
 
 		/******************/
