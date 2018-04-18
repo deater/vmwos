@@ -61,8 +61,11 @@ int main(int argc, char **argv) {
 	times(&buf);
 
 	int wallclock_ms,user_ms,percent=0;
+	uint32_t cpu;
 
-	printf("\nTime running B: Wallclock: ");
+	getcpu(&cpu,NULL,NULL);
+
+	printf("\nTime running B: CPU: %d, Wallclock: ",cpu);
 	print_fixed((current_time-start_time),1000000);
 	printf(" seconds, User: ");
 	print_fixed(buf.tms_utime,64);

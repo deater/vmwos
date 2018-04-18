@@ -443,7 +443,7 @@ int statfs(const char *path, struct statfs *buf) {
 }
 
 /* 345 */
-int getcpu(unsigned int *cpu, unsigned int *node, void *tcache) {
+int getcpu(uint32_t *cpu, uint32_t *node, void *tcache) {
 
 	register long r7 __asm__("r7") = __NR_getcpu;
 	register long r0 __asm__("r0") = (long)cpu;

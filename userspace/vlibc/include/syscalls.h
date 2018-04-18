@@ -245,4 +245,4 @@ int munmap(void *addr, size_t length);
 
 int statfs(const char *path, struct statfs *buf);
 
-int getcpu(unsigned int *cpu, unsigned int *node, void *tcache);
+int getcpu(uint32_t *cpu, uint32_t *node, void *tcache);
