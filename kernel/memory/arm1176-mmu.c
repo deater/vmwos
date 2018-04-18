@@ -254,9 +254,36 @@ void flush_icache(void) {
 	// Invalidate Instruction Cache and branch target cache
 	//	MCR p15, 0, <Rd>, c7, c5, 0
 
-	asm volatile("mcr p15, 0, %0, c7, c5, 0\n" // invalidate icache+btc
-			"mcr p15,0,%0,c7,c10,4\n"  // DSB
-		: : "r" (0) : "memory");
+//	asm volatile("mcr p15, 0, %0, c7, c5, 0\n" // invalidate icache+btc
+//			"mcr p15,0,%0,c7,c10,4\n"  // DSB
+//		: : "r" (0) : "memory");
+
+
+	// ARM ERRATA 411920 says icache flush can fail
+	// this is the workaround Linux uses
+
+	asm volatile(	"mov	r0, #0\n"
+			"mrs	r1, cpsr	@ save status register\n"
+			"cpsid	ifa		@ disable interrupts\n"
+			"mcr	p15, 0, r0, c7, c5, 0	@ invalidate I-cache\n"
+			"mcr	p15, 0, r0, c7, c5, 0	@ invalidate I-cache\n"
+			"mcr	p15, 0, r0, c7, c5, 0	@ invalidate I-cache\n"
+			"mcr	p15, 0, r0, c7, c5, 0	@ invalidate I-cache\n"
+			"msr	cpsr_cx, r1	@ restore interrupts\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n		@ ARM Ltd recommends at least\n"
+			"nop\n		@ 11 NOPs\n"
+		: : : "r0","r1");
+
 
 }
 
