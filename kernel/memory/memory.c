@@ -7,11 +7,14 @@
 
 #include "lib/printk.h"
 #include "lib/memset.h"
+#include "lib/locks.h"
 
 #define MAX_MEMORY	(1024*1024*1024)		// 1GB
 #define CHUNK_SIZE	4096
 
 static int memory_debug=0;
+
+static uint32_t memory_mutex=MUTEX_UNLOCKED;
 
 static unsigned int memory_total;
 
@@ -139,16 +142,21 @@ void *memory_allocate(uint32_t size) {
 		printk("\tRounding up to %d %d chunks\n",num_chunks,CHUNK_SIZE);
 	}
 
+	mutex_lock(&memory_mutex);
+
 	first_chunk=find_free(num_chunks);
 
 	if (first_chunk<0) {
 		printk("Error!  Could not allocate %d of memory!\n",size);
+		mutex_unlock(&memory_mutex);
 		return NULL;
 	}
 
 	for(i=0;i<num_chunks;i++) {
 		memory_mark_used(first_chunk+i);
 	}
+
+	mutex_unlock(&memory_mutex);
 
 	/* clear memory to zero, both for bss and also security reasons */
 	memset((void *)(first_chunk*CHUNK_SIZE),0,num_chunks*CHUNK_SIZE);
