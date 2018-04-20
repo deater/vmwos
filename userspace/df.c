@@ -71,7 +71,7 @@ static int df(char *device,char *mountpoint) {
 		printf("\t100%%");
 	}
 	else {
-		printf("\t%3d%%",100-(freeblocks/totalblocks));
+		printf("\t%3d%%",100-(100*freeblocks/totalblocks));
 	}
 
 	printf("\t%s\n",mountpoint);
