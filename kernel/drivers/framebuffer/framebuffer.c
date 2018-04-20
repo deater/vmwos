@@ -125,8 +125,8 @@ char *framebuffer_init(int x, int y, int depth) {
 	if (fb_info.pointer!=0) {
 		printk("framebuffer: allocating %dK "
 			"for a %dx%dx%d ofscreen buffer\n",
-			fb_info.phys_x*fb_info.phys_y*(fb_info.depth/8),
-			fb_info.phys_x*fb_info.phys_y*fb_info.depth);
+			(fb_info.phys_x*fb_info.phys_y*(fb_info.depth/8))/1024,
+			fb_info.phys_x,fb_info.phys_y,fb_info.depth);
 
 		offscreen=memory_allocate(
 			fb_info.phys_x*fb_info.phys_y*(fb_info.depth/8),
