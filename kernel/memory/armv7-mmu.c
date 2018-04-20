@@ -227,17 +227,18 @@ void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) 
 		page_table[i] = i << 20 | SECTION_DEFAULT;
 
 	}
+	if (mmu_debug) {
+		printk("\tSetting default (0x%x) only for %x to %x\n",
+			SECTION_DEFAULT,0,0xffffffff);
+	}
 
 	/* Enable supervisor only and cachable for kernel */
 	for (i = (mem_start >> 20); i < (kernel_end >> 20); i++) {
 		page_table[i] = i << 20 | SECTION_KERNEL;
 	}
 	if (mmu_debug) {
-		printk("\tSetting cachable+kernel only for %x to %x, "
-			"actual %x to %x\n",
-			mem_start,kernel_end,
-			mem_start&0xfff00000,
-			kernel_end&0xfff00000);
+		printk("\tSetting cachable+kernel (0x%x) only for %x to %x\n",
+			SECTION_KERNEL,mem_start,kernel_end);
 	}
 
 	/* Enable cachable and readable by all for rest of RAM */
@@ -245,20 +246,26 @@ void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) 
 		page_table[i] = i << 20 | SECTION_USER;
 	}
 	if (mmu_debug) {
-		printk("\tSetting cachable+any for %x to %x, "
-			"actual %x to %x\n",
-			kernel_end,mem_end,
-			kernel_end&0xfff00000,mem_end&0xfff00000);
+		printk("\tSetting cachable+any (0x%x) for %x to %x\n",
+			SECTION_USER,kernel_end,mem_end);
 	}
 
 	/* Set from 1GB-2GB */
 	for (i = 0x40000000 >> 20; i < 0x80000000 >> 20; i++) {
 		page_table[i] = i << 20 | SECTION_1GB;
 	}
+	if (mmu_debug) {
+		printk("\tSetting 1G (0x%x) for %x to %x\n",
+			SECTION_1GB,0x40000000,0x80000000);
+	}
 
 	/* Set from 2GB-4GB */
 	for (i = 0x80000000 >> 20; i <= 0xffffffff >> 20; i++) {
 		page_table[i] = i << 20 | SECTION_2GB;
+	}
+	if (mmu_debug) {
+		printk("\tSetting 2G (0x%x) for %x to %x\n",
+			SECTION_2GB,0x80000000,0xffffffff);
 	}
 
 }
@@ -560,7 +567,7 @@ void flush_dcache(uint32_t start_addr, uint32_t end_addr) {
 	// clean and invalidate data or unified cache line
 	// DCCIMVAC c c7 0 c14 1
 
-//	invalidate_l1_dcache();
+	invalidate_l1_dcache();
 
 
 	/* get cache line size from Cache-type Register (CTR) */

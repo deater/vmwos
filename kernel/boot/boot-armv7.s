@@ -149,6 +149,13 @@ done_pi2:
 	mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
 	msr	cpsr_c, r3
 
+	/* Set up the FIQ Mode Stack	*/
+	mov	r3, #(CPSR_MODE_FIQ | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
+	mov	sp, #0x3000
+	/* Switch back to supervisor mode */
+	mov	r3, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r3
 
 
 

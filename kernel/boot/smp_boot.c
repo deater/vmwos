@@ -3,7 +3,10 @@
 #include "boot/smp_boot.h"
 #include "lib/printk.h"
 #include "lib/mmio.h"
+
+#include "memory/memory.h"
 #include "memory/mmu-common.h"
+
 
 /* For now, assume 4 cores */
 #define NUMCORES	4

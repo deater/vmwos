@@ -1,21 +1,23 @@
 0x0000 0000	IRQ Vectors
 0x0000 0100	ATAGS (legacy)
 
-0x0000 1000	UND/abort stack (core0)
-0x0000 3000	IRQ stack (core0)
+0x0000 1000 - 2000	UND/abort stack (core0)
+0x0000 2000 - 3000	FIQ stack (core0)
+0x0000 3000 - 4000	IRQ stack (core0)
 
-0x0000 5000	Supervisor stack (core3)
-0x0000 6000	Supervisor stack (core2)
-0x0000 6000	Supervisor stack (core1)
-0x0000 7000	Supervisor stack (core0)
+0x0000 4000 - 5000	Supervisor stack (core3)
+0x0000 5000 - 6000	Supervisor stack (core2)
+0x0000 6000 - 7000	Supervisor stack (core1)
+0x0000 7000 - 8000	Supervisor stack (core0)
 0x0000 8000	kernel start
 
-0x000e 0000	kernel end (roughly)		reserve 16MB kernel?
-0x0100 0000
+0x000e 0000	kernel end (roughly)
+0x0100 0000					reserve 16MB kernel?
 
 0x3??? ????	device-tree at boot
 0x3??? ????	GPU reserved area
 0x3f00 0000	memory mapped I/O
+
 0x4000 0000	multi-core registers
 
 0xc000 0000	non-cached memory alias
