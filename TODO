@@ -46,8 +46,10 @@ Kernel feature requests:
 		- Properly generate ANSI escape chars for arrows, etc
 		- Use FIQ interrupt?
 	+ framebuffer:
-		queue up updates off screen, have kernel thread update
-		maybe once a tick (64 fps)
+		- queue up updates off screen, have kernel thread update
+		  maybe once a tick (64 fps)
+		- allocate framebuffer memory at run time, rather than
+		  big static array
 	+ heartbeat -- uses GPIO29 on 3B+?
 	+ times() -- higher granularity on the system accounting
 		need a free-running timer (or PMU?)

@@ -15,6 +15,7 @@
 #include "lib/string.h"
 #include "lib/memcpy.h"
 
+#include "memory/memory.h"
 #include "memory/mmu-common.h"
 
 static uint32_t debug=1;
@@ -22,7 +23,7 @@ static uint32_t debug=1;
 static int framebuffer_initialized=0;
 
 static struct frame_buffer_info_type current_fb;
-static unsigned char offscreen[2048*2048*3];
+static unsigned char *offscreen;
 
 struct frame_buffer_info_type {
 	int phys_x,phys_y;	/* IN: Physical Width / Height*/
@@ -58,7 +59,7 @@ char *framebuffer_init(int x, int y, int depth) {
 	struct frame_buffer_info_type fb_info  __attribute__ ((aligned(16)));;
 
 	int result;
-	uint32_t addr;
+	uint32_t addr,mbox_addr;
 
 	fb_info.phys_x=x;
 	fb_info.phys_y=y;
@@ -83,7 +84,10 @@ char *framebuffer_init(int x, int y, int depth) {
 	/* Flush dcache so value is in memory */
 	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
 
-	result=mailbox_write(firmware_phys_to_bus_address(addr),
+	mbox_addr=firmware_phys_to_bus_address(addr);
+	//printk("Writing to mailbox %x\n",mbox_addr);
+
+	result=mailbox_write(mbox_addr,
 			MAILBOX_CHAN_FRAMEBUFFER);
 
 	if (result<0) {
@@ -118,7 +122,18 @@ char *framebuffer_init(int x, int y, int depth) {
 	current_fb.pitch=fb_info.pitch;
 	current_fb.depth=fb_info.depth;
 
-	if (fb_info.pointer==0) {
+	if (fb_info.pointer!=0) {
+		printk("framebuffer: allocating %dK "
+			"for a %dx%dx%d ofscreen buffer\n",
+			fb_info.phys_x*fb_info.phys_y*(fb_info.depth/8),
+			fb_info.phys_x*fb_info.phys_y*fb_info.depth);
+
+		offscreen=memory_allocate(
+			fb_info.phys_x*fb_info.phys_y*(fb_info.depth/8),
+				MEMORY_KERNEL);
+	}
+
+	if ((fb_info.pointer==0) ||(offscreen==NULL)) {
 		printk("ERROR initializing framebuffer!\n");
 	}
 	else {
