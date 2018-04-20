@@ -22,7 +22,7 @@
 
 static int pl011_uart_initialized=0;
 
-static uint32_t pl011_lock=0;
+//static uint32_t pl011_lock=0;
 static int enable_locking=0;
 
 void pl011_uart_enable_locking(void) {

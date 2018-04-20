@@ -344,6 +344,8 @@ char *getcwd(char *buf, size_t size) {
 
 	result=romfs_stat(inode, &stat_buf);
 
+	(void)result;
+
 	strncpy(buf,"BROKEN",size);
 
 	return buf;
