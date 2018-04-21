@@ -276,14 +276,19 @@ void enable_mmu(int debug) {
 	uint32_t reg;
 
 
-#if 0
-	/* Need to enable SMP cache coherency on ARMv8, maybe only in 64-bit? */
+#if 1
+	/* Need to enable SMP cache coherency on ARMv8 */
+	/* This is set by the firmware? */
 	uint32_t reg2;
 
 	if (debug) printk("\tEnabling SMPEN\n");
 	asm volatile("mrrc p15, 1, %0, %1, c15" :  "=r" (reg), "=r"(reg2):: "cc");
-	reg|=(1<<6);	// Set SMPEN.
-	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
+	if (debug) printk("CPU Extended was %x / %x\n",reg,reg2);
+	if (!(reg&(1<<6))) {
+		printk("ERROR: SMPEN not set in CPU Extended Register!\n");
+	}
+//	reg|=(1<<6);	// Set SMPEN.
+//	asm volatile("mcrr p15, 1, %0, %1, c15" : : "r" (reg), "r"(reg2):"cc");
 #else
 
 	/* Need to enable SMP cache coherency in auxiliary control register (ACTLR) */

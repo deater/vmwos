@@ -26,16 +26,16 @@ void secondary_boot_c(int core) {
 
 	core_booted[core]=1;
 
-	invalidate_l1_dcache();
+//	invalidate_l1_dcache();
 
 //	flush_dcache((uint32_t)&core_booted,
 //		((uint32_t)&core_booted)+sizeof(core_booted));
 
-	printk("Booted core %d, %d %d %d\n",
-		core,
-		core_booted[1],
-		core_booted[2],
-		core_booted[3]);
+//	printk("Booted core %d, %d %d %d\n",
+//		core,
+//		core_booted[1],
+//		core_booted[2],
+//		core_booted[3]);
 
 	/* Low power infinite loop for now */
 	/* Busy looping makes the GPU complain */
@@ -80,7 +80,7 @@ void smp_boot(void) {
 //		flush_dcache((uint32_t)&core_booted,
 //			((uint32_t)&core_booted)+sizeof(core_booted));
 
-		invalidate_l1_dcache();
+//		invalidate_l1_dcache();
 
 		while(core_booted[i]==0) {
 			timeout++;
