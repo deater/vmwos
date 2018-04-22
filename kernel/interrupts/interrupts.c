@@ -14,6 +14,9 @@
 #include "processes/scheduler.h"
 #include "processes/exit.h"
 
+#include "interrupts/interrupts.h"
+#include "interrupts/ipi.h"
+
 
 #define MAX_IRQ	64
 
@@ -103,7 +106,7 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 	/* Next check pending1 register      */
 	/*************************************/
 	pending1=bcm2835_read(IRQ_PENDING1);
-	if (!handled) {
+	if ((pending1) && (!handled)) {
 		printk("Unknown pending1 interrupt %x\n",pending1);
 	}
 
@@ -112,13 +115,16 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 	/*************************************/
 	pending2=bcm2835_read(IRQ_PENDING2);
 
-	// Check if GPIO23 (ps2 keyboard) (irq49)
-	if (pending2 & IRQ_PENDING2_IRQ49) {
-		handled++;
-		ps2_interrupt_handler();
-	}
-	else if (!handled) {
-		printk("Unknown pending2 interrupt %x\n",pending2);
+	if (pending2) {
+		// Check if GPIO23 (ps2 keyboard) (irq49)
+		if (pending2 & IRQ_PENDING2_IRQ49) {
+			handled++;
+			ps2_interrupt_handler();
+		}
+
+		if (!handled) {
+			printk("Unknown pending2 interrupt %x\n",pending2);
+		}
 	}
 
 
@@ -164,7 +170,7 @@ Bits	Description
 			}
 			handled++;
 		} else if (per_core[i]&0x10) {
-			printk("IPI interrupt core %d\n",i);
+			ipi_interrupt_handler(i);
 			handled++;
 		}
 		else {
