@@ -1,8 +1,11 @@
 #include <stdint.h>
 
 #include "boot/smp_boot.h"
+
 #include "lib/printk.h"
 #include "lib/mmio.h"
+
+#include "interrupts/ipi.h"
 
 #include "memory/memory.h"
 #include "memory/mmu-common.h"
@@ -101,5 +104,9 @@ void smp_boot(void) {
 		printk("core%d=%d ",i,core_booted[i]);
 	}
 	printk("\n");
+
+	/* Enable IPI interrupts */
+	ipi_enable();
+
 
 }
