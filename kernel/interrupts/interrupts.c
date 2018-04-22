@@ -86,34 +86,42 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 	uint32_t basic_pending,pending1,pending2;
 	uint32_t handled=0;
 
-	// Check if GPIO23 (ps2 keyboard) (irq49)
-	pending2=bcm2835_read(IRQ_PENDING2);
-
-	if (pending2 & IRQ_PENDING2_IRQ49) {
-		handled++;
-		ps2_interrupt_handler();
-	}
-
-	// Check if UART (irq57)
+	/**************************************/
+	/* First check basic_pending register */
+	/**************************************/
 	basic_pending=bcm2835_read(IRQ_BASIC_PENDING);
 
 	if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
 		handled++;
 		serial_interrupt_handler();
 	}
-
-	// check if it's a timer interrupt
 	if (basic_pending & IRQ_BASIC_PENDING_TIMER) {
 		handled++;
 	}
-	else {
-		if (!handled) {
-			pending1=bcm2835_read(IRQ_PENDING1);
-			pending2=bcm2835_read(IRQ_PENDING2);
-			printk("Unknown interrupt happened %x/%x/%x @%x!\n",
-				basic_pending,
-				pending1,
-				pending2,r1);
+
+	/*************************************/
+	/* Next check pending1 register      */
+	/*************************************/
+	pending1=bcm2835_read(IRQ_PENDING1);
+	if (!handled) {
+		printk("Unknown pending1 interrupt %x\n",pending1);
+	}
+
+	/*************************************/
+	/* Next check pending2 register      */
+	/*************************************/
+	pending2=bcm2835_read(IRQ_PENDING2);
+
+	// Check if GPIO23 (ps2 keyboard) (irq49)
+	if (pending2 & IRQ_PENDING2_IRQ49) {
+		handled++;
+		ps2_interrupt_handler();
+	}
+	else if (!handled) {
+		printk("Unknown pending2 interrupt %x\n",pending2);
+	}
+
+
 #ifdef ARMV7
 /*
 Address: 0x4000_0060 Core0 interrupt source
@@ -137,32 +145,47 @@ Bits	Description
 1	CNTPNSIRQ interrupt
 0	CNTPSIRQ interrupt (Physical Timer -1)
 */
-	uint32_t per_core[4];
+	uint32_t per_core[4],i;
+	static int print_once=0;
+
 	per_core[0]=mmio_read(0x40000060);
 	per_core[1]=mmio_read(0x40000064);
 	per_core[2]=mmio_read(0x40000068);
 	per_core[3]=mmio_read(0x4000006c);
-	if (per_core[0]&0x100) {
-		printk("Unhandled GPU interrupt (probably power sag)\n");
+
+	for(i=0;i<4;i++) {
+		if (per_core[i]==0) continue;
+
+		if (per_core[i]&0x100) {
+			if (!print_once) {
+				printk("Unhandled GPU interrupt core %d "
+					"(probably power sag)\n",i);
+				print_once++;
+			}
+			handled++;
+		} else if (per_core[i]&0x10) {
+			printk("IPI interrupt core %d\n",i);
+			handled++;
+		}
+		else {
+			printk("Unknown core %d interrupt %x\n",
+				i,per_core[i]);
+		}
 	}
-	printk("per core source %x %x %x %x\n",
-		per_core[0],per_core[1],per_core[2],per_core[3]);
 
 #endif
 
-		}
-		return;
+	if (!handled) {
+		printk("Unknown interrupt!\n");
 	}
 
-//	printk("About to handle timer interrupt\n");
-
-	// timer_interrupt
-
-	timer_interrupt_handler();
-
-//	printk("Returned from timer interrupt\n");
-
-	if (scheduling_enabled) schedule();
+	// check if it's a timer interrupt
+	if (basic_pending & IRQ_BASIC_PENDING_TIMER) {
+//		printk("About to handle timer interrupt\n");
+		timer_interrupt_handler();
+//		printk("Returned from timer interrupt\n");
+		if (scheduling_enabled) schedule();
+	}
 
 //	printk("Exiting interrupt_c\n");
 
