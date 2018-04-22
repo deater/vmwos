@@ -115,10 +115,24 @@ int vmwos_random(uint32_t *buffer) {
 }
 
 
-void *vmwos_malloc(uint32_t size) {
+//void *vmwos_malloc(uint32_t size) {
+//
+//	register long r7 __asm__("r7") = __NR_malloc;
+//	register long r0 __asm__("r0") = size;
+//
+//	asm volatile(
+//		"svc #0\n"
+//		: "=r"(r0)
+//		: "r"(r7), "0"(r0)
+//		: "memory");
 
-	register long r7 __asm__("r7") = __NR_malloc;
-	register long r0 __asm__("r0") = size;
+//	return (void *)r0;
+//}
+
+int vmwos_core_poke(uint32_t which) {
+
+	register long r7 __asm__("r7") = __NR_core_poke;
+	register long r0 __asm__("r0") = which;
 
 	asm volatile(
 		"svc #0\n"
@@ -126,6 +140,6 @@ void *vmwos_malloc(uint32_t size) {
 		: "r"(r7), "0"(r0)
 		: "memory");
 
-	return (void *)r0;
+	return r0;
 }
 

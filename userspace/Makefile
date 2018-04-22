@@ -6,21 +6,21 @@ GENROMFS = genromfs
 
 all:	$(ELF2BFLT) \
 	shell \
-	cat cat_count cause_error df hello ll ls \
-	memory_test printa printb pwd slideshow sysinfo tbo uname
+	cat cat_count cause_error core_poke df hello ll ls \
+	memory_test printa printb pwd sysinfo tbo uname
 
 
 image:	shell \
-	cat cat_count cause_error df hello ll ls \
-	memory_test printa printb pwd slideshow sysinfo tbo uname
+	cat cat_count cause_error core_poke df hello ll ls \
+	memory_test printa printb pwd sysinfo tbo uname
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
 	mkdir -p image/home/ansis
 	mkdir -p image/proc
 	mkdir -p image/etc
-	cp shell cat cat_count cause_error df \
-		hello ll ls memory_test printa printb pwd slideshow \
+	cp shell cat cat_count cause_error core_poke df \
+		hello ll ls memory_test printa printb pwd \
 		sysinfo tbo uname ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
@@ -41,6 +41,9 @@ cat_count:	cat_count.elf
 
 cause_error:	cause_error.elf
 	$(ELF2BFLT) cause_error.elf cause_error
+
+core_poke:	core_poke.elf
+	$(ELF2BFLT) core_poke.elf core_poke
 
 df:	df.elf
 	$(ELF2BFLT) df.elf df
@@ -96,6 +99,9 @@ cat_count.elf:	cat_count.o ./vlibc/vlibc.a
 cause_error.elf:	cause_error.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cause_error.elf cause_error.o ./vlibc/vlibc.a
 
+core_poke.elf:	core_poke.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o core_poke.elf core_poke.o ./vlibc/vlibc.a
+
 df.elf:	df.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o df.elf df.o ./vlibc/vlibc.a
 
@@ -143,6 +149,9 @@ cat_count.o:	cat_count.c
 cause_error.o:	cause_error.c
 	$(CROSS)$(CC) $(CFLAGS) -c cause_error.c
 
+core_poke.o:	core_poke.c
+	$(CROSS)$(CC) $(CFLAGS) -c core_poke.c
+
 df.o:	df.c
 	$(CROSS)$(CC) $(CFLAGS) -c df.c
 
@@ -187,7 +196,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 
 clean:
 	rm -f *~ *.o *.elf \
-		hello cat cat_count cause_error df ll ls memory_test \
+		hello cat cat_count cause_error core_poke df ll ls memory_test \
 		printa printb pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
