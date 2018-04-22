@@ -32,8 +32,8 @@ kernel.elf:	kernel_main.arm1176.o \
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.arm1176.o \
 		boot/boot-arm1176.a \
-		interrupts/interrupts-arm1176.a \
 		syscalls/syscalls-arm1176.a \
+		interrupts/interrupts-arm1176.a \
 		fs/fs-arm1176.a \
 		drivers/drivers-arm1176.a \
 		debug/debug-arm1176.a \
@@ -93,8 +93,8 @@ kernel7.elf:	kernel_main.armv7.o \
 	$(CROSS)ld $(LFLAGS) \
 		kernel_main.armv7.o \
 		boot/boot-armv7.a \
-		interrupts/interrupts-armv7.a \
 		syscalls/syscalls-armv7.a \
+		interrupts/interrupts-armv7.a \
 		fs/fs-armv7.a \
 		drivers/drivers-armv7.a \
 		memory/memory-armv7.a \

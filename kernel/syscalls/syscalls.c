@@ -18,6 +18,7 @@
 #include "time/time.h"
 
 #include "interrupts/interrupts.h"
+#include "interrupts/ipi.h"
 
 #include "processes/process.h"
 #include "processes/scheduler.h"
@@ -246,6 +247,10 @@ uint32_t swi_handler_c(
 //		case SYSCALL_MALLOC:
 //			result=(uint32_t)memory_allocate(r0);
 //			break;
+
+		case SYSCALL_CORE_POKE:
+			result=send_ipi(r0);
+			break;
 
 		default:
 			printk("Unknown syscall %d\n",r7);
