@@ -242,7 +242,7 @@ uint32_t memory_get_total(void) {
 
 void memory_hierarchy_init(unsigned long memory_kernel) {
 
-	uint32_t start,length;
+	uint32_t start,length,i;
 
 	/**************************/
 	/* Init Memory Hierarchy  */
@@ -266,6 +266,10 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 		setup_pagetable(0,memory_total,RESERVED_KERNEL);
 		enable_mmu(1);
 
+		/* Mark the multicore stacks as reserved */
+		for(i=0xff4000;i<0x1000000;i+=CHUNK_SIZE) {
+			memory_mark_used(i/CHUNK_SIZE);
+		}
 	}
 	else {
 

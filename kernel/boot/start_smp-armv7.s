@@ -47,7 +47,10 @@ done_pi2:
 	mrc	p15, 0, r3, c0, c0, 5
 	ands	r3, #3                  /* CPU ID is Bits 0..1 */
 
+	/***********************/
 	/* set up system stack */
+	/***********************/
+
 	/* core0 = 0x8000 - 0x7000 */
 	/* core1 = 0x7000 - 0x6000 */
 	/* core2 = 0x6000 - 0x5000 */
@@ -58,6 +61,82 @@ done_pi2:
 	sub	r0,r3
 	lsl	r0,#12
 	mov	sp,r0
+
+	/***********************/
+	/* set up IRQ stack    */
+	/***********************/
+
+	/* First switch to interrupt mode, then update stack pointer */
+	mov	r1, #(CPSR_MODE_IRQ | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
+	/* core0 = 0x100 0000 - 0x0ff f000 */
+	/* core1 = 0x0ff f000 - 0x0ff e000 */
+	/* core2 = 0x0ff e000 - 0x0ff d000 */
+	/* core3 = 0x0ff d000 - 0x0ff c000 */
+	/* (0x1000 - core)<<12 */
+
+	mov	r0,#0x1000
+	sub	r0,r3
+	lsl	r0,#12
+	mov	sp,r0
+
+	/* Switch back to supervisor mode */
+	mov	r1, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
+	/* Set up the Undefined Mode Stack      */
+	mov	r1, #(CPSR_MODE_UNDEFINED | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
+	/* core0 = 0x0ff 8000 - 0x0ff 7000 */
+	/* core1 = 0x0ff 7000 - 0x0ff 6000 */
+	/* core2 = 0x0ff 6000 - 0x0ff 5000 */
+	/* core3 = 0x0ff 5000 - 0x0ff 4000 */
+	/* (0xff8 - core)<<12 */
+
+	mov	r0,#0xff8
+	sub	r0,r3
+	lsl	r0,#12
+	mov	sp,r0
+
+	/* Switch back to supervisor mode */
+	mov	r1, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
+        /* Set up the Abort Mode Stack  */
+	mov	r1, #(CPSR_MODE_ABORT | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
+	mov	r0,#0xff8
+	sub	r0,r3
+	lsl	r0,#12
+	mov	sp,r0
+
+        /* Switch back to supervisor mode */
+	mov	r1, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
+	/* Set up the FIQ Mode Stack    */
+	mov	r1, #(CPSR_MODE_FIQ | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
+	/* core0 = 0x0ff c000 - 0x0ff b000 */
+	/* core1 = 0x0ff b000 - 0x0ff a000 */
+	/* core2 = 0x0ff a000 - 0x0ff 9000 */
+	/* core3 = 0x0ff 9000 - 0x0ff 8000 */
+	/* (0xff8 - core)<<12 */
+
+	mov	r0,#0xffc
+	sub	r0,r3
+	lsl	r0,#12
+	mov	sp,r0
+
+
+	/* Switch back to supervisor mode */
+	mov	r1, #(CPSR_MODE_SVC | CPSR_MODE_IRQ_DISABLE | CPSR_MODE_FIQ_DISABLE )
+	msr	cpsr_c, r1
+
 
 	mov	r0,r3			/* put cpu# in arg0 */
 
