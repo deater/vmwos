@@ -12,6 +12,22 @@
 0x0000 8000	kernel start
 
 0x000e 0000	kernel end (roughly)
+
+0x00ff 4000 - 5000	UND stack (core3)
+0x00ff 5000 - 6000	UND stack (core2)
+0x00ff 6000 - 7000	UND stack (core1)
+0x00ff 7000 - 8000	UND stack (core0)
+
+0x00ff 8000 - 9000	FIQ stack (core3)
+0x00ff 9000 - a000	FIQ stack (core2)
+0x00ff a000 - b000	FIQ stack (core1)
+0x00ff b000 - c000	FIQ stack (core0)
+
+0x00ff c000 - d000	IRQ stack (core3)
+0x00ff d000 - e000	IRQ stack (core2)
+0x00ff e000 - f000	IRQ stack (core1)
+0x00ff f000 - 0000	IRQ stack (core0)
+
 0x0100 0000					reserve 16MB kernel?
 
 0x3??? ????	device-tree at boot

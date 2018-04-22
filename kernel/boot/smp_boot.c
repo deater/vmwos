@@ -69,12 +69,14 @@ void smp_boot(void) {
 			start_core_addr,mailbox_addr);
 		mmio_write(mailbox_addr,start_core_addr);
 
+		printk("\tWaiting for core %d to become ready\n",i);
+
 		/* Send event -- wake other cores sleeping in WFE */
 		asm volatile("sev\n"  // SEV
 			: : : "memory");
 
-		printk("\tCore0 waiting for core %i to become ready (%d %d %d)\n",
-			i,core_booted[1],core_booted[2],core_booted[3]);
+//		printk("\tCore0 waiting for core %i to become ready (%d %d %d)\n",
+//			i,core_booted[1],core_booted[2],core_booted[3]);
 		timeout=0;
 
 //		flush_dcache((uint32_t)&core_booted,
