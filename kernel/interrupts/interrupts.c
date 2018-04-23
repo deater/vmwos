@@ -152,7 +152,6 @@ Bits	Description
 0	CNTPSIRQ interrupt (Physical Timer -1)
 */
 	uint32_t per_core[4],i;
-	static int print_once=0;
 
 	per_core[0]=mmio_read(0x40000060);
 	per_core[1]=mmio_read(0x40000064);
@@ -162,13 +161,16 @@ Bits	Description
 	for(i=0;i<4;i++) {
 		if (per_core[i]==0) continue;
 
+		/* GPU interrupt, meaning basic_pending/pending1/pending2 */
+		/* Should have handled this */
 		if (per_core[i]&0x100) {
-			if (!print_once) {
+			if (!handled) {
 				printk("Unhandled GPU interrupt core %d "
-					"(probably power sag)\n",i);
-				print_once++;
+					"%x %x %x "
+					"(possibly power sag)\n",
+					i,basic_pending,pending1,pending2);
 			}
-			handled++;
+			/* IPI interrupt */
 		} else if (per_core[i]&0x10) {
 			ipi_interrupt_handler(i);
 			handled++;
