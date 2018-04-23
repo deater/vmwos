@@ -157,7 +157,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_IOCTL:
-			printk("UNIMPLEMENTED SYSCALL: IOCTL %x %x %x\n",
+			printk("UNIMPLEMENTED SYSCALL: IOCTL(%x,%x,%x)\n",
 				r0,r1,r2);
 			result=-1;
 			break;
