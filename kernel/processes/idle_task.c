@@ -3,6 +3,7 @@
 #include "lib/printk.h"
 #include "lib/delay.h"
 #include "lib/string.h"
+#include "lib/smp.h"
 
 #include "processes/process.h"
 #include "processes/idle_task.h"

@@ -1,15 +1,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "lib/printk.h"
+#include "lib/string.h"
+#include "lib/memcpy.h"
+#include "lib/smp.h"
+
 #include "syscalls/exec.h"
 #include "memory/memory.h"
 #include "processes/scheduler.h"
 #include "processes/process.h"
 #include "time/time.h"
-
-#include "lib/printk.h"
-#include "lib/string.h"
-#include "lib/memcpy.h"
 
 int scheduling_enabled=1;
 

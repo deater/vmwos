@@ -1,7 +1,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-//#include "mmio.h"
+#include "lib/smp.h"
+
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/led/led.h"

@@ -1,7 +1,10 @@
 #include <stdint.h>
 
-#include "processes/process.h"
 #include "lib/printk.h"
+#include "lib/smp.h"
+
+#include "processes/process.h"
+
 
 void dump_saved_user_state(struct process_control_block_type *proc) {
 

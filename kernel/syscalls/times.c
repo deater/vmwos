@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include "lib/smp.h"
+
 #include "syscalls/times.h"
 
 #include "processes/process.h"

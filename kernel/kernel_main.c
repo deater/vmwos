@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "lib/printk.h"
+#include "lib/smp.h"
 
 #include "boot/hardware_detect.h"
 #include "boot/smp_boot.h"

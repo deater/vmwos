@@ -9,6 +9,7 @@
 #include "lib/errors.h"
 #include "lib/endian.h"
 #include "lib/memcpy.h"
+#include "lib/smp.h"
 
 #include "drivers/block/ramdisk.h"
 

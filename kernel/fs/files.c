@@ -4,6 +4,7 @@
 #include "lib/errors.h"
 #include "lib/printk.h"
 #include "lib/string.h"
+#include "lib/smp.h"
 
 #include "drivers/console/console_io.h"
 

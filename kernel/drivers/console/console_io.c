@@ -4,7 +4,9 @@
 
 #include "drivers/serial/serial.h"
 #include "drivers/framebuffer/framebuffer_console.h"
+
 #include "lib/locks.h"
+#include "lib/smp.h"
 
 #include "processes/process.h"
 #include "processes/waitqueue.h"

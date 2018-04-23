@@ -1,12 +1,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "processes/process.h"
-#include "processes/scheduler.h"
-
 #include "lib/printk.h"
 #include "lib/string.h"
 #include "lib/memcpy.h"
+#include "lib/smp.h"
+
+#include "processes/process.h"
+#include "processes/scheduler.h"
 
 static int debug=0;
 

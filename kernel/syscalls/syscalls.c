@@ -3,6 +3,7 @@
 
 #include "lib/printk.h"
 #include "lib/errors.h"
+#include "lib/smp.h"
 
 #include "syscalls/syscalls.h"
 

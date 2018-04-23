@@ -11,11 +11,12 @@ http://www.makelinux.net/ldd3/chp-6-sect-2
 #include <stdint.h>
 #include <stddef.h>
 
+#include "lib/printk.h"
+#include "lib/smp.h"
+
 #include "processes/process.h"
 #include "processes/scheduler.h"
 #include "processes/waitqueue.h"
-
-#include "lib/printk.h"
 
 static int wait_debug=0;
 
