@@ -111,5 +111,5 @@ void timer_sleep_until(uint32_t time) {
 			timer_next_wakeup=time;
 		}
 	}
-	wait_queue_add(&timer_wait_queue,current_process);
+	wait_queue_add(&timer_wait_queue,current_proc[0]);
 }

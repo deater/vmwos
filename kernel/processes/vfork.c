@@ -17,7 +17,7 @@ int32_t vfork(void) {
 	struct process_control_block_type *child,*parent,*prev,*next;
 	uint32_t new_stack;
 
-	parent=current_process;
+	parent=current_proc[0];
 
 	/* create new child process */
 	child=process_create();
@@ -68,7 +68,7 @@ int32_t vfork(void) {
 
 	process_save(child,new_stack);
 
-	if (current_process==parent) {
+	if (current_proc[0]==parent) {
 		if (debug) printk("parent status %d, ready=%d sleep=%d running schedule\n",
 				parent->status,
 				PROCESS_STATUS_READY,PROCESS_STATUS_SLEEPING);

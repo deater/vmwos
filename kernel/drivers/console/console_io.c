@@ -65,12 +65,16 @@ int console_insert_char(int ch) {
 	mutex_unlock(&console_buffer_write_mutex);
 
 	/* Emergency debug if ^B */
-	if (ch==0x2) dump_saved_user_state(current_process);
+	if (ch==0x2) {
+		dump_saved_user_state(current_proc[0]);
+	}
 
 	/* TODO: kill if ^C? */
 
 	/* Force schedule if ^Z */
-	if (ch==26) scheduling_enabled=!scheduling_enabled;
+	if (ch==26) {
+		scheduling_enabled=!scheduling_enabled;
+	}
 
 	/* Wake anyone waiting for I/O */
 	wait_queue_wake(&console_wait_queue);
@@ -144,7 +148,7 @@ int console_read(void *buf, size_t count) {
 	/* put to sleep if no data available */
 	/* FIXME: handle non-blocking case */
 	while (input_buffer_head==input_buffer_tail) {
-		wait_queue_add(&console_wait_queue,current_process);
+		wait_queue_add(&console_wait_queue,current_proc[0]);
 	}
 
 	for(i=0;i<count;i++) {

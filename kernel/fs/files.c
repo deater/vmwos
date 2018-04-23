@@ -104,7 +104,7 @@ int32_t get_inode(const char *pathname) {
 		ptr++;
 	}
 	else {
-		dir_inode=current_process->current_dir;
+		dir_inode=current_proc[0]->current_dir;
 	}
 
 	if (*ptr==0) {
@@ -328,7 +328,7 @@ int32_t chdir(const char *path) {
 		return -ENOTDIR;
 	}
 
-	current_process->current_dir=inode;
+	current_proc[0]->current_dir=inode;
 
 	return 0;
 }
@@ -341,7 +341,7 @@ char *getcwd(char *buf, size_t size) {
 
 	int32_t inode,result;
 
-	inode=current_process->current_dir;
+	inode=current_proc[0]->current_dir;
 
 	result=romfs_stat(inode, &stat_buf);
 

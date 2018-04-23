@@ -20,8 +20,8 @@ void schedule(void) {
 
 	struct process_control_block_type *proc,*orig_proc;
 
-	orig_proc=current_process;
-	proc=current_process;
+	orig_proc=current_proc[0];
+	proc=current_proc[0];
 
 	if (schedule_debug)
 		printk("Attempting to schedule, current proc=%d (%x)\n",
@@ -89,26 +89,27 @@ void schedule(void) {
 	/* Update time stats */
 
 	/* old process ran from time it started until now */
-	current_process->user_time+=
-		(ticks_since_boot()-current_process->last_scheduled);
+	current_proc[0]->user_time+=
+		(ticks_since_boot()-current_proc[0]->last_scheduled);
 
 	/* new process is starting from right now */
 	proc->last_scheduled=ticks_since_boot();
 
 	/* switch to new process */
-	if (proc!=current_process) {
+	if (proc!=current_proc[0]) {
 		if (schedule_debug)
 			printk("SCHEDULER: Switching from proc %d (%x) to %d (%x)\n",
-				current_process->pid,(long)current_process,
+				current_proc[0]->pid,
+				(long)current_proc[0],
 				proc->pid,(long)proc);
-		process_switch(current_process,proc);
+		process_switch(current_proc[0],proc);
 	}
-
-	if (schedule_debug) {
-		printk("SCHEDULER: Sticking with proc %d\n",
-			current_process->pid);
+	else {
+		if (schedule_debug) {
+			printk("SCHEDULER: Sticking with proc %d\n",
+				current_proc[0]->pid);
+		}
 	}
-
 	/* ARM documentation says we can put a */
 	/* clrex instruction here */
 	/* to avoid false positives in the mutex handling? */

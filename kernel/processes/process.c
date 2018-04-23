@@ -18,7 +18,9 @@ int userspace_started=0;
 static int avail_pid=0;
 
 struct process_control_block_type *proc_first=NULL;
-struct process_control_block_type *current_process=NULL;
+//struct process_control_block_type *current_process=NULL;
+
+struct process_control_block_type *current_proc[NUM_CORES];
 
 #define MAX_PROCS	16
 static struct process_control_block_type __attribute__((aligned(4096)))
@@ -279,7 +281,7 @@ int32_t process_switch(struct process_control_block_type *old,
                 : /* clobbers */
         );
 
-	current_process=new;
+	current_proc[0]=new;
 
         /* Restore current state from PCB */
         asm(

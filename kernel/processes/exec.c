@@ -87,8 +87,8 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		size=bss_end-text_start;
 		if (exec_debug) printk("BFLT: total size=%x (%d)\n",size,size);
 
-		current_process->datasize=bss_start-data_start;
-		current_process->bsssize=bss_end-bss_start;
+		current_proc[0]->datasize=bss_start-data_start;
+		current_proc[0]->bsssize=bss_end-bss_start;
 
 
 	}
@@ -132,7 +132,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	/* Set name */
 	/* FIXME: strip off path before setting filename */
-	strlcpy(current_process->name,filename,32);
+	strlcpy(current_proc[0]->name,filename,32);
 
 	/* Set up command line arguments */
 
@@ -193,23 +193,23 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	}
 
 	/* Setup the stack */
-        current_process->user_state.r[13]=(long)argv_location;
-        current_process->stack=stack_page;
-        current_process->stacksize=stack_size;
+        current_proc[0]->user_state.r[13]=(long)argv_location;
+        current_proc[0]->stack=stack_page;
+        current_proc[0]->stacksize=stack_size;
 
 	/* Setup lr to point to exit */
 	/* That way when a program exits it will return to where lr points */
-//	current_process->reg_state.r[14]=(long)exit;
+//	current_proc[0]->reg_state.r[14]=(long)exit;
 
 	/* Make r0=argc */
-	current_process->user_state.r[0]=argc;
+	current_proc[0]->user_state.r[0]=argc;
 	/* Make r1=argv */
-	current_process->user_state.r[1]=(long)argv_location;
+	current_proc[0]->user_state.r[1]=(long)argv_location;
 
         /* Setup the entry point */
-        current_process->user_state.pc=(long)binary_start;
-        current_process->text=binary_start;
-        current_process->textsize=size;
+        current_proc[0]->user_state.pc=(long)binary_start;
+        current_proc[0]->text=binary_start;
+        current_proc[0]->textsize=size;
 
 	/* Flush icache, as we have changed executable code */
 	/* so the various caches might be out of date */
@@ -219,10 +219,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	if (exec_summary_debug) {
 		printk("Execed process %s current_process %x pid %d "
-			"allocated %dkB at %x and %dkB stack at %x\n",
-			filename,(long)current_process,current_process->pid,
+			"allocated %dkB at %x and %dkB stack at %x, cpu %d\n",
+			filename,(long)current_proc[0],
+			current_proc[0]->pid,
 			size/1024,binary_start,
-			stack_size/1024,stack_page);
+			stack_size/1024,stack_page,get_cpu());
 	}
 
 	/* r0 gets overwritten with syscall result */

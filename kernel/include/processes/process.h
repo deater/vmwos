@@ -56,7 +56,7 @@ struct process_control_block_type {
 
 };
 
-extern struct process_control_block_type *current_process;
+extern struct process_control_block_type *current_proc[NUM_CORES];
 
 //int32_t process_table_init(void);
 //int32_t process_load(char *name, int type, char *data, int size, int stack_size);

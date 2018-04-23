@@ -20,17 +20,19 @@ void enter_userspace(void) {
 
 	/* enter userspace */
 
-	long shell_address=current_process->user_state.pc;
+	long shell_address=current_proc[0]->user_state.pc;
+	long cp_address=(long)(&current_proc[0]);
 
 	asm volatile(
 		"mov	lr, %[shell]\n"
-		"ldr	sp,=current_process\n"
+		"mov	sp, %[cp]\n"
 		"ldr	sp,[sp]\n"
 		"mov	r0, #0x10\n"	/* Userspace, IRQ enabled */
 		"msr	SPSR_cxsf, r0\n"
 		"movs	pc,lr\n"
 		: /* output */
-		: [shell] "r"(shell_address) /* input */
+		: [shell] "r"(shell_address),
+		  [cp] "r"(cp_address) /* input */
 		: "r0", "lr", "memory");        /* clobbers */
 }
 
@@ -40,7 +42,7 @@ void start_userspace(char *init_filename) {
 	int32_t result;
 
 	init_process=process_create();
-	current_process=init_process;
+	current_proc[0]=init_process;
 	/* Should this be NULL instead? */
 	init_process->parent=init_process;
 	init_process->current_dir=get_inode("/");

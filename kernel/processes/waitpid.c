@@ -71,7 +71,7 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options,
 	}
 	else {
 		while (proc->status!=PROCESS_STATUS_EXITED) {
-			wait_queue_add(&waitpid_wait_queue,current_process);
+			wait_queue_add(&waitpid_wait_queue,current_proc[0]);
 			//schedule();
 		}
 		if (wstatus!=NULL) *wstatus=proc->exit_value;

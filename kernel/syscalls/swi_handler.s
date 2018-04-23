@@ -14,7 +14,7 @@
 	@	entry-armv.S and entry-common.S
 
 swi_handler:
-	ldr     sp,=current_process	@ get pointer to current process
+	ldr     sp,=current_proc	@ get pointer to current process
         ldr     sp,[sp]			@ and de-reference (sp==current_process)
 
 	stmia	sp,{r0-lr}^		@ Save all user registers r0-lr

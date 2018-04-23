@@ -49,17 +49,19 @@ static void enter_kernelspace(void) {
 
         /* enter userspace */
 
-        long shell_address=current_process->user_state.pc;
+        long shell_address=current_proc[0]->user_state.pc;
+        long cp_address=(long)&(current_proc[0]);
 
         asm volatile(
-                "mov    lr, %[shell]\n"
-                "ldr    sp,=current_process\n"
+                "mov	lr, %[shell]\n"
+                "mov	sp, %[cp]\n"
                 "ldr    sp,[sp]\n"
                 "mov    r0, #0x1f\n"    /* system mode, IRQ enabled */
                 "msr    SPSR_cxsf, r0\n"
                 "movs   pc,lr\n"
                 : /* output */
-                : [shell] "r"(shell_address) /* input */
+                : [shell] "r"(shell_address),
+		  [cp] "r"(cp_address)  /* input */
                 : "r0", "lr", "memory");        /* clobbers */
 }
 
