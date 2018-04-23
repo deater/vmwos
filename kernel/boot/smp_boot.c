@@ -4,17 +4,14 @@
 
 #include "lib/printk.h"
 #include "lib/mmio.h"
+#include "lib/smp.h"
 
 #include "interrupts/ipi.h"
 
 #include "memory/memory.h"
 #include "memory/mmu-common.h"
 
-
-/* For now, assume 4 cores */
-#define NUMCORES	4
-
-static volatile uint32_t core_booted[NUMCORES];
+static volatile uint32_t core_booted[NUM_CORES];
 
 /* Boot up secondary cores */
 
@@ -66,7 +63,7 @@ void smp_boot(void) {
 	/* core 3: 0x400000BC */
 
 
-	for(i=1;i<NUMCORES;i++) {
+	for(i=1;i<NUM_CORES;i++) {
 		mailbox_addr=0x4000008c+(i*0x10);
 		printk("\tWriting %x to mailbox %x\n",
 			start_core_addr,mailbox_addr);
@@ -100,7 +97,7 @@ void smp_boot(void) {
 
 
 	printk("Done SMP init: ");
-	for(i=0;i<NUMCORES;i++) {
+	for(i=0;i<NUM_CORES;i++) {
 		printk("core%d=%d ",i,core_booted[i]);
 	}
 	printk("\n");

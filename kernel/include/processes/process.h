@@ -56,8 +56,6 @@ struct process_control_block_type {
 
 };
 
-#define NUM_CORES	4
-
 extern struct process_control_block_type *current_process;
 
 //int32_t process_table_init(void);
