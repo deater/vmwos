@@ -66,7 +66,7 @@ int console_insert_char(int ch) {
 
 	/* Emergency debug if ^B */
 	if (ch==0x2) {
-		dump_saved_user_state(current_proc[0]);
+		dump_saved_user_state(current_proc[get_cpu()]);
 	}
 
 	/* TODO: kill if ^C? */
@@ -148,7 +148,7 @@ int console_read(void *buf, size_t count) {
 	/* put to sleep if no data available */
 	/* FIXME: handle non-blocking case */
 	while (input_buffer_head==input_buffer_tail) {
-		wait_queue_add(&console_wait_queue,current_proc[0]);
+		wait_queue_add(&console_wait_queue,current_proc[get_cpu()]);
 	}
 
 	for(i=0;i<count;i++) {

@@ -110,7 +110,7 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_WAITPID:
 			//printk("Trying to waitpid on pid %d\n",r0);
-			result=waitpid(r0,(int32_t *)r1,r2,current_proc[0]);
+			result=waitpid(r0,(int32_t *)r1,r2,current_proc[get_cpu()]);
 			break;
 
 		case SYSCALL_EXECVE:
@@ -118,8 +118,8 @@ uint32_t swi_handler_c(
 			result=execve((char *)r0,(char **)r1,(char **)r2);
 			/* wake up our parent (why would we do that???)*/
 			/* oh, because separate process now, I see */
-			//printk("Waking parent %d\n",current_proc[0]>parent->pid);
-			current_proc[0]->parent->status=PROCESS_STATUS_READY;
+			//printk("Waking parent %d\n",current_proc[get_cpu()]>parent->pid);
+			current_proc[get_cpu()]->parent->status=PROCESS_STATUS_READY;
 			schedule();
 
 			/* Note, we set result to value of r0 from execve */
@@ -147,7 +147,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_GETPID:
-			result=current_proc[0]->pid;
+			result=current_proc[get_cpu()]->pid;
 			break;
 
 		case SYSCALL_TIMES:
