@@ -16,7 +16,13 @@ Known Kernel Bugs:
 	+ Interrupts are disabled during a syscall, so we can lose clock
 		ticks
 	+ user accounting resolution: how does the linux-kernel do this?
-		we can't account sub 16ms resolution
+		we can't account sub 16ms resolution.
+		Probably read out the countdown register even if it hasn't
+		triggered yet.
+	+ Compiling error with old gcc -- smp code setting the constant
+		for the stack values.  Split to two instructions rather
+		than relying on movt insns
+
 
 Known Userspace Bugs:
 	+
