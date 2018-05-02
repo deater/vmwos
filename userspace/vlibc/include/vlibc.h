@@ -2,6 +2,8 @@
 uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor);
 int32_t __aeabi_idiv(int32_t dividend, int32_t divisor);
 
+int32_t __aeabi_idivmod(int32_t dividend, int32_t divisor);
+
 /* error.c */
 extern int errno;
 char *strerror(int errnum);

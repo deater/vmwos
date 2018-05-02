@@ -192,6 +192,12 @@ static int parse_input(char *string) {
 	else if (!strncmp(string,"random",6)) {
 		printf("%d\n",rand());
 	}
+	else if (!strncmp(string,"remainder",9)) {
+		int j;
+		for(j=0;j<100;j++) {
+			printf("%d q=%d r=%d\n",j,j/13,j%13);
+		}
+	}
 	else if (strlen(string)==0) {
 		/* do nothing */
 	}
