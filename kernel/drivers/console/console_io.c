@@ -4,6 +4,7 @@
 
 #include "drivers/serial/serial.h"
 #include "drivers/framebuffer/framebuffer_console.h"
+#include "drivers/audio/audio.h"
 
 #include "lib/locks.h"
 #include "lib/smp.h"
@@ -67,6 +68,11 @@ int console_insert_char(int ch) {
 	/* Emergency debug if ^B */
 	if (ch==0x2) {
 		dump_saved_user_state(current_proc[get_cpu()]);
+	}
+
+	/* Beep if ^G */
+	if (ch==0x7) {
+		audio_beep();
 	}
 
 	/* TODO: kill if ^C? */
