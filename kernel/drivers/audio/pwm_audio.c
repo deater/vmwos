@@ -10,6 +10,7 @@
 uint32_t audio_pwm_init(void) {
 
 	/* Set GPIO40 and GPIO45 to ALT0 (PWM) */
+	/* FIXME: use the proper GPIO interface for this */
 	bcm2835_write(GPIO_GPFSEL4, (0x4 << 0) + (0x4 << 15));
 				// 40		45
 

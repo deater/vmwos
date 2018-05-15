@@ -8,6 +8,7 @@ all:	drivers-arm1176.a drivers-armv7.a
 #### ARM1176
 
 drivers-arm1176.a:	drivers.arm1176.o \
+		audio/audio.arm1176.a \
 		bcm2835/bcm2835.arm1176.a \
 		block/block.arm1176.a \
 		console/console.arm1176.a \
@@ -24,6 +25,7 @@ drivers-arm1176.a:	drivers.arm1176.o \
 
 	$(CROSS)$(AR) crsT drivers-arm1176.a \
 		drivers.arm1176.o \
+		audio/audio.arm1176.a \
 		bcm2835/bcm2835.arm1176.a \
 		block/block.arm1176.a \
 		console/console.arm1176.a \
@@ -40,6 +42,10 @@ drivers-arm1176.a:	drivers.arm1176.o \
 
 drivers.arm1176.o:	drivers.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o drivers.arm1176.o -c drivers.c
+
+
+audio/audio.arm1176.a:	force_look
+	cd audio && make
 
 bcm2835/bcm2835.arm1176.a:	force_look
 	cd bcm2835 && make
@@ -85,6 +91,7 @@ timer/timer.arm1176.a:	force_look
 
 drivers-armv7.a:	\
 		drivers.armv7.o \
+		audio/audio.armv7.a \
 		bcm2835/bcm2835.armv7.a \
 		block/block.armv7.a \
 		console/console.armv7.a \
@@ -101,6 +108,7 @@ drivers-armv7.a:	\
 
 	$(CROSS)$(AR) crsT drivers-armv7.a \
 		drivers.armv7.o \
+		audio/audio.armv7.a \
 		bcm2835/bcm2835.armv7.a \
 		block/block.armv7.a \
 		console/console.armv7.a \
@@ -118,6 +126,9 @@ drivers-armv7.a:	\
 
 drivers.armv7.o:	drivers.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o drivers.armv7.o -c drivers.c
+
+audio/audio.armv7.a:	force_look
+	cd audio && make
 
 bcm2835/bcm2835.armv7.a:	force_look
 	cd bcm2835 && make
@@ -166,6 +177,7 @@ force_look:
 
 clean:
 	rm -f *~ *.o *.a
+	cd audio && make clean
 	cd bcm2835 && make clean
 	cd block && make clean
 	cd console && make clean
