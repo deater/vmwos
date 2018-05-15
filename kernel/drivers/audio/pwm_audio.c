@@ -64,3 +64,7 @@ fifo_full:
 	return i;
 }
 
+int32_t audio_beep(void) {
+	audio_pwm_write(NULL,1000);
+	return 0;
+}

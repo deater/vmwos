@@ -12,6 +12,8 @@
 #include "drivers/serial/serial.h"
 #include "drivers/console/console_io.h"
 
+#include "drivers/audio/audio.h"
+
 #include "fs/files.h"
 
 #include "memory/memory.h"
@@ -83,6 +85,12 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/**************************/
 
 	drivers_init_all();
+
+	printk("Trying audio\n");
+	audio_pwm_init();
+	audio_beep();
+	printk("Done trying audio\n");
+
 
 	/**************************/
 	/* SMP Boot               */
