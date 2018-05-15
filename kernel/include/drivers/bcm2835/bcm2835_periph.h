@@ -7,6 +7,75 @@
 /* We adjust the IO_BASE elsewhere */
 #define	IO_BASE	0
 
+
+/**************/
+/* Interrupts */
+/**************/
+/* Section 7 */
+			/*7e00b000 */
+#define IRQ_BASE	IO_BASE+0x00b000
+
+#define IRQ_BASIC_PENDING	(IRQ_BASE+0x200)
+
+#define IRQ_BASIC_PENDING_TIMER		(1<<0)
+#define IRQ_BASIC_PENDING_IRQ57		(1<<19)
+
+#define IRQ_PENDING1		(IRQ_BASE+0x204)
+#define IRQ_PENDING2		(IRQ_BASE+0x208)
+
+#define IRQ_PENDING2_IRQ49	0x20000
+
+#define IRQ_FIQ_CONTROL		(IRQ_BASE+0x20c)
+#define IRQ_ENABLE_IRQ1		(IRQ_BASE+0x210)
+#define IRQ_ENABLE_IRQ2		(IRQ_BASE+0x214)
+#define IRQ_ENABLE_BASIC_IRQ	(IRQ_BASE+0x218)
+
+#define IRQ_ENABLE_BASIC_IRQ_ACCESS_ERROR0	(1<<7)
+#define IRQ_ENABLE_BASIC_IRQ_ACCESS_ERROR1	(1<<6)
+#define IRQ_ENABLE_BASIC_IRQ_GPU1_HALTED	(1<<5)
+#define IRQ_ENABLE_BASIC_IRQ_GPU0_HALTED	(1<<4)
+#define IRQ_ENABLE_BASIC_IRQ_ARM_DOORBELL1	(1<<3)
+#define IRQ_ENABLE_BASIC_IRQ_ARM_DOORBELL0	(1<<2)
+#define IRQ_ENABLE_BASIC_IRQ_ARM_MAILBOX	(1<<1)
+#define IRQ_ENABLE_BASIC_IRQ_ARM_TIMER		(1<<0)
+
+#define IRQ_DISABLE_IRQ1	(IRQ_BASE+0x21c)
+#define IRQ_DISABLE_IRQ2	(IRQ_BASE+0x220)
+#define IRQ_DISABLE_BASIC_IRQ	(IRQ_BASE+0x224)
+
+
+
+/*********/
+/* Timer */
+/*********/
+/* Section 14 */
+			/*7e00b000 */
+#define TIMER_BASE	IO_BASE+0x00b000
+
+/* LOAD = Value to Count Down from */
+#define TIMER_LOAD	(TIMER_BASE+0x400)
+/* VALUE = Current timer Value */
+#define TIMER_VALUE	(TIMER_BASE+0x404)
+/* CONTROL = Control Values */
+#define TIMER_CONTROL	(TIMER_BASE+0x408)
+#define TIMER_CONTROL_FREE_ENABLE	(1<<9)	/* Enable Free Counter */
+#define TIMER_CONTROL_HALT		(1<<8)	/* Halt if processor halted */
+#define TIMER_CONTROL_ENABLE		(1<<7)	/* Enable counter */
+				/* 6 = ignored, always free-running */
+#define TIMER_CONTROL_INT_ENABLE	(1<<5)	/* Enable interrupt */
+#define TIMER_CONTROL_PRESCALE_1	(0<<2)
+#define TIMER_CONTROL_PRESCALE_16	(1<<2)
+#define TIMER_CONTROL_PRESCALE_256	(2<<2)
+#define TIMER_CONTROL_32BIT		(1<<1)	/* Manual says 23bit? typo? */
+				/* 0 = ignored, always wrapping */
+
+#define TIMER_IRQ_CLEAR	(TIMER_BASE+0x40c)
+#define TIMER_RAW_IRQ	(TIMER_BASE+0x410)
+#define TIMER_MASKED_IRQ	(TIMER_BASE+0x414)
+#define TIMER_RELOAD	(TIMER_BASE+0x418)
+#define TIMER_PREDIVIDER	(TIMER_BASE+0x41c)
+#define TIMER_FREE_RUNNING	(TIMER_BASE+0x420)
+
 /************/
 /* Watchdog */
 /************/
@@ -20,6 +89,26 @@
 #define PM_WDOG (PM_BASE + 0x24)
 
 
+/***********************************************/
+/* Clock Manager (see BCM2835 Peripherals 6.2) */
+/*   note the PWM clocks are not defined there */
+/*   those values come from the Linux driver.  */
+/***********************************************/
+
+#define CM_BASE	(IO_BASE+0x101000)
+#define CM_GP0CTL	(CM_BASE+0x70)
+#define CM_GP0DIV	(CM_BASE+0x74)
+#define CM_GP1CTL	(CM_BASE+0x78)
+#define CM_GP1DIV	(CM_BASE+0x7C)
+#define CM_GP2CTL	(CM_BASE+0x80)
+#define CM_GP2DIV	(CM_BASE+0x84)
+#define CM_PWMCTL	(CM_BASE+0xA0)
+#define CM_PWMDIV	(CM_BASE+0xA4)
+
+#define CM_PASSWORD	0x5a000000
+#define CM_CLOCK_ENABLE		0x10		// Enable The Clock Generator
+#define CM_SRC_OSCILLATOR	0x01		// Clock Source = Oscillator
+
 /***************************/
 /* Random Number Generator */
 /***************************/
@@ -29,6 +118,7 @@
 #define RNG_STATUS		(RNG_BASE+0x4)
 #define RNG_DATA		(RNG_BASE+0x8)
 #define RNG_FF_THRESHOLD	(RNG_BASE+0xc)
+
 
 
 /********/
@@ -104,80 +194,10 @@
 #define GPIO_GPPUDCLK1	(GPIO_BASE + 0x9c)
 
 
-/**************/
-/* Interrupts */
-/**************/
-/* Section 7 */
-			/*7e00b000 */
-#define IRQ_BASE	IO_BASE+0x00b000
+/************************************************************************/
+/* UART									*/
+/************************************************************************/
 
-#define IRQ_BASIC_PENDING	(IRQ_BASE+0x200)
-
-#define IRQ_BASIC_PENDING_TIMER		(1<<0)
-#define IRQ_BASIC_PENDING_IRQ57		(1<<19)
-
-#define IRQ_PENDING1		(IRQ_BASE+0x204)
-#define IRQ_PENDING2		(IRQ_BASE+0x208)
-
-#define IRQ_PENDING2_IRQ49	0x20000
-
-#define IRQ_FIQ_CONTROL		(IRQ_BASE+0x20c)
-#define IRQ_ENABLE_IRQ1		(IRQ_BASE+0x210)
-#define IRQ_ENABLE_IRQ2		(IRQ_BASE+0x214)
-#define IRQ_ENABLE_BASIC_IRQ	(IRQ_BASE+0x218)
-
-#define IRQ_ENABLE_BASIC_IRQ_ACCESS_ERROR0	(1<<7)
-#define IRQ_ENABLE_BASIC_IRQ_ACCESS_ERROR1	(1<<6)
-#define IRQ_ENABLE_BASIC_IRQ_GPU1_HALTED	(1<<5)
-#define IRQ_ENABLE_BASIC_IRQ_GPU0_HALTED	(1<<4)
-#define IRQ_ENABLE_BASIC_IRQ_ARM_DOORBELL1	(1<<3)
-#define IRQ_ENABLE_BASIC_IRQ_ARM_DOORBELL0	(1<<2)
-#define IRQ_ENABLE_BASIC_IRQ_ARM_MAILBOX	(1<<1)
-#define IRQ_ENABLE_BASIC_IRQ_ARM_TIMER		(1<<0)
-
-#define IRQ_DISABLE_IRQ1	(IRQ_BASE+0x21c)
-#define IRQ_DISABLE_IRQ2	(IRQ_BASE+0x220)
-#define IRQ_DISABLE_BASIC_IRQ	(IRQ_BASE+0x224)
-
-
-
-/*********/
-/* Timer */
-/*********/
-/* Section 14 */
-			/*7e00b000 */
-#define TIMER_BASE	IO_BASE+0x00b000
-
-/* LOAD = Value to Count Down from */
-#define TIMER_LOAD	(TIMER_BASE+0x400)
-/* VALUE = Current timer Value */
-#define TIMER_VALUE	(TIMER_BASE+0x404)
-/* CONTROL = Control Values */
-#define TIMER_CONTROL	(TIMER_BASE+0x408)
-#define TIMER_CONTROL_FREE_ENABLE	(1<<9)	/* Enable Free Counter */
-#define TIMER_CONTROL_HALT		(1<<8)	/* Halt if processor halted */
-#define TIMER_CONTROL_ENABLE		(1<<7)	/* Enable counter */
-				/* 6 = ignored, always free-running */
-#define TIMER_CONTROL_INT_ENABLE	(1<<5)	/* Enable interrupt */
-#define TIMER_CONTROL_PRESCALE_1	(0<<2)
-#define TIMER_CONTROL_PRESCALE_16	(1<<2)
-#define TIMER_CONTROL_PRESCALE_256	(2<<2)
-#define TIMER_CONTROL_32BIT		(1<<1)	/* Manual says 23bit? typo? */
-				/* 0 = ignored, always wrapping */
-
-#define TIMER_IRQ_CLEAR	(TIMER_BASE+0x40c)
-#define TIMER_RAW_IRQ	(TIMER_BASE+0x410)
-#define TIMER_MASKED_IRQ	(TIMER_BASE+0x414)
-#define TIMER_RELOAD	(TIMER_BASE+0x418)
-#define TIMER_PREDIVIDER	(TIMER_BASE+0x41c)
-#define TIMER_FREE_RUNNING	(TIMER_BASE+0x420)
-
-
-
-/********/
-/* UART */
-/********/
-			/*7e00b000 */
 			/*7e201000 */
 #define UART0_BASE	IO_BASE+0x201000
 /* DR = Data register */
@@ -345,3 +365,32 @@
 #define UART0_ITOP	(UART0_BASE + 0x88)
 /* TDR = Test Data Register */
 #define UART0_TDR	(UART0_BASE + 0x8C)
+
+
+
+/************************************************/
+/* PWM (see BCM2835 Peripherals Chapter 9	*/
+/*   Pulse-Width Modulation			*/
+/************************************************/
+
+#define PWM_BASE	(IO_BASE+0x20C000)
+
+#define PWM_CONTROL	(PWM_BASE+0x00)
+#define PWM_STATUS	(PWM_BASE+0x04)
+#define PWM_DMAC	(PWM_BASE+0x08)
+#define PWM0_RANGE	(PWM_BASE+0x10)
+#define PWM0_DATA	(PWM_BASE+0x14)
+#define PWM_FIFO_IN	(PWM_BASE+0x18)
+#define PWM1_RANGE	(PWM_BASE+0x20)
+#define PWM1_DATA	(PWM_BASE+0x24)
+
+#define PWM_CONTROL_USE_FIFO1	(1<<13)
+#define PWM_CONTROL_ENABLE1	(1<<8)
+#define PWM_CONTROL_CLEAR_FIFO	(1<<6)
+#define PWM_CONTROL_USE_FIFO0	(1<<5)
+#define PWM_CONTROL_ENABLE0	(1<<0)
+
+#define PWM_STATUS_FULL	0x1
+
+
+
