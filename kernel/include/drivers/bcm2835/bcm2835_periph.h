@@ -136,6 +136,16 @@
 #define GPIO_GPFSEL3	(GPIO_BASE + 0x0c)
 #define GPIO_GPFSEL4	(GPIO_BASE + 0x10)
 #define GPIO_GPFSEL5	(GPIO_BASE + 0x14)
+
+#define	GPIO_GPFSEL_INPUT	0x0
+#define	GPIO_GPFSEL_OUTPUT	0x1
+#define	GPIO_GPFSEL_ALT0	0x4
+#define	GPIO_GPFSEL_ALT1	0x5
+#define	GPIO_GPFSEL_ALT2	0x6
+#define	GPIO_GPFSEL_ALT3	0x7
+#define	GPIO_GPFSEL_ALT4	0x3
+#define	GPIO_GPFSEL_ALT5	0x2
+
 /* GPSET = GPIO Set */
 /*  SET0 to set GPIO 32-0  */
 /*  SET1 to set GPIO 54-33 */

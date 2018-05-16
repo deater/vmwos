@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "drivers/gpio/gpio.h"
 #include "lib/printk.h"
+#include "lib/errors.h"
 
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
@@ -26,12 +27,12 @@ int32_t gpio_request(uint32_t which_one, char *string) {
 
 	if (which_one>MAX_GPIO) {
 		printk("Invalid GPIO%d\n",which_one);
-		return -1;
+		return -EINVAL;
 	}
 
 	if ( (1ULL<<which_one) & gpio_reserved) {
 		printk("GPIO%d already in use\n",which_one);
-		return -1;
+		return -EBUSY;
 	}
 
 	gpio_reserved|=(1ULL<<which_one);
@@ -46,7 +47,7 @@ int32_t gpio_free(uint32_t which_one) {
 
 	if (which_one>MAX_GPIO) {
 		printk("Invalid GPIO%d\n",which_one);
-		return -1;
+		return -EINVAL;
 	}
 
 	gpio_reserved&=~(1ULL<<which_one);
@@ -56,9 +57,8 @@ int32_t gpio_free(uint32_t which_one) {
 	return 0;
 
 }
-
-/* Set GPIO direction to be an input */
-int gpio_direction_input(int which_one) {
+/* Set GPIO pin function */
+int32_t gpio_function_select(int which_one, int function) {
 
 	uint32_t old;
 	uint32_t addr_offset;
@@ -66,47 +66,41 @@ int gpio_direction_input(int which_one) {
 
 	if (which_one>MAX_GPIO) {
 		printk("Invalid GPIO%d\n",which_one);
-		return -1;
+		return -EINVAL;
 	}
 
-	/* GPFSEL0 = 9 - 0 */
+	/* Function type is stord in the GPFSEL registers	*/
+	/* 10 per register, each is 3 bits			*/
+	/* 	i.e. GPFSEL0 holds functions for GPIO 0 - 9	*/
 	addr_offset=(which_one/10)*4;
 	bit=(which_one%10)*3;
 
-	/* 000 means input */
-
+	/* Read existing value */
 	old=bcm2835_read(GPIO_GPFSEL0+addr_offset);
+
+	/* Mask out the existing bits */
 	old &= ~(7<<bit);
+
+	/* Write in the new bits */
+	old |= (function<<bit);
+
+	/* Write out the new value */
 	bcm2835_write(GPIO_GPFSEL0+addr_offset, old);
 
 	return 0;
 
 }
 
+/* Set GPIO direction to be an input */
+int32_t gpio_direction_input(int which_one) {
+
+	return gpio_function_select(which_one, GPIO_GPFSEL_INPUT);
+}
+
 /* Set GPIO direction to be an output */
-int gpio_direction_output(int which_one) {
+int32_t gpio_direction_output(int which_one) {
 
-	uint32_t old;
-	uint32_t addr_offset;
-	uint32_t bit;
-
-	if (which_one>MAX_GPIO) {
-		printk("Invalid GPIO%d\n",which_one);
-		return -1;
-	}
-
-	/* GPFSEL0 = 9 - 0 */
-	addr_offset=(which_one/10)*4;
-	bit=(which_one%10)*3;
-
-	/* 001 means output */
-
-	old=bcm2835_read(GPIO_GPFSEL0+addr_offset);
-	old &= ~(7<<bit);
-	old |= (1<<bit);
-	bcm2835_write(GPIO_GPFSEL0+addr_offset, old);
-
-	return 0;
+	return gpio_function_select(which_one, GPIO_GPFSEL_OUTPUT);
 }
 
 /* FIXME */

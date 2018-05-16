@@ -6,8 +6,9 @@
  */
 
 int32_t gpio_request(uint32_t which_one, char *string);
-int gpio_direction_input(int which_one);
-int gpio_direction_output(int which_one);
+int32_t gpio_function_select(int which_one, int function);
+int32_t gpio_direction_input(int which_one);
+int32_t gpio_direction_output(int which_one);
 int gpio_to_irq(int which_one);
 int32_t gpio_free(uint32_t which_one);
 int gpio_get_value(int which_one);
