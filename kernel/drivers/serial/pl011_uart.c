@@ -31,8 +31,6 @@ void pl011_uart_enable_locking(void) {
 
 uint32_t pl011_uart_init(struct serial_type *serial) {
 
-	uint32_t old;
-
 	/* Make this configurable? */
 	serial->baud=115200;
 	serial->bits=8;
@@ -55,15 +53,8 @@ uint32_t pl011_uart_init(struct serial_type *serial) {
 	gpio_request(15,"uart_rx");
 
 	/* Set GPIO14 and GPIO15 to be pl011 TX, so ALT0        */
-	/* ALT0 is binary 100 (0x4)                             */
-	old=bcm2835_read(GPIO_GPFSEL1);
-	old &= ~(0x7 << 12);
-	old |= (4<<12);
-
-	old &= ~(0x7 << 15);
-	old |= (4<<15);
-	bcm2835_write(GPIO_GPFSEL1,old);
-
+	gpio_function_select(14,GPIO_GPFSEL_ALT0);
+	gpio_function_select(15,GPIO_GPFSEL_ALT0);
 
 	/* Disable the pull up/down on pins 14 and 15 */
 	/* See the Peripheral Manual for more info */
