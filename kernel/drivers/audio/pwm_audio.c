@@ -4,15 +4,19 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "drivers/gpio/gpio.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/bcm2835/bcm2835_io.h"
 
 uint32_t audio_pwm_init(void) {
 
+	/* Setup GPIO pins 14 and 15 */
+	gpio_request(40,"pwm0");
+	gpio_request(45,"pwm1");
+
 	/* Set GPIO40 and GPIO45 to ALT0 (PWM) */
-	/* FIXME: use the proper GPIO interface for this */
-	bcm2835_write(GPIO_GPFSEL4, (0x4 << 0) + (0x4 << 15));
-				// 40		45
+	gpio_function_select(40,GPIO_GPFSEL_ALT0);
+	gpio_function_select(45,GPIO_GPFSEL_ALT0);
 
 	/* Set the PWM clock */
 	bcm2835_write(CM_PWMDIV, CM_PASSWORD + 0x2000);
