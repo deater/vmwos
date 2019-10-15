@@ -402,5 +402,87 @@
 
 #define PWM_STATUS_FULL	0x1
 
+#define PWM_DMAC_ENAB	0x80000000
 
 
+/************************************************/
+/* DMA (see BCM2835 Peripherals Chapter 4	*/
+/*   DMA Controller				*/
+/************************************************/
+
+#define DMA0_BASE	(IO_BASE+0x7000)
+#define DMA1_BASE	(IO_BASE+0x7100)
+#define DMA2_BASE	(IO_BASE+0x7200)
+#define DMA3_BASE	(IO_BASE+0x7300)
+#define DMA4_BASE	(IO_BASE+0x7400)
+#define DMA5_BASE	(IO_BASE+0x7500)
+#define DMA6_BASE	(IO_BASE+0x7600)
+#define DMA7_BASE	(IO_BASE+0x7700)
+#define DMA8_BASE	(IO_BASE+0x7800)
+#define DMA9_BASE	(IO_BASE+0x7900)
+#define DMA10_BASE	(IO_BASE+0x7a00)
+#define DMA11_BASE	(IO_BASE+0x7b00)
+#define DMA12_BASE	(IO_BASE+0x7c00)
+#define DMA13_BASE	(IO_BASE+0x7d00)
+#define DMA14_BASE	(IO_BASE+0x7e00)
+/* Not a typo, discontiguous */
+#define DMA15_BASE	(IO_BASE+0xe05000)
+
+#define DMA_CS		0x00	/* Control and Status */
+#define DMA_CONBLK_AD	0x04	/* Control Block Address */
+#define DMA_TI		0x08	/* CB Word 0 (Transfer Information) */
+#define DMA_SOURCE_AD	0x0c	/* CB Word 1 (Source Address) */
+#define DMA_DEST_AD	0x10	/* CB Word 2 (Destination Address) */
+#define DMA_TXFR_LEN	0x14	/* CB Word 3 (Transfer Length) */
+#define DMA_STRIDE	0x18	/* CB Word 4 (2D Stride) */
+#define DMA_NEXTCONBK	0x1c	/* CB Word 5 (Next CB Address) */
+#define DMA_DEBUG	0x20	/* Debug */
+
+#define DMA_CS_DMA_ACTIVE			0x1 /* Activate the DMA */
+#define DMA_CS_DMA_END				0x2 /* DMA End Flag */
+#define DMA_CS_DMA_INT				0x4 /* Interrupt Status */
+#define DMA_CS_DMA_DREQ				0x8 /* DREQ State */
+#define DMA_CS_DMA_PAUSED			0x10 /* Paused State */
+#define DMA_CS_DMA_DREQ_STOPS_DMA		0x20 /* Paused by DREQ State */
+#define DMA_CS_DMA_WAITING_FOR_OUTSTANDING_WRITES	0x40
+				/* Waiting for the Last Write to be Received */
+#define DMA_CS_DMA_ERROR			0x100 /* Error */
+
+#define DMA_TI_INTEN		0x1	/* Interrupt Enable */
+#define DMA_TI_TDMODE		0x2	/* 2D Mode */
+#define DMA_TI_WAIT_RESP	0x8	/* Wait for a Write Response */
+#define DMA_TI_DEST_INC		0x10	/* Destination Address Increment */
+#define DMA_TI_DEST_WIDTH	0x20	/* Destination Transfer Width */
+#define DMA_TI_DEST_DREQ	0x40	/* Control Destination Writes w DREQ */
+#define DMA_TI_DEST_IGNORE	0x80	/* Ignore Writes */
+#define DMA_TI_SRC_INC		0x100	/* Source Address Increment */
+#define DMA_TI_SRC_WIDTH	0x200	/* Source Transfer Width */
+#define DMA_TI_SRC_DREQ		0x400	/* Control Source Reads with DREQ */
+#define DMA_TI_SRC_IGNORE	0x800	/* Ignore Reads */
+
+#define DMA_TI_PERMAP_0		0x0	/* Continuous Un-paced Transfer */
+#define DMA_TI_PERMAP_1		0x10000 /* Peripheral Number 1 */
+#define DMA_TI_PERMAP_2		0x20000 /* Peripheral Number 2 */
+#define DMA_TI_PERMAP_3		0x30000 /* Peripheral Number 3 */
+#define DMA_TI_PERMAP_4		0x40000 /* Peripheral Number 4 */
+#define DMA_TI_PERMAP_5		0x50000 /* Peripheral Number 5 */
+
+
+#define DMA_INT_STATUS	(IO_BASE+0x7ee0)
+#define DMA_ENABLE	(IO_BASE+0x7ff0)
+
+#define DMA_EN0		0x1
+#define DMA_EN1		0x2
+#define DMA_EN2		0x4
+#define DMA_EN3		0x8
+#define DMA_EN4		0x10
+#define DMA_EN5		0x20
+#define DMA_EN6		0x40
+#define DMA_EN7		0x80
+#define DMA_EN8		0x100
+#define DMA_EN9		0x200
+#define DMA_EN10	0x400
+#define DMA_EN11	0x800
+#define DMA_EN12	0x1000
+#define DMA_EN13	0x2000
+#define DMA_EN14	0x4000
