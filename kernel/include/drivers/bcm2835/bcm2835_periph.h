@@ -106,8 +106,16 @@
 #define CM_PWMDIV	(CM_BASE+0xA4)
 
 #define CM_PASSWORD	0x5a000000
-#define CM_CLOCK_ENABLE		0x10		// Enable The Clock Generator
-#define CM_SRC_OSCILLATOR	0x01		// Clock Source = Oscillator
+#define CM_CLOCK_ENABLE		0x10	// Enable The Clock Generator
+#define CM_SRC_OSCILLATOR	0x01	// Clock Source = Oscillator
+#define CM_SRC_TESTDEBUG0	0x02	// Clock Source = Test Debug 0
+#define CM_SRC_TESTDEBUG1	0x03	// Clock Source = Test Debug 1
+#define CM_SRC_PLLAPER		0x04	// Clock Source = PLLA Per
+#define CM_SRC_PLLCPER		0x05	// Clock Source = PLLC Per
+#define CM_SRC_PLLDPER		0x06	// Clock Source = PLLD Per
+#define CM_SRC_HDMIAUX		0x07	// Clock Source = HDMI Auxiliary
+#define CM_SRC_GND		0x08	// Clock Source = GND
+
 
 /***************************/
 /* Random Number Generator */
@@ -400,7 +408,18 @@
 #define PWM_CONTROL_USE_FIFO0	(1<<5)
 #define PWM_CONTROL_ENABLE0	(1<<0)
 
-#define PWM_STATUS_FULL	0x1
+
+#define PWM_STATUS_STA2		0x400
+#define PWM_STATUS_STA1		0x200
+#define PWM_STATUS_BERR		0x100
+#define PWM_STATUS_GAPO4	0x80
+#define PWM_STATUS_GAPO3	0x40
+#define PWM_STATUS_GAPO2	0x20
+#define PWM_STATUS_GAPO1	0x10
+#define PWM_STATUS_RERR1	0x8
+#define PWM_STATUS_WERR1	0x4
+#define PWM_STATUS_EMPTY	0x2
+#define PWM_STATUS_FULL		0x1
 
 #define PWM_DMAC_ENAB	0x80000000
 
