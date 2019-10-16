@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 	ayemu_set_stereo(&ay, AYEMU_MONO, NULL);
 
 	printf("Allocate RAM\n");
-	output_buffer=vmwos_malloc(output_bufsize*sizeof(uint32_t));
+	output_buffer=vmwos_malloc(output_bufsize*sizeof(uint32_t)*2);
 	if (output_buffer==NULL) {
 		printf("Error allocating memory!\n");
 		return -1;
@@ -165,7 +165,10 @@ int main(int argc, char **argv) {
 			/* 14-bit? */
 			temp=(audio_buf[i*2]&0xff);
 			temp|=audio_buf[(i*2)+1]<<8;
-			output_buffer[i+totalsize]=temp>>2;
+			/* write left (?) channel */
+			output_buffer[(i+totalsize)*2]=temp>>2;
+			/* write right (?) channel */
+			output_buffer[((i+totalsize)*2)+1]=temp>>2;
 		}
 		//memcpy(output_buffer+totalsize,audio_buf,AUDIO_BUFSIZ);
 		totalsize+=AUDIO_BUFSIZ/2;
@@ -175,7 +178,7 @@ int main(int argc, char **argv) {
 	printf("Total size=%d\n",totalsize);
 
 
-	vmwos_play_sound(output_buffer,totalsize*4,1);
+	vmwos_play_sound(output_buffer,totalsize*4*2,1);
 
 	printf("After play\n");
 
