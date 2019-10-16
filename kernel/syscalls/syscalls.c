@@ -249,7 +249,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_PLAY_SOUND:
-			result=(uint32_t)audio_pwm_write((uint8_t *)r0,r1,r2);
+			result=(uint32_t)audio_pwm_write((uint32_t *)r0,r1,r2);
 			break;
 
 		case SYSCALL_CORE_POKE:

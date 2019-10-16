@@ -115,36 +115,11 @@ uint32_t audio_pwm_init(void) {
 }
 
 /* write the data */
-int32_t audio_pwm_write(uint8_t *buffer, uint32_t len, uint32_t repeat) {
+int32_t audio_pwm_write(uint32_t *buffer, uint32_t len, uint32_t repeat) {
 
-#if 0
-	int i=0;
-	uint32_t status,data;
-
-	/* Stop if FIFO full */
-	while(1) {
-
-		data=20*(i&0x1f);
-
-fifo_full:
-		status=bcm2835_read(PWM_STATUS);
-		if (status&PWM_STATUS_FULL) goto fifo_full;
-
-		/* Data is interleaved in same FIFO */
-
-		/* Channel 0 */
-		bcm2835_write(PWM_FIFO_IN, data);
-		/* Channel 1 */
-		bcm2835_write(PWM_FIFO_IN, data);
-
-		i++;
-
-		if (i>len) break;
-
-	}
-
-	return i;
-#endif
+	/* set up control structure */
+	cb_struct1.source_address=(uint32_t)buffer;
+	cb_struct1.transfer_length=len;
 
 	/* Start DMA */
 	bcm2835_write(DMA0_BASE+DMA_CS,DMA_CS_DMA_ACTIVE);
@@ -161,7 +136,7 @@ int32_t audio_beep(void) {
 //	printk("Status: %x\n",status);
 
 	/* Start audio */
-	audio_pwm_write(NULL,1000,0);
+	audio_pwm_write(dma_buffer_0,0x2000,0);
 	delay(1000000);
 
 	/* Stop DMA */
