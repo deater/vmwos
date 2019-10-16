@@ -18,7 +18,7 @@
 
 #define FREQ	44100
 #define CHANS	1
-#define BITS	8
+#define BITS	16
 
 /* global variables */
 volatile uint32_t TimeDelay;
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 
 	printf("Decode Song\n");
 	while(!song_done) {
-		int i;
+		int i,temp;
 		NextBuffer(0);
 		if (current_pattern!=old_pattern) {
 			clock_gettime(CLOCK_REALTIME,&t);
@@ -161,12 +161,14 @@ int main(int argc, char **argv) {
 			old_pattern=current_pattern;
 		}
 
-		for(i=0;i<AUDIO_BUFSIZ;i++) {
+		for(i=0;i<AUDIO_BUFSIZ/2;i++) {
 			/* 14-bit? */
-			output_buffer[i+totalsize]=audio_buf[i]<<6;
+			temp=(audio_buf[i*2]&0xff);
+			temp|=audio_buf[(i*2)+1]<<8;
+			output_buffer[i+totalsize]=temp>>2;
 		}
 		//memcpy(output_buffer+totalsize,audio_buf,AUDIO_BUFSIZ);
-		totalsize+=AUDIO_BUFSIZ;
+		totalsize+=AUDIO_BUFSIZ/2;
 	}
 
 
