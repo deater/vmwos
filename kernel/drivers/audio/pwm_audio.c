@@ -10,6 +10,7 @@
 #include "drivers/gpio/gpio.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/bcm2835/bcm2835_io.h"
+#include "drivers/audio/audio.h"
 #include "lib/printk.h"
 #include "lib/delay.h"
 
@@ -114,7 +115,7 @@ uint32_t audio_pwm_init(void) {
 }
 
 /* write the data */
-int32_t audio_pwm_write(uint8_t *buffer, uint32_t len, int repeat) {
+int32_t audio_pwm_write(uint8_t *buffer, uint32_t len, uint32_t repeat) {
 
 #if 0
 	int i=0;

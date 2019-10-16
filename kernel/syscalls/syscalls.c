@@ -14,6 +14,7 @@
 #include "drivers/bcm2835/bcm2835_periph.h"
 #include "drivers/thermal/thermal.h"
 #include "drivers/random/bcm2835_rng.h"
+#include "drivers/audio/audio.h"
 #include "fs/files.h"
 
 #include "time/time.h"
@@ -243,9 +244,13 @@ uint32_t swi_handler_c(
 			result=bcm2835_rng_read((uint32_t *)r0);
 			break;
 
-//		case SYSCALL_MALLOC:
-//			result=(uint32_t)memory_allocate(r0);
-//			break;
+		case SYSCALL_MALLOC:
+			result=(uint32_t)memory_allocate(r0,r1);
+			break;
+
+		case SYSCALL_PLAY_SOUND:
+			result=(uint32_t)audio_pwm_write((uint8_t *)r0,r1,r2);
+			break;
 
 		case SYSCALL_CORE_POKE:
 			result=send_ipi(r0);
