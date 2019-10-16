@@ -51,7 +51,7 @@ uint32_t audio_pwm_init(void) {
 	/* setup csbs */
 	cb_struct1.transfer_information=0x00050141;
 	cb_struct1.source_address=(uint32_t)&dma_buffer_0;
-	cb_struct1.destination_address=0x7E20C018;
+	cb_struct1.destination_address=0x7E20C018; /*  PWM_BASE + PWM_FIFO_IN */
 	cb_struct1.transfer_length=0x8000;
 	cb_struct1.twod_stride=0;
 	cb_struct1.next_control_block=(uint32_t)&cb_struct1;
@@ -82,16 +82,23 @@ uint32_t audio_pwm_init(void) {
 	/* Bits 0..11 Fractional Part Of Divisor = 0 */
 	/* Bits 12..23 Integer Part Of Divisor = 2 */
 	bcm2835_write(CM_PWMDIV, CM_PASSWORD + 0x2000);
+//	bcm2835_write(CM_PWMCTL,
+//			CM_PASSWORD | CM_CLOCK_ENABLE | CM_SRC_PLLCPER);
+	/* PLLD is 500MHz? */
 	bcm2835_write(CM_PWMCTL,
 			CM_PASSWORD | CM_CLOCK_ENABLE | CM_SRC_PLLDPER);
+
 //	bcm2835_write(CM_PWMCTL,
 //			CM_PASSWORD + 0x16);
 
 	/* Set the range of the PWM */
-	/*   0xc8 = 8-bit 48kHz */
-	/* 0x2C48  14bit 44100Hz Mono */
-	bcm2835_write(PWM0_RANGE, 0x2c48);
-	bcm2835_write(PWM1_RANGE, 0x2c48);
+	/*   0xc8   8-bit 48kHz */
+	/* 0x2C48  14bit 44100Hz Mono (500MHz/0x2c48=44.1kHz) */
+	/* 0x1624  14bit 44100Hz Stereo (500MHz/0x1624=88.2kHz) */
+//	bcm2835_write(PWM0_RANGE, 0x2c48);
+//	bcm2835_write(PWM1_RANGE, 0x2c48);
+	bcm2835_write(PWM0_RANGE, 0x1624);
+	bcm2835_write(PWM1_RANGE, 0x1624);
 
 	/* Update the control register */
 	bcm2835_write(PWM_CONTROL,				//0x2161);
