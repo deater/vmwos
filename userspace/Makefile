@@ -7,7 +7,8 @@ GENROMFS = genromfs
 all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error core_poke df hello ll ls \
-	memory_test printa printb pwd sysinfo tbo uname
+	memory_test printa printb pwd sysinfo tbo uname \
+	chiptune
 
 
 image:	shell \
@@ -21,7 +22,7 @@ image:	shell \
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error core_poke df \
 		hello ll ls memory_test printa printb pwd \
-		sysinfo tbo uname ./image/bin
+		sysinfo tbo uname chiptune ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
 	cp files/fstab ./image/etc
@@ -41,6 +42,9 @@ cat_count:	cat_count.elf
 
 cause_error:	cause_error.elf
 	$(ELF2BFLT) cause_error.elf cause_error
+
+chiptune:	chiptune.elf
+	$(ELF2BFLT) chiptune.elf chiptune
 
 core_poke:	core_poke.elf
 	$(ELF2BFLT) core_poke.elf core_poke
@@ -96,6 +100,9 @@ cat.elf:	cat.o ./vlibc/vlibc.a
 cat_count.elf:	cat_count.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cat_count.elf cat_count.o ./vlibc/vlibc.a
 
+chiptune.elf:	chiptune.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o chiptune.elf chiptune.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
+
 cause_error.elf:	cause_error.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cause_error.elf cause_error.o ./vlibc/vlibc.a
 
@@ -148,6 +155,15 @@ cat_count.o:	cat_count.c
 
 cause_error.o:	cause_error.c
 	$(CROSS)$(CC) $(CFLAGS) -c cause_error.c
+
+chiptune.o:	chiptune.c
+	$(CROSS)$(CC) $(CFLAGS) -c chiptune.c
+
+ay8912.o:	ay8912.c
+	$(CROSS)$(CC) $(CFLAGS) -c ay8912.c
+
+pt3_lib.o:	pt3_lib.c
+	$(CROSS)$(CC) $(CFLAGS) -c pt3_lib.c
 
 core_poke.o:	core_poke.c
 	$(CROSS)$(CC) $(CFLAGS) -c core_poke.c
