@@ -140,3 +140,72 @@ void *memset(void *s, int c, uint32_t n) {
 	return s;
 }
 
+//void *memcpy_byte(void *dest, const void *src, uint32_t n) {
+void *memcpy(void *dest, const void *src, uint32_t n) {
+
+        int i;
+
+        char *d=dest;
+        const char *s=src;
+
+        for(i=0;i<n;i++) {
+                *d=*s;
+                d++;
+		s++;
+        }
+
+        return dest;
+}
+
+#if 0
+
+void *memcpy_4bytes(void *dest, const void *src, uint32_t n) {
+
+	uint32_t i;
+
+	uint32_t *int_dest,*int_src;
+	uint8_t *char_dest,*char_src;
+
+	uint32_t tail;
+
+	tail=n%4;
+
+	int_dest=(uint32_t *)dest;
+	int_src=(uint32_t *)src;
+
+	char_dest=(uint8_t *)dest;
+	char_src=(uint8_t *)src;
+
+
+	for(i=0;i<((n-tail)/4);i++) {
+		int_dest[i]=int_src[i];
+	}
+
+	/* Do trailing edge */
+	for(i=0;i<tail;i++) {
+		char_dest[i]=char_src[i];
+	}
+
+	return dest;
+}
+
+#endif
+
+
+	/* Not optimized */
+int32_t memcmp(const void *s1, const void *s2, uint32_t n) {
+
+	int i,result;
+	char *c1,*c2;
+
+	c1=(char *)s1;
+	c2=(char *)s2;
+
+	for(i=0;i<n;i++) {
+		result=c1[i]-c2[i];
+		if (result) return result;
+	}
+
+	return 0;
+}
+

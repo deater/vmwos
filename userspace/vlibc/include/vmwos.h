@@ -7,8 +7,9 @@
 #define __NR_temp		8198
 #define __NR_random		8199
 #define __NR_framebuffer_load	8200
-//#define __NR_malloc		8201
+#define __NR_malloc		8201
 #define __NR_core_poke		8202
+#define __NR_play_sound		8203
 
 int vmwos_blink(int value);
 int vmwos_tb1(void);
@@ -19,3 +20,5 @@ int vmwos_random(uint32_t *buffer);
 int vmwos_framebuffer_load(int x, int y, int depth, char *fb);
 void *vmwos_malloc(uint32_t size);
 int vmwos_core_poke(uint32_t which);
+int vmwos_play_sound(uint8_t *buffer, uint32_t length, uint32_t repeat);
+

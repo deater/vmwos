@@ -5,16 +5,22 @@ all:	vlibc.a
 
 vlibc.a:	start.o \
 		div.o error.o printf.o random.o stdio.o string.o system.o time.o tty.o \
-		vmwos.o syscalls.arm.o
+		uldivmod.o ldivmod.o vmwos.o syscalls.arm.o
 	$(CROSS)$(AR) crs vlibc.a start.o \
 		div.o error.o printf.o random.o stdio.o string.o system.o time.o tty.o \
-		vmwos.o syscalls.arm.o
+		uldivmod.o ldivmod.o vmwos.o syscalls.arm.o
 
 start.o:	start.c
 	$(CROSS)$(CC) $(CFLAGS) -c start.c
 
 div.o:	div.c
 	$(CROSS)$(CC) $(CFLAGS) -c div.c
+
+ldivmod.o:	ldivmod.s
+	$(CROSS)$(AS) -o ldivmod.o -c ldivmod.s
+
+uldivmod.o:	uldivmod.s
+	$(CROSS)$(AS) -o uldivmod.o -c uldivmod.s
 
 error.o:	error.c
 	$(CROSS)$(CC) $(CFLAGS) -c error.c
