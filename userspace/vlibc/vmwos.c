@@ -144,7 +144,7 @@ int vmwos_core_poke(uint32_t which) {
 	return r0;
 }
 
-int vmwos_play_sound(uint8_t *buffer, uint32_t length, uint32_t repeat) {
+int vmwos_play_sound(uint32_t *buffer, uint32_t length, uint32_t repeat) {
 
 	register long r7 __asm__("r7") = __NR_play_sound;
 	register long r0 __asm__("r0") = (unsigned long)buffer;
