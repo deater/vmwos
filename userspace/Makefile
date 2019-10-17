@@ -163,7 +163,7 @@ ay8912.o:	ay8912.c
 	$(CROSS)$(CC) $(CFLAGS) -c ay8912.c
 
 pt3_lib.o:	pt3_lib.c
-	$(CROSS)$(CC) $(CFLAGS) -c pt3_lib.c
+	$(CROSS)$(CC) $(CFLAGS) -DPT3LIB_EMBEDDED -c pt3_lib.c
 
 core_poke.o:	core_poke.c
 	$(CROSS)$(CC) $(CFLAGS) -c core_poke.c

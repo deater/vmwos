@@ -51,7 +51,7 @@ static void change_song(void) {
 	pt3_image.length=__I2_PT3_len;
 //	[0] = {	.data=__I2_PT3,	.length=__I2_PT3_len, },
 //};
-	pt3_load_song("ignored", &pt3_image, &pt3, &pt3_2);
+	pt3_load_song(&pt3_image, &pt3, &pt3_2);
 
 	current_pattern=0;
 	line=0;
