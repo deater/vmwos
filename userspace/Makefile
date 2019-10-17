@@ -8,12 +8,12 @@ all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error core_poke df hello ll ls \
 	memory_test printa printb pwd sysinfo tbo uname \
-	chiptune
+	chiptune chiptune6
 
 
 image:	shell \
 	cat cat_count cause_error core_poke df hello ll ls \
-	memory_test printa printb pwd sysinfo tbo uname
+	memory_test printa printb pwd sysinfo tbo uname chiptune chiptune6
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
@@ -22,7 +22,7 @@ image:	shell \
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error core_poke df \
 		hello ll ls memory_test printa printb pwd \
-		sysinfo tbo uname chiptune ./image/bin
+		sysinfo tbo uname chiptune chiptune6 ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
 	cp files/fstab ./image/etc
@@ -45,6 +45,9 @@ cause_error:	cause_error.elf
 
 chiptune:	chiptune.elf
 	$(ELF2BFLT) chiptune.elf chiptune
+
+chiptune6:	chiptune6.elf
+	$(ELF2BFLT) chiptune6.elf chiptune6
 
 core_poke:	core_poke.elf
 	$(ELF2BFLT) core_poke.elf core_poke
@@ -103,6 +106,9 @@ cat_count.elf:	cat_count.o ./vlibc/vlibc.a
 chiptune.elf:	chiptune.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o chiptune.elf chiptune.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
 
+chiptune6.elf:	chiptune6.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o chiptune6.elf chiptune6.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
+
 cause_error.elf:	cause_error.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cause_error.elf cause_error.o ./vlibc/vlibc.a
 
@@ -159,6 +165,9 @@ cause_error.o:	cause_error.c
 chiptune.o:	chiptune.c
 	$(CROSS)$(CC) $(CFLAGS) -c chiptune.c
 
+chiptune6.o:	chiptune6.c
+	$(CROSS)$(CC) $(CFLAGS) -c chiptune6.c
+
 ay8912.o:	ay8912.c
 	$(CROSS)$(CC) $(CFLAGS) -c ay8912.c
 
@@ -212,7 +221,8 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 
 clean:
 	rm -f *~ *.o *.elf \
-		hello cat cat_count cause_error core_poke df ll ls memory_test \
+		hello cat cat_count cause_error chiptune chiptune6 \
+		core_poke df ll ls memory_test \
 		printa printb pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
