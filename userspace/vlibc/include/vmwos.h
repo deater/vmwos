@@ -17,7 +17,7 @@ int vmwos_setfont(int which);
 int vmwos_gradient(uint32_t type);
 int vmwos_get_temp(void);
 int vmwos_random(uint32_t *buffer);
-int vmwos_framebuffer_load(int x, int y, int depth, char *fb);
+int vmwos_framebuffer_load(int x, int y, int depth, unsigned char *fb);
 void *vmwos_malloc(uint32_t size);
 int vmwos_core_poke(uint32_t which);
 int vmwos_play_sound(uint32_t *buffer, uint32_t length, uint32_t repeat);

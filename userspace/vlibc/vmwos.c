@@ -67,7 +67,7 @@ int vmwos_gradient(uint32_t type) {
 
 }
 
-int vmwos_framebuffer_load(int x, int y, int depth, char *fb) {
+int vmwos_framebuffer_load(int x, int y, int depth, unsigned char *fb) {
 
 	register long r7 __asm__("r7") = __NR_framebuffer_load;
 	register long r0 __asm__("r0")=x;
