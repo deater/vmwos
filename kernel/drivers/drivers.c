@@ -16,7 +16,7 @@
 
 void drivers_init_all(void) {
 
-	uint32_t framebuffer_width=800,framebuffer_height=600;
+	uint32_t framebuffer_width=640,framebuffer_height=480;
 	uint32_t temperature;
 
 	/**************************/

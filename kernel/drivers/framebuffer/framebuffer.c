@@ -18,6 +18,9 @@
 #include "memory/memory.h"
 #include "memory/mmu-common.h"
 
+#define FB_WIDTH	640
+#define FB_HEIGHT	480
+
 static uint32_t debug=1;
 
 static int framebuffer_initialized=0;
@@ -44,7 +47,8 @@ int framebuffer_ready(void) {
 
 static void dump_framebuffer_info(struct frame_buffer_info_type *fb) {
 
-	printk("px %d py %d vx %d vy %d pitch %d depth %d x %d y %d ptr %x sz %d\n",
+	printk("px %d py %d vx %d vy %d pitch %d depth "
+		"%d x %d y %d ptr %x sz %d\n",
 		fb->phys_x,fb->phys_y,
 		fb->virt_x,fb->virt_y,
 		fb->pitch,fb->depth,
@@ -227,8 +231,8 @@ int framebuffer_gradient(uint32_t type) {
 	if (type==0) {
 
 		for(x=0;x<current_fb.phys_x;x++) {
-			/* hardcoded to 800, not guaranteed we have divide */
-			framebuffer_vline( (x*256)/800,
+			/* hardcoded, not guaranteed we have divide */
+			framebuffer_vline( (x*256)/FB_WIDTH,
 					0,current_fb.phys_y-1, x);
 		}
 		framebuffer_push();
@@ -247,7 +251,7 @@ int framebuffer_load(int x, int y, int depth, char *pointer) {
 
 	for(i=0;i<y;i++) {
 		memcpy( (offscreen+i*current_fb.pitch),
-			(pointer+i*800),
+			(pointer+i*FB_WIDTH),
 			x*(depth/8));
 	}
 
