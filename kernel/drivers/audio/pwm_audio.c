@@ -51,7 +51,8 @@ uint32_t audio_pwm_init(void) {
 	/* setup csbs */
 	cb_struct1.transfer_information=0x00050141;
 	cb_struct1.source_address=(uint32_t)&dma_buffer_0;
-	cb_struct1.destination_address=0x7E20C018; /*  PWM_BASE + PWM_FIFO_IN */
+	cb_struct1.destination_address=//0x7E20C018;
+			0x7e000000 + PWM_FIFO_IN;
 	cb_struct1.transfer_length=0x8000;
 	cb_struct1.twod_stride=0;
 	cb_struct1.next_control_block=(uint32_t)&cb_struct1;
