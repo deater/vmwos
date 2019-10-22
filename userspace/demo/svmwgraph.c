@@ -2,8 +2,9 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "pi-graphics.h"
 #include "svmwgraph.h"
+#include "pi-graphics.h"
+
 
 
 void vmwHlin(int x1, int x2, int y, int color, unsigned char *buffer) {
@@ -51,7 +52,7 @@ void vmwFadeToBlack(unsigned char *buffer, struct palette *pal) {
 			if (pal->blue[i]) pal->blue[i]--;
 		}
 		usleep(1000);
-		pi_graphics_update(buffer);
+		pi_graphics_update(buffer,pal);
 
 	}
 }
@@ -87,7 +88,7 @@ void vmwFadeFromBlack(unsigned char *buffer, struct palette *pal) {
 			if (pal->blue[i]) pal->blue[i]--;
 		}
 		usleep(1000);
-		pi_graphics_update(buffer);
+		pi_graphics_update(buffer,pal);
 	}
 }
 

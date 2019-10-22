@@ -16,10 +16,11 @@
 
 static struct palette pal;
 
+static unsigned char buffer[XSIZE*YSIZE];
+
 int main(int argc, char **argv) {
 
 	int x,ch;
-	unsigned char buffer[XSIZE*YSIZE];
 
 	pi_graphics_init();
 
@@ -108,7 +109,7 @@ int main(int argc, char **argv) {
 		ch=pi_graphics_input();
 		if (ch=='q') break;
 		if (ch==27) break;
-		pi_graphics_update(buffer);
+		pi_graphics_update(buffer,&pal);
 		usleep(10000);
 	}
 
@@ -119,7 +120,7 @@ int main(int argc, char **argv) {
 		ch=pi_graphics_input();
 		if (ch=='q') break;
 		if (ch==27) break;
-		pi_graphics_update(buffer);
+		pi_graphics_update(buffer,&pal);
 		usleep(10000);
 	}
 

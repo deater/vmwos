@@ -9,7 +9,7 @@ all:	$(ELF2BFLT) \
 	cat cat_count cause_error core_poke df hello ll ls \
 	memory_test printa printb pwd sysinfo tbo uname \
 	chiptune chiptune6
-
+	cd demo && $(MAKE)
 
 image:	shell \
 	cat cat_count cause_error core_poke df hello ll ls \
@@ -23,6 +23,7 @@ image:	shell \
 	cp shell cat cat_count cause_error core_poke df \
 		hello ll ls memory_test printa printb pwd \
 		sysinfo tbo uname chiptune chiptune6 ./image/bin
+	cp demo/vmw_open ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
 	cp files/fstab ./image/etc
@@ -226,4 +227,4 @@ clean:
 		printa printb pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
-
+	cd demo && make clean
