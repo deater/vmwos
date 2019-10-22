@@ -231,7 +231,8 @@ int framebuffer_gradient(uint32_t type) {
 	if (type==0) {
 
 		for(x=0;x<current_fb.phys_x;x++) {
-			/* hardcoded, not guaranteed we have divide */
+			/* hardcoded to FB_WIDTH, */
+			/* not guaranteed we have divide */
 			framebuffer_vline( (x*256)/FB_WIDTH,
 					0,current_fb.phys_y-1, x);
 		}
@@ -246,12 +247,12 @@ int framebuffer_gradient(uint32_t type) {
 
 int framebuffer_load(int x, int y, int depth, char *pointer) {
 
-
 	int i;
 
 	for(i=0;i<y;i++) {
-		memcpy( (offscreen+i*current_fb.pitch),
-			(pointer+i*FB_WIDTH),
+		memcpy(
+			(offscreen+i*current_fb.pitch),
+			pointer+(i*x*(depth/8)),
 			x*(depth/8));
 	}
 

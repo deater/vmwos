@@ -16,13 +16,16 @@ int pi_graphics_update(unsigned char *buffer, struct palette *pal) {
 
 	int x;
 
+	printf("Update\n");
+
+	/* BGR */
 	for(x=0;x<XSIZE*YSIZE;x++) {
-		framebuffer[x*3]=pal->red[buffer[x]];
+		framebuffer[x*3]=pal->blue[buffer[x]];
 		framebuffer[(x*3)+1]=pal->green[buffer[x]];
-		framebuffer[(x*3)+2]=pal->blue[buffer[x]];
+		framebuffer[(x*3)+2]=pal->red[buffer[x]];
 	}
 
-	vmwos_framebuffer_load(XSIZE,YSIZE,3,framebuffer);
+	vmwos_framebuffer_load(XSIZE,YSIZE,24,framebuffer);
 
 	return 0;
 }
@@ -33,6 +36,8 @@ int pi_graphics_init(void) {
 }
 
 int pi_graphics_input(void) {
+
+	printf("Waiting 2s for input...\n");
 
 	sleep(2);
 #if 0
@@ -80,6 +85,6 @@ int pi_graphics_input(void) {
                 }
         }
 #endif
-        return 0;
+        return 27;
 }
 
