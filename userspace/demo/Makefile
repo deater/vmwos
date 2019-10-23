@@ -10,7 +10,7 @@ SDL_INCLUDE= `sdl-config --cflags`
 
 all:	vmw_open
 
-native:	vmw_open.native
+native:	vmw_open.native doom_fire.native
 
 ####
 
@@ -68,6 +68,31 @@ vmw_open.o:	vmw_open.c svmwgraph.h
 
 vmw_open.x86.o:	vmw_open.c pi-graphics.h
 	$(CC) $(NATIVE_CFLAGS) -o vmw_open.x86.o -c vmw_open.c
+
+
+####
+
+doom_fire.native:	doom_fire.x86.o pi-sim.x86.o svmwgraph.x86.o \
+			print_string.x86.o
+	$(CC) -o doom_fire.native doom_fire.x86.o svmwgraph.x86.o \
+		print_string.x86.o \
+		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
+
+doom_fire:	doom_fire.elf
+	$(ELF2BFLT) doom_fire.elf doom_fire
+
+doom_fire.elf:	doom_fire.o svmwgraph.o print_string.o \
+		pi-graphics.o $(BUILDROOT)/vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) -o doom_fire.elf \
+		doom_fire.o svmwgraph.o \
+		pi-graphics.o print_string.o $(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
+
+doom_fire.o:	doom_fire.c svmwgraph.h
+	$(CROSS)$(CC) $(CFLAGS) -c doom_fire.c
+
+doom_fire.x86.o:	doom_fire.c pi-graphics.h
+	$(CC) $(NATIVE_CFLAGS) -o doom_fire.x86.o -c doom_fire.c
+
 
 
 ####
