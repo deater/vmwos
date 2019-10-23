@@ -13,43 +13,35 @@
 #include "svmwgraph.h"
 #include "pi-graphics.h"
 #include "default_font.c"
-
-static struct palette pal;
-
-static unsigned char buffer[XSIZE*YSIZE];
-
-int main(int argc, char **argv) {
-
-	int x,ch;
-
-	pi_graphics_init();
-
-	vmwClearScreen(0,buffer);
-
-	vmwSetAllBlackPalette(&pal);
+#include "demosplash2019.h"
 
 	/* Do the VMW Software Production Logo */
+void vmwos_open(unsigned char *buffer, struct palette *pal) {
+
+	int x;
+
+	/* set up RGB palette */
 	for(x=0;x<=40;x++) {
 		/* red */
-		pal.red[100+x]=((x+20)*4);
-		pal.green[100+x]=0;
-		pal.blue[100+x]=0;
+		pal->red[100+x]=((x+20)*4);
+		pal->green[100+x]=0;
+		pal->blue[100+x]=0;
 
 		/* blue */
-		pal.red[141+x]=0;
-		pal.green[141+x]=0;
-		pal.blue[141+x]=((x+20)*4);
+		pal->red[141+x]=0;
+		pal->green[141+x]=0;
+		pal->blue[141+x]=((x+20)*4);
 
 		/* green */
-		pal.red[182+x]=0;
-		pal.green[182+x]=((x+20)*4);
-		pal.blue[182+x]=0;
+		pal->red[182+x]=0;
+		pal->green[182+x]=((x+20)*4);
+		pal->blue[182+x]=0;
 	}
 
 	/* Set the white color */
-	pal.red[15]=0xff;
-	pal.green[15]=0xff;
-	pal.blue[15]=0xff;
+	pal->red[15]=0xff;
+	pal->green[15]=0xff;
+	pal->blue[15]=0xff;
 
 	/* Actually draw the stylized VMW */
 	for(x=0;x<=40;x++) {
@@ -102,30 +94,34 @@ int main(int argc, char **argv) {
 	vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,140*2,
 			15,15,0,default_font,buffer);
 
-//	vmwFadeFromBlack(buffer,palette);
+	vmwFadeFromBlack(buffer,pal);
 
-	while(1) {
+//	while(1) {
+//
+//		ch=pi_graphics_input();
+//		if (ch=='q') break;
+//		if (ch==27) break;
+//		pi_graphics_update(buffer,pal);
+//		usleep(10000);
+//	}
 
-		ch=pi_graphics_input();
-		if (ch=='q') break;
-		if (ch==27) break;
-		pi_graphics_update(buffer,&pal);
-		usleep(10000);
-	}
+	pi_graphics_update(buffer,pal);
+	sleep(2);
 
-	vmwFadeToBlack(buffer,&pal);
+	vmwFadeToBlack(buffer,pal);
 
-	while(1) {
+//	while(1) {
+//
+//		ch=pi_graphics_input();
+//		if (ch=='q') break;
+//		if (ch==27) break;
+//		pi_graphics_update(buffer,pal);
+//		usleep(10000);
+//	}
 
-		ch=pi_graphics_input();
-		if (ch=='q') break;
-		if (ch==27) break;
-		pi_graphics_update(buffer,&pal);
-		usleep(10000);
-	}
+	sleep(1);
 
-
-	return 0;
+	return;
 }
 
 

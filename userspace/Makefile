@@ -23,7 +23,7 @@ image:	shell \
 	cp shell cat cat_count cause_error core_poke df \
 		hello ll ls memory_test printa printb pwd \
 		sysinfo tbo uname chiptune chiptune6 ./image/bin
-	cp demo/vmw_open ./image/bin
+	cp demo/demosplash2019 ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
 	cp files/fstab ./image/etc

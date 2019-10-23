@@ -8,9 +8,9 @@ NATIVE_CFLAGS = -O2 -Wall
 SDL_LIBS= `sdl-config --libs`
 SDL_INCLUDE= `sdl-config --cflags`
 
-all:	vmw_open
+all:	demosplash2019
 
-native:	vmw_open.native doom_fire.native
+native:	demosplash2019.native
 
 ####
 
@@ -46,22 +46,32 @@ mode7_demo:	mode7_demo.o pi-sim.o svmwgraph.o apple2.o
 mode7_demo.o:	mode7_demo.c svmwgraph.h pi-sim.h
 	$(CC) $(CFLAGS) -c mode7_demo.c
 
+
+
 ####
 
-vmw_open.native:	vmw_open.x86.o pi-sim.x86.o svmwgraph.x86.o \
-			print_string.x86.o
-	$(CC) -o vmw_open.native vmw_open.x86.o svmwgraph.x86.o \
-		print_string.x86.o \
+demosplash2019.native:	demosplash2019.x86.o pi-sim.x86.o svmwgraph.x86.o \
+			vmw_open.x86.o print_string.x86.o
+	$(CC) -o demosplash2019.native demosplash2019.x86.o svmwgraph.x86.o \
+		vmw_open.x86.o print_string.x86.o \
 		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
 
-vmw_open:	vmw_open.elf
-	$(ELF2BFLT) vmw_open.elf vmw_open
+demosplash2019:	demosplash2019.elf
+	$(ELF2BFLT) demosplash2019.elf demosplash2019
 
-vmw_open.elf:	vmw_open.o svmwgraph.o print_string.o \
-		pi-graphics.o $(BUILDROOT)/vlibc/vlibc.a
-	$(CROSS)$(CC) $(CFLAGS) -o vmw_open.elf \
-		vmw_open.o svmwgraph.o \
+demosplash2019.elf:	demosplash2019.o svmwgraph.o print_string.o \
+		vmw_open.o pi-graphics.o $(BUILDROOT)/vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) -o demosplash2019.elf \
+		demosplash2019.o svmwgraph.o vmw_open.o \
 		pi-graphics.o print_string.o $(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
+
+demosplash2019.o:	demosplash2019.c demosplash2019.h svmwgraph.h
+	$(CROSS)$(CC) $(CFLAGS) -c demosplash2019.c
+
+demosplash2019.x86.o:	demosplash2019.c demosplash2019.h pi-graphics.h
+	$(CC) $(NATIVE_CFLAGS) -o demosplash2019.x86.o -c demosplash2019.c
+
+####
 
 vmw_open.o:	vmw_open.c svmwgraph.h
 	$(CROSS)$(CC) $(CFLAGS) -c vmw_open.c
