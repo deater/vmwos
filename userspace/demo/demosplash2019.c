@@ -31,6 +31,9 @@ int main(int argc, char **argv) {
 	/* Do the VMW Software Production Logo */
 	vmwos_open(buffer,&pal);
 
+	/* Draw the credits */
+	doom_fire(buffer,&pal);
+
 	return 0;
 }
 

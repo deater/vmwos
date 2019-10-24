@@ -8,15 +8,18 @@
 #else
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #endif
 
 #include "svmwgraph.h"
 #include "pi-graphics.h"
-#include "default_font.c"
+#include "demosplash2019.h"
 
-static struct palette pal;
+static void vmwClearTopScreen(int color, unsigned char *buffer) {
 
-static unsigned char buffer[XSIZE*YSIZE];
+        memset(buffer,color,XSIZE*200*sizeof(unsigned char));
+
+}
 
 /* The state word must be initialized to non-zero */
 static uint32_t rand32(void) {
@@ -31,9 +34,10 @@ static uint32_t rand32(void) {
 /* Based on Doom Fire as described by FABIEN SANGLARD */
 /* http://fabiensanglard.net/doom_fire_psx/ */
 
-int main(int argc, char **argv) {
+void doom_fire(unsigned char *buffer, struct palette *pal) {
 
-	int x,y,ch,newcol,r,dst;
+	int x,y,newcol,r,dst;
+	int count=0,credit=0,texty=445;
 
 	int rgbs[38]={
 		0x000000,
@@ -49,23 +53,22 @@ int main(int argc, char **argv) {
                 0xFFFFFF,
 	};
 
-	pi_graphics_init();
-
 	vmwClearScreen(0,buffer);
 
 	for(x=0;x<38;x++) {
-		pal.red[x]=(rgbs[x]>>16)&0xff;
-		pal.green[x]=(rgbs[x]>>8)&0xff;
-		pal.blue[x]=(rgbs[x])&0xff;
+		pal->red[x]=(rgbs[x]>>16)&0xff;
+		pal->green[x]=(rgbs[x]>>8)&0xff;
+		pal->blue[x]=(rgbs[x])&0xff;
 	}
 
 	/* draw white line at bottom */
 	vmwHlin(0,640,479,37,buffer);
 
-//	vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,140*2,
-//			15,15,0,default_font,buffer);
+
 
 	while(1) {
+		vmwClearTopScreen(0, buffer);
+
 		for(x=0;x<640;x++) {
 			for(y=200;y<479;y++) {
 				r=rand32()&7;
@@ -77,14 +80,20 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		ch=pi_graphics_input();
-		if (ch=='q') break;
-		if (ch==27) break;
-		pi_graphics_update(buffer,&pal);
+		if (credit==0) {
+			vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,texty,
+				15,15,0,DEFAULT_FONT,buffer);
+			texty--;
+			if (texty==10) credit=1;
+		}
+		pi_graphics_update(buffer,pal);
 		usleep(10000);
+
+		count++;
+		if (count==1000) break;
 	}
 
-	return 0;
+	return;
 }
 
 

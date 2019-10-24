@@ -4,7 +4,7 @@ BUILDROOT = ../
 
 include ../Makefile_user.inc
 
-NATIVE_CFLAGS = -O2 -Wall
+NATIVE_CFLAGS = -O2 -Wall -g
 SDL_LIBS= `sdl-config --libs`
 SDL_INCLUDE= `sdl-config --cflags`
 
@@ -51,19 +51,23 @@ mode7_demo.o:	mode7_demo.c svmwgraph.h pi-sim.h
 ####
 
 demosplash2019.native:	demosplash2019.x86.o pi-sim.x86.o svmwgraph.x86.o \
-			vmw_open.x86.o print_string.x86.o
+			vmw_open.x86.o print_string.x86.o \
+			doom_fire.x86.o
 	$(CC) -o demosplash2019.native demosplash2019.x86.o svmwgraph.x86.o \
 		vmw_open.x86.o print_string.x86.o \
+		doom_fire.x86.o \
 		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
 
 demosplash2019:	demosplash2019.elf
 	$(ELF2BFLT) demosplash2019.elf demosplash2019
 
 demosplash2019.elf:	demosplash2019.o svmwgraph.o print_string.o \
-		vmw_open.o pi-graphics.o $(BUILDROOT)/vlibc/vlibc.a
+		vmw_open.o pi-graphics.o doom_fire.o \
+		$(BUILDROOT)/vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) -o demosplash2019.elf \
 		demosplash2019.o svmwgraph.o vmw_open.o \
-		pi-graphics.o print_string.o $(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
+		pi-graphics.o print_string.o \
+		doom_fire.o $(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
 
 demosplash2019.o:	demosplash2019.c demosplash2019.h svmwgraph.h
 	$(CROSS)$(CC) $(CFLAGS) -c demosplash2019.c
@@ -82,20 +86,8 @@ vmw_open.x86.o:	vmw_open.c pi-graphics.h
 
 ####
 
-doom_fire.native:	doom_fire.x86.o pi-sim.x86.o svmwgraph.x86.o \
-			print_string.x86.o
-	$(CC) -o doom_fire.native doom_fire.x86.o svmwgraph.x86.o \
-		print_string.x86.o \
-		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
-
 doom_fire:	doom_fire.elf
 	$(ELF2BFLT) doom_fire.elf doom_fire
-
-doom_fire.elf:	doom_fire.o svmwgraph.o print_string.o \
-		pi-graphics.o $(BUILDROOT)/vlibc/vlibc.a
-	$(CROSS)$(CC) $(CFLAGS) -o doom_fire.elf \
-		doom_fire.o svmwgraph.o \
-		pi-graphics.o print_string.o $(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
 
 doom_fire.o:	doom_fire.c svmwgraph.h
 	$(CROSS)$(CC) $(CFLAGS) -c doom_fire.c

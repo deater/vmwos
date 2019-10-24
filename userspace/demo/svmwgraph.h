@@ -14,14 +14,16 @@ int pisim_init(void);
 int pisim_input(void);
 
 /* Font Routines */
+#define DEFAULT_FONT	0
+
 void vmwTextXY(char *string,int x,int y,int color,int background,int overwrite,
-        unsigned char font[256][16], unsigned char *buffer);
+        int which_font, unsigned char *buffer);
 void vmwTextXYx2(char *string,int x,int y,int color,int background,int overwrite,
-        unsigned char font[256][16], unsigned char *buffer);
+        int which_font, unsigned char *buffer);
 int put_char(unsigned char c, int x, int y, int fg_color, int bg_color,
-        int overwrite, unsigned char font[256][16], unsigned char *buffer);
+        int overwrite, int which_font, unsigned char *buffer);
 int print_string(char *string, int x, int y, int color,
-	unsigned char font[256][16],unsigned char *buffer);
+	int which_font,unsigned char *buffer);
 
 /* Palette */
 void vmwFadeToBlack(unsigned char *buffer, struct palette *pal);

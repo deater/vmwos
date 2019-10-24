@@ -12,7 +12,6 @@
 
 #include "svmwgraph.h"
 #include "pi-graphics.h"
-#include "default_font.c"
 #include "demosplash2019.h"
 
 	/* Do the VMW Software Production Logo */
@@ -92,7 +91,7 @@ void vmwos_open(unsigned char *buffer, struct palette *pal) {
 
 
 	vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,140*2,
-			15,15,0,default_font,buffer);
+			15,15,0,DEFAULT_FONT,buffer);
 
 	vmwFadeFromBlack(buffer,pal);
 
