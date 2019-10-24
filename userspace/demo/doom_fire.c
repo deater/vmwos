@@ -1,3 +1,6 @@
+/* Based on Doom Fire as described by FABIEN SANGLARD */
+/* http://fabiensanglard.net/doom_fire_psx/ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -31,8 +34,7 @@ static uint32_t rand32(void) {
 	return x;
 }
 
-/* Based on Doom Fire as described by FABIEN SANGLARD */
-/* http://fabiensanglard.net/doom_fire_psx/ */
+
 
 void doom_fire(unsigned char *buffer, struct palette *pal) {
 
@@ -88,8 +90,10 @@ void doom_fire(unsigned char *buffer, struct palette *pal) {
 				15,15,0,DEFAULT_FONT,buffer);
 
 		pi_graphics_update(buffer,pal);
+#ifdef VMWOS
+#else
 		usleep(10000);
-
+#endif
 		count++;
 		if (count==1000) break;
 	}
