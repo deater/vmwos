@@ -245,19 +245,30 @@ int framebuffer_gradient(uint32_t type) {
 	return 0;
 }
 
+void fast_fb_update(char *fb, char *src);
+
 int framebuffer_load(int x, int y, int depth, char *pointer) {
 
-	int i;
+//	int i;
 
-	for(i=0;i<y;i++) {
-		memcpy(
-			(offscreen+i*current_fb.pitch),
-			pointer+(i*x*(depth/8)),
-			x*(depth/8));
-	}
+	/* assume our pointer is aligned and pitch perfect */
+
+//	fast_fb_update((char *)current_fb.pointer,pointer);
+
+//	A bit faster
+	memcpy((unsigned char *)current_fb.pointer,
+		pointer,current_fb.phys_x*current_fb.phys_y*3);
+
+//	original code
+//	for(i=0;i<y;i++) {
+//		memcpy(
+//			(offscreen+i*current_fb.pitch),
+//			pointer+(i*x*(depth/8)),
+//			x*(depth/8));
+//	}
 
 	/* Yes, this dual copies for now */
-	framebuffer_push();
+//	framebuffer_push();
 
 	return 0;
 
