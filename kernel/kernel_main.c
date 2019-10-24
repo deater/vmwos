@@ -81,9 +81,25 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	hardware_print_commandline();
 
 	/**************************/
+	/* Enable floating point  */
+	/**************************/
+	/* FIXME: where to put this? */
+#ifdef ARMV7
+#else
+	printk("Enabling FPU...\n");
+
+	asm volatile(   "mrc p15, #0, r0, c1, c0, #2\n"
+			"orr r0, r0, #0xF00000 @ Single + double precision\n"
+			"mcr p15, #0, r0, c1, c0, #2\n"
+			"mov r0, #0x40000000   @ Set VFP enable bit\n"
+			"fmxr fpexc, r0\n"
+                : : : "r0");
+
+#endif
+
+	/**************************/
 	/* Init Device Drivers	  */
 	/**************************/
-
 	drivers_init_all();
 
 	printk("Trying audio\n");

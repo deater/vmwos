@@ -245,7 +245,7 @@ int framebuffer_gradient(uint32_t type) {
 	return 0;
 }
 
-void fast_fb_update(char *fb, char *src);
+//void fast_fb_update(char *fb, char *src);
 
 int framebuffer_load(int x, int y, int depth, char *pointer) {
 
