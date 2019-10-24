@@ -16,8 +16,6 @@ int pi_graphics_update(unsigned char *buffer, struct palette *pal) {
 
 	int x;
 
-	printf("Update\n");
-
 	/* BGR */
 	for(x=0;x<XSIZE*YSIZE;x++) {
 		framebuffer[x*3]=pal->blue[buffer[x]];

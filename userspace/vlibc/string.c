@@ -140,6 +140,7 @@ void *memset(void *s, int c, uint32_t n) {
 	return s;
 }
 
+#if 0
 //void *memcpy_byte(void *dest, const void *src, uint32_t n) {
 void *memcpy(void *dest, const void *src, uint32_t n) {
 
@@ -156,6 +157,7 @@ void *memcpy(void *dest, const void *src, uint32_t n) {
 
         return dest;
 }
+#endif
 
 #if 0
 

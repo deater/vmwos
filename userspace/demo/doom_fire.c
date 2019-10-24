@@ -81,11 +81,12 @@ void doom_fire(unsigned char *buffer, struct palette *pal) {
 		}
 
 		if (credit==0) {
-			vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,texty,
-				15,15,0,DEFAULT_FONT,buffer);
 			texty--;
 			if (texty==10) credit=1;
 		}
+			vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,texty,
+				15,15,0,DEFAULT_FONT,buffer);
+
 		pi_graphics_update(buffer,pal);
 		usleep(10000);
 

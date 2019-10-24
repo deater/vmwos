@@ -14,6 +14,20 @@
 #include "pi-graphics.h"
 #include "demosplash2019.h"
 
+#ifdef VMWOS
+static int64_t get_time_us(void) {
+
+        int64_t value;
+        struct timespec t;
+
+        clock_gettime(CLOCK_REALTIME,&t);
+
+        value=(t.tv_sec*1000000ULL)+t.tv_nsec/1000;
+
+        return value;
+}
+#endif
+
 	/* Do the VMW Software Production Logo */
 void vmwos_open(unsigned char *buffer, struct palette *pal) {
 
@@ -93,7 +107,20 @@ void vmwos_open(unsigned char *buffer, struct palette *pal) {
 	vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,140*2,
 			15,15,0,DEFAULT_FONT,buffer);
 
+#ifdef VMWOS
+	int64_t start_usecs,end_usecs;
+
+	start_usecs=get_time_us();
+#endif
+
 	vmwFadeFromBlack(buffer,pal);
+
+#ifdef VMWOS
+	end_usecs=get_time_us();
+
+	printf("Took %lld usecs\n",end_usecs-start_usecs);
+#endif
+
 
 //	while(1) {
 //
