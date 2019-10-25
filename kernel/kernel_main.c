@@ -84,12 +84,23 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Enable floating point  */
 	/**************************/
 	/* FIXME: where to put this? */
-#ifdef ARMV7
-#else
 	printk("Enabling FPU...\n");
 
+#ifdef ARMV7
+	/* Pi3 (Cortex A53) FPU enable */
+	asm volatile(   "mrc p15, 0, r0, c1, c1, 2 @ Enable nonsecure to cp10/cp11\n"
+			"orr r0, r0, #3<<10\n"
+			"mcr p15, 0, r0, c1, c1, 2\n"
+			"mrc p15,0,r0,c1,c0, #2 @ Access Control Register\n"
+			"orr r0, #(0x300000 + 0xC00000)	@  Enable Single & Double Precision\n"
+			"mcr p15,0,r0,c1,c0, #2	@ Access Control Register\n"
+			"mov r0, #0x40000000 @ Enable VFP\n"
+			"vmsr fpexc,r0\n"
+                : : : "r0");
+#else
+	/* ARM1176 FPU enable */
 	asm volatile(   "mrc p15, #0, r0, c1, c0, #2\n"
-			"orr r0, r0, #0xF00000 @ Single + double precision\n"
+			"orr r0, r0, #0xf00000 @ Single + double precision\n"
 			"mcr p15, #0, r0, c1, c0, #2\n"
 			"mov r0, #0x40000000   @ Set VFP enable bit\n"
 			"fmxr fpexc, r0\n"
