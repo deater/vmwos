@@ -87,8 +87,11 @@ vmw_open.x86.o:	vmw_open.c pi-graphics.h
 
 ####
 
-doom_fire:	doom_fire.elf
-	$(ELF2BFLT) doom_fire.elf doom_fire
+console.o:	console.c svmwgraph.h
+	$(CROSS)$(CC) $(CFLAGS) -c console.c
+
+console.x86.o:	console.c svmwgraph.h
+	$(CC) $(NATIVE_CFLAGS) -o console.x86.o -c console.c
 
 doom_fire.o:	doom_fire.c svmwgraph.h
 	$(CROSS)$(CC) $(CFLAGS) -c doom_fire.c

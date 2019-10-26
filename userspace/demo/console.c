@@ -1,21 +1,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "lib/printk.h"
+#include "svmwgraph.h"
+#include "pi-graphics.h"
 
-#include "drivers/framebuffer/framebuffer.h"
-#include "drivers/framebuffer/framebuffer_console.h"
-
-#include "c_font.h"
-
-#include "lib/string.h"
-#include "lib/memcpy.h"
-#include "lib/memset.h"
-#include "lib/errors.h"
-
-static uint32_t framebuffer_console_initialized=0;
-
-//static int debug=1;
+#ifdef VMWOS
+#include "syscalls.h"
+#include "vlibc.h"
+#include "vmwos.h"
+#else
+#include <stdio.h>
+#include <string.h>
+#endif
 
 #define ANSI_BLACK	0
 #define ANSI_RED	1
@@ -25,7 +21,7 @@ static uint32_t framebuffer_console_initialized=0;
 
 
 static int font_ysize=16;
-static unsigned char *current_font=(unsigned char *)default_font;
+static unsigned char *current_font;
 
 #define CONSOLE_X 80
 #define CONSOLE_Y 30
@@ -57,59 +53,19 @@ static unsigned int ansi_colors[16]={
         0xffffff, /* white */
 };
 
-void framebuffer_console_setfont(int which) {
+static void console_load_ansi_pal(struct palette *pal) {
+	int i;
 
-	current_font=(unsigned char *)default_font;
-	font_ysize=16;
-	printk("Using default font\n");
-
-	framebuffer_clear_screen(0);
-	framebuffer_console_push();
-
-}
-
-
-int framebuffer_console_putchar(int fore_color, int back_color,
-			int ch, int x, int y) {
-
-	int xx,yy;
-
-	if (!framebuffer_console_initialized) return -ENODEV;
-
-	for(yy=0;yy<font_ysize;yy++) {
-		for(xx=0;xx<8;xx++) {
-			if (current_font[(ch*font_ysize)+yy] & (1<<(7-xx))) {
-				framebuffer_putpixel(fore_color,x+xx,y+yy);
-#if 0
-				framebuffer_hline(fore_color,
-						(x+xx)*2,(x+xx)*2+1,(y+yy)*2);
-				framebuffer_hline(fore_color,
-						(x+xx)*2,(x+xx)*2+1,((y+yy)*2)+1);
-#endif
-			}
-			else {
-				/* transparency */
-				if (back_color!=0) {
-				framebuffer_putpixel(back_color,x+xx,y+yy);
-#if 0
-					framebuffer_hline(back_color,
-						(x+xx)*2,(x+xx)*2+1,(y+yy)*2);
-					framebuffer_hline(back_color,
-						(x+xx)*2,(x+xx)*2+1,((y+yy)*2)+1);
-#endif
-				}
-			}
-		}
+	for(i=0;i<16;i++) {
+		pal->red[i]=(ansi_colors[i]>>16)&0xff;
+		pal->green[i]=(ansi_colors[i]>>8)&0xff;
+		pal->blue[i]=(ansi_colors[i])&0xff;
 	}
-	return 0;
-
 }
 
-int framebuffer_console_clear(void) {
+int console_clear(void) {
 
 	int x,y;
-
-	framebuffer_clear_screen(0);
 
 	for(y=0;y<CONSOLE_Y;y++) {
 		for(x=0;x<CONSOLE_X;x++) {
@@ -121,7 +77,7 @@ int framebuffer_console_clear(void) {
 	return 0;
 }
 
-int framebuffer_console_home(void) {
+int console_home(void) {
 
 	console_x=0;
 	console_y=0;
@@ -130,23 +86,21 @@ int framebuffer_console_home(void) {
 }
 
 
-int framebuffer_console_push(void) {
+int console_update(unsigned char *buffer, struct palette *pal) {
 
 	int x,y;
 
-	if (!framebuffer_ready()) return -1;
-
 	for(x=0;x<CONSOLE_X;x++) {
 		for(y=0;y<CONSOLE_Y;y++) {
-			framebuffer_console_putchar(
-				ansi_colors[text_color[x+(y*CONSOLE_X)]&0xf],
-				ansi_colors[(text_color[x+(y*CONSOLE_X)]>>4)&0xf],
-				text_console[x+(y*CONSOLE_X)],
-				x*8,y*font_ysize);
+			put_char(text_console[x+(y*CONSOLE_X)],
+				x*8,y*font_ysize,
+				text_color[x+(y*CONSOLE_X)]&0xf,
+				(text_color[x+(y*CONSOLE_X)]>>4)&0xf,
+				1,DEFAULT_FONT,buffer);
 		}
 	}
 
-	framebuffer_push();
+	pi_graphics_update(buffer,pal);
 
 	return 0;
 }
@@ -167,7 +121,8 @@ static int32_t which_number=-1;
 static uint32_t ansi_state=ANSI_STATE_NORMAL;
 static uint32_t ansi_command;
 
-int framebuffer_console_write(const char *buffer, int length) {
+int console_write(const char *string, int length,
+		unsigned char *buffer, struct palette *pal) {
 
 	int i=0;
 	int refresh_screen=0;
@@ -175,26 +130,24 @@ int framebuffer_console_write(const char *buffer, int length) {
 	int x;
 	int c;
 
-	if (!framebuffer_console_initialized) return -ENODEV;
-
 	while(1) {
 		if (ansi_state==ANSI_STATE_NORMAL) {
-			if (buffer[i]=='\r') {
+			if (string[i]=='\r') {
 				/* Carriage Return */
 				/* console_x=0; */
 				/* we ignore and hope a \r is always */
 				/* followed by a \n */
-			} else if (buffer[i]=='\n') {
+			} else if (string[i]=='\n') {
 				/* Linefeed */
 				console_x=0;
 				console_y++;
-			} else if (buffer[i]=='\t') {
+			} else if (string[i]=='\t') {
 				console_x=(console_x+8)&(~0x7);
-			} else if (buffer[i]=='\b') {
+			} else if (string[i]=='\b') {
 				console_x--;
 				if (console_x<0) console_x=0;
 				refresh_screen=1;
-			} else if (buffer[i]==27) {
+			} else if (string[i]==27) {
 				ansi_state=ANSI_STATE_ESCAPE;
 			}
 
@@ -204,7 +157,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 				if (text_console[console_x+(console_y*CONSOLE_X)]!=' ') {
 					refresh_screen=1;
 				}
-				text_console[console_x+(console_y*CONSOLE_X)]=buffer[i];
+				text_console[console_x+(console_y*CONSOLE_X)]=string[i];
 				text_color[console_x+(console_y*CONSOLE_X)]=
 					(console_back_color<<4 |
 					(console_fore_color&0xf));
@@ -213,7 +166,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 		}
 		else if (ansi_state==ANSI_STATE_ESCAPE) {
-			if (buffer[i]=='[') {
+			if (string[i]=='[') {
 				which_number=-1;
 				numbers[0]=ANSI_DEFAULT;
 				ansi_state=ANSI_STATE_NUMBER;
@@ -223,7 +176,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 			}
 		} else if (ansi_state==ANSI_STATE_NUMBER) {
 			int val;
-			val=buffer[i];
+			val=string[i];
 
 			/* If not a number */
 			if ((val<'0') || (val>'9')) {
@@ -232,7 +185,7 @@ int framebuffer_console_write(const char *buffer, int length) {
 					which_number++;
 					if (which_number==ANSI_MAX_NUMBERS) {
 						ansi_state=ANSI_STATE_NORMAL;
-						printk("ANSI: Too many numbers!\n");
+						//printk("ANSI: Too many numbers!\n");
 						break;
 					}
 					numbers[which_number]=0;
@@ -315,12 +268,12 @@ int framebuffer_console_write(const char *buffer, int length) {
 					case 1:
 						/* clear to beginning of screen */
 					default:
-						printk("ANSI: unknown clear %d\n",numbers[0]);
+						//printk("ANSI: unknown clear %d\n",numbers[0]);
 						break;
 					case 2:
 						/* clear all of screen */
-						framebuffer_console_clear();
-						framebuffer_console_home();
+						console_clear();
+						console_home();
 						break;
 					}
 					break;
@@ -353,8 +306,8 @@ int framebuffer_console_write(const char *buffer, int length) {
 					}
 					break;
 				default:
-					printk("Unknown ansi command \'%c\'",
-							ansi_command);
+					//printk("Unknown ansi command \'%c\'",
+					//		ansi_command);
 						break;
 			}
 
@@ -382,9 +335,9 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 			refresh_screen=1;
 
-			memcpy(&(text_console[0]),&(text_console[CONSOLE_X]),
+			memmove(&(text_console[0]),&(text_console[CONSOLE_X]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
-			memcpy(&(text_color[0]),&(text_color[CONSOLE_X]),
+			memmove(&(text_color[0]),&(text_color[CONSOLE_X]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
 
 			for(x=0;x<CONSOLE_X;x++) {
@@ -400,30 +353,25 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 	}
 
-	if (refresh_screen) {
-		framebuffer_clear_screen(0);
-	}
+//	if (refresh_screen) {
+//		framebuffer_clear_screen(0);
+//	}
 
-	framebuffer_console_push();
+	console_update(buffer,pal);
 
 	return 0;
 }
 
-int framebuffer_console_val(int x, int y) {
 
-	if (x>=CONSOLE_X) return -1;
-	if (y>=CONSOLE_Y) return -1;
 
-	return text_console[x+(y*CONSOLE_X)];
+int console_init(struct palette *pal) {
 
-}
+	console_clear();
+	console_home();
 
-int framebuffer_console_init(void) {
+	console_load_ansi_pal(pal);
 
-	framebuffer_console_clear();
-	framebuffer_console_home();
-
-	framebuffer_console_initialized=1;
+	current_font=(unsigned char *)select_font(DEFAULT_FONT);
 
 	return 0;
 }

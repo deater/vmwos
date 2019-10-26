@@ -12,7 +12,7 @@
 #define FONTSIZE_Y	16
 #define	FONTSIZE_X	8
 
-static void *select_font(int which) {
+void *select_font(int which) {
 
 	return default_font;
 }
