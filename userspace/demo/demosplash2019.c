@@ -31,6 +31,9 @@ int main(int argc, char **argv) {
 	/* Do the VMW Software Production Logo */
 	vmwos_open(buffer,&pal);
 
+	/* Do the boot screen fakeout */
+	boot_intro(buffer,&pal);
+
 	/* init console */
 	console_init(&pal);
 	console_write("Testing\n", 8, buffer, &pal);

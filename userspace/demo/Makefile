@@ -14,15 +14,6 @@ native:	demosplash2019.native
 
 ####
 
-sparkle:	sparkle.o svmwgraph.o pi-sim.o apple2.o
-	$(CC) -o sparkle sparkle.o svmwgraph.o pi-sim.o apple2.o \
-		$(SDL_LIBS) $(LFLAGS)
-
-sparkle.o:	sparkle.c svmwgraph.h pi-sim.h
-	$(CC) $(CFLAGS) -c sparkle.c
-
-####
-
 chiptune:	chiptune.o ay8912.o pt3_lib.o
 	$(CC) -o chiptune ay8912.o chiptune.o pt3_lib.o $(LFLAGS)
 
@@ -52,11 +43,12 @@ mode7_demo.o:	mode7_demo.c svmwgraph.h pi-sim.h
 
 demosplash2019.native:	demosplash2019.x86.o \
 			pi-sim.x86.o svmwgraph.x86.o pcx_load.x86.o \
-			vmw_open.x86.o print_string.x86.o \
-			doom_fire.x86.o console.x86.o
+			vmw_open.x86.o print_string.x86.o pi_logo.x86.o \
+			doom_fire.x86.o console.x86.o boot_intro.x86.o
 	$(CC) -o demosplash2019.native demosplash2019.x86.o svmwgraph.x86.o \
 		vmw_open.x86.o print_string.x86.o pcx_load.x86.o \
-		doom_fire.x86.o console.x86.o \
+		doom_fire.x86.o console.x86.o boot_intro.x86.o \
+		pi_logo.x86.o \
 		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
 
 demosplash2019:	demosplash2019.elf
@@ -64,12 +56,12 @@ demosplash2019:	demosplash2019.elf
 
 demosplash2019.elf:	demosplash2019.o svmwgraph.o print_string.o \
 		vmw_open.o pi-graphics.o doom_fire.o console.o \
-		pcx_load.o \
+		pcx_load.o boot_intro.o pi_logo.o \
 		$(BUILDROOT)/vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) -o demosplash2019.elf \
 		demosplash2019.o svmwgraph.o vmw_open.o \
 		pi-graphics.o print_string.o pcx_load.o \
-		doom_fire.o console.o \
+		doom_fire.o console.o boot_intro.o pi_logo.o \
 		$(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
 
 demosplash2019.o:	demosplash2019.c demosplash2019.h svmwgraph.h
@@ -89,6 +81,12 @@ vmw_open.x86.o:	vmw_open.c pi-graphics.h
 
 ####
 
+boot_intro.o:	boot_intro.c svmwgraph.h
+	$(CROSS)$(CC) $(CFLAGS) -c boot_intro.c
+
+boot_intro.x86.o:	boot_intro.c svmwgraph.h
+	$(CC) $(NATIVE_CFLAGS) -o boot_intro.x86.o -c boot_intro.c
+
 console.o:	console.c svmwgraph.h
 	$(CROSS)$(CC) $(CFLAGS) -c console.c
 
@@ -103,22 +101,15 @@ doom_fire.x86.o:	doom_fire.c pi-graphics.h
 
 
 
-####
-
-pi_opener:	pi_opener.o pcx_load.o \
-		pi_boot.o pi-sim.o print_string.o svmwgraph.o
-	$(CC) -o pi_opener pi_opener.o pcx_load.o \
-		pi_boot.o print_string.o \
-		pi-sim.o svmwgraph.o $(SDL_LIBS) $(LFLAGS)
-
-pi_opener.o:	pi_opener.c pi-sim.h
-	$(CC) $(CFLAGS) -c pi_opener.c
 
 
-####
+#### IMAGES
 
-pi_boot.o:	pi_boot.pcx
-	ld -r -b binary pi_boot.pcx -o pi_boot.o
+pi_logo.o:	pi_logo.pcx
+	$(CROSS)ld -r -b binary pi_logo.pcx -o pi_logo.o
+
+pi_logo.x86.o:	pi_logo.pcx
+	ld -r -b binary pi_logo.pcx -o pi_logo.x86.o
 
 ####
 
