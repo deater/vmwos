@@ -382,9 +382,10 @@ int framebuffer_console_write(const char *buffer, int length) {
 
 			refresh_screen=1;
 
-			memcpy(&(text_console[0]),&(text_console[CONSOLE_X]),
+			/* we overlap */
+			memmove(&(text_console[0]),&(text_console[CONSOLE_X]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
-			memcpy(&(text_color[0]),&(text_color[CONSOLE_X]),
+			memmove(&(text_color[0]),&(text_color[CONSOLE_X]),
 				(CONSOLE_Y-1)*CONSOLE_X*sizeof(unsigned char));
 
 			for(x=0;x<CONSOLE_X;x++) {
