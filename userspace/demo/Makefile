@@ -52,22 +52,23 @@ mode7_demo.o:	mode7_demo.c svmwgraph.h pi-sim.h
 
 demosplash2019.native:	demosplash2019.x86.o pi-sim.x86.o svmwgraph.x86.o \
 			vmw_open.x86.o print_string.x86.o \
-			doom_fire.x86.o
+			doom_fire.x86.o console.x86.o
 	$(CC) -o demosplash2019.native demosplash2019.x86.o svmwgraph.x86.o \
 		vmw_open.x86.o print_string.x86.o \
-		doom_fire.x86.o \
+		doom_fire.x86.o console.x86.o \
 		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
 
 demosplash2019:	demosplash2019.elf
 	$(ELF2BFLT) demosplash2019.elf demosplash2019
 
 demosplash2019.elf:	demosplash2019.o svmwgraph.o print_string.o \
-		vmw_open.o pi-graphics.o doom_fire.o \
+		vmw_open.o pi-graphics.o doom_fire.o console.o \
 		$(BUILDROOT)/vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) -o demosplash2019.elf \
 		demosplash2019.o svmwgraph.o vmw_open.o \
 		pi-graphics.o print_string.o \
-		doom_fire.o $(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
+		doom_fire.o console.o \
+		$(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
 
 demosplash2019.o:	demosplash2019.c demosplash2019.h svmwgraph.h
 	$(CROSS)$(CC) $(CFLAGS) -c demosplash2019.c

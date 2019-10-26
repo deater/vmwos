@@ -4,7 +4,7 @@
 
 #include "syscalls.h"
 #include "vmwos.h"
-
+#include "vlibc.h"
 
 int strncmp(const char *s1, const char *s2, uint32_t n) {
 
@@ -211,3 +211,34 @@ int32_t memcmp(const void *s1, const void *s2, uint32_t n) {
 	return 0;
 }
 
+/* FIXME: not optimized */
+void *memmove(void *dest, const void *src, size_t n) {
+
+	int i;
+	char *d = dest;
+	const char *s = src;
+
+	/* If dest and src same, just return destination */
+	if (d==s) {
+		return d;
+	}
+
+	/* If no overlap, just run memcpy */
+	if ((uintptr_t)s-(uintptr_t)d-n <= -2*n) {
+		return memcpy(d, s, n);
+	}
+
+	/* if desitnation less than src, run forward */
+	/* otherwise, copy backwards */
+	if (d<s) {
+		for(i=0;i<n;i++) {
+			*d++ = *s++;
+		}
+	} else {
+		for(i=n-1;i>=0;i--) {
+			d[n] = s[n];
+		}
+	}
+
+	return dest;
+}
