@@ -1,9 +1,14 @@
-#include <stdio.h>	/* For FILE I/O */
-#include <string.h>	/* For strncmp */
-#include <fcntl.h>	/* for open()  */
-#include <unistd.h>	/* for lseek() */
-#include <sys/stat.h>	/* for file modes */
-#include <stdlib.h>	/* free() */
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef VMWOS
+#include "syscalls.h"
+#include "vlibc.h"
+#include "vmwos.h"
+#else
+#include <stdio.h>
+#include <string.h>
+#endif
 
 #include "svmwgraph.h"
 
@@ -130,7 +135,7 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 	return 0;
 }
 
-int vmwPCXLoadPalette(unsigned char *image, int offset) {
+int vmwPCXLoadPalette(unsigned char *image, int offset, struct palette *pal) {
 
 	unsigned char *pal_pointer,temp_byte;
 	unsigned char r,g,b;
@@ -146,7 +151,7 @@ int vmwPCXLoadPalette(unsigned char *image, int offset) {
 	pal_pointer++;
 
 	if (temp_byte!=12) {
-		fprintf(stderr,"Error!  No palette found! 0%x 0%x\n",
+		printf("Error!  No palette found! 0%x 0%x\n",
 			temp_byte,offset);
 		return -1;
 	}
@@ -159,9 +164,9 @@ int vmwPCXLoadPalette(unsigned char *image, int offset) {
 		b=*pal_pointer;
 		pal_pointer++;
 
-		red_palette[i]=r;
-		green_palette[i]=g;
-		blue_palette[i]=b;
+		pal->red[i]=r;
+		pal->green[i]=g;
+		pal->blue[i]=b;
 
 	}
 	return 0;

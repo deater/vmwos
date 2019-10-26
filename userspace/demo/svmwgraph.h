@@ -83,4 +83,6 @@ int console_clear(void);
 int console_home(void);
 
 
-
+/* pcx_load.h */
+int vmwLoadPCX(unsigned char *image, int x, int y, unsigned char *buffer);
+int vmwPCXLoadPalette(unsigned char *image, int offset, struct palette *pal);
