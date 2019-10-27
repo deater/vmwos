@@ -46,7 +46,7 @@ void vmwVlin(int y1, int y2, int x, int color, unsigned char *buffer);
 
 /* Apple2 Compatible */
 void apple2_plot(int x, int y, int color, unsigned char *buffer);
-void apple2_load_palette(void);
+void apple2_load_palette(struct palette *pal);
 
 #define APPLE2_COLOR_BLACK		0
 #define APPLE2_COLOR_DARKBLUE		2

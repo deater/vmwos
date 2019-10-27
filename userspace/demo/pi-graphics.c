@@ -35,10 +35,11 @@ int pi_graphics_init(void) {
 
 int pi_graphics_input(void) {
 
+#ifdef VMWOS
 	printf("Waiting 2s for input...\n");
 
 	sleep(2);
-#if 0
+#else
         SDL_Event event;
         int keypressed;
 
@@ -83,6 +84,6 @@ int pi_graphics_input(void) {
                 }
         }
 #endif
-        return 27;
+        return 0;
 }
 

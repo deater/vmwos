@@ -43,11 +43,12 @@ mode7_demo.o:	mode7_demo.c svmwgraph.h pi-sim.h
 
 demosplash2019.native:	demosplash2019.x86.o \
 			pi-sim.x86.o svmwgraph.x86.o pcx_load.x86.o \
-			vmw_open.x86.o print_string.x86.o \
+			vmw_open.x86.o print_string.x86.o mode7.x86.o \
 			doom_fire.x86.o console.x86.o boot_intro.x86.o
 	$(CC) -o demosplash2019.native demosplash2019.x86.o svmwgraph.x86.o \
 		vmw_open.x86.o print_string.x86.o pcx_load.x86.o \
 		doom_fire.x86.o console.x86.o boot_intro.x86.o \
+		mode7.x86.o \
 		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
 
 demosplash2019:	demosplash2019.elf
@@ -55,12 +56,12 @@ demosplash2019:	demosplash2019.elf
 
 demosplash2019.elf:	demosplash2019.o svmwgraph.o print_string.o \
 		vmw_open.o pi-graphics.o doom_fire.o console.o \
-		pcx_load.o boot_intro.o \
+		pcx_load.o boot_intro.o mode7.o \
 		$(BUILDROOT)/vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) -o demosplash2019.elf \
 		demosplash2019.o svmwgraph.o vmw_open.o \
 		pi-graphics.o print_string.o pcx_load.o \
-		doom_fire.o console.o boot_intro.o \
+		doom_fire.o console.o boot_intro.o mode7.o \
 		$(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
 
 demosplash2019.o:	demosplash2019.c demosplash2019.h svmwgraph.h
@@ -97,6 +98,12 @@ doom_fire.o:	doom_fire.c svmwgraph.h
 
 doom_fire.x86.o:	doom_fire.c pi-graphics.h
 	$(CC) $(NATIVE_CFLAGS) -o doom_fire.x86.o -c doom_fire.c
+
+mode7.o:	mode7.c svmwgraph.h
+	$(CROSS)$(CC) $(CFLAGS) -c mode7.c
+
+mode7.x86.o:	mode7.c pi-graphics.h
+	$(CC) $(NATIVE_CFLAGS) -o mode7.x86.o -c mode7.c
 
 
 

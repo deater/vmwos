@@ -1,13 +1,18 @@
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef VMWOS
+#include "syscalls.h"
+#include "vlibc.h"
+#include "vmwos.h"
+#else
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#endif
 
-#include <math.h>
-
-#include "pi-sim.h"
 #include "svmwgraph.h"
-
+#include "pi-graphics.h"
 
 static unsigned char flying_map[16][16]= {
 	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
@@ -32,30 +37,87 @@ static unsigned char flying_map[16][16]= {
 
 };
 
+static double sin_lookup_table[32]={
+	 0.000000, 0.098017, 0.195090, 0.290285,
+	 0.382683, 0.471397, 0.555570, 0.634393,
+	 0.707107, 0.773010, 0.831470, 0.881921,
+	 0.923880, 0.956940, 0.980785, 0.995185,
+	 1.000000, 0.995185, 0.980785, 0.956940,
+	 0.923880, 0.881921, 0.831470, 0.773010,
+	 0.707107, 0.634393, 0.555570, 0.471397,
+	 0.382683, 0.290285, 0.195090, 0.098017,
+};
+
+	/* 0...63 */
+static double sin_lookup(int which) {
+
+	which=(which%64);
+	if (which<32) return sin_lookup_table[which];
+	else return -sin_lookup_table[which-32];
+}
+
+static double cos_lookup(int which) {
+
+	which=which+16;
+	return sin_lookup(which);
+}
+
+
+static unsigned int apple2_color[16]={
+        0,              /*  0 black */
+        0xe31e60,       /*  1 magenta */
+        0x604ebd,       /*  2 dark blue */
+        0xff44fd,       /*  3 purple */
+        0x00a360,       /*  4 dark green */
+        0x9c9c9c,       /*  5 grey 1 */
+        0x14cffd,       /*  6 medium blue */
+        0xd0c3ff,       /*  7 light blue */
+        0x607203,       /*  8 brown */
+        0xff6a3c,       /*  9 orange */
+        0x9d9d9d,       /* 10 grey 2 */
+        0xffa0d0,       /* 11 pink */
+        0x14f53c,       /* 12 bright green */
+        0xd0dd8d,       /* 13 yellow */
+        0x72ffd0,       /* 14 aqua */
+        0xffffff,       /* 15 white */
+};
+
+void apple2_load_palette(struct palette *pal) {
+
+	int i;
+
+	for(i=0;i<16;i++) {
+		pal->red[i]=(apple2_color[i]>>16)&0xff;
+		pal->green[i]=(apple2_color[i]>>8)&0xff;
+		pal->blue[i]=(apple2_color[i])&0xff;
+	}
+
+}
+
 
 /* Ship Sprites */
-unsigned char ship_shadow[]={
+static unsigned char ship_shadow[]={
 	0x5,0x3,
 	0x00,0x00,0x00,0x00,0x00,
 	0x00,0x00,0xaa,0x00,0x00,
 	0x00,0x00,0xaa,0x00,0x00,
 };
 
-unsigned char ship_forward[]={
+static unsigned char ship_forward[]={
 	0x5,0x3,
 	0x00,0x00,0x77,0x00,0x00,
 	0x50,0x55,0x77,0x55,0x50,
 	0x01,0x00,0x07,0x00,0x01,
 };
 
-unsigned char ship_right[]={
+static unsigned char ship_right[]={
 	0x5,0x3,
 	0x50,0x00,0x70,0x77,0x00,
 	0x01,0x55,0x77,0x55,0x50,
 	0x00,0x77,0x07,0x00,0x15,
 };
 
-unsigned char ship_left[]={
+static unsigned char ship_left[]={
 	0x5,0x3,
 	0x00,0x77,0x70,0x00,0x50,
 	0x50,0x55,0x77,0x55,0x01,
@@ -79,7 +141,7 @@ static double bmp_w=640, bmp_h=480;
 
 double BETA=-0.6;
 
-void draw_background_mode7(double angle, double cx, double cy,
+void draw_background_mode7(int angle, double cx, double cy,
 		unsigned char *buffer) {
 
 	int color;
@@ -112,15 +174,15 @@ void draw_background_mode7(double angle, double cx, double cy,
 
 		// calculate the dx and dy of points in space when we step
 		// through all points on this line
-		line_dx = -sin(angle) * horizontal_scale;
-		line_dy = cos(angle) * horizontal_scale;
+		line_dx = -sin_lookup(angle) * horizontal_scale;
+		line_dy = cos_lookup(angle) * horizontal_scale;
 
 		// calculate the starting position
-		space_x = cx + (distance * cos(angle)) - bmp_w/2 * line_dx;
-		space_y = cy + (distance * sin(angle)) - bmp_w/2 * line_dy;
+		space_x = cx + (distance * cos_lookup(angle)) - bmp_w/2 * line_dx;
+		space_y = cy + (distance * sin_lookup(angle)) - bmp_w/2 * line_dy;
 
-		space_x+=(BETA*space_z*cos(angle));
-		space_y+=(BETA*space_z*sin(angle));
+		space_x+=(BETA*space_z*cos_lookup(angle));
+		space_y+=(BETA*space_z*sin_lookup(angle));
 
 
 		// go through all points in this screen line
@@ -140,14 +202,14 @@ void draw_background_mode7(double angle, double cx, double cy,
 }
 
 
-int flying(unsigned char *buffer) {
+int flying(unsigned char *buffer, struct palette *pal) {
 
 	int i,color;
 	unsigned char ch;
 	int xx,yy;
 	int turning=0;
 	double flyx=0,flyy=0;
-	double our_angle=0.0;
+	int our_angle=0;
 	double dy,dx,speed=0;
 
 	/************************************************/
@@ -170,7 +232,7 @@ int flying(unsigned char *buffer) {
 	}
 
 	while(1) {
-		ch=pisim_input();
+		ch=pi_graphics_input();
 
 		if ((ch=='q') || (ch==27))  break;
 
@@ -214,8 +276,8 @@ int flying(unsigned char *buffer) {
 			else {
 				turning=-20;
 
-				our_angle-=(6.28/64.0);
-				if (our_angle<0.0) our_angle+=6.28;
+				our_angle-=1;
+				if (our_angle<0) our_angle+=64;
 			}
 		//	printf("Angle %lf\n",our_angle);
 		}
@@ -226,8 +288,8 @@ int flying(unsigned char *buffer) {
 			}
 			else {
 				turning=20;
-				our_angle+=(6.28/64.0);
-				if (our_angle>6.28) our_angle-=6.28;
+				our_angle+=1;
+				if (our_angle>63) our_angle-=64;
 			}
 
 
@@ -247,8 +309,8 @@ int flying(unsigned char *buffer) {
 
 
 		{
-			dx = speed * cos (our_angle);
-			dy = speed * sin (our_angle);
+			dx = speed * cos_lookup (our_angle);
+			dy = speed * sin_lookup (our_angle);
 
 		        flyx += dx;
         		flyy += dy;
@@ -270,7 +332,7 @@ int flying(unsigned char *buffer) {
 //			turning--;
 //		}
 
-		pisim_update(buffer);
+		pi_graphics_update(buffer,pal);
 
 		usleep(20000);
 
@@ -279,14 +341,10 @@ int flying(unsigned char *buffer) {
 }
 
 
-int main(int argc, char **argv) {
+int mode7_flying(unsigned char *buffer, struct palette *pal) {
 
-	unsigned char buffer[XSIZE*YSIZE];
-
-	pisim_init();
-
-	apple2_load_palette();
-	flying(buffer);
+	apple2_load_palette(pal);
+	flying(buffer,pal);
 
 	return 0;
 }

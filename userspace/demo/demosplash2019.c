@@ -31,6 +31,10 @@ int main(int argc, char **argv) {
 	/* Do the VMW Software Production Logo */
 	vmwos_open(buffer,&pal);
 
+	/* temporary mode7 */
+	mode7_flying(buffer, &pal);
+
+
 	/* init console */
 	console_init(&pal);
 
