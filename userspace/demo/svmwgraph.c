@@ -109,4 +109,36 @@ void vmwFadeFromBlack(unsigned char *buffer, struct palette *pal) {
 	}
 }
 
+/* sprite format: x,y followed by sprite data */
+/* color 0xff is transparent */
 
+void put_sprite_cropped(unsigned char *buffer,
+			unsigned char *sprite,int x,int y) {
+
+	int xsize,ysize;
+	int xx,yy;
+	unsigned char *sprite_pointer,*output_pointer;
+
+	xsize=sprite[0];
+	ysize=sprite[1];
+	sprite_pointer=&sprite[2];
+	output_pointer=&buffer[(y*XSIZE)+x];
+
+	for(yy=0;yy<ysize;yy++) {
+
+		for(xx=0;xx<xsize;xx++) {
+			if (*sprite_pointer!=0xff) {
+				if ((xx+x<XSIZE) && (yy+y<YSIZE)) {
+					*output_pointer=*sprite_pointer;
+				}
+			}
+			output_pointer++;
+			sprite_pointer++;
+		}
+		output_pointer+=(XSIZE-xsize);
+	}
+
+
+
+	return;
+}

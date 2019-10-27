@@ -97,47 +97,131 @@ void apple2_load_palette(struct palette *pal) {
 
 /* Ship Sprites */
 static unsigned char ship_shadow[]={
-	0x5,0x3,
-	0x00,0x00,0x00,0x00,0x00,
-	0x00,0x00,0xaa,0x00,0x00,
-	0x00,0x00,0xaa,0x00,0x00,
+	10,12,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x0a,0x0a,0xff,0xff,0xff,0xff,
 };
 
 static unsigned char ship_forward[]={
-	0x5,0x3,
-	0x00,0x00,0x77,0x00,0x00,
-	0x50,0x55,0x77,0x55,0x50,
-	0x01,0x00,0x07,0x00,0x01,
+	10,12,
+	0xff,0xff,0xff,0xff,0x07,0x07,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x07,0x07,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x07,0x07,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x07,0x07,0xff,0xff,0xff,0xff,
+	0x05,0x05,0x05,0x05,0xff,0xff,0x05,0x05,0x05,0x05,
+	0x05,0x05,0x05,0x05,0xff,0xff,0x05,0x05,0x05,0x05,
+	0xff,0xff,0x05,0x05,0x07,0x07,0x05,0x05,0xff,0xff,
+	0xff,0xff,0x05,0x05,0x07,0x07,0x05,0x05,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x07,0x07,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0x07,0x07,0xff,0xff,0xff,0xff,
+	0x01,0x01,0xff,0xff,0xff,0xff,0xff,0xff,0x01,0x01,
+	0x01,0x01,0xff,0xff,0xff,0xff,0xff,0xff,0x01,0x01,
 };
 
 static unsigned char ship_right[]={
-	0x5,0x3,
-	0x50,0x00,0x70,0x77,0x00,
+	0x5,0x6,
+	0x50,0xff,0x70,0x77,0xff,
+	0x50,0xff,0x70,0x77,0xff,
 	0x01,0x55,0x77,0x55,0x50,
-	0x00,0x77,0x07,0x00,0x15,
+	0x01,0x55,0x77,0x55,0x50,
+	0xff,0x77,0x07,0xff,0x15,
+	0xff,0x77,0x07,0xff,0x15,
 };
 
 static unsigned char ship_left[]={
-	0x5,0x3,
-	0x00,0x77,0x70,0x00,0x50,
+	0x5,0x6,
+	0xff,0x77,0x70,0xff,0x50,
+	0xff,0x77,0x70,0xff,0x50,
 	0x50,0x55,0x77,0x55,0x01,
-	0x15,0x00,0x07,0x77,0x00,
+	0x50,0x55,0x77,0x55,0x01,
+	0x15,0xff,0x07,0x77,0xff,
+	0x15,0xff,0x07,0x77,0xff,
+};
+
+struct fixed_type {
+	char i;
+	unsigned char f;
 };
 
 
+static void double_to_fixed(double d, struct fixed_type *f) {
+
+	int temp;
+	temp=d*256;
+	f->i=(temp>>8)&0xff;
+	f->f=temp&0xff;
+}
+
+static void print_fixed(struct fixed_type *f) {
+	printf("0x%02X,0x%02X",f->i,f->f);
+}
+
+static double fixed_to_double(struct fixed_type *f) {
+
+	double d;
+
+	d=f->i;
+	d+=((double)(f->f))/256.0;
+
+//	printf("(%02x.%02x)=%lf\n",f->i,f->f,*d);
+
+	return d;
+}
+
+static void fixed_add(struct fixed_type *x, struct fixed_type *y, struct fixed_type *z) {
+	int carry;
+	short sum;
+
+	sum=(short)(x->f)+(short)(y->f);
+
+	if (sum>=256) carry=1;
+	else carry=0;
+
+	z->f=sum&0xff;
+
+	z->i=x->i+y->i+carry;
+}
+
+static void fixed_mul(struct fixed_type *x, struct fixed_type *y, struct fixed_type *z) {
+
+	int a,b,c;
+
+	a=((x->i)<<8)+(x->f);
+	b=((y->i)<<8)+(y->f);
+
+	c=a*b;
+//	printf("%x %x %x\n",a,b,c);
+
+	c>>=8;
+
+	z->i=(c>>8);
+	z->f=(c&0xff);
+}
 
 static int tile_w=16,tile_h=16;
 
 
 /* http://www.helixsoft.nl/articles/circle/sincos.htm */
 
-static double space_z=2.5; // height of the camera above the plane
-static int horizon=-2;    // number of pixels line 0 is below the horizon
-static double scale_x=320, scale_y=240;
-		// scale of space coordinates to screen coordinates
-static double bmp_w=640, bmp_h=480;
-
-//void mode_7 (BITMAP *bmp, BITMAP *tile, fixed angle, fixed cx, fixed cy, MODE_7_PARAMS params)
+/* height of the camera above the plane */
+static struct fixed_type space_z={2,128}; /* 2.5 */
+/* number of pixels line 0 is below the horizon */
+static int horizon=-68;		// -2
+/* scale of space coordinates to screen coordinates */
+#define SCALE_X 320
+#define SCALE_Y 240
+#define BMP_W	640
+#define BMP_H	480
 
 double BETA=-0.6;
 
@@ -164,13 +248,13 @@ void draw_background_mode7(int angle, double cx, double cy,
 
 //	clear_screens();
 
-	for (screen_y = 6; screen_y < bmp_h; screen_y++) {
+	for (screen_y = 72; screen_y < BMP_H; screen_y++) {
 		// first calculate the distance of the line we are drawing
-		distance = (space_z * scale_y) / (screen_y + horizon);
+		distance = (fixed_to_double(&space_z) * SCALE_Y) / (screen_y + horizon);
 
 		// then calculate the horizontal scale, or the distance between
 		// space points on this horizontal line
-		horizontal_scale = (distance / scale_x);
+		horizontal_scale = (distance / SCALE_X);
 
 		// calculate the dx and dy of points in space when we step
 		// through all points on this line
@@ -178,15 +262,15 @@ void draw_background_mode7(int angle, double cx, double cy,
 		line_dy = cos_lookup(angle) * horizontal_scale;
 
 		// calculate the starting position
-		space_x = cx + (distance * cos_lookup(angle)) - bmp_w/2 * line_dx;
-		space_y = cy + (distance * sin_lookup(angle)) - bmp_w/2 * line_dy;
+		space_x = cx + (distance * cos_lookup(angle)) - (BMP_W/2) * line_dx;
+		space_y = cy + (distance * sin_lookup(angle)) - (BMP_W/2) * line_dy;
 
-		space_x+=(BETA*space_z*cos_lookup(angle));
-		space_y+=(BETA*space_z*sin_lookup(angle));
+		space_x+=(BETA*fixed_to_double(&space_z)*cos_lookup(angle));
+		space_y+=(BETA*fixed_to_double(&space_z)*sin_lookup(angle));
 
 
 		// go through all points in this screen line
-		for (screen_x = 0; screen_x < bmp_w; screen_x++) {
+		for (screen_x = 0; screen_x < BMP_W; screen_x++) {
 			// get a pixel from the tile and put it on the screen
 
 			color=(flying_map[(int)space_x & mask_x]
@@ -216,19 +300,12 @@ int flying(unsigned char *buffer, struct palette *pal) {
 	/* Flying					*/
 	/************************************************/
 
-	xx=17;	yy=26;
+	xx=318;	yy=312;
 
-	color=APPLE2_COLOR_BLACK;
-
+	/* Make sky */
 	color=APPLE2_COLOR_MEDIUMBLUE;
-
-	for(i=0;i<20;i++) {
-		vmwHlin(0, 40, i, color, buffer);
-	}
-
-	color=APPLE2_COLOR_DARKBLUE;
-	for(i=20;i<48;i++) {
-		vmwHlin(0, 40, i, color, buffer);
+	for(i=0;i<72;i++) {
+		vmwHlin(0, 640, i, color, buffer);
 	}
 
 	while(1) {
@@ -236,37 +313,22 @@ int flying(unsigned char *buffer, struct palette *pal) {
 
 		if ((ch=='q') || (ch==27))  break;
 
-		if (ch=='g') {
-			BETA+=0.1;
-			printf("Horizon=%lf\n",BETA);
-		}
-		if (ch=='h') {
-			BETA-=0.1;
-			printf("Horizon=%lf\n",BETA);
-		}
-
-		if (ch=='s') {
-			scale_x++;
-			scale_y++;
-			printf("Scale=%lf\n",scale_x);
-		}
-
 		/* up */
 		if ((ch=='i') || (ch==11)) {
-			if (yy>16) {
-				yy-=2;
-				space_z+=1;
+			if (yy>192) {
+				yy-=24;
+				space_z.i+=1;
 			}
 
-			printf("Z=%lf\n",space_z);
+//			printf("Z=%lf\n",space_z);
 		}
 		/* down */
 		if ((ch=='m') || (ch==10)) {
-			if (yy<30) {
-				yy+=2;
-				space_z-=1;
+			if (yy<360) {
+				yy+=24;
+				space_z.i-=1;
 			}
-			printf("Z=%lf\n",space_z);
+//			printf("Z=%lf\n",space_z);
 		}
 		/* left */
 		if ((ch=='j') || (ch==8)) {
@@ -307,30 +369,27 @@ int flying(unsigned char *buffer, struct palette *pal) {
 			speed=0;
 		}
 
+		dx = speed * cos_lookup (our_angle);
+		dy = speed * sin_lookup (our_angle);
 
-		{
-			dx = speed * cos_lookup (our_angle);
-			dy = speed * sin_lookup (our_angle);
-
-		        flyx += dx;
-        		flyy += dy;
-		}
-
-//		gr_copy(0x800,0x400);
+		flyx += dx;
+		flyy += dy;
 
 		draw_background_mode7(our_angle, flyx, flyy,buffer);
 
-//		grsim_put_sprite_page(0,ship_shadow,xx,30);
+		put_sprite_cropped(buffer,ship_shadow,xx,360);
 
-//		if (turning==0) grsim_put_sprite_page(0,ship_forward,xx,yy);
-//		if (turning<0) {
-//			grsim_put_sprite_page(0,ship_left,xx,yy);
-//			turning++;
-//		}
-//		if (turning>0) {
-//			grsim_put_sprite_page(0,ship_right,xx,yy);
-//			turning--;
-//		}
+		if (turning==0) {
+			put_sprite_cropped(buffer,ship_forward,xx,yy);
+		}
+		if (turning<0) {
+			put_sprite_cropped(buffer,ship_left,xx,yy);
+			turning++;
+		}
+		if (turning>0) {
+			put_sprite_cropped(buffer,ship_right,xx,yy);
+			turning--;
+		}
 
 		pi_graphics_update(buffer,pal);
 

@@ -7,8 +7,6 @@ struct palette {
 	unsigned char blue[256];
 };
 
-//extern unsigned char display[640*480];
-
 int pisim_update(unsigned char *buffer);
 int pisim_init(void);
 int pisim_input(void);
@@ -43,6 +41,9 @@ void vmwHlin(int x1, int x2, int y, int color,unsigned char *buffer);
 void vmwPlot(int x,int y, int color, unsigned char *buffer);
 void vmwVlin(int y1, int y2, int x, int color, unsigned char *buffer);
 
+/* Sprite */
+void put_sprite_cropped(unsigned char *buffer,
+			unsigned char *sprite,int x,int y);
 
 /* Apple2 Compatible */
 void apple2_plot(int x, int y, int color, unsigned char *buffer);
@@ -50,7 +51,7 @@ void apple2_load_palette(struct palette *pal);
 
 #define APPLE2_COLOR_BLACK		0
 #define APPLE2_COLOR_DARKBLUE		2
-#define APPLE2_COLOR_MEDIUMBLUE		9
+#define APPLE2_COLOR_MEDIUMBLUE		6
 #define APPLE2_COLOR_WHITE		15
 
 /* console */
