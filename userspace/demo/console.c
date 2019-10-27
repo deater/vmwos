@@ -11,6 +11,7 @@
 #else
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #endif
 
 #define ANSI_BLACK	0
@@ -86,12 +87,16 @@ int console_home(void) {
 }
 
 
-int console_update(unsigned char *buffer, struct palette *pal) {
+int console_update(unsigned char *buffer, struct palette *pal, int pi_top) {
 
-	int x,y;
+	int x,y,ystart;
 
-	for(x=0;x<CONSOLE_X;x++) {
-		for(y=0;y<CONSOLE_Y;y++) {
+	ystart=0;
+	if (pi_top) ystart=5;
+
+
+	for(y=ystart;y<CONSOLE_Y;y++) {
+		for(x=0;x<CONSOLE_X;x++) {
 			put_char(text_console[x+(y*CONSOLE_X)],
 				x*8,y*font_ysize,
 				text_color[x+(y*CONSOLE_X)]&0xf,
@@ -122,7 +127,8 @@ static uint32_t ansi_state=ANSI_STATE_NORMAL;
 static uint32_t ansi_command;
 
 int console_write(const char *string, int length,
-		unsigned char *buffer, struct palette *pal) {
+		unsigned char *buffer, struct palette *pal,
+		int pi_top) {
 
 	int i=0;
 	int refresh_screen=0;
@@ -141,6 +147,8 @@ int console_write(const char *string, int length,
 				/* Linefeed */
 				console_x=0;
 				console_y++;
+				console_update(buffer,pal,pi_top);
+				usleep(50000);
 			} else if (string[i]=='\t') {
 				console_x=(console_x+8)&(~0x7);
 			} else if (string[i]=='\b') {
@@ -357,7 +365,7 @@ int console_write(const char *string, int length,
 //		framebuffer_clear_screen(0);
 //	}
 
-	console_update(buffer,pal);
+	console_update(buffer,pal,pi_top);
 
 	return 0;
 }

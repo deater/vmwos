@@ -77,7 +77,7 @@ void apple2_load_palette(void);
 #define BACK_GREY	7
 
 int console_write(const char *string, int length,
-                unsigned char *buffer, struct palette *pal);
+                unsigned char *buffer, struct palette *pal, int pi_top);
 int console_init(struct palette *pal);
 int console_clear(void);
 int console_home(void);
