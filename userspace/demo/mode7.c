@@ -15,9 +15,9 @@
 #include "pi-graphics.h"
 
 /* 24.8 fixed point */
-#define FIXEDSHIFT	8
+//#define FIXEDSHIFT	8
 /* 20.12 fixed point */
-//#define FIXEDSHIFT	12
+#define FIXEDSHIFT	12
 
 static unsigned char flying_map[16][16]= {
 	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
@@ -42,6 +42,7 @@ static unsigned char flying_map[16][16]= {
 
 };
 
+#if FIXEDSHIFT==8
 static int sin_lookup_fixed[32]={
 	0x00,0x19,0x31,0x4a,
 	0x61,0x78,0x8e,0xa2,
@@ -52,7 +53,19 @@ static int sin_lookup_fixed[32]={
 	0xb5,0xa2,0x8e,0x78,
 	0x61,0x4a,0x31,0x19,
 };
+#else
+static int sin_lookup_fixed[32]={
+	0x000,0x191,0x31f,0x4a5,
+	0x61f,0x78a,0x8e3,0xa26,
+	0xb50,0xc5e,0xd4d,0xe1c,
+	0xec8,0xf4f,0xfb1,0xfec,
+	0x1000,0xfec,0xfb1,0xf4f,
+	0xec8,0xe1c,0xd4d,0xc5e,
+	0xb50,0xa26,0x8e3,0x78a,
+	0x61f,0x4a5,0x31f,0x191,
+};
 
+#endif
 
 
 
@@ -162,7 +175,7 @@ static int fixed_mul(int a, int b) {
 
 	long long c;
 
-	c=a*b;
+	c=(long long)a*(long long)b;
 
 	c>>=FIXEDSHIFT;
 
@@ -173,10 +186,26 @@ static int fixed_div(int a, int b) {
 
 	int c;
 
-	c=a<<FIXEDSHIFT;
-	if ((c>>FIXEDSHIFT)!=a) printf("problem A=%x\n",a);
+	if (b==0) {
+		printf("Divide by zero!\n");
+		return 0;
+	}
 
-	c/=b;
+	/*   25 8000 */
+	/* 2580 0000 */
+	/* 5800 0000 */
+
+	/* HACK, if not fit in 12-bit then calculate in 8 bit */
+	c=a<<FIXEDSHIFT;
+	if ((c>>FIXEDSHIFT)!=a) {
+		printf("problem A=%x C=%x\n",a,c);
+		c=a<<8;
+		c/=b;
+		c<<=4;
+	}
+	else {
+		c/=b;
+	}
 
 	return c;
 }
@@ -247,7 +276,7 @@ void draw_background_mode7(int angle, int cx, int cy,
 		// first calculate the distance of the line we are drawing
 		distance =
 			fixed_div(fixed_mul(space_z, SCALE_Y<<FIXEDSHIFT),
-				( (screen_y<<FIXEDSHIFT) + (horizon<<FIXEDSHIFT)));
+			( (screen_y<<FIXEDSHIFT) + (horizon<<FIXEDSHIFT)));
 
 		// then calculate the horizontal scale, or the distance between
 		// space points on this horizontal line
