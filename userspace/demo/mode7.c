@@ -14,7 +14,7 @@
 #include "svmwgraph.h"
 #include "pi-graphics.h"
 
-#include "pi_1b.h"
+#include "pi_actual.h"
 
 /* 24.8 fixed point */
 //#define FIXEDSHIFT	8
@@ -254,7 +254,7 @@ void draw_background_mode7(int angle, int cx, int cy,
 			tempy=space_y>>FIXEDSHIFT;
 
 			if ((tempx>319) || (tempx<0) ||
-				(tempy>319) || (tempy<0)) {
+				(tempy>193) || (tempy<0)) {
 				color=16+((tempx&0x3)<<2)+((tempy&0x3));
 //				if (((tempx&0xf)==0xf) || ((tempy&0xf)==0xf)) {
 //					color=15;
@@ -283,7 +283,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 	int xx,yy;
 	int turning=0;
 	// 1034880
-	int flyx=00,flyy=512000;
+	int flyx=611693,flyy=3363;
 	int our_angle=0;
 	int dx,dy,speed=0;
 
@@ -399,9 +399,9 @@ int mode7_flying(unsigned char *buffer, struct palette *pal) {
 
 	int x,y;
 
-	vmwPCXLoadPalette(pi_1b_pcx, pi_1b_pcx_len-769, pal);
-        vmwLoadPCX(pi_1b_pcx,0,0, buffer);
-	for(y=0;y<320;y++) {
+	vmwPCXLoadPalette(pi_actual_pcx, pi_actual_pcx_len-769, pal);
+        vmwLoadPCX(pi_actual_pcx,0,0, buffer);
+	for(y=0;y<194;y++) {
 		for(x=0;x<320;x++) {
 			flying_map[x][y]=buffer[y*XSIZE+x];
 		}

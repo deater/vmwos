@@ -30,17 +30,6 @@ pt3_lib.o:	pt3_lib.c pt3_lib.h
 
 ####
 
-mode7_demo:	mode7_demo.o pi-sim.o svmwgraph.o apple2.o
-	$(CC) -o mode7_demo mode7_demo.o svmwgraph.o apple2.o\
-		pi-sim.o $(SDL_LIBS) $(LFLAGS)
-
-mode7_demo.o:	mode7_demo.c svmwgraph.h pi-sim.h
-	$(CC) $(CFLAGS) -c mode7_demo.c
-
-
-
-####
-
 demosplash2019.native:	demosplash2019.x86.o \
 			pi-sim.x86.o svmwgraph.x86.o pcx_load.x86.o \
 			vmw_open.x86.o print_string.x86.o mode7.x86.o \
@@ -99,10 +88,10 @@ doom_fire.o:	doom_fire.c svmwgraph.h
 doom_fire.x86.o:	doom_fire.c pi-graphics.h
 	$(CC) $(NATIVE_CFLAGS) -o doom_fire.x86.o -c doom_fire.c
 
-mode7.o:	mode7.c svmwgraph.h
+mode7.o:	mode7.c svmwgraph.h pi_actual.h
 	$(CROSS)$(CC) $(CFLAGS) -c mode7.c
 
-mode7.x86.o:	mode7.c pi-graphics.h
+mode7.x86.o:	mode7.c pi-graphics.h pi_actual.h
 	$(CC) $(NATIVE_CFLAGS) -o mode7.x86.o -c mode7.c
 
 
