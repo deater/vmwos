@@ -14,6 +14,11 @@
 #include "svmwgraph.h"
 #include "pi-graphics.h"
 
+/* 24.8 fixed point */
+#define FIXEDSHIFT	8
+/* 20.12 fixed point */
+//#define FIXEDSHIFT	12
+
 static unsigned char flying_map[16][16]= {
 	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
 	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
@@ -152,39 +157,14 @@ static unsigned char ship_left[]={
 	0x15,0xff,0x07,0x77,0xff,
 };
 
-#if 0
-static int double_to_fixed(double d) {
-
-	return d*256;
-}
-
-
-static double fixed_to_double(int i) {
-
-	double d;
-
-	d=(i>>8);
-	d+=((double)(i&0xff))/256.0;
-
-//	printf("(%02x.%02x)=%lf\n",f->i,f->f,*d);
-
-	return d;
-}
-
-static int fixed_add(int x, int y) {
-
-	return x+y;
-}
-#endif
 
 static int fixed_mul(int a, int b) {
 
-	int c;
+	long long c;
 
 	c=a*b;
-//	printf("%x %x %x\n",a,b,c);
 
-	c>>=8;
+	c>>=FIXEDSHIFT;
 
 	return c;
 }
@@ -193,7 +173,9 @@ static int fixed_div(int a, int b) {
 
 	int c;
 
-	c=a<<8;
+	c=a<<FIXEDSHIFT;
+	if ((c>>FIXEDSHIFT)!=a) printf("problem A=%x\n",a);
+
 	c/=b;
 
 	return c;
@@ -206,7 +188,21 @@ static int tile_w=16,tile_h=16;
 /* http://www.helixsoft.nl/articles/circle/sincos.htm */
 
 /* height of the camera above the plane */
-static int space_z=0x0280; /* 2.5 */
+
+#if (FIXEDSHIFT==8)
+#define DELTAV	0xC
+#else
+#define DELTAV  0xC0
+#endif
+
+#if (FIXEDSHIFT==8)
+#define SPACEZ	0x0280
+#else
+#define SPACEZ  0x2800
+#endif
+
+static int space_z=SPACEZ; /* 2.5 */
+
 /* number of pixels line 0 is below the horizon */
 static int horizon=-68;		// -2
 /* scale of space coordinates to screen coordinates */
@@ -215,8 +211,14 @@ static int horizon=-68;		// -2
 #define BMP_W	640
 #define BMP_H	480
 
-/* 0.6 = ffffff67 */
-static int BETA=0xffffff67;
+/* -0.6 = ffffff67 */
+#if (FIXEDSHIFT==8)
+#define BETAF 0xffffff67;
+#else
+#define BETAF 0xfffff667;
+#endif
+
+static int BETA=BETAF;
 
 void draw_background_mode7(int angle, int cx, int cy,
 		unsigned char *buffer) {
@@ -244,12 +246,12 @@ void draw_background_mode7(int angle, int cx, int cy,
 	for (screen_y = 72; screen_y < BMP_H; screen_y++) {
 		// first calculate the distance of the line we are drawing
 		distance =
-			fixed_div(fixed_mul(space_z, SCALE_Y<<8),
-				( (screen_y<<8) + (horizon<<8)));
+			fixed_div(fixed_mul(space_z, SCALE_Y<<FIXEDSHIFT),
+				( (screen_y<<FIXEDSHIFT) + (horizon<<FIXEDSHIFT)));
 
 		// then calculate the horizontal scale, or the distance between
 		// space points on this horizontal line
-		horizontal_scale = fixed_div(distance,SCALE_X<<8);
+		horizontal_scale = fixed_div(distance,SCALE_X<<FIXEDSHIFT);
 
 		line_dx = fixed_mul(-sin_fixed(angle) , horizontal_scale);
 		line_dy = fixed_mul(cos_fixed(angle) , horizontal_scale);
@@ -257,10 +259,10 @@ void draw_background_mode7(int angle, int cx, int cy,
 		// calculate the starting position
 		space_x = cx +
 			fixed_mul(distance , cos_fixed(angle)) -
-			fixed_mul( (BMP_W/2)<<8,line_dx);
+			fixed_mul( (BMP_W/2)<<FIXEDSHIFT,line_dx);
 		space_y = cy +
 			fixed_mul(distance , sin_fixed(angle)) -
-			fixed_mul( (BMP_W/2)<<8,line_dy);
+			fixed_mul( (BMP_W/2)<<FIXEDSHIFT,line_dy);
 
 		space_x+=fixed_mul(BETA,fixed_mul(space_z,cos_fixed(angle)));
 		space_y+=fixed_mul(BETA,fixed_mul(space_z,sin_fixed(angle)));
@@ -270,8 +272,8 @@ void draw_background_mode7(int angle, int cx, int cy,
 		for (screen_x = 0; screen_x < BMP_W; screen_x++) {
 			// get a pixel from the tile and put it on the screen
 
-			color=(flying_map[(space_x>>8) & mask_x]
-					 [(space_y>>8) & mask_y]);
+			color=(flying_map[(space_x>>FIXEDSHIFT) & mask_x]
+					 [(space_y>>FIXEDSHIFT) & mask_y]);
 
 			vmwPlot(screen_x,screen_y,color,buffer);
 
@@ -314,7 +316,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		if ((ch=='i') || (ch==11)) {
 			if (yy>192) {
 				yy-=24;
-				space_z+=0x100;
+				space_z+=0x1<<FIXEDSHIFT;
 			}
 
 //			printf("Z=%lf\n",space_z);
@@ -323,7 +325,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		if ((ch=='m') || (ch==10)) {
 			if (yy<360) {
 				yy+=24;
-				space_z-=0x100;
+				space_z-=0x1<<FIXEDSHIFT;
 			}
 //			printf("Z=%lf\n",space_z);
 		}
@@ -355,11 +357,11 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		}
 
 		if (ch=='z') {
-			speed+=0xc;	/* 0.05 roughly */
+			speed+=DELTAV;	/* 0.05 roughly */
 		}
 
 		if (ch=='x') {
-			speed-=0xc;	/* 0.05 roughly */
+			speed-=DELTAV;	/* 0.05 roughly */
 		}
 
 		if (ch==' ') {
