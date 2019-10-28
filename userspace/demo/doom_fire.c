@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #endif
 
 #include "svmwgraph.h"
@@ -23,19 +24,6 @@ static void vmwClearTopScreen(int color, unsigned char *buffer) {
         memset(buffer,color,XSIZE*200*sizeof(unsigned char));
 
 }
-
-/* The state word must be initialized to non-zero */
-static uint32_t rand32(void) {
-	/* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
-	static uint32_t x = 0xfeb13;
-	x ^= x << 13;
-	x ^= x >> 17;
-	x ^= x << 5;
-	return x;
-}
-
-
-
 void doom_fire(unsigned char *buffer, struct palette *pal) {
 
 	int x,y,newcol,r,dst;
@@ -73,7 +61,7 @@ void doom_fire(unsigned char *buffer, struct palette *pal) {
 
 		for(x=0;x<640;x++) {
 			for(y=200;y<479;y++) {
-				r=rand32()&7;
+				r=rand()&7;
 				dst=(y*XSIZE)+x-(r&3)+1;
 //				if (dst>=640*480) dst=(640*480)-1;
 				newcol=buffer[((y+1)*XSIZE)+x]-(r<2);

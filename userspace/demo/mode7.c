@@ -407,8 +407,8 @@ int mode7_flying(unsigned char *buffer, struct palette *pal) {
 		}
 	}
 
-		pi_graphics_update(buffer,pal);
-		sleep(5);
+//		pi_graphics_update(buffer,pal);
+//		sleep(5);
 
 	flying(buffer,pal);
 

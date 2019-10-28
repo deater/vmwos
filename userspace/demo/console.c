@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #endif
 
 #define ANSI_BLACK	0
@@ -29,6 +30,10 @@ static unsigned char *current_font;
 
 static unsigned char text_console[CONSOLE_X*CONSOLE_Y];
 static unsigned char text_color[CONSOLE_X*CONSOLE_Y];
+static signed short text_x[CONSOLE_X*CONSOLE_Y];
+static signed short text_y[CONSOLE_X*CONSOLE_Y];
+static signed char text_xspeed[CONSOLE_X*CONSOLE_Y];
+static signed char text_yspeed[CONSOLE_X*CONSOLE_Y];
 static int console_x=0;
 static int console_y=0;
 static int console_fore_color=0xffffff;
@@ -109,6 +114,27 @@ int console_update(unsigned char *buffer, struct palette *pal, int pi_top) {
 
 	return 0;
 }
+
+int console_update_weird(unsigned char *buffer, struct palette *pal) {
+
+	int x,y;
+
+	for(y=0;y<CONSOLE_Y;y++) {
+		for(x=0;x<CONSOLE_X;x++) {
+			put_char_cropped(text_console[x+(y*CONSOLE_X)],
+				text_x[(y*CONSOLE_X)+x],
+				text_y[(y*CONSOLE_X)+x],
+				text_color[x+(y*CONSOLE_X)]&0xf,
+				(text_color[x+(y*CONSOLE_X)]>>4)&0xf,
+				0,DEFAULT_FONT,buffer);
+		}
+	}
+
+	pi_graphics_update(buffer,pal);
+
+	return 0;
+}
+
 
 
 /* Arbitrary, can't find a spec although more than 3 shouldn't be necessary */
@@ -386,6 +412,37 @@ int console_init(struct palette *pal) {
 
 
 int console_text_collapse(unsigned char *buffer, struct palette *pal) {
+	int x,y,i;
+
+	/* Init from current console state */
+
+	for(y=0;y<CONSOLE_Y;y++) {
+		for (x=0;x<CONSOLE_X;x++) {
+			text_x[(y*CONSOLE_X)+x]=x*8;
+			text_y[(y*CONSOLE_X)+x]=y*16;
+			text_xspeed[(y*CONSOLE_X)+x]=0;
+			text_yspeed[(y*CONSOLE_X)+x]=4+rand()%4;
+		}
+	}
+
+	for(i=0;i<150;i++) {
+		/* Move letters */
+		for(y=0;y<CONSOLE_Y;y++) {
+			for (x=0;x<CONSOLE_X;x++) {
+				text_x[(y*CONSOLE_X)+x]+=text_xspeed[(y*CONSOLE_X)+x];
+				text_y[(y*CONSOLE_X)+x]+=text_yspeed[(y*CONSOLE_X)+x];
+			}
+		}
+		vmwClearScreen(0,buffer);
+
+		console_update_weird(buffer,pal);
+#ifdef VMWOS
+#else
+		usleep(30000);
+#endif
+
+	}
+
 	return 0;
 }
 

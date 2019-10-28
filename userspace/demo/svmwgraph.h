@@ -23,6 +23,8 @@ void vmwTextXYx4(char *string,int x,int y,int color,
         int which_font, unsigned char *buffer);
 int put_char(unsigned char c, int x, int y, int fg_color, int bg_color,
         int overwrite, int which_font, unsigned char *buffer);
+int put_char_cropped(unsigned char c, int x, int y, int fg_color, int bg_color,
+        int overwrite, int which_font, unsigned char *buffer);
 int put_charx4(unsigned char c, int x, int y, int fg_color,
         int which_font, unsigned char *buffer);
 int print_string(char *string, int x, int y, int color,

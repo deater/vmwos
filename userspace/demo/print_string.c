@@ -44,6 +44,38 @@ int put_char(unsigned char c, int x, int y, int fg_color, int bg_color,
 
 }
 
+int put_char_cropped(unsigned char c, int x, int y, int fg_color, int bg_color,
+	int overwrite, int which_font, unsigned char *buffer) {
+	int xx,yy;
+
+	int output_pointer;
+
+	unsigned char (*font)[256][16];
+
+	font=select_font(which_font);
+
+	output_pointer=(y*XSIZE)+x;
+
+	for(yy=0;yy<FONTSIZE_Y;yy++) {
+		for(xx=0;xx<FONTSIZE_X;xx++) {
+			if (	(xx+x>=0) && (yy+y>=0) &&
+				(xx+x<XSIZE) && (yy+y<YSIZE)) {
+
+				if ((*font)[c][yy]&(1<<(FONTSIZE_X-xx))) {
+					buffer[output_pointer]=fg_color;
+				} else if (overwrite) {
+					buffer[output_pointer]=bg_color;
+				}
+			}
+			output_pointer++;
+		}
+		output_pointer+=(XSIZE-FONTSIZE_X);
+	}
+	return 0;
+
+}
+
+
 int put_charx2(unsigned char c, int x, int y, int fg_color, int bg_color,
 	int overwrite, int which_font, unsigned char *buffer) {
 	int xx,yy;

@@ -29,8 +29,9 @@ Things to do:
 		Speed up fading
 	
 	Fake boot:
-		Text explosion
-		Sprites
+		Text falling
+		Proper pseudo-random rand() call
+
 	Fake boot2:
 		Explosion
 	Mode7:

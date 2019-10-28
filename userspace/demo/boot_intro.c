@@ -78,7 +78,7 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 	vmwTextXYx4("MUST BE STOPPED",80,350,16,DEFAULT_FONT,buffer);
 	pi_graphics_update(buffer,pal);
 
-	sleep(5);
+	sleep(3);
 
 	/*******************************************************/
 	/* text collapse				       */
@@ -87,17 +87,15 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 	/* re-draw text */
 	console_update(buffer,pal,1);
 
+	sleep(1);
+
 	console_text_collapse(buffer,pal);
 
-	sleep(5);
+	sleep(1);
 
 	/*******************************************************/
 	/* moving pi					       */
 	/*******************************************************/
-
-
-
-
 
 	vmwClearScreen(0, buffer);
 
@@ -108,7 +106,11 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 		pi_graphics_update(buffer,pal);
 		usleep(30000);
 	}
-	sleep(5);
+	sleep(3);
+
+	/*******************************************************/
+	/* Load Linux Logo				       */
+	/*******************************************************/
 
 	console_clear();
 
@@ -124,13 +126,27 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 
 	vmwTextXYx4("LINUX? ",208,150,0,DEFAULT_FONT,buffer);
 	vmwTextXYx4("LINUX?",224,150,16,DEFAULT_FONT,buffer);
+	pi_graphics_update(buffer,pal);
+	sleep(1);
+
 	vmwTextXYx4("WHERE WE'RE GOING ",32,200,0,DEFAULT_FONT,buffer);
 	vmwTextXYx4("WHERE WE'RE GOING",48,200,16,DEFAULT_FONT,buffer);
+	pi_graphics_update(buffer,pal);
+	sleep(1);
+
 	vmwTextXYx4("WE WON'T NEED LINUX ",0,250,0,DEFAULT_FONT,buffer);
 	vmwTextXYx4("WE WON'T NEED LINUX",16,250,16,DEFAULT_FONT,buffer);
 	pi_graphics_update(buffer,pal);
+	sleep(3);
 
-	sleep(10);
+	/* re-draw text */
+	console_update(buffer,pal,1);
+
+	sleep(2);
+
+	console_text_collapse(buffer,pal);
+
+	sleep(1);
 
 	return 0;
 }
