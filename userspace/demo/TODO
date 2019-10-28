@@ -4,7 +4,7 @@ VMW logo, decompressing w countdown
 
 20s fake Linux boot, with console slide
 	Pi split up and rejoin?
-	Pi logo pulse
+	Pi logo pulse		?
 
 	    SYSTEMD 
 	MUST BE STOPPED
@@ -26,18 +26,21 @@ Things to do:
 	Opener:
 		Drop in proper music
 		DECODE: 5 4 3 2 1
-		Speed up fading
-	
-	Fake boot:
-		Text falling
-		Proper pseudo-random rand() call
+	Fake boot1:
+		Have Pi move down
+		Rasterbars in background
+			Have 9 wide now, dark/med/light/grey/white
+				Green: 111, 95, 82, 7, 15
+				Purple: 222, 190, 158, 126, 7, 15
+
+		Pi pulse?
+		Scrolling text?
 
 	Fake boot2:
-		Explosion
+		Done?
 	Mode7:
-		Sky graphic
-		Pi graphic
-		Ship sprites -- foreshortened pi logo?
+		Sky graphic (screen seems to be 90% view, so need 640*4 pic )
+		Foreshortened Pi logo as ship
 		Record path
 
 	Fire:
