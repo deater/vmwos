@@ -37,30 +37,34 @@ static unsigned char flying_map[16][16]= {
 
 };
 
-static double sin_lookup_table[32]={
-	 0.000000, 0.098017, 0.195090, 0.290285,
-	 0.382683, 0.471397, 0.555570, 0.634393,
-	 0.707107, 0.773010, 0.831470, 0.881921,
-	 0.923880, 0.956940, 0.980785, 0.995185,
-	 1.000000, 0.995185, 0.980785, 0.956940,
-	 0.923880, 0.881921, 0.831470, 0.773010,
-	 0.707107, 0.634393, 0.555570, 0.471397,
-	 0.382683, 0.290285, 0.195090, 0.098017,
+static int sin_lookup_fixed[32]={
+	0x00,0x19,0x31,0x4a,
+	0x61,0x78,0x8e,0xa2,
+	0xb5,0xc5,0xd4,0xe1,
+	0xec,0xf4,0xfb,0xfe,
+	0x100,0xfe,0xfb,0xf4,
+	0xec,0xe1,0xd4,0xc5,
+	0xb5,0xa2,0x8e,0x78,
+	0x61,0x4a,0x31,0x19,
 };
 
+
+
+
 	/* 0...63 */
-static double sin_lookup(int which) {
+static int sin_fixed(int which) {
 
 	which=(which%64);
-	if (which<32) return sin_lookup_table[which];
-	else return -sin_lookup_table[which-32];
+	if (which<32) return sin_lookup_fixed[which];
+	else return -sin_lookup_fixed[which-32];
 }
 
-static double cos_lookup(int which) {
+static int cos_fixed(int which) {
 
 	which=which+16;
-	return sin_lookup(which);
+	return sin_fixed(which);
 }
+
 
 
 static unsigned int apple2_color[16]={
@@ -148,65 +152,53 @@ static unsigned char ship_left[]={
 	0x15,0xff,0x07,0x77,0xff,
 };
 
-struct fixed_type {
-	char i;
-	unsigned char f;
-};
+#if 0
+static int double_to_fixed(double d) {
 
-
-static void double_to_fixed(double d, struct fixed_type *f) {
-
-	int temp;
-	temp=d*256;
-	f->i=(temp>>8)&0xff;
-	f->f=temp&0xff;
+	return d*256;
 }
 
-static void print_fixed(struct fixed_type *f) {
-	printf("0x%02X,0x%02X",f->i,f->f);
-}
 
-static double fixed_to_double(struct fixed_type *f) {
+static double fixed_to_double(int i) {
 
 	double d;
 
-	d=f->i;
-	d+=((double)(f->f))/256.0;
+	d=(i>>8);
+	d+=((double)(i&0xff))/256.0;
 
 //	printf("(%02x.%02x)=%lf\n",f->i,f->f,*d);
 
 	return d;
 }
 
-static void fixed_add(struct fixed_type *x, struct fixed_type *y, struct fixed_type *z) {
-	int carry;
-	short sum;
+static int fixed_add(int x, int y) {
 
-	sum=(short)(x->f)+(short)(y->f);
-
-	if (sum>=256) carry=1;
-	else carry=0;
-
-	z->f=sum&0xff;
-
-	z->i=x->i+y->i+carry;
+	return x+y;
 }
+#endif
 
-static void fixed_mul(struct fixed_type *x, struct fixed_type *y, struct fixed_type *z) {
+static int fixed_mul(int a, int b) {
 
-	int a,b,c;
-
-	a=((x->i)<<8)+(x->f);
-	b=((y->i)<<8)+(y->f);
+	int c;
 
 	c=a*b;
 //	printf("%x %x %x\n",a,b,c);
 
 	c>>=8;
 
-	z->i=(c>>8);
-	z->f=(c&0xff);
+	return c;
 }
+
+static int fixed_div(int a, int b) {
+
+	int c;
+
+	c=a<<8;
+	c/=b;
+
+	return c;
+}
+
 
 static int tile_w=16,tile_h=16;
 
@@ -214,7 +206,7 @@ static int tile_w=16,tile_h=16;
 /* http://www.helixsoft.nl/articles/circle/sincos.htm */
 
 /* height of the camera above the plane */
-static struct fixed_type space_z={2,128}; /* 2.5 */
+static int space_z=0x0280; /* 2.5 */
 /* number of pixels line 0 is below the horizon */
 static int horizon=-68;		// -2
 /* scale of space coordinates to screen coordinates */
@@ -223,9 +215,10 @@ static int horizon=-68;		// -2
 #define BMP_W	640
 #define BMP_H	480
 
-double BETA=-0.6;
+/* 0.6 = ffffff67 */
+static int BETA=0xffffff67;
 
-void draw_background_mode7(int angle, double cx, double cy,
+void draw_background_mode7(int angle, int cx, int cy,
 		unsigned char *buffer) {
 
 	int color;
@@ -234,47 +227,51 @@ void draw_background_mode7(int angle, double cx, double cy,
 	int screen_x, screen_y;
 
 	// the distance and horizontal scale of the line we are drawing
-	double distance, horizontal_scale;
+	int distance,horizontal_scale;
 
 	// masks to make sure we don't read pixels outside the tile
 	int mask_x = (tile_w - 1);
 	int mask_y = (tile_h - 1);
 
 	// step for points in space between two pixels on a horizontal line
-	double  line_dx, line_dy;
+	int  line_dx, line_dy;
 
 	// current space position
-	double space_x, space_y;
+	int space_x, space_y;
 
 //	clear_screens();
 
 	for (screen_y = 72; screen_y < BMP_H; screen_y++) {
 		// first calculate the distance of the line we are drawing
-		distance = (fixed_to_double(&space_z) * SCALE_Y) / (screen_y + horizon);
+		distance =
+			fixed_div(fixed_mul(space_z, SCALE_Y<<8),
+				( (screen_y<<8) + (horizon<<8)));
 
 		// then calculate the horizontal scale, or the distance between
 		// space points on this horizontal line
-		horizontal_scale = (distance / SCALE_X);
+		horizontal_scale = fixed_div(distance,SCALE_X<<8);
 
-		// calculate the dx and dy of points in space when we step
-		// through all points on this line
-		line_dx = -sin_lookup(angle) * horizontal_scale;
-		line_dy = cos_lookup(angle) * horizontal_scale;
+		line_dx = fixed_mul(-sin_fixed(angle) , horizontal_scale);
+		line_dy = fixed_mul(cos_fixed(angle) , horizontal_scale);
 
 		// calculate the starting position
-		space_x = cx + (distance * cos_lookup(angle)) - (BMP_W/2) * line_dx;
-		space_y = cy + (distance * sin_lookup(angle)) - (BMP_W/2) * line_dy;
+		space_x = cx +
+			fixed_mul(distance , cos_fixed(angle)) -
+			fixed_mul( (BMP_W/2)<<8,line_dx);
+		space_y = cy +
+			fixed_mul(distance , sin_fixed(angle)) -
+			fixed_mul( (BMP_W/2)<<8,line_dy);
 
-		space_x+=(BETA*fixed_to_double(&space_z)*cos_lookup(angle));
-		space_y+=(BETA*fixed_to_double(&space_z)*sin_lookup(angle));
+		space_x+=fixed_mul(BETA,fixed_mul(space_z,cos_fixed(angle)));
+		space_y+=fixed_mul(BETA,fixed_mul(space_z,sin_fixed(angle)));
 
 
 		// go through all points in this screen line
 		for (screen_x = 0; screen_x < BMP_W; screen_x++) {
 			// get a pixel from the tile and put it on the screen
 
-			color=(flying_map[(int)space_x & mask_x]
-					[(int)space_y&mask_y]);
+			color=(flying_map[(space_x>>8) & mask_x]
+					 [(space_y>>8) & mask_y]);
 
 			vmwPlot(screen_x,screen_y,color,buffer);
 
@@ -292,9 +289,9 @@ int flying(unsigned char *buffer, struct palette *pal) {
 	unsigned char ch;
 	int xx,yy;
 	int turning=0;
-	double flyx=0,flyy=0;
+	int flyx=0,flyy=0;
 	int our_angle=0;
-	double dy,dx,speed=0;
+	int dx,dy,speed=0;
 
 	/************************************************/
 	/* Flying					*/
@@ -317,7 +314,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		if ((ch=='i') || (ch==11)) {
 			if (yy>192) {
 				yy-=24;
-				space_z.i+=1;
+				space_z+=0x100;
 			}
 
 //			printf("Z=%lf\n",space_z);
@@ -326,7 +323,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		if ((ch=='m') || (ch==10)) {
 			if (yy<360) {
 				yy+=24;
-				space_z.i-=1;
+				space_z-=0x100;
 			}
 //			printf("Z=%lf\n",space_z);
 		}
@@ -358,24 +355,27 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		}
 
 		if (ch=='z') {
-			speed+=0.05;
+			speed+=0xc;	/* 0.05 roughly */
 		}
 
 		if (ch=='x') {
-			speed-=0.05;
+			speed-=0xc;	/* 0.05 roughly */
 		}
 
 		if (ch==' ') {
 			speed=0;
 		}
 
-		dx = speed * cos_lookup (our_angle);
-		dy = speed * sin_lookup (our_angle);
+		dx = fixed_mul( speed, cos_fixed(our_angle));
+		dy = fixed_mul( speed, sin_fixed(our_angle));
 
-		flyx += dx;
-		flyy += dy;
+		flyx = flyx+dx;
+		flyy = flyy+dy;
 
-		draw_background_mode7(our_angle, flyx, flyy,buffer);
+		draw_background_mode7(our_angle,
+			flyx,
+			flyy,
+			buffer);
 
 		put_sprite_cropped(buffer,ship_shadow,xx,360);
 
