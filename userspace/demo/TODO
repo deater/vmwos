@@ -15,23 +15,20 @@ VMW logo, decompressing w countdown
 
 20s linux_logo, with explosion
 	Where we're going we won't need Linux
+	Bring that in one word at a time
 
 30s mode7, over pi
 
 26s doom fire with credits
 	Pi rise up from fire and then fire turn off?
 
-
-
-
 Things to do:
 	Opener:
 		Drop in proper music
-		Countdown
+		DECODE: 5 4 3 2 1
 		Speed up fading
 	
 	Fake boot:
-		Overlay message
 		Text explosion
 		Sprites
 	Fake boot2:
@@ -39,10 +36,17 @@ Things to do:
 	Mode7:
 		Sky graphic
 		Pi graphic
-		Ship sprites
-		Make code integer
+		Ship sprites -- foreshortened pi logo?
 		Record path
+
 	Fire:
+		CODE: DEATER
+		MUSIC: DYA
+		THANKS: TEAM28 / PIFOX
+		THANKS: FABIEN SANGLARD
+		THANKS: MPVANIERSEL
+		A VMW SOFTWARE PRODUCTION
+
 		Have credits stop.  Fade out?
 		Put in all credits
 		Have pi scroll up too

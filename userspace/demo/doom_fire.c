@@ -83,8 +83,8 @@ void doom_fire(unsigned char *buffer, struct palette *pal) {
 		}
 
 		if (credit==0) {
-			texty--;
-			if (texty==10) credit=1;
+			texty-=1;
+			if (texty==120) credit=1;
 		}
 			vmwTextXYx2("A VMW SOFTWARE PRODUCTION",60*2,texty,
 				15,15,0,DEFAULT_FONT,buffer);
@@ -92,10 +92,15 @@ void doom_fire(unsigned char *buffer, struct palette *pal) {
 		pi_graphics_update(buffer,pal);
 #ifdef VMWOS
 #else
-		usleep(10000);
+		usleep(30000);
 #endif
 		count++;
-		if (count==1000) break;
+		if (count==600) break;
+
+		if (count==300) {
+			/* draw black line at bottom */
+			vmwHlin(0,640,479,0,buffer);
+		}
 	}
 
 	return;

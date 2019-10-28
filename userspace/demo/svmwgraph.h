@@ -86,7 +86,9 @@ int console_write(const char *string, int length,
 int console_init(struct palette *pal);
 int console_clear(void);
 int console_home(void);
-
+int console_update(unsigned char *buffer, struct palette *pal, int pi_top);
+int console_text_collapse(unsigned char *buffer, struct palette *pal);
+int console_text_explode(unsigned char *buffer, struct palette *pal);
 
 /* pcx_load.h */
 int vmwLoadPCX(unsigned char *image, int x, int y, unsigned char *buffer);

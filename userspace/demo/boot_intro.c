@@ -34,36 +34,82 @@ static int future_pal[32]={
 	0xffffff, 0xffffff,
 };
 
+static unsigned char pi_logo_sprite[2+(68*80)];
 
 int boot_intro(unsigned char *buffer, struct palette *pal) {
 
-	int i;
+	int i,x,y,color;
 	unsigned char *pi_logo=__pi_logo_pcx;
 	int filesize=__pi_logo_pcx_len;
 	int length;
 
-	printf("Image is %d bytes\n",filesize);
+	/* Load the Pi logo to the buffer */
 	vmwPCXLoadPalette(pi_logo, filesize-769, pal);
 	vmwLoadPCX(pi_logo,0,0, buffer);
 
-//	print_string("Testing 123!",10,10,0xff,buffer);
+	/* load into sprite */
+	pi_logo_sprite[0]=68;
+	pi_logo_sprite[1]=80;
+	for(y=0;y<80;y++) {
+		for(x=0;x<68;x++) {
+			color=buffer[y*XSIZE+x];
+			if (color==243) color=0xff;
+			pi_logo_sprite[2+(y*68)+x]=color;
+		}
+	}
 
+	/* Write the demsg to the screen */
 	length=strlen(pi1_dmesg);
 	console_write(pi1_dmesg, length,buffer,pal,1);
 
 	sleep(1);
+
+	/* Set palette for red letters */
 	for(i=0;i<32;i++) {
 		pal->red[i+16]=0x80+(4*i);
 		pal->green[i+16]=0x00;
 		pal->blue[i+16]=0x00;
 	}
+
+	/* Print systemd message */
 	vmwTextXYx4("SYSTEMD ",192,300,0,DEFAULT_FONT,buffer);
 	vmwTextXYx4("SYSTEMD",208,300,16,DEFAULT_FONT,buffer);
 	vmwTextXYx4("MUST BE STOPPED ",64,350,0,DEFAULT_FONT,buffer);
 	vmwTextXYx4("MUST BE STOPPED",80,350,16,DEFAULT_FONT,buffer);
 	pi_graphics_update(buffer,pal);
 
-	sleep(10);
+	sleep(5);
+
+	/*******************************************************/
+	/* text collapse				       */
+	/*******************************************************/
+
+	/* re-draw text */
+	console_update(buffer,pal,1);
+
+	console_text_collapse(buffer,pal);
+
+	sleep(5);
+
+	/*******************************************************/
+	/* moving pi					       */
+	/*******************************************************/
+
+
+
+
+
+	vmwClearScreen(0, buffer);
+
+	x=0; y=0;
+	for(i=0;i<100;i++) {
+		x+=3; y+=2;
+		put_sprite_cropped(buffer,pi_logo_sprite,x,y);
+		pi_graphics_update(buffer,pal);
+		usleep(30000);
+	}
+	sleep(5);
+
 	console_clear();
 
 	length=strlen(linuxlogo_ansi);

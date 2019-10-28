@@ -51,11 +51,13 @@ void vmwFadeToBlack(unsigned char *buffer, struct palette *pal) {
 			if (pal->green[i]) pal->green[i]--;
 			if (pal->blue[i]) pal->blue[i]--;
 		}
+
+		pi_graphics_update(buffer,pal);
+
 #ifdef VMWOS
 #else
-		usleep(1000);
+		usleep(30000);
 #endif
-		pi_graphics_update(buffer,pal);
 
 	}
 }
@@ -101,11 +103,12 @@ void vmwFadeFromBlack(unsigned char *buffer, struct palette *pal) {
 				temp_pal.blue[i]++;
 			}
 		}
+
 #ifdef VMWOS
 #else
-		usleep(1000);
+		usleep(30000);
 #endif
-		pi_graphics_update(buffer,&temp_pal);
+
 	}
 }
 

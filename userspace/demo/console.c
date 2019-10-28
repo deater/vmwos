@@ -385,3 +385,11 @@ int console_init(struct palette *pal) {
 }
 
 
+int console_text_collapse(unsigned char *buffer, struct palette *pal) {
+	return 0;
+}
+
+int console_text_explode(unsigned char *buffer, struct palette *pal) {
+	return 0;
+}
+
