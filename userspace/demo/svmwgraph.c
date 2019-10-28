@@ -40,16 +40,34 @@ void vmwPlot(int x,int y, int color, unsigned char *buffer) {
 	buffer[output_pointer]=color;
 }
 
+#define FADESPEED 8
 
 void vmwFadeToBlack(unsigned char *buffer, struct palette *pal) {
 
 	int i,j;
 
-	for(j=0;j<256;j++) {
+	for(j=0;j<256;j+=FADESPEED) {
 		for (i=0;i<256;i++) {
-			if (pal->red[i]) pal->red[i]--;
-			if (pal->green[i]) pal->green[i]--;
-			if (pal->blue[i]) pal->blue[i]--;
+			if (pal->red[i]>FADESPEED) {
+				pal->red[i]-=FADESPEED;
+			}
+			else {
+				pal->red[i]=0;
+			}
+
+			if (pal->green[i]>FADESPEED) {
+				pal->green[i]-=FADESPEED;
+			}
+			else {
+				pal->green[i]=0;
+			}
+
+			if (pal->blue[i]>FADESPEED) {
+				pal->blue[i]-=FADESPEED;
+			}
+			else {
+				pal->blue[i]=0;
+			}
 		}
 
 		pi_graphics_update(buffer,pal);
@@ -91,19 +109,29 @@ void vmwFadeFromBlack(unsigned char *buffer, struct palette *pal) {
 
 	vmwSetAllBlackPalette(&temp_pal);
 
-	for(j=0;j<256;j++) {
+	for(j=0;j<256;j+=FADESPEED) {
 		for (i=0;i<256;i++) {
-			if (temp_pal.red[i] < pal->red[i]) {
-				temp_pal.red[i]++;
+			if (temp_pal.red[i] < pal->red[i]-FADESPEED) {
+				temp_pal.red[i]+=FADESPEED;
 			}
-			if (temp_pal.green[i] < pal->green[i]) {
-				temp_pal.green[i]++;
+			else {
+				temp_pal.red[i]=pal->red[i];
 			}
-			if (temp_pal.blue[i] < pal->blue[i]) {
-				temp_pal.blue[i]++;
+			if (temp_pal.green[i] < pal->green[i]-FADESPEED) {
+				temp_pal.green[i]+=FADESPEED;
+			}
+			else {
+				temp_pal.green[i]=pal->green[i];
+			}
+			if (temp_pal.blue[i] < pal->blue[i]-FADESPEED) {
+				temp_pal.blue[i]+=FADESPEED;
+			}
+			else {
+				temp_pal.blue[i]=pal->blue[i];
 			}
 		}
 
+		pi_graphics_update(buffer,&temp_pal);
 #ifdef VMWOS
 #else
 		usleep(30000);
