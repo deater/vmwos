@@ -105,13 +105,13 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 				output_pointer++;
 				total++;
 				x++;
-				if (x>xsize) {
+				if (x>=xsize) {
 					x=0;
 					//printf("[%d+%d] ",
 					//	output_pointer,XSIZE-xsize);
-					output_pointer+=(XSIZE-xsize-1);
-					//printf("[%d+%d] ",
-					//	output_pointer,XSIZE-xsize);
+					output_pointer+=(XSIZE-xsize);
+					/* skip padding */
+					break;
 
 				}
 				//printf("%d ",x);
@@ -122,9 +122,9 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 			output_pointer++;
 			total++;
 			x++;
-			if (x>xsize) {
+			if (x>=xsize) {
 				x=0;
-				output_pointer+=(XSIZE-xsize-1);
+				output_pointer+=(XSIZE-xsize);
 				//printf("[%d] ",output_pointer);
 			}
 			//printf("%d ",x);

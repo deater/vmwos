@@ -14,33 +14,15 @@
 #include "svmwgraph.h"
 #include "pi-graphics.h"
 
+#include "pi_1b.h"
+
 /* 24.8 fixed point */
 //#define FIXEDSHIFT	8
 /* 20.12 fixed point */
 #define FIXEDSHIFT	12
 
-static unsigned char flying_map[16][16]= {
-	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
-	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
-	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
-	{0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,},
+static unsigned char flying_map[320][320];
 
-	{4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,},
-	{4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,},
-	{4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,},
-	{4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,},
-
-	{8,8,8,8,9,9,9,9,10,10,10,10,11,11,11,11,},
-	{8,8,8,8,9,9,9,9,10,10,10,10,11,11,11,11,},
-	{8,8,8,8,9,9,9,9,10,10,10,10,11,11,11,11,},
-	{8,8,8,8,9,9,9,9,10,10,10,10,11,11,11,11,},
-
-	{12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15,},
-	{12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15,},
-	{12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15,},
-	{12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15,},
-
-};
 
 #if FIXEDSHIFT==8
 static int sin_lookup_fixed[32]={
@@ -83,38 +65,6 @@ static int cos_fixed(int which) {
 	return sin_fixed(which);
 }
 
-
-
-static unsigned int apple2_color[16]={
-        0,              /*  0 black */
-        0xe31e60,       /*  1 magenta */
-        0x604ebd,       /*  2 dark blue */
-        0xff44fd,       /*  3 purple */
-        0x00a360,       /*  4 dark green */
-        0x9c9c9c,       /*  5 grey 1 */
-        0x14cffd,       /*  6 medium blue */
-        0xd0c3ff,       /*  7 light blue */
-        0x607203,       /*  8 brown */
-        0xff6a3c,       /*  9 orange */
-        0x9d9d9d,       /* 10 grey 2 */
-        0xffa0d0,       /* 11 pink */
-        0x14f53c,       /* 12 bright green */
-        0xd0dd8d,       /* 13 yellow */
-        0x72ffd0,       /* 14 aqua */
-        0xffffff,       /* 15 white */
-};
-
-void apple2_load_palette(struct palette *pal) {
-
-	int i;
-
-	for(i=0;i<16;i++) {
-		pal->red[i]=(apple2_color[i]>>16)&0xff;
-		pal->green[i]=(apple2_color[i]>>8)&0xff;
-		pal->blue[i]=(apple2_color[i])&0xff;
-	}
-
-}
 
 
 /* Ship Sprites */
@@ -198,7 +148,7 @@ static int fixed_div(int a, int b) {
 	/* HACK, if not fit in 12-bit then calculate in 8 bit */
 	c=a<<FIXEDSHIFT;
 	if ((c>>FIXEDSHIFT)!=a) {
-		printf("problem A=%x C=%x\n",a,c);
+		//printf("problem A=%x C=%x\n",a,c);
 		c=a<<8;
 		c/=b;
 		c<<=4;
@@ -210,8 +160,6 @@ static int fixed_div(int a, int b) {
 	return c;
 }
 
-
-static int tile_w=16,tile_h=16;
 
 
 /* http://www.helixsoft.nl/articles/circle/sincos.htm */
@@ -244,7 +192,8 @@ static int horizon=-68;		// -2
 #if (FIXEDSHIFT==8)
 #define BETAF 0xffffff67;
 #else
-#define BETAF 0xfffff667;
+//#define BETAF 0xfffff667;
+#define BETAF 0xfffff367;
 #endif
 
 static int BETA=BETAF;
@@ -261,8 +210,6 @@ void draw_background_mode7(int angle, int cx, int cy,
 	int distance,horizontal_scale;
 
 	// masks to make sure we don't read pixels outside the tile
-	int mask_x = (tile_w - 1);
-	int mask_y = (tile_h - 1);
 
 	// step for points in space between two pixels on a horizontal line
 	int  line_dx, line_dy;
@@ -301,9 +248,24 @@ void draw_background_mode7(int angle, int cx, int cy,
 		for (screen_x = 0; screen_x < BMP_W; screen_x++) {
 			// get a pixel from the tile and put it on the screen
 
-			color=(flying_map[(space_x>>FIXEDSHIFT) & mask_x]
-					 [(space_y>>FIXEDSHIFT) & mask_y]);
+			int tempx,tempy;
 
+			tempx=space_x>>FIXEDSHIFT;
+			tempy=space_y>>FIXEDSHIFT;
+
+			if ((tempx>319) || (tempx<0) ||
+				(tempy>319) || (tempy<0)) {
+				color=16+((tempx&0x3)<<2)+((tempy&0x3));
+//				if (((tempx&0xf)==0xf) || ((tempy&0xf)==0xf)) {
+//					color=15;
+//				}
+//				else {
+//					color=0;
+//				}
+			}
+			else {
+				color=(flying_map[tempx][tempy]);
+			}
 			vmwPlot(screen_x,screen_y,color,buffer);
 
 			// advance to the next position in space
@@ -320,7 +282,8 @@ int flying(unsigned char *buffer, struct palette *pal) {
 	unsigned char ch;
 	int xx,yy;
 	int turning=0;
-	int flyx=0,flyy=0;
+	// 1034880
+	int flyx=00,flyy=512000;
 	int our_angle=0;
 	int dx,dy,speed=0;
 
@@ -331,7 +294,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 	xx=318;	yy=312;
 
 	/* Make sky */
-	color=APPLE2_COLOR_MEDIUMBLUE;
+	color=3;
 	for(i=0;i<72;i++) {
 		vmwHlin(0, 640, i, color, buffer);
 	}
@@ -394,6 +357,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		}
 
 		if (ch==' ') {
+			printf("Location: %d,%d\n",flyx,flyy);
 			speed=0;
 		}
 
@@ -433,7 +397,19 @@ int flying(unsigned char *buffer, struct palette *pal) {
 
 int mode7_flying(unsigned char *buffer, struct palette *pal) {
 
-	apple2_load_palette(pal);
+	int x,y;
+
+	vmwPCXLoadPalette(pi_1b_pcx, pi_1b_pcx_len-769, pal);
+        vmwLoadPCX(pi_1b_pcx,0,0, buffer);
+	for(y=0;y<320;y++) {
+		for(x=0;x<320;x++) {
+			flying_map[x][y]=buffer[y*XSIZE+x];
+		}
+	}
+
+		pi_graphics_update(buffer,pal);
+		sleep(5);
+
 	flying(buffer,pal);
 
 	return 0;
