@@ -16,6 +16,8 @@
 
 #include "pi_actual.h"
 
+#include "flight_replay.h"
+
 /* 24.8 fixed point */
 //#define FIXEDSHIFT	8
 /* 20.12 fixed point */
@@ -286,6 +288,8 @@ int flying(unsigned char *buffer, struct palette *pal) {
 	int flyx=611693,flyy=3363;
 	int our_angle=0;
 	int dx,dy,speed=0;
+	int framecount=0,lastframe=0;
+	int input_offset=0;
 
 	/************************************************/
 	/* Flying					*/
@@ -299,9 +303,27 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		vmwHlin(0, 640, i, color, buffer);
 	}
 
+	lastframe=flight_replay[input_offset].frames;
+
 	while(1) {
+#ifdef RECORD_FLIGHT
 		ch=pi_graphics_input();
 
+		if (ch!=0) {
+			printf("%d,\'%c\'\n",framecount-lastframe,ch);
+			lastframe=framecount;
+		}
+#else
+
+		if (lastframe==0) {
+			ch=flight_replay[input_offset].keypress;
+			input_offset++;
+			lastframe=flight_replay[input_offset].frames;
+		}
+		else {
+			ch=0;
+		}
+#endif
 		if ((ch=='q') || (ch==27))  break;
 
 		/* up */
@@ -386,6 +408,8 @@ int flying(unsigned char *buffer, struct palette *pal) {
 			turning--;
 		}
 
+		lastframe--;
+		framecount++;
 		pi_graphics_update(buffer,pal);
 
 		usleep(20000);
@@ -411,6 +435,8 @@ int mode7_flying(unsigned char *buffer, struct palette *pal) {
 //		sleep(5);
 
 	flying(buffer,pal);
+
+	vmwFadeToBlack(buffer, pal);
 
 	return 0;
 }
