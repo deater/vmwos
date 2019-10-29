@@ -14,6 +14,9 @@
 #include "pi-graphics.h"
 #include "demosplash2019.h"
 
+extern int start_playing_pt3(void);
+
+
 #ifdef VMWOS
 static int64_t get_time_us(void) {
 
@@ -132,6 +135,10 @@ void vmwos_open(unsigned char *buffer, struct palette *pal) {
 //	}
 
 	pi_graphics_update(buffer,pal);
+
+	/* Load audio */
+	start_playing_pt3();
+
 	sleep(2);
 
 	vmwFadeToBlack(buffer,pal);

@@ -14,30 +14,15 @@ native:	demosplash2019.native
 
 ####
 
-chiptune:	chiptune.o ay8912.o pt3_lib.o
-	$(CC) -o chiptune ay8912.o chiptune.o pt3_lib.o $(LFLAGS)
-
-####
-
-chiptune.o:	chiptune.c pt3_lib.h
-	$(CC) $(CFLAGS) -c chiptune.c
-
-ay8912.o:	ay8912.c ayemu.h
-	$(CC) $(CFLAGS) -c ay8912.c
-
-pt3_lib.o:	pt3_lib.c pt3_lib.h
-	$(CC) $(CFLAGS) -c pt3_lib.c
-
-####
-
 demosplash2019.native:	demosplash2019.x86.o \
 			pi-sim.x86.o svmwgraph.x86.o pcx_load.x86.o \
 			vmw_open.x86.o print_string.x86.o mode7.x86.o \
-			doom_fire.x86.o console.x86.o boot_intro.x86.o
+			doom_fire.x86.o console.x86.o boot_intro.x86.o \
+			ay8912.x86.o pt3_lib.x86.o chiptune.x86.o
 	$(CC) -o demosplash2019.native demosplash2019.x86.o svmwgraph.x86.o \
 		vmw_open.x86.o print_string.x86.o pcx_load.x86.o \
 		doom_fire.x86.o console.x86.o boot_intro.x86.o \
-		mode7.x86.o \
+		mode7.x86.o ay8912.x86.o pt3_lib.x86.o chiptune.x86.o \
 		pi-sim.x86.o $(SDL_LIBS) $(NATIVE_LFLAGS)
 
 demosplash2019:	demosplash2019.elf
@@ -46,11 +31,13 @@ demosplash2019:	demosplash2019.elf
 demosplash2019.elf:	demosplash2019.o svmwgraph.o print_string.o \
 		vmw_open.o pi-graphics.o doom_fire.o console.o \
 		pcx_load.o boot_intro.o mode7.o \
+		ay8912.o pt3_lib.o chiptune.o \
 		$(BUILDROOT)/vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) -o demosplash2019.elf \
 		demosplash2019.o svmwgraph.o vmw_open.o \
 		pi-graphics.o print_string.o pcx_load.o \
 		doom_fire.o console.o boot_intro.o mode7.o \
+		ay8912.o pt3_lib.o chiptune.o \
 		$(BUILDROOT)/vlibc/vlibc.a $(LFLAGS)
 
 demosplash2019.o:	demosplash2019.c demosplash2019.h svmwgraph.h
@@ -67,6 +54,26 @@ vmw_open.o:	vmw_open.c svmwgraph.h
 vmw_open.x86.o:	vmw_open.c pi-graphics.h
 	$(CC) $(NATIVE_CFLAGS) -o vmw_open.x86.o -c vmw_open.c
 
+
+####
+
+ay8912.o:	ay8912.c ayemu.h
+	$(CROSS)$(CC) $(CFLAGS) -c ay8912.c
+
+ay8912.x86.o:	ay8912.c ayemu.h
+	$(CC) $(NATIVE_CFLAGS) -o ay8912.x86.o -c ay8912.c
+
+chiptune.o:	chiptune.c pt3_lib.h
+	$(CROSS)$(CC) $(CFLAGS) -c chiptune.c
+
+chiptune.x86.o:	chiptune.c pt3_lib.h
+	$(CC) $(NATIVE_CFLAGS) -o chiptune.x86.o -c chiptune.c
+
+pt3_lib.o:	pt3_lib.c pt3_lib.h
+	$(CROSS)$(CC) $(CFLAGS) -c pt3_lib.c
+
+pt3_lib.x86.o:	pt3_lib.c pt3_lib.h
+	$(CC) $(NATIVE_CFLAGS) -o pt3_lib.x86.o -c pt3_lib.c
 
 ####
 
