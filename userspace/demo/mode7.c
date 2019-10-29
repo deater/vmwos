@@ -412,7 +412,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		framecount++;
 		pi_graphics_update(buffer,pal);
 
-		usleep(20000);
+		usleep(33000);
 
 	}
 	return 0;

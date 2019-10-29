@@ -421,7 +421,8 @@ int console_text_collapse(unsigned char *buffer, struct palette *pal) {
 			text_x[(y*CONSOLE_X)+x]=x*8;
 			text_y[(y*CONSOLE_X)+x]=y*16;
 			text_xspeed[(y*CONSOLE_X)+x]=0;
-			text_yspeed[(y*CONSOLE_X)+x]=4+rand()%4;
+			/* Note: rand()%4 was returning negative sometimes? */
+			text_yspeed[(y*CONSOLE_X)+x]=4+(rand()&0x3);
 		}
 	}
 
@@ -429,8 +430,10 @@ int console_text_collapse(unsigned char *buffer, struct palette *pal) {
 		/* Move letters */
 		for(y=0;y<CONSOLE_Y;y++) {
 			for (x=0;x<CONSOLE_X;x++) {
-				text_x[(y*CONSOLE_X)+x]+=text_xspeed[(y*CONSOLE_X)+x];
-				text_y[(y*CONSOLE_X)+x]+=text_yspeed[(y*CONSOLE_X)+x];
+				text_x[(y*CONSOLE_X)+x]+=
+					text_xspeed[(y*CONSOLE_X)+x];
+				text_y[(y*CONSOLE_X)+x]+=
+					text_yspeed[(y*CONSOLE_X)+x];
 			}
 		}
 		vmwClearScreen(0,buffer);
@@ -438,7 +441,7 @@ int console_text_collapse(unsigned char *buffer, struct palette *pal) {
 		console_update_weird(buffer,pal);
 #ifdef VMWOS
 #else
-		usleep(30000);
+		usleep(50000);
 #endif
 
 	}
