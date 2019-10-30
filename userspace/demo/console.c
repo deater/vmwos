@@ -412,7 +412,7 @@ int console_init(struct palette *pal) {
 }
 
 
-int console_text_collapse(int starty,
+int console_text_collapse(int starty,int how_long,
 			unsigned char *buffer, struct palette *pal) {
 	int x,y,i;
 
@@ -428,7 +428,7 @@ int console_text_collapse(int starty,
 		}
 	}
 
-	for(i=0;i<150;i++) {
+	for(i=0;i<how_long;i++) {
 		/* Move letters */
 		for(y=starty;y<CONSOLE_Y;y++) {
 			for (x=0;x<CONSOLE_X;x++) {

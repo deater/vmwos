@@ -180,3 +180,30 @@ void put_sprite_cropped(unsigned char *buffer,
 
 	return;
 }
+
+
+/* sprite format: x,y followed by sprite data */
+
+/* FIXME: can probably optimize this */
+
+void erase_sprite_cropped(unsigned char *buffer,
+			unsigned char *sprite,int x,int y) {
+
+	int xsize,ysize;
+	int xx,yy;
+	unsigned char *output_pointer;
+
+	xsize=sprite[0];
+	ysize=sprite[1];
+	output_pointer=&buffer[(y*XSIZE)+x];
+
+	for(yy=0;yy<ysize;yy++) {
+		for(xx=0;xx<xsize;xx++) {
+			*output_pointer=0;
+			output_pointer++;
+		}
+		output_pointer+=(XSIZE-xsize);
+	}
+
+	return;
+}

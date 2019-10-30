@@ -34,6 +34,30 @@ static int future_pal[32]={
 	0xffffff, 0xffffff,
 };
 
+#if 0
+static short sine_table[64]={
+	  0, 15, 31, 46, 61, 75, 88,101,
+	113,123,133,141,147,153,156,159,
+	160,159,156,153,147,141,133,123,
+	113,101, 88, 75, 61, 46, 31, 15,
+	0,-15,-31,-46,-61,-75,-88,-101,
+	-113,-123,-133,-141,-147,-153,-156,-159,
+	-160,-159,-156,-153,-147,-141,-133,-123,
+	-113,-101,-88,-75,-61,-46,-31,-15
+};
+#endif
+
+static short sine_table[128]={
+	  0,  7, 15, 23, 31, 38, 46, 53, 61, 68, 75, 82, 88, 95,101,107,
+	113,118,123,128,133,137,141,144,147,150,153,155,156,158,159,159,
+	160,159,159,158,156,155,153,150,147,144,141,137,133,128,123,118,
+	113,107,101,95,88,82,75,68,61,53,46,38,31,23,15,7,
+	0,-7,-15,-23,-31,-38,-46,-53,-61,-68,-75,-82,-88,-95,-101,-107,
+	-113,-118,-123,-128,-133,-137,-141,-144,-147,-150,-153,-155,-156,-158,-159,-159,
+	-160,-159,-159,-158,-156,-155,-153,-150,-147,-144,-141,-137,-133,-128,-123,
+	-118,-113,-107,-101,-95,-88,-82,-75,-68,-61,-53,-46,-38,-31,-23,-15,-7,
+};
+
 static unsigned char pi_logo_sprite[2+(63*80)];
 
 static void put_rasterbar(int y, int color, unsigned char *buffer) {
@@ -57,13 +81,24 @@ static void put_rasterbar(int y, int color, unsigned char *buffer) {
 	vmwHlin(0, 640, y+8, color+7, buffer);
 }
 
+static void erase_rasterbar(int y, unsigned char *buffer) {
+
+	int i;
+
+	for(i=0;i<16;i++) {
+		vmwHlin(0, 640, (y-7)+i, 0, buffer);
+	}
+}
+
+
 
 int boot_intro(unsigned char *buffer, struct palette *pal) {
 
-	int i,x,y,color;
+	int i,j,x,y,color;
 	unsigned char *pi_logo=__pi_logo_pcx;
 	int filesize=__pi_logo_pcx_len;
 	int length;
+	int red_y,orange_y,yellow_y,green_y,blue_y,purple_y;
 
 	/* Load the Pi logo to the buffer */
 	vmwPCXLoadPalette(pi_logo, filesize-769, pal);
@@ -79,7 +114,6 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 			pi_logo_sprite[2+(y*63)+x]=color;
 		}
 	}
-	printf("BLAH=%d\n",pi_logo_sprite[2+(79*63)+5]);
 
 	vmwClearScreen(0, buffer);
 
@@ -116,7 +150,7 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 
 	sleep(1);
 
-	console_text_collapse(5,buffer,pal);
+	console_text_collapse(5,120,buffer,pal);
 
 	sleep(1);
 
@@ -154,23 +188,48 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 		pal->blue[i+56]=0xff-(0x10*i);
 	}
 
-	printf("BLAH=%d\n",pi_logo_sprite[2+(79*63)+5]);
+	/* actual move the pi and rasterbars */
+	red_y=0;
+	orange_y=8;
+	yellow_y=16;
+	green_y=24;
+	blue_y=32;
+	purple_y=40;
 
 	x=0; y=0;
-	for(i=0;i<100;i++) {
-		x+=3; y+=2;
-		put_rasterbar(10,16,buffer);
-		put_rasterbar(60,24,buffer);
-		put_rasterbar(110,32,buffer);
-		put_rasterbar(160,40,buffer);
-		put_rasterbar(210,48,buffer);
-		put_rasterbar(260,56,buffer);
+	for(i=0;i<320;i++) {
+
+		/* only move if <100 */
+		if (i<100) { x+=3; y+=2; }
+
+		/* slow down bars by factor of 1 */
+		j=i;
+
+		/* draw new */
+		put_rasterbar(240+sine_table[(j+red_y)%128],16,buffer);
+		put_rasterbar(240+sine_table[(j+orange_y)%128],24,buffer);
+		put_rasterbar(240+sine_table[(j+yellow_y)%128],32,buffer);
+		put_rasterbar(240+sine_table[(j+green_y)%128],40,buffer);
+		put_rasterbar(240+sine_table[(j+blue_y)%128],48,buffer);
+		put_rasterbar(240+sine_table[(j+purple_y)%128],56,buffer);
 
 		put_sprite_cropped(buffer,pi_logo_sprite,x,y);
 		pi_graphics_update(buffer,pal);
+#ifdef VMWOS
+#else
 		usleep(30000);
+#endif
+		/* erase old */
+		erase_sprite_cropped(buffer,pi_logo_sprite,x,y);
+
+		erase_rasterbar(240+sine_table[(j+red_y)%128],buffer);
+		erase_rasterbar(240+sine_table[(j+orange_y)%128],buffer);
+		erase_rasterbar(240+sine_table[(j+yellow_y)%128],buffer);
+		erase_rasterbar(240+sine_table[(j+green_y)%128],buffer);
+		erase_rasterbar(240+sine_table[(j+blue_y)%128],buffer);
+		erase_rasterbar(240+sine_table[(j+purple_y)%128],buffer);
 	}
-	sleep(8);
+	//sleep(1);
 
 	/*******************************************************/
 	/* Load Linux Logo				       */
@@ -208,9 +267,9 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 
 	sleep(2);
 
-	console_text_collapse(5,buffer,pal);
+	console_text_collapse(5,100,buffer,pal);
 
-	sleep(1);
+//	sleep(1);
 
 	return 0;
 }

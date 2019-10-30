@@ -47,6 +47,8 @@ void vmwVlin(int y1, int y2, int x, int color, unsigned char *buffer);
 /* Sprite */
 void put_sprite_cropped(unsigned char *buffer,
 			unsigned char *sprite,int x,int y);
+void erase_sprite_cropped(unsigned char *buffer,
+			unsigned char *sprite,int x,int y);
 
 /* Apple2 Compatible */
 void apple2_plot(int x, int y, int color, unsigned char *buffer);
@@ -90,7 +92,7 @@ int console_init(struct palette *pal);
 int console_clear(void);
 int console_home(void);
 int console_update(unsigned char *buffer, struct palette *pal, int pi_top);
-int console_text_collapse(int starty,
+int console_text_collapse(int starty,int how_long,
 		unsigned char *buffer, struct palette *pal);
 int console_text_explode(unsigned char *buffer, struct palette *pal);
 
