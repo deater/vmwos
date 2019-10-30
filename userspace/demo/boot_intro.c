@@ -34,7 +34,29 @@ static int future_pal[32]={
 	0xffffff, 0xffffff,
 };
 
-static unsigned char pi_logo_sprite[2+(68*80)];
+static unsigned char pi_logo_sprite[2+(63*80)];
+
+static void put_rasterbar(int y, int color, unsigned char *buffer) {
+
+	vmwHlin(0, 640, y-7, color+7, buffer);
+	vmwHlin(0, 640, y-6, color+6, buffer);
+	vmwHlin(0, 640, y-5, color+5, buffer);
+	vmwHlin(0, 640, y-4, color+4, buffer);
+	vmwHlin(0, 640, y-3, color+3, buffer);
+	vmwHlin(0, 640, y-2, color+2, buffer);
+	vmwHlin(0, 640, y-1, color+1, buffer);
+	vmwHlin(0, 640, y, color, buffer);
+//	vmwHlin(0, 640, y,   15,    buffer);
+	vmwHlin(0, 640, y+1, color, buffer);
+	vmwHlin(0, 640, y+2, color+1, buffer);
+	vmwHlin(0, 640, y+3, color+2, buffer);
+	vmwHlin(0, 640, y+4, color+3, buffer);
+	vmwHlin(0, 640, y+5, color+4, buffer);
+	vmwHlin(0, 640, y+6, color+5, buffer);
+	vmwHlin(0, 640, y+7, color+6, buffer);
+	vmwHlin(0, 640, y+8, color+7, buffer);
+}
+
 
 int boot_intro(unsigned char *buffer, struct palette *pal) {
 
@@ -48,15 +70,20 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 	vmwLoadPCX(pi_logo,0,0, buffer);
 
 	/* load into sprite */
-	pi_logo_sprite[0]=68;
+	pi_logo_sprite[0]=63;
 	pi_logo_sprite[1]=80;
 	for(y=0;y<80;y++) {
-		for(x=0;x<68;x++) {
+		for(x=0;x<63;x++) {
 			color=buffer[y*XSIZE+x];
-			if (color==243) color=0xff;
-			pi_logo_sprite[2+(y*68)+x]=color;
+			//if (color==243) color=0xff;
+			pi_logo_sprite[2+(y*63)+x]=color;
 		}
 	}
+	printf("BLAH=%d\n",pi_logo_sprite[2+(79*63)+5]);
+
+	vmwClearScreen(0, buffer);
+
+	put_sprite_cropped(buffer,pi_logo_sprite,0,0);
 
 	/* Write the demsg to the screen */
 	length=strlen(pi1_dmesg);
@@ -99,14 +126,51 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 
 	vmwClearScreen(0, buffer);
 
+	/* Set palette for rasterbars */
+	for(i=0;i<8;i++) {
+		/* red */
+		pal->red[i+16]=0xff-(0x10*i);
+		pal->green[i+16]=0x00;
+		pal->blue[i+16]=0x00;
+		/* orange */
+		pal->red[i+24]=0xff-(0x10*i);
+		pal->green[i+24]=0xaa-(0x10*i);
+		pal->blue[i+24]=0x80-(0x10*i);
+		/* yellow */
+		pal->red[i+32]=0xff-(0x10*i);
+		pal->green[i+32]=0xff-(0x10*i);
+		pal->blue[i+32]=0x00;
+		/* green */
+		pal->red[i+40]=0x00;
+		pal->green[i+40]=0xff-(0x10*i);
+		pal->blue[i+40]=0x00;
+		/* blue */
+		pal->red[i+48]=0x00;
+		pal->green[i+48]=0x00;
+		pal->blue[i+48]=0xff-(0x10*i);
+		/* purple */
+		pal->red[i+56]=0xff-(0x10*i);
+		pal->green[i+56]=0x00;
+		pal->blue[i+56]=0xff-(0x10*i);
+	}
+
+	printf("BLAH=%d\n",pi_logo_sprite[2+(79*63)+5]);
+
 	x=0; y=0;
 	for(i=0;i<100;i++) {
 		x+=3; y+=2;
+		put_rasterbar(10,16,buffer);
+		put_rasterbar(60,24,buffer);
+		put_rasterbar(110,32,buffer);
+		put_rasterbar(160,40,buffer);
+		put_rasterbar(210,48,buffer);
+		put_rasterbar(260,56,buffer);
+
 		put_sprite_cropped(buffer,pi_logo_sprite,x,y);
 		pi_graphics_update(buffer,pal);
 		usleep(30000);
 	}
-	sleep(3);
+	sleep(8);
 
 	/*******************************************************/
 	/* Load Linux Logo				       */

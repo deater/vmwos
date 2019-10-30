@@ -27,6 +27,7 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 	int version,bpp,type;
 	unsigned char *image_pointer;
 	int output_pointer=0;
+	int bytes_per_line;
 
 	xmin=(image[5]<<8)+image[4];
 	ymin=(image[7]<<8)+image[6];
@@ -72,6 +73,7 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 
 		printf("Number of colored planes: %i\n",image[65]);
 		printf("Bytes per line: %i\n",(image[67]<<8)+image[66]);
+		bytes_per_line=(image[67]<<8)+image[66];
 		printf("Palette Type: %i\n",(image[69]<<8)+image[68]);
 		printf("Hscreen Size: %i\n",(image[71]<<8)+image[70]);
 		printf("Vscreen Size: %i\n",(image[73]<<8)+image[72]);
@@ -89,7 +91,7 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 
 	image_pointer=image+128;
 
-	while (total<xsize*ysize) {
+	while (total<bytes_per_line*ysize) {
 
 		/* read a byte */
 		temp_byte=*image_pointer;
@@ -100,16 +102,25 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 			numacross=temp_byte&0x3f;
 			temp_byte=*image_pointer;
 			image_pointer++;
+
+//			printf("x=%d numacross=%d color=%d\n",
+//				x,numacross,temp_byte);
 			for(i=0;i<numacross;i++) {
-				buffer[output_pointer]=temp_byte;
+				if (x<xsize) {
+					buffer[output_pointer]=temp_byte;
+				}
 				output_pointer++;
 				total++;
 				x++;
-				if (x>=xsize) {
-					x=0;
+				if (x>bytes_per_line-1) {
 					//printf("[%d+%d] ",
 					//	output_pointer,XSIZE-xsize);
-					output_pointer+=(XSIZE-xsize);
+					output_pointer+=(XSIZE-bytes_per_line);
+					//printf("x=%d numacross=%d i=%d color=%d\n",
+					//	x,numacross,i,temp_byte);
+
+					x=0;
+
 					/* skip padding */
 					break;
 
@@ -118,13 +129,15 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 			}
 		}
 		else {
-			buffer[output_pointer]=temp_byte;
+//			printf("x=%d numacross=1 color=%d\n",
+//				x,temp_byte);
+			if (x<xsize) buffer[output_pointer]=temp_byte;
 			output_pointer++;
 			total++;
 			x++;
-			if (x>=xsize) {
+			if (x>bytes_per_line-1) {
 				x=0;
-				output_pointer+=(XSIZE-xsize);
+				output_pointer+=(XSIZE-bytes_per_line);
 				//printf("[%d] ",output_pointer);
 			}
 			//printf("%d ",x);
