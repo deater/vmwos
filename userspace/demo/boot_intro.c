@@ -94,11 +94,14 @@ static void erase_rasterbar(int y, unsigned char *buffer) {
 
 int boot_intro(unsigned char *buffer, struct palette *pal) {
 
-	int i,j,x,y,color;
+	int i,x,y,color;
 	unsigned char *pi_logo=__pi_logo_pcx;
 	int filesize=__pi_logo_pcx_len;
 	int length;
-	int red_y,orange_y,yellow_y,green_y,blue_y,purple_y;
+	int red_off=32,orange_off=32,yellow_off=32,green_off=32,
+		blue_off=32,purple_off=32;
+	int red_out=0,orange_out=0,yellow_out=0,green_out=0,
+		blue_out=0,purple_out=0;
 
 	/* Load the Pi logo to the buffer */
 	vmwPCXLoadPalette(pi_logo, filesize-769, pal);
@@ -155,7 +158,7 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 	sleep(1);
 
 	/*******************************************************/
-	/* moving pi					       */
+	/* moving pi / Rasterbars			       */
 	/*******************************************************/
 
 	vmwClearScreen(0, buffer);
@@ -189,31 +192,71 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 	}
 
 	/* actual move the pi and rasterbars */
-	red_y=0;
-	orange_y=8;
-	yellow_y=16;
-	green_y=24;
-	blue_y=32;
-	purple_y=40;
 
 	x=0; y=0;
 	for(i=0;i<320;i++) {
 
+		switch(i) {
+			case  0: red_out=1; break;
+			case  8: orange_out=1; break;
+			case  16: yellow_out=1; break;
+			case  24: green_out=1; break;
+			case  32: blue_out=1; break;
+			case  40: purple_out=1; break;
+		}
+
 		/* only move if <100 */
 		if (i<100) { x+=3; y+=2; }
 
-		/* slow down bars by factor of 1 */
-		j=i;
+		/* move rasterbars */
+		if (red_out) red_off=(red_off+1)%128;
+		if (orange_out) orange_off=(orange_off+1)%128;
+		if (yellow_out) yellow_off=(yellow_off+1)%128;
+		if (green_out) green_off=(green_off+1)%128;
+		if (blue_out) blue_off=(blue_off+1)%128;
+		if (purple_out) purple_off=(purple_off+1)%128;
 
 		/* draw new */
-		put_rasterbar(240+sine_table[(j+red_y)%128],16,buffer);
-		put_rasterbar(240+sine_table[(j+orange_y)%128],24,buffer);
-		put_rasterbar(240+sine_table[(j+yellow_y)%128],32,buffer);
-		put_rasterbar(240+sine_table[(j+green_y)%128],40,buffer);
-		put_rasterbar(240+sine_table[(j+blue_y)%128],48,buffer);
-		put_rasterbar(240+sine_table[(j+purple_y)%128],56,buffer);
+		if ((red_out) && (red_off>32) && (red_off<96)) {
+			put_rasterbar(240+sine_table[red_off],16,buffer);
+		}
+		if ((orange_out) && (orange_off>32) && (orange_off<96)) {
+			put_rasterbar(240+sine_table[orange_off],24,buffer);
+		}
+		if ((yellow_out) && (yellow_off>32) && (yellow_off<96)) {
+			put_rasterbar(240+sine_table[yellow_off],32,buffer);
+		}
+		if ((green_out) && (green_off>32) && (green_off<96)) {
+			put_rasterbar(240+sine_table[green_off],40,buffer);
+		}
+		if ((blue_out) && (blue_off>32) && (blue_off<96)) {
+			put_rasterbar(240+sine_table[blue_off],48,buffer);
+		}
+		if ((purple_out) && (purple_off>32) && (purple_off<96)) {
+			put_rasterbar(240+sine_table[purple_off],56,buffer);
+		}
 
 		put_sprite_cropped(buffer,pi_logo_sprite,x,y);
+
+		if ((red_out) && ((red_off<=32) || (red_off>=96))) {
+			put_rasterbar(240+sine_table[red_off],16,buffer);
+		}
+		if ((orange_out) && ((orange_off<=32) || (orange_off>=96))) {
+			put_rasterbar(240+sine_table[orange_off],24,buffer);
+		}
+		if ((yellow_out) && ((yellow_off<=32) || (yellow_off>=96))) {
+			put_rasterbar(240+sine_table[yellow_off],32,buffer);
+		}
+		if ((green_out) && ((green_off<=32) || (green_off>=96))) {
+			put_rasterbar(240+sine_table[green_off],40,buffer);
+		}
+		if ((blue_out) && ((blue_off<=32) || (blue_off>=96))) {
+			put_rasterbar(240+sine_table[blue_off],48,buffer);
+		}
+		if ((purple_out) && ((purple_off<=32) || (purple_off>=96))) {
+			put_rasterbar(240+sine_table[purple_off],56,buffer);
+		}
+
 		pi_graphics_update(buffer,pal);
 #ifdef VMWOS
 #else
@@ -222,12 +265,12 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 		/* erase old */
 		erase_sprite_cropped(buffer,pi_logo_sprite,x,y);
 
-		erase_rasterbar(240+sine_table[(j+red_y)%128],buffer);
-		erase_rasterbar(240+sine_table[(j+orange_y)%128],buffer);
-		erase_rasterbar(240+sine_table[(j+yellow_y)%128],buffer);
-		erase_rasterbar(240+sine_table[(j+green_y)%128],buffer);
-		erase_rasterbar(240+sine_table[(j+blue_y)%128],buffer);
-		erase_rasterbar(240+sine_table[(j+purple_y)%128],buffer);
+		erase_rasterbar(240+sine_table[red_off],buffer);
+		erase_rasterbar(240+sine_table[orange_off],buffer);
+		erase_rasterbar(240+sine_table[yellow_off],buffer);
+		erase_rasterbar(240+sine_table[green_off],buffer);
+		erase_rasterbar(240+sine_table[blue_off],buffer);
+		erase_rasterbar(240+sine_table[purple_off],buffer);
 	}
 	//sleep(1);
 
