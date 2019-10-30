@@ -411,9 +411,10 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		lastframe--;
 		framecount++;
 		pi_graphics_update(buffer,pal);
-
+#ifdef VMWOS
+#else
 		usleep(33000);
-
+#endif
 	}
 	return 0;
 }
