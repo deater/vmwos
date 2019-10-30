@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+//#define RECORD_FLIGHT 1
+
 #ifdef VMWOS
 #include "syscalls.h"
 #include "vlibc.h"
@@ -310,7 +312,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 		ch=pi_graphics_input();
 
 		if (ch!=0) {
-			printf("%d,\'%c\'\n",framecount-lastframe,ch);
+			printf("\t{%d,\'%c\'},\n",framecount-lastframe,ch);
 			lastframe=framecount;
 		}
 #else
@@ -408,7 +410,10 @@ int flying(unsigned char *buffer, struct palette *pal) {
 			turning--;
 		}
 
+#ifdef RECORD_FLIGHT
+#else
 		lastframe--;
+#endif
 		framecount++;
 		pi_graphics_update(buffer,pal);
 #ifdef VMWOS

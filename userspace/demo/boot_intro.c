@@ -194,7 +194,7 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 	/* actual move the pi and rasterbars */
 
 	x=0; y=0;
-	for(i=0;i<320;i++) {
+	for(i=0;i<340;i++) {
 
 		switch(i) {
 			case  0: red_out=1; break;
