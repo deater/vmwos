@@ -30,11 +30,12 @@
 //volatile uint32_t TimeDelay;
 //volatile uint32_t overflows=0;
 
-static ayemu_ay_t ay;
+static ayemu_ay_t ay,ay2;
 static struct pt3_song_t pt3,pt3_2;
 
 static ayemu_ay_reg_frame_t frame;
-//static unsigned char frame[14];
+static ayemu_ay_reg_frame_t frame2;
+
 
 #define MAX_SONGS 1
 #include "dotd.h"
@@ -70,6 +71,7 @@ static void change_song(void) {
 #define COUNTDOWN_RESET (FREQ/50)
 
 static unsigned char audio_buf[AUDIO_BUFSIZ];
+static unsigned char audio_buf2[AUDIO_BUFSIZ];
 static int output_bufsize=8*1024*1024,totalsize=0;
 static uint32_t *output_buffer;
 
@@ -85,10 +87,12 @@ static void NextBuffer(int which_half) {
 			return;
 		}
 		pt3_set_pattern(current_pattern,&pt3);
+		if (pt3_2.valid) pt3_set_pattern(current_pattern,&pt3_2);
 	}
 
 	if (subframe==0) {
 		line_decode_result=pt3_decode_line(&pt3);
+		if (pt3_2.valid) pt3_decode_line(&pt3_2);
 	}
 
 	if (line_decode_result==1) {
@@ -110,14 +114,21 @@ static void NextBuffer(int which_half) {
 	}
 
 	pt3_make_frame(&pt3,frame);
+	if (pt3_2.valid) {
+		pt3_make_frame(&pt3_2,frame2);
+	}
 
 	/* Update AY buffer */
 	ayemu_set_regs(&ay,frame);
+	ayemu_set_regs(&ay2,frame2);
 
 //	printf("Current pattern: %d / %d\n",current_pattern, line);
 
 	/* Generate sound buffer */
 	ayemu_gen_sound (&ay, audio_buf, AUDIO_BUFSIZ);
+	if (pt3_2.valid) {
+		ayemu_gen_sound (&ay2, audio_buf2, AUDIO_BUFSIZ);
+	}
 
 }
 
@@ -136,17 +147,23 @@ int start_playing_pt3(unsigned char *buffer, struct palette *pal)  {
 	/* Init ay code */
 	printf("Init AY library\n");
 	ayemu_init(&ay);
+	ayemu_init(&ay2);
 	// 44100, 1, 16 -- freq, channels, bits
 	ayemu_set_sound_format(&ay, FREQ, CHANS, BITS);
+	ayemu_set_sound_format(&ay2, FREQ, CHANS, BITS);
 
 	printf("Reset AY library\n");
 	ayemu_reset(&ay);
+	ayemu_reset(&ay2);
 	ayemu_set_chip_type(&ay, AYEMU_AY, NULL);
+	ayemu_set_chip_type(&ay2, AYEMU_AY, NULL);
 	/* Assume mockingboard/VMW-chiptune freq */
 	/* pt3_lib assumes output is 1773400 of zx spectrum */
 	ayemu_set_chip_freq(&ay, 1773400);
-//	ayemu_set_chip_freq(&ay, 1000000);
 	ayemu_set_stereo(&ay, AYEMU_MONO, NULL);
+
+	ayemu_set_chip_freq(&ay2, 1773400);
+	ayemu_set_stereo(&ay2, AYEMU_MONO, NULL);
 
 	printf("Allocate RAM\n");
 	output_buffer=vmwos_malloc(output_bufsize*sizeof(uint32_t)*2);
@@ -159,7 +176,7 @@ int start_playing_pt3(unsigned char *buffer, struct palette *pal)  {
 
 	printf("Decode Song\n");
 	while(!song_done) {
-		int i,temp;
+		int i,temp,temp2;
 		NextBuffer(0);
 		if (current_pattern!=old_pattern) {
 			clock_gettime(CLOCK_REALTIME,&t);
@@ -179,7 +196,8 @@ int start_playing_pt3(unsigned char *buffer, struct palette *pal)  {
 #ifdef VMWOS
 			/* Start playing early */
 			if (!sound_started) {
-				vmwos_play_sound(output_buffer,totalsize*4*2,1);
+				//vmwos_play_sound(output_buffer,totalsize*4*2,1);
+				vmwos_play_sound(output_buffer,5081202*4*2,1);
 				sound_started=1;
 			}
 #else
@@ -192,10 +210,17 @@ int start_playing_pt3(unsigned char *buffer, struct palette *pal)  {
 			/* 14-bit? */
 			temp=(audio_buf[i*2]&0xff);
 			temp|=audio_buf[(i*2)+1]<<8;
+			if (pt3_2.valid) {
+				temp2=(audio_buf2[i*2]&0xff);
+				temp2|=audio_buf2[(i*2)+1]<<8;
+			}
+			else {
+				temp2=temp;
+			}
 			/* write left (?) channel */
 			output_buffer[(i+totalsize)*2]=temp>>2;
 			/* write right (?) channel */
-			output_buffer[((i+totalsize)*2)+1]=temp>>2;
+			output_buffer[((i+totalsize)*2)+1]=temp2>>2;
 		}
 		//memcpy(output_buffer+totalsize,audio_buf,AUDIO_BUFSIZ);
 		totalsize+=AUDIO_BUFSIZ/2;
