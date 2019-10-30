@@ -115,11 +115,12 @@ int console_update(unsigned char *buffer, struct palette *pal, int pi_top) {
 	return 0;
 }
 
-int console_update_weird(unsigned char *buffer, struct palette *pal) {
+static int console_update_weird(int starty,
+		unsigned char *buffer, struct palette *pal) {
 
 	int x,y;
 
-	for(y=0;y<CONSOLE_Y;y++) {
+	for(y=starty;y<CONSOLE_Y;y++) {
 		for(x=0;x<CONSOLE_X;x++) {
 			put_char_cropped(text_console[x+(y*CONSOLE_X)],
 				text_x[(y*CONSOLE_X)+x],
@@ -411,12 +412,13 @@ int console_init(struct palette *pal) {
 }
 
 
-int console_text_collapse(unsigned char *buffer, struct palette *pal) {
+int console_text_collapse(int starty,
+			unsigned char *buffer, struct palette *pal) {
 	int x,y,i;
 
 	/* Init from current console state */
 
-	for(y=0;y<CONSOLE_Y;y++) {
+	for(y=starty;y<CONSOLE_Y;y++) {
 		for (x=0;x<CONSOLE_X;x++) {
 			text_x[(y*CONSOLE_X)+x]=x*8;
 			text_y[(y*CONSOLE_X)+x]=y*16;
@@ -428,7 +430,7 @@ int console_text_collapse(unsigned char *buffer, struct palette *pal) {
 
 	for(i=0;i<150;i++) {
 		/* Move letters */
-		for(y=0;y<CONSOLE_Y;y++) {
+		for(y=starty;y<CONSOLE_Y;y++) {
 			for (x=0;x<CONSOLE_X;x++) {
 				text_x[(y*CONSOLE_X)+x]+=
 					text_xspeed[(y*CONSOLE_X)+x];
@@ -436,9 +438,9 @@ int console_text_collapse(unsigned char *buffer, struct palette *pal) {
 					text_yspeed[(y*CONSOLE_X)+x];
 			}
 		}
-		vmwClearScreen(0,buffer);
+		vmwClearScreenY(starty*16,0,buffer);
 
-		console_update_weird(buffer,pal);
+		console_update_weird(starty,buffer,pal);
 #ifdef VMWOS
 #else
 		usleep(50000);

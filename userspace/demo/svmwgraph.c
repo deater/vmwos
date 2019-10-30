@@ -86,6 +86,13 @@ void vmwClearScreen(int color, unsigned char *buffer) {
 
 }
 
+void vmwClearScreenY(int starty, int color, unsigned char *buffer) {
+
+	memset(buffer+(starty*XSIZE),
+		color,XSIZE*(YSIZE-starty)*sizeof(unsigned char));
+
+}
+
 void vmwSetAllBlackPalette(struct palette *pal) {
 
 	/* FIXME: use memset? */

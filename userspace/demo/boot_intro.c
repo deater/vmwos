@@ -89,7 +89,7 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 
 	sleep(1);
 
-	console_text_collapse(buffer,pal);
+	console_text_collapse(5,buffer,pal);
 
 	sleep(1);
 
@@ -144,7 +144,7 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 
 	sleep(2);
 
-	console_text_collapse(buffer,pal);
+	console_text_collapse(5,buffer,pal);
 
 	sleep(1);
 

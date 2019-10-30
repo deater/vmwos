@@ -37,6 +37,7 @@ void vmwSetAllBlackPalette(struct palette *pal);
 
 /* Clear Screen */
 void vmwClearScreen(int color, unsigned char *buffer);
+void vmwClearScreenY(int starty,int color, unsigned char *buffer);
 
 /* Line Drawing */
 void vmwHlin(int x1, int x2, int y, int color,unsigned char *buffer);
@@ -89,7 +90,8 @@ int console_init(struct palette *pal);
 int console_clear(void);
 int console_home(void);
 int console_update(unsigned char *buffer, struct palette *pal, int pi_top);
-int console_text_collapse(unsigned char *buffer, struct palette *pal);
+int console_text_collapse(int starty,
+		unsigned char *buffer, struct palette *pal);
 int console_text_explode(unsigned char *buffer, struct palette *pal);
 
 /* pcx_load.h */
