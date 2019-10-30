@@ -13,10 +13,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #endif
 
 #include "pt3_lib.h"
 #include "ayemu.h"
+
+#include "svmwgraph.h"
+#include "pi-graphics.h"
 
 #define FREQ	44100
 #define CHANS	1
@@ -33,7 +37,7 @@ static ayemu_ay_reg_frame_t frame;
 //static unsigned char frame[14];
 
 #define MAX_SONGS 1
-#include "i2_pt3.h"
+#include "dotd.h"
 
 static int which_song=0;
 static int song_done=0;
@@ -49,8 +53,8 @@ static void change_song(void) {
 	which_song=0;
 
 	struct pt3_image_t pt3_image;
-	pt3_image.data=__I2_PT3;
-	pt3_image.length=__I2_PT3_len;
+	pt3_image.data=__dya_dotd_pt3;
+	pt3_image.length=__dya_dotd_pt3_len;
 //	[0] = {	.data=__I2_PT3,	.length=__I2_PT3_len, },
 //};
 	pt3_load_song(&pt3_image, &pt3, &pt3_2);
@@ -119,10 +123,11 @@ static void NextBuffer(int which_half) {
 
 
 
-int start_playing_pt3(void)  {
+int start_playing_pt3(unsigned char *buffer, struct palette *pal)  {
 
-	int old_pattern=0;
+	int old_pattern=0,sound_started=0;
 	struct timespec t;
+	char tbuffer[3];
 
 	/* Init first song */
 	printf("Loading song\n");
@@ -158,9 +163,29 @@ int start_playing_pt3(void)  {
 		NextBuffer(0);
 		if (current_pattern!=old_pattern) {
 			clock_gettime(CLOCK_REALTIME,&t);
+			tbuffer[0]='0'+(30-current_pattern)/10;
+			tbuffer[1]='0'+(30-current_pattern)%10;
+			tbuffer[2]=0;
+
+			vmwTextXYx4(tbuffer,288,400,0,DEFAULT_FONT,buffer);
+			vmwTextXYx4(tbuffer,288,400,150,DEFAULT_FONT,buffer);
+
+			pi_graphics_update(buffer,pal);
+
 			printf("New pattern: %d at time %d\n",
 				current_pattern,(int)t.tv_sec);
 			old_pattern=current_pattern;
+
+#ifdef VMWOS
+			/* Start playing early */
+			if (!sound_started) {
+				vmwos_play_sound(output_buffer,totalsize*4*2,1);
+				sound_started=1;
+			}
+#else
+			usleep(50000);
+#endif
+
 		}
 
 		for(i=0;i<AUDIO_BUFSIZ/2;i++) {
@@ -174,14 +199,14 @@ int start_playing_pt3(void)  {
 		}
 		//memcpy(output_buffer+totalsize,audio_buf,AUDIO_BUFSIZ);
 		totalsize+=AUDIO_BUFSIZ/2;
+
+
+
 	}
 
 
 	printf("Total size=%d\n",totalsize);
 
-#ifdef VMWOS
-	vmwos_play_sound(output_buffer,totalsize*4*2,1);
-#endif
 
 	printf("After play\n");
 

@@ -14,7 +14,7 @@
 #include "pi-graphics.h"
 #include "demosplash2019.h"
 
-extern int start_playing_pt3(void);
+extern int start_playing_pt3(unsigned char *buffer, struct palette *pal);
 
 
 #ifdef VMWOS
@@ -137,7 +137,7 @@ void vmwos_open(unsigned char *buffer, struct palette *pal) {
 	pi_graphics_update(buffer,pal);
 
 	/* Load audio */
-	start_playing_pt3();
+	start_playing_pt3(buffer,pal);
 
 	sleep(2);
 
