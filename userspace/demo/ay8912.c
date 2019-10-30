@@ -13,6 +13,7 @@
 #include "vmwos.h"
 #else
 #include <stdlib.h>
+#include <stdio.h>
 #endif
 
 
@@ -394,8 +395,17 @@ static void prepare_generation(ayemu_ay_t *ay)
 	for (n = 0; n < 32; n++) {
 		vol = ay->table[n];
 		for (m=0; m < 6; m++) {
+#ifndef VMWOS
+		int v1,v2;
+
+			v1 = (int) (((long long) vol * ay->eq[m]) / 100);
+			v2 = ((vol * ay->eq[m]) / 100);
+			if (v1!=v2) printf("ERROR DECODING %d!=%d\n",v1,v2);
+			ay->vols[m][n] = ((vol * ay->eq[m]) / 100);
+#else
 			//ay->vols[m][n] = (int) (((long long) vol * ay->eq[m]) / 100);
 			ay->vols[m][n] = ((vol * ay->eq[m]) / 100);
+#endif
 		}
 	}
   }
