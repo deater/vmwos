@@ -139,7 +139,7 @@ void vmwos_open(unsigned char *buffer, struct palette *pal) {
 	/* Load audio */
 	start_playing_pt3(buffer,pal);
 
-	sleep(2);
+//	sleep(2);
 
 	vmwFadeToBlack(buffer,pal);
 
