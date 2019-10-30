@@ -8,6 +8,8 @@
 //#include <string.h>
 //#include <termios.h>
 
+//#define FIRST_RUN	1
+
 static int parse_input(char *string);
 
 //static int debug=0;
@@ -254,6 +256,10 @@ int main(int argc, char **argv) {
 	int ch,done=0;
 	int32_t status;
 
+#ifdef FIRST_RUN
+	int firstrun_done=0;
+#endif
+
 	struct termios oldt, newt;
 
 //	register long sp asm ("sp");
@@ -268,13 +274,27 @@ int main(int argc, char **argv) {
 	tcsetattr(0, TCSANOW, &newt);
 
 	while (1) {
+
+
 		input_pointer=0;
 
 		printf("] ");
 
 		while(1) {
 
+
+#ifdef FIRST_RUN
+			if (!firstrun_done) {
+				printf("Running DEMOSPLASH\n");
+				strncpy(input_string,"demosplash2019",15);
+				result=parse_input(input_string);
+				firstrun_done=1;
+				ch='\n';
+			}
+
+#endif
 			ch=getchar();
+
 
 			if ((ch=='\n') || (ch=='\r')) {
 				printf("\n");
