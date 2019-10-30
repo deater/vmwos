@@ -32,6 +32,26 @@ int strlen(const char *s) {
 	return length;
 }
 
+/* At most n bytes of src are copied to dest */
+/* If no nul in the first n bytes of src, dest will *not* be nul terminated */
+/* If length of src less than n, nuls are padded */
+char *strncpy(char *dest, const char *src, uint32_t n) {
+
+	uint32_t i;
+
+	for(i=0; i<n; i++) {
+		dest[i]=src[i];
+		if (src[i]=='\0') break;
+	}
+	for(i=i;i<n;i++) {
+		dest[i]='\0';
+	}
+
+	return dest;
+
+}
+
+
 int32_t atoi(char *string) {
 
 	int result=0;
