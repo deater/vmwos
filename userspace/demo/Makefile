@@ -95,10 +95,10 @@ doom_fire.o:	doom_fire.c svmwgraph.h
 doom_fire.x86.o:	doom_fire.c pi-graphics.h
 	$(CC) $(NATIVE_CFLAGS) -o doom_fire.x86.o -c doom_fire.c
 
-mode7.o:	mode7.c svmwgraph.h pi_actual.h flight_replay.h
+mode7.o:	mode7.c svmwgraph.h pi_actual.h flight_replay.h pi_ship.h
 	$(CROSS)$(CC) $(CFLAGS) -c mode7.c
 
-mode7.x86.o:	mode7.c pi-graphics.h pi_actual.h flight_replay.h
+mode7.x86.o:	mode7.c pi-graphics.h pi_actual.h flight_replay.h pi_ship.h
 	$(CC) $(NATIVE_CFLAGS) -o mode7.x86.o -c mode7.c
 
 
