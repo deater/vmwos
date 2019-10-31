@@ -18,6 +18,7 @@
 
 #include "pi_actual.h"
 #include "pi_ship.h"
+#include "deep_field.h"
 
 #include "flight_replay.h"
 
@@ -78,6 +79,10 @@ static unsigned char ship_forward[2+52*32];
 static unsigned char ship_right[2+52*32];
 static unsigned char ship_left[2+52*32];
 
+#define DEEP_XSIZE	2560
+#define DEEP_YSIZE	73
+
+static unsigned char deep_field[DEEP_XSIZE*DEEP_YSIZE];
 
 static int fixed_mul(int a, int b) {
 
@@ -233,10 +238,19 @@ void draw_background_mode7(int angle, int cx, int cy,
 	}
 }
 
+static void update_sky(int angle, unsigned char *buffer) {
+	int i;
+
+	/* FIXME: should properly wrap when we go past edge */
+
+	for(i=0;i<DEEP_YSIZE;i++) {
+		memcpy(&buffer[i*XSIZE],
+			&deep_field[i*DEEP_XSIZE+(40*angle)],XSIZE);
+	}
+}
 
 int flying(unsigned char *buffer, struct palette *pal) {
 
-	int i,color;
 	unsigned char ch;
 	int xx,yy;
 	int turning=0;
@@ -254,10 +268,12 @@ int flying(unsigned char *buffer, struct palette *pal) {
 	xx=318;	yy=312;
 
 	/* Make sky */
-	color=3;
-	for(i=0;i<72;i++) {
-		vmwHlin(0, 640, i, color, buffer);
-	}
+//	color=3;
+//	for(i=0;i<72;i++) {
+//		vmwHlin(0, 640, i, color, buffer);
+//	}
+
+	update_sky(our_angle,buffer);
 
 	lastframe=flight_replay[input_offset].frames;
 
@@ -309,6 +325,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 
 				our_angle-=1;
 				if (our_angle<0) our_angle+=64;
+				update_sky(our_angle,buffer);
 			}
 		//	printf("Angle %lf\n",our_angle);
 		}
@@ -321,6 +338,7 @@ int flying(unsigned char *buffer, struct palette *pal) {
 				turning=20;
 				our_angle+=1;
 				if (our_angle>63) our_angle-=64;
+				update_sky(our_angle,buffer);
 			}
 
 
@@ -384,19 +402,20 @@ int mode7_flying(unsigned char *buffer, struct palette *pal) {
 	int x,y;
 
 	vmwPCXLoadPalette(pi_actual_pcx, pi_actual_pcx_len-769, pal);
-        vmwLoadPCX(pi_actual_pcx,0,0, buffer);
+        vmwLoadPCX(pi_actual_pcx,0,0, buffer, XSIZE);
 	for(y=0;y<194;y++) {
 		for(x=0;x<320;x++) {
 			flying_map[x][y]=buffer[y*XSIZE+x];
 		}
 	}
 
+	/* load ship images */
 	ship_shadow[0]=52; 	ship_shadow[1]=32;
 	ship_forward[0]=52;	ship_forward[1]=32;
 	ship_right[0]=52;	ship_right[1]=32;
 	ship_left[0]=52;	ship_left[1]=32;
 
-        vmwLoadPCX(pi_ship_pcx,0,0, buffer);
+        vmwLoadPCX(pi_ship_pcx,0,0, buffer, XSIZE);
 
 	for(y=0;y<32;y++) {
 		for(x=0;x<52;x++) {
@@ -407,10 +426,21 @@ int mode7_flying(unsigned char *buffer, struct palette *pal) {
 		}
 	}
 
+	/* load deep field image */
+        vmwLoadPCX(deep_field_pcx, 0,0, deep_field, DEEP_XSIZE);
 
+//	{
+//		int q,a;
+//
+//		for(a=0;a<72;a++) {
+//			for(q=0;q<640;q++) {
+//				buffer[a*XSIZE+q]=deep_field[a*DEEP_XSIZE+q];
+//			}
+//		}
 
 //		pi_graphics_update(buffer,pal);
-//		sleep(5);
+//		sleep(10);
+//	}
 
 	flying(buffer,pal);
 

@@ -19,7 +19,7 @@
 static int debug=1;
 
 int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
-	unsigned char *buffer)  {
+	unsigned char *buffer, int buffer_xsize)  {
 
 	int x,i,numacross,xsize,ysize,xmin,ymin,total;
 	int xmax,ymax;
@@ -87,7 +87,7 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 	total=0;
 	x=0;
 
-	output_pointer=(y_offset*XSIZE)+x_offset;
+	output_pointer=(y_offset*buffer_xsize)+x_offset;
 
 	image_pointer=image+128;
 
@@ -115,7 +115,7 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 				if (x>bytes_per_line-1) {
 					//printf("[%d+%d] ",
 					//	output_pointer,XSIZE-xsize);
-					output_pointer+=(XSIZE-bytes_per_line);
+					output_pointer+=(buffer_xsize-bytes_per_line);
 					//printf("x=%d numacross=%d i=%d color=%d\n",
 					//	x,numacross,i,temp_byte);
 
@@ -137,7 +137,7 @@ int vmwLoadPCX(unsigned char *image, int x_offset, int y_offset,
 			x++;
 			if (x>bytes_per_line-1) {
 				x=0;
-				output_pointer+=(XSIZE-bytes_per_line);
+				output_pointer+=(buffer_xsize-bytes_per_line);
 				//printf("[%d] ",output_pointer);
 			}
 			//printf("%d ",x);

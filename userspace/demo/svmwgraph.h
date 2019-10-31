@@ -97,5 +97,6 @@ int console_text_collapse(int starty,int how_long,
 int console_text_explode(unsigned char *buffer, struct palette *pal);
 
 /* pcx_load.h */
-int vmwLoadPCX(unsigned char *image, int x, int y, unsigned char *buffer);
+int vmwLoadPCX(unsigned char *image, int x, int y, unsigned char *buffer,
+		int buffer_xsize);
 int vmwPCXLoadPalette(unsigned char *image, int offset, struct palette *pal);

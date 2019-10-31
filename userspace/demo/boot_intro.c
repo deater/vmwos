@@ -105,7 +105,7 @@ int boot_intro(unsigned char *buffer, struct palette *pal) {
 
 	/* Load the Pi logo to the buffer */
 	vmwPCXLoadPalette(pi_logo, filesize-769, pal);
-	vmwLoadPCX(pi_logo,0,0, buffer);
+	vmwLoadPCX(pi_logo,0,0, buffer, XSIZE);
 
 	/* load into sprite */
 	pi_logo_sprite[0]=63;

@@ -70,7 +70,7 @@ void doom_fire(unsigned char *buffer, struct palette *pal) {
 	int firetop=200;
 
 	/* Load the Pi logo to the buffer */
-	vmwLoadPCX(pi_outline_pcx,0,0, buffer);
+	vmwLoadPCX(pi_outline_pcx,0,0, buffer, XSIZE);
 
 	/* load into sprite */
 	pi_outline_sprite[0]=128;
