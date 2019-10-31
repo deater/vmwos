@@ -1,10 +1,17 @@
-1:36 total
+Before release:
+	+ re-record mode7.  Maybe add 128 angles
+	+ re-time with music
 
-VMW logo, decompressing w countdown
+Maybe:
+	+ why hashes odd when falling
+	+ preserve background color when faling
+	+ properly do background in mode7
 
-20s fake Linux boot, with console slide
-	Pi split up and rejoin?
-	Pi logo pulse		?
+Abandoned:
+	+ Pi split up and rejoin?
+	+ Pi logo pulse		?
+	+ linux_logo explode instead of fall
+
 
 	    SYSTEMD 
 	MUST BE STOPPED
@@ -12,36 +19,6 @@ VMW logo, decompressing w countdown
 	Systemd will be eliminatd
 	Systemd infection
 	Preventing Systemd Assimilation
-
-20s linux_logo, with explosion
-	Where we're going we won't need Linux
-	Bring that in one word at a time
-
-30s mode7, over pi
-
-26s doom fire with credits
-	Pi rise up from fire and then fire turn off?
-
-Things to do:
-	Opener:
-		Drop in proper music
-		DECODE: 5 4 3 2 1
-	Fake boot1:
-		Have Pi move down
-		Rasterbars in background
-			Have 9 wide now, dark/med/light/grey/white
-				Green: 111, 95, 82, 7, 15
-				Purple: 222, 190, 158, 126, 7, 15
-
-		Pi pulse?
-		Scrolling text?
-
-	Fake boot2:
-		Done?
-	Mode7:
-		Sky graphic (screen seems to be 90% view, so need 640*4 pic )
-		Foreshortened Pi logo as ship
-		Record path
 
 	Fire:
 		CODE: DEATER
@@ -51,7 +28,5 @@ Things to do:
 		THANKS: MPVANIERSEL
 		A VMW SOFTWARE PRODUCTION
 
-		Have credits stop.  Fade out?
-		Put in all credits
-		Have pi scroll up too
+
 		

@@ -1,0 +1,19 @@
+Pi-On-Fire Demo v1.0
+~~~~~~~~~~~~~~~~~~~~~~~
+
+To try it on your own Pi.
+
++ You need a Pi with a BCM2835/2708 chip in it
+	Pi-1B, Pi-1B+, Pi-1A, maybe a zero
+
++ Get a version of Raspbian on an SD card
+
++ Copy /boot/kernel.img (kernel.img on partition /dev/sda1)
+	somwhere safe if you ever want Linux again
+
++ Copy the included kernel.img overtop
+
++ Put in your pi and boot!  Hopefully it works.
+
++ If you have a serial port hooked up you can mess with vmwos after
+	the demo stops
