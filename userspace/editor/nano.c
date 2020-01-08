@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <termios.h>
 #include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -16,8 +18,12 @@
 
 #define VMW_NANO_VERSION "0.0.1"
 #define NANO_TAB_STOP	8
+#define NANO_QUIT_TIMES	3
+
+#define CTRL_KEY(X) (X&0x1f)
 
 enum editor_keys {
+	BACKSPACE = 127,
 	ARROW_LEFT = 0x1000,
 	ARROW_RIGHT,
 	ARROW_UP,
@@ -45,6 +51,7 @@ struct editor_config {
 	int coloff;
 	int numrows;
 	struct editor_row *row;
+	int dirty;
 	char *filename;
 	char statusmsg[80];
 	time_t statusmsg_time;
@@ -86,19 +93,19 @@ static void enable_raw_mode(void) {
 	raw.c_lflag &= ~(ECHO | ICANON);
 
 	/* Turn off ^Z and ^C */
-//	raw.c_lflag &= ~(ISIG);
+	raw.c_lflag &= ~(ISIG);
 
 	/* Turn off ^S and ^Q */
-//	raw.c_iflag &= ~(IXON);
+	raw.c_iflag &= ~(IXON);
 
 	/* Turn off ^M to lf mapping */
-//	raw.c_iflag &= ~(ICRNL);
+	raw.c_iflag &= ~(ICRNL);
 
 	/* Turn off ^V */
-//	raw.c_lflag&= ~(IEXTEN);
+	raw.c_lflag&= ~(IEXTEN);
 
 	/* Turn off cr/lf expansion */
-//	raw.c_oflag&= ~(OPOST);
+	raw.c_oflag&= ~(OPOST);
 
 	/* Other misc flags for RAW mode */
 //	...
@@ -174,13 +181,15 @@ static void editor_update_row(struct editor_row *row) {
 
 }
 
-static void editor_append_row(char *s, size_t len) {
+static void editor_insert_row(int at, char *s, size_t len) {
 
-	int at;
+	if ((at<0) || (at>config.numrows)) return;
 
-	at=config.numrows;
 	config.row=realloc(config.row,sizeof(struct editor_row)*
 			(config.numrows+1));
+	memmove(&config.row[at+1],&config.row[at],
+			sizeof(struct editor_row)*(config.numrows-at));
+
 	config.row[at].size=len;
 	config.row[at].chars=malloc(len+1);
 	memcpy(config.row[at].chars,s,len);
@@ -191,6 +200,130 @@ static void editor_append_row(char *s, size_t len) {
 	editor_update_row(&config.row[at]);
 
 	config.numrows++;
+	config.dirty++;
+}
+
+static void editor_free_row(struct editor_row *row) {
+	free(row->render);
+	free(row->chars);
+}
+
+static void editor_delete_row(int at) {
+
+	if ((at<0) || (at>=config.numrows)) return;
+
+	editor_free_row(&config.row[at]);
+	memmove(&config.row[at],&config.row[at+1],
+		sizeof(struct editor_row) * (config.numrows - at - 1));
+	config.numrows--;
+	config.dirty++;
+}
+
+static void editor_row_insert_char(struct editor_row *row, int at, int c) {
+
+	if ((at<0) || (at>row->size)) at=row->size;
+	row->chars=realloc(row->chars,row->size+2);
+	memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+	row->size++;
+	row->chars[at] = c;
+	editor_update_row(row);
+	config.dirty++;
+}
+
+static void editor_row_append_string(struct editor_row *row, char *s, size_t len) {
+
+	row->chars = realloc(row->chars, row->size+len+1);
+	memcpy(&row->chars[row->size],s,len);
+	row->size+=len;
+	row->chars[row->size]='\0';
+	editor_update_row(row);
+	config.dirty++;
+}
+
+static void editor_row_delete_char(struct editor_row *row, int at) {
+
+	if ((at<0) || (at>=row->size)) return;
+	memmove(&row->chars[at],&row->chars[at+1],row->size-at);
+	row->size--;
+	editor_update_row(row);
+	config.dirty++;
+}
+
+static void editor_insert_char(int c) {
+	if (config.cy==config.numrows) {
+		editor_insert_row(config.numrows,"",0);
+	}
+	editor_row_insert_char(&config.row[config.cy],
+		config.cx,c);
+	config.cx++;
+}
+
+static void editor_insert_newline(void) {
+
+	struct editor_row *row;
+
+	if (config.cx==0) {
+		editor_insert_row(config.cy,"",0);
+	}
+	else {
+		row=&config.row[config.cy];
+		editor_insert_row(config.cy+1,&row->chars[config.cx],
+				row->size-config.cx);
+		row=&config.row[config.cy];
+		row->size=config.cx;
+		row->chars[row->size]='\0';
+		editor_update_row(row);
+	}
+	config.cy++;
+	config.cx=0;
+}
+
+static void editor_delete_char(void) {
+
+	struct editor_row *row;
+
+	/* If at end of file, do nothing */
+	if (config.cy == config.numrows) return;
+
+	/* If at very beginning of file, do nothing */
+	if ((config.cx==0) && (config.cy==0)) return;
+
+	row=&config.row[config.cy];
+	if (config.cx>0) {
+		editor_row_delete_char(row,config.cx-1);
+		config.cx--;
+	} else {
+		/* Handle case of deleting at beginning of line */
+		/* delete line and merge contents with prev line */
+		config.cx=config.row[config.cy-1].size;
+		editor_row_append_string(&config.row[config.cy-1],
+			row->chars,row->size);
+		editor_delete_row(config.cy);
+		config.cy--;
+	}
+}
+
+static char *editor_rows_to_string(int *buflen) {
+
+	int totlen=0;
+	int j;
+	char *buf,*p;
+
+	for(j=0;j<config.numrows;j++) {
+		totlen+=config.row[j].size+1;
+	}
+	*buflen=totlen;
+
+	buf=malloc(totlen);
+	p=buf;
+
+	for(j=0;j<config.numrows;j++) {
+		memcpy(p,config.row[j].chars,config.row[j].size);
+		p+=config.row[j].size;
+		*p='\n';
+		p++;
+	}
+	return buf;
 }
 
 static void editor_open(char *filename) {
@@ -218,10 +351,47 @@ static void editor_open(char *filename) {
 
 			linelen--;
 		}
-		editor_append_row(line,linelen);
+		editor_insert_row(config.numrows,line,linelen);
 	}
 	free(line);
 	fclose(fff);
+
+	config.dirty=0;
+}
+
+static void editor_set_status_message(const char *fmt, ...) {
+
+	va_list ap;
+	va_start(ap,fmt);
+	vsnprintf(config.statusmsg, sizeof(config.statusmsg), fmt, ap);
+	va_end(ap);
+	config.statusmsg_time = time(NULL);
+}
+
+static void editor_save(void) {
+
+	int len;
+	char *buf;
+	int fd;
+	if (config.filename==NULL) return;
+
+	buf=editor_rows_to_string(&len);
+
+	fd=open(config.filename, O_RDWR | O_CREAT, 0644);
+	if (fd!=-1) {
+		if (ftruncate(fd,len)!=-1) {
+			if (write(fd,buf,len)==len) {
+				close(fd);
+				free(buf);
+				config.dirty=0;
+				editor_set_status_message("%d bytes written to disk",len);
+				return;
+			}
+		}
+		close(fd);
+	}
+	free(buf);
+	editor_set_status_message("Can't save! I/O error: %s",strerror(errno));
 }
 
 static int editor_read_key(void) {
@@ -328,12 +498,27 @@ static void editor_process_key(void) {
 
 	int c;
 	int times;
+	static int quit_times=NANO_QUIT_TIMES;
 
 	c=editor_read_key();
 
 	switch(c) {
-		case 'x'&0x1f:
+		case '\r':
+			editor_insert_newline();
+			break;
+		case CTRL_KEY('x'):
+			if ((config.dirty) && (quit_times>0)) {
+				editor_set_status_message("WARNING!! "
+					"file has unsaved changes. "
+					"Press ^X %d more times to quit.",
+					quit_times);
+				quit_times--;
+				return;
+			}
 			safe_exit(0,NULL);
+			break;
+		case CTRL_KEY('o'):
+			editor_save();
 			break;
 		case HOME_KEY:
 			config.cx=0;
@@ -343,6 +528,14 @@ static void editor_process_key(void) {
 				config.cx=config.row[config.cy].size;
 			}
 			break;
+
+		case BACKSPACE:
+		case CTRL_KEY('h'):
+		case DEL_KEY:
+			if (c==DEL_KEY) editor_move_cursor(ARROW_RIGHT);
+			editor_delete_char();
+			break;
+
 		case PAGE_UP:
 		case PAGE_DOWN:
 			if (c==PAGE_UP) {
@@ -364,7 +557,18 @@ static void editor_process_key(void) {
 		case ARROW_RIGHT:
 			editor_move_cursor(c);
 			break;
+
+		case CTRL_KEY('l'):	// ignore refresh for now
+			break;
+
+		case '\x1b':		// ignore escape being pressed
+			break;
+
+		default:
+			editor_insert_char(c);
+			break;
 	}
+	quit_times = NANO_QUIT_TIMES;
 }
 
 static void editor_draw_rows(struct abuf *ab) {
@@ -443,8 +647,10 @@ static void editor_draw_status_bar(struct abuf *ab) {
 	/* make it inverted text */
 	abuf_append(ab,"\x1b[7m",4);
 
-	len=snprintf(status,sizeof(status),"%.20s - %d lines",
-		config.filename?config.filename:"[No Name]",config.numrows);
+	len=snprintf(status,sizeof(status),"%.20s - %d lines %s",
+		config.filename?config.filename:"[No Name]",
+		config.numrows,
+		config.dirty?"(modified)":"");
 	rlen=snprintf(rstatus,sizeof(rstatus),"%d/%d",
 		config.cy+1,config.numrows);
 
@@ -509,15 +715,6 @@ static void editor_refresh_screen(void) {
 
 }
 
-static void editor_set_status_message(const char *fmt, ...) {
-
-	va_list ap;
-	va_start(ap,fmt);
-	vsnprintf(config.statusmsg, sizeof(config.statusmsg), fmt, ap);
-	va_end(ap);
-	config.statusmsg_time = time(NULL);
-}
-
 static int get_cursor_position(int *rows, int *cols) {
 
 	char buf[32];
@@ -578,6 +775,7 @@ static void editor_init(void) {
 	config.coloff=0;
 	config.numrows=0;
 	config.row=NULL;
+	config.dirty=0;
 	config.filename=NULL;
 	config.statusmsg[0]='\0';
 	config.statusmsg_time=0;
@@ -600,7 +798,7 @@ int main(int argc, char **argv) {
 		editor_open(argv[1]);
 	}
 
-	editor_set_status_message("HELP: ^X = quit");
+	editor_set_status_message("HELP: ^O = save | ^X = quit");
 
 	while(1) {
 		editor_refresh_screen();
