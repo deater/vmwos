@@ -368,32 +368,6 @@ static void editor_set_status_message(const char *fmt, ...) {
 	config.statusmsg_time = time(NULL);
 }
 
-static void editor_save(void) {
-
-	int len;
-	char *buf;
-	int fd;
-	if (config.filename==NULL) return;
-
-	buf=editor_rows_to_string(&len);
-
-	fd=open(config.filename, O_RDWR | O_CREAT, 0644);
-	if (fd!=-1) {
-		if (ftruncate(fd,len)!=-1) {
-			if (write(fd,buf,len)==len) {
-				close(fd);
-				free(buf);
-				config.dirty=0;
-				editor_set_status_message("%d bytes written to disk",len);
-				return;
-			}
-		}
-		close(fd);
-	}
-	free(buf);
-	editor_set_status_message("Can't save! I/O error: %s",strerror(errno));
-}
-
 static int editor_read_key(void) {
 
 	int nread;
@@ -450,6 +424,7 @@ static int editor_read_key(void) {
 	return c;
 }
 
+
 static void editor_move_cursor(int key) {
 
 	struct editor_row *row;
@@ -494,82 +469,6 @@ static void editor_move_cursor(int key) {
 	}
 }
 
-static void editor_process_key(void) {
-
-	int c;
-	int times;
-	static int quit_times=NANO_QUIT_TIMES;
-
-	c=editor_read_key();
-
-	switch(c) {
-		case '\r':
-			editor_insert_newline();
-			break;
-		case CTRL_KEY('x'):
-			if ((config.dirty) && (quit_times>0)) {
-				editor_set_status_message("WARNING!! "
-					"file has unsaved changes. "
-					"Press ^X %d more times to quit.",
-					quit_times);
-				quit_times--;
-				return;
-			}
-			safe_exit(0,NULL);
-			break;
-		case CTRL_KEY('o'):
-			editor_save();
-			break;
-		case HOME_KEY:
-			config.cx=0;
-			break;
-		case END_KEY:
-			if (config.cy<config.numrows) {
-				config.cx=config.row[config.cy].size;
-			}
-			break;
-
-		case BACKSPACE:
-		case CTRL_KEY('h'):
-		case DEL_KEY:
-			if (c==DEL_KEY) editor_move_cursor(ARROW_RIGHT);
-			editor_delete_char();
-			break;
-
-		case PAGE_UP:
-		case PAGE_DOWN:
-			if (c==PAGE_UP) {
-				config.cy=config.rowoff;
-			}
-			else if (c==PAGE_DOWN) {
-				config.cy=config.rowoff+config.screenrows-1;
-				if (config.cy>config.numrows) config.cy=config.numrows;
-			}
-
-			times=config.screenrows;
-			while(times--)
-				editor_move_cursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
-			break;
-
-		case ARROW_UP:
-		case ARROW_DOWN:
-		case ARROW_LEFT:
-		case ARROW_RIGHT:
-			editor_move_cursor(c);
-			break;
-
-		case CTRL_KEY('l'):	// ignore refresh for now
-			break;
-
-		case '\x1b':		// ignore escape being pressed
-			break;
-
-		default:
-			editor_insert_char(c);
-			break;
-	}
-	quit_times = NANO_QUIT_TIMES;
-}
 
 static void editor_draw_rows(struct abuf *ab) {
 
@@ -715,6 +614,47 @@ static void editor_refresh_screen(void) {
 
 }
 
+
+static char *editor_prompt(char *prompt) {
+
+	size_t bufsize=128;
+	char *buf;
+	size_t buflen=0;
+	int c;
+
+	buf=malloc(bufsize);
+	buf[0]='\0';
+
+	while(1) {
+		editor_set_status_message(prompt,buf);
+		editor_refresh_screen();
+
+		c=editor_read_key();
+
+		if ((c==DEL_KEY)||(c==CTRL_KEY('h')) || (c==BACKSPACE)) {
+			if (buflen!=0) buf[--buflen]='\0';
+		}
+		/* escape cancels */
+		else if (c=='\x1b') {
+			editor_set_status_message("");
+			free(buf);
+			return NULL;
+		} else if (c=='\r') {
+			if (buflen!=0) {
+				editor_set_status_message("");
+				return buf;
+			}
+		} else if ( (!iscntrl(c)) && (c<128)) {
+			if (buflen==bufsize-1) {
+				bufsize*=2;
+				buf=realloc(buf,bufsize);
+			}
+			buf[buflen++]=c;
+			buf[buflen]='\0';
+		}
+	}
+}
+
 static int get_cursor_position(int *rows, int *cols) {
 
 	char buf[32];
@@ -761,6 +701,116 @@ static int get_window_size(int *rows, int *cols) {
 		*rows=ws.ws_row;
 	}
 	return 0;
+}
+
+
+static void editor_save(void) {
+
+	int len;
+	char *buf;
+	int fd;
+
+	if (config.filename==NULL) {
+		config.filename=editor_prompt("Save as: %s");
+		if (config.filename==NULL) {
+			editor_set_status_message("Save aborted");
+			return;
+		}
+	}
+	buf=editor_rows_to_string(&len);
+
+	fd=open(config.filename, O_RDWR | O_CREAT, 0644);
+	if (fd!=-1) {
+		if (ftruncate(fd,len)!=-1) {
+			if (write(fd,buf,len)==len) {
+				close(fd);
+				free(buf);
+				config.dirty=0;
+				editor_set_status_message("%d bytes written to disk",len);
+				return;
+			}
+		}
+		close(fd);
+	}
+	free(buf);
+	editor_set_status_message("Can't save! I/O error: %s",strerror(errno));
+}
+
+static void editor_process_key(void) {
+
+	int c;
+	int times;
+	static int quit_times=NANO_QUIT_TIMES;
+
+	c=editor_read_key();
+
+	switch(c) {
+		case '\r':
+			editor_insert_newline();
+			break;
+		case CTRL_KEY('x'):
+			if ((config.dirty) && (quit_times>0)) {
+				editor_set_status_message("WARNING!! "
+					"file has unsaved changes. "
+					"Press ^X %d more times to quit.",
+					quit_times);
+				quit_times--;
+				return;
+			}
+			safe_exit(0,NULL);
+			break;
+		case CTRL_KEY('o'):
+			editor_save();
+			break;
+		case HOME_KEY:
+			config.cx=0;
+			break;
+		case END_KEY:
+			if (config.cy<config.numrows) {
+				config.cx=config.row[config.cy].size;
+			}
+			break;
+
+		case BACKSPACE:
+		case CTRL_KEY('h'):
+		case DEL_KEY:
+			if (c==DEL_KEY) editor_move_cursor(ARROW_RIGHT);
+			editor_delete_char();
+			break;
+
+		case PAGE_UP:
+		case PAGE_DOWN:
+			if (c==PAGE_UP) {
+				config.cy=config.rowoff;
+			}
+			else if (c==PAGE_DOWN) {
+				config.cy=config.rowoff+config.screenrows-1;
+				if (config.cy>config.numrows) config.cy=config.numrows;
+			}
+
+			times=config.screenrows;
+			while(times--)
+				editor_move_cursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+			break;
+
+		case ARROW_UP:
+		case ARROW_DOWN:
+		case ARROW_LEFT:
+		case ARROW_RIGHT:
+			editor_move_cursor(c);
+			break;
+
+		case CTRL_KEY('l'):	// ignore refresh for now
+			break;
+
+		case '\x1b':		// ignore escape being pressed
+			break;
+
+		default:
+			editor_insert_char(c);
+			break;
+	}
+	quit_times = NANO_QUIT_TIMES;
 }
 
 
