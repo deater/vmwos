@@ -18,8 +18,11 @@ char *strerror(int errnum);
 #define STDOUT_FILENO	1
 #define STDERR_FILENO	2
 
+#define BUFSIZ		4096
+
 struct file_struct {
 	int fd;
+	int eof;
 };
 typedef struct file_struct FILE;
 FILE stdin,stdout,stderr;
@@ -32,14 +35,17 @@ int sscanf(const char *str, const char *format, ...);
 FILE *fopen(const char *pathname, const char *mode);
 char *fgets(char *s, int size, FILE *stream);
 int fclose(FILE *stream);
-
 int32_t getline(char **lineptr, size_t *n, FILE *stream);
+int32_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
+int32_t fgetc(FILE *stream);
+int32_t feof(FILE *stream);
 
 /* malloc.c */
 void *malloc(uint32_t size);
 void free(void *ptr);
 void *calloc(uint32_t nmemb, uint32_t size);
 void *realloc(void *ptr, uint32_t size);
+char *strdup(const char *s);
 
 /* printf.c */
 int printf(const char *string,...);
@@ -63,7 +69,6 @@ void *memmove(void *dest, const void *src, size_t n);
 char *strchr(const char *s, int32_t c);
 char *strrchr(const char *s, int32_t c);
 char *strstr(const char *s1, const char *s2);
-char *strdup(const char *s);
 
 /* system.c */
 int reboot(void);
