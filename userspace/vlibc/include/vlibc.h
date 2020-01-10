@@ -1,4 +1,6 @@
 /* ctype.c */
+int32_t iscntrl(int32_t c);
+int32_t isdigit(int32_t c);
 int32_t isspace(int32_t c);
 
 /* div.c */
@@ -25,14 +27,28 @@ FILE stdin,stdout,stderr;
 int putchar(int c);
 int puts(char *s);
 int getchar(void);
+int sscanf(const char *str, const char *format, ...);
+
+int ftruncate(int32_t fd, int32_t length);
+
 FILE *fopen(const char *pathname, const char *mode);
 char *fgets(char *s, int size, FILE *stream);
 int fclose(FILE *stream);
 
+int32_t getline(char **lineptr, size_t *n, FILE *stream);
+
+/* malloc.c */
+void *malloc(uint32_t size);
+void free(void *ptr);
+void *calloc(uint32_t nmemb, uint32_t size);
+void *realloc(void *ptr, uint32_t size);
+
 /* printf.c */
 int printf(const char *string,...);
 int sprintf(char *string, char *fmt, ...);
+int snprintf(char *str, uint32_t size, const char *format, ...);
 int fprintf(FILE *stream, const char *string, ...);
+int vsnprintf(char *str, uint32_t size, const char *format, ...);
 
 /* random.c */
 int32_t rand(void);
@@ -46,6 +62,10 @@ void *memset(void *s, int c, uint32_t n);
 void *memcpy(void *dest, const void *src, uint32_t n);
 int32_t memcmp(const void *s1, const void *s2, uint32_t n);
 void *memmove(void *dest, const void *src, size_t n);
+char *strchr(const char *s, int32_t c);
+char *strrchr(const char *s, int32_t c);
+char *strstr(const char *s1, const char *s2);
+char *strdup(const char *s);
 
 /* system.c */
 int reboot(void);
