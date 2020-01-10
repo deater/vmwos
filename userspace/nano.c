@@ -5,10 +5,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 #ifdef VMWOS
 static int errno;
 typedef uint64_t time_t;
+typedef int32_t ssize_t;
 
 #include "syscalls.h"
 #include "vlibc.h"
@@ -16,7 +18,6 @@ typedef uint64_t time_t;
 #else
 
 #include <stdio.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <termios.h>
 #include <ctype.h>
@@ -73,9 +74,9 @@ struct editor_syntax {
 	int flags;
 };
 
-char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL};
+static char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL};
 
-char *C_HL_keywords[] = {
+static char *C_HL_keywords[] = {
 	"switch", "if", "while", "for", "break", "continue", "return",
 	"else", "struct", "union", "typedef", "static",
 	"enum", "class", "case",
@@ -84,7 +85,7 @@ char *C_HL_keywords[] = {
 	"signed|", "void|", NULL,
 };
 
-struct editor_syntax HLDB[]={
+static struct editor_syntax HLDB[]={
 	{ "c", C_HL_extensions,
 		C_HL_keywords,
 		"//","/*","*/",
@@ -408,7 +409,9 @@ static void editor_select_syntax_highlight(void) {
 	i=0;
 	while (s->filematch[i]) {
 		is_ext = (s->filematch[i][0] == '.');
-		if ((is_ext && ext && !strcmp(ext, s->filematch[i])) ||
+		if ((is_ext && ext &&
+			!strncmp(ext, s->filematch[i],
+					strlen(s->filematch[i]))) ||
 			(!is_ext && strstr(config.filename, s->filematch[i]))) {
 				config.syntax = s;
 
@@ -981,6 +984,7 @@ static int get_cursor_position(int *rows, int *cols) {
 
 	char buf[32];
 	unsigned int i = 0;
+	char *ptr;
 
 	/* Ask for cursor position */
 	if (write(STDOUT_FILENO, "\x1b[6n",4)!=4) {
@@ -996,7 +1000,13 @@ static int get_cursor_position(int *rows, int *cols) {
 	buf[i]='\0';
 
 	if ((buf[0] != '\x1b') || (buf[1] !='[')) return -1;
-	if (sscanf(&buf[2],"%d;%d",rows,cols)!=2) return -1;
+	//if (sscanf(&buf[2],"%d;%d",rows,cols)!=2) return -1;
+	ptr=&buf[2];	/* skip the escape at beginning */
+	*rows=atoi(ptr);
+	ptr=strchr(ptr,';');
+	if (ptr==NULL) return -1;
+	*cols=atoi(ptr+1);
+
 
 	return 0;
 }
@@ -1004,12 +1014,15 @@ static int get_cursor_position(int *rows, int *cols) {
 
 static int get_window_size(int *rows, int *cols) {
 
-	struct winsize ws;
+#ifndef VMWOS
 	int result;
+	struct winsize ws;
+
 
 	/* First try ioctl() */
 	result=ioctl(STDOUT_FILENO,TIOCGWINSZ, &ws);
 	if ((result==-1) || (ws.ws_col==0)) {
+#endif
 		/* try asking terminal direct */
 
 		/* move cursor to bottom right */
@@ -1017,11 +1030,13 @@ static int get_window_size(int *rows, int *cols) {
 
 		return get_cursor_position(rows,cols);
 
+#ifndef VMWOS
 	}
 	else {
 		*cols=ws.ws_col;
 		*rows=ws.ws_row;
 	}
+#endif
 	return 0;
 }
 
