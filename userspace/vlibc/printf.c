@@ -8,7 +8,8 @@
 
 #define MAX_PRINT_SIZE 256
 
-int vsprintf(char *buffer, const char *string, va_list ap) {
+static int vsnprintf_internal(char *buffer, uint32_t size,
+				const char *string, va_list ap) {
 
 	char int_buffer[18];
 	int int_pointer=0;
@@ -18,6 +19,7 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 	unsigned long x;
 	uint64_t lx;
 	char pad_value,pad_len,printed_size;
+	int max_print_size=size;
 
 	while(1) {
 		if (*string==0) break;
@@ -50,7 +52,7 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 					buffer[buffer_pointer]='-';
 					buffer_pointer++;
 					printed_size++;
-					if (buffer_pointer==MAX_PRINT_SIZE) break;
+					if (buffer_pointer==max_print_size) break;
 
 					x=~x;
 					x++;
@@ -69,14 +71,14 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 							pad_value;
 						buffer_pointer++;
 						if (buffer_pointer
-							==MAX_PRINT_SIZE) break;
+							==max_print_size) break;
 					}
 				}
 
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
-					if (buffer_pointer==MAX_PRINT_SIZE) break;
+					if (buffer_pointer==max_print_size) break;
 				}
 			}
 			/* long long x (FIXME!) */
@@ -104,7 +106,7 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 				for(i=int_pointer+1;i<18;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
-					if (buffer_pointer==MAX_PRINT_SIZE)
+					if (buffer_pointer==max_print_size)
 						break;
 				}
 			}
@@ -131,7 +133,7 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 							pad_value;
 						buffer_pointer++;
 						if (buffer_pointer==
-							MAX_PRINT_SIZE) break;
+							max_print_size) break;
 					}
 				}
 
@@ -139,7 +141,7 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
 					if (buffer_pointer==
-							MAX_PRINT_SIZE) break;
+							max_print_size) break;
 				}
 			}
 			/* char */
@@ -148,14 +150,14 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 				x=va_arg(ap, unsigned long);
 				buffer[buffer_pointer]=x;
 				buffer_pointer++;
-				if (buffer_pointer==MAX_PRINT_SIZE) break;
+				if (buffer_pointer==max_print_size) break;
 			}
 			/* %% */
 			else if (*string=='%') {
 				string++;
 				buffer[buffer_pointer]='%';
 				buffer_pointer++;
-				if (buffer_pointer==MAX_PRINT_SIZE) break;
+				if (buffer_pointer==max_print_size) break;
 			}
 			/* string */
 			else if (*string=='s') {
@@ -167,20 +169,50 @@ int vsprintf(char *buffer, const char *string, va_list ap) {
 					s++;
 					buffer_pointer++;
 					if (buffer_pointer==
-						MAX_PRINT_SIZE) break;
+						max_print_size) break;
 				}
 			}
 		}
 		else {
 			buffer[buffer_pointer]=*string;
 			buffer_pointer++;
-			if (buffer_pointer==MAX_PRINT_SIZE) break;
+			if (buffer_pointer==max_print_size) break;
 			string++;
 		}
-		if (buffer_pointer==MAX_PRINT_SIZE-1) break;
+		if (buffer_pointer==max_print_size-1) break;
 	}
 
 	return buffer_pointer;
+}
+
+int vsprintf(char *buffer, const char *string, ...) {
+
+	int result;
+
+	va_list argp;
+	va_start(argp, string);
+
+	result=vsnprintf_internal(buffer,MAX_PRINT_SIZE,string,argp);
+
+	va_end(argp);
+
+        return result;
+
+}
+
+int vsnprintf(char *buffer, uint32_t size, const char *string, ...) {
+
+	int result;
+
+	va_list argp;
+	va_start(argp, string);
+
+	result=vsnprintf_internal(buffer,size,string,argp);
+
+	va_end(argp);
+
+        return result;
+
 }
 
 int printf(const char *string,...) {
@@ -191,7 +223,7 @@ int printf(const char *string,...) {
 	va_list argp;
 	va_start(argp, string);
 
-	result=vsprintf(buffer,string,argp);
+	result=vsnprintf_internal(buffer,MAX_PRINT_SIZE,string,argp);
 
 	va_end(argp);
 
@@ -208,7 +240,7 @@ int sprintf(char *string, char *fmt, ...) {
 	va_list argp;
 	va_start(argp, fmt);
 
-	result=vsprintf(string,fmt,argp);
+	result=vsnprintf_internal(string,MAX_PRINT_SIZE,fmt,argp);
 
 	va_end(argp);
 
@@ -219,6 +251,25 @@ int sprintf(char *string, char *fmt, ...) {
 
 }
 
+int snprintf(char *string, uint32_t size, const char *fmt, ...) {
+
+	int result;
+
+	va_list argp;
+	va_start(argp, fmt);
+
+	result=vsnprintf_internal(string,size,fmt,argp);
+
+	va_end(argp);
+
+	/* NUL terminate */
+	string[result]='\0';
+
+	return result;
+
+}
+
+
 int fprintf(FILE *stream, const char *string, ...) {
 
 	char buffer[MAX_PRINT_SIZE];
@@ -227,7 +278,7 @@ int fprintf(FILE *stream, const char *string, ...) {
 	va_list argp;
 	va_start(argp, string);
 
-	result=vsprintf(buffer,string,argp);
+	result=vsnprintf_internal(buffer,MAX_PRINT_SIZE,string,argp);
 
 	va_end(argp);
 
@@ -236,7 +287,6 @@ int fprintf(FILE *stream, const char *string, ...) {
 	return result;
 
 }
-
 
 #if 0
 
