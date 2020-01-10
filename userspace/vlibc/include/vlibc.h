@@ -1,3 +1,6 @@
+/* ctype.c */
+int32_t isspace(int32_t c);
+
 /* div.c */
 uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor);
 int32_t __aeabi_idiv(int32_t dividend, int32_t divisor);
@@ -9,6 +12,10 @@ extern int errno;
 char *strerror(int errnum);
 
 /* stdio.c */
+#define STDIN_FILENO	0
+#define STDOUT_FILENO	1
+#define STDERR_FILENO	2
+
 struct file_struct {
 	int fd;
 };
