@@ -29,8 +29,6 @@ int puts(char *s);
 int getchar(void);
 int sscanf(const char *str, const char *format, ...);
 
-int ftruncate(int32_t fd, int32_t length);
-
 FILE *fopen(const char *pathname, const char *mode);
 char *fgets(char *s, int size, FILE *stream);
 int fclose(FILE *stream);

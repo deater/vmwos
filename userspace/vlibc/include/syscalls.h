@@ -98,6 +98,9 @@ int32_t write(int fd, const void *buf, uint32_t count);
 int32_t read(int fd, void *buf, size_t count);
 int32_t open(const char *filename, uint32_t flags, uint32_t mode);
 int32_t close(uint32_t fd);
+int32_t ftruncate(int32_t fd, int64_t length);
+
+
 int32_t vfork(void);
 int32_t exit(int32_t status);
 int32_t chdir(const char *path);
