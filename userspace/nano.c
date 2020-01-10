@@ -3,6 +3,18 @@
 /* kilo by antirez, tutorial by paileyq */
 /* Modified to be more similar to the nano editor */
 
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef VMWOS
+static int errno;
+typedef uint64_t time_t;
+
+#include "syscalls.h"
+#include "vlibc.h"
+#include "vmwos.h"
+#else
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -15,6 +27,8 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <time.h>
+
+#endif
 
 #define VMW_NANO_VERSION "0.0.1"
 #define NANO_TAB_STOP	8
@@ -38,6 +52,9 @@ enum editor_keys {
 enum editor_highlight {
 	HL_NORMAL = 0,
 	HL_COMMENT,
+	HL_MLCOMMENT,
+	HL_KEYWORD1,
+	HL_KEYWORD2,
 	HL_STRING,
 	HL_NUMBER,
 	HL_MATCH,
@@ -49,14 +66,29 @@ enum editor_highlight {
 struct editor_syntax {
 	char *filetype;
 	char **filematch;
+	char **keywords;
 	char *singleline_comment_start;
+	char *multiline_comment_start;
+	char *multiline_comment_end;
 	int flags;
 };
 
 char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL};
 
+char *C_HL_keywords[] = {
+	"switch", "if", "while", "for", "break", "continue", "return",
+	"else", "struct", "union", "typedef", "static",
+	"enum", "class", "case",
+
+	"int|", "long|", "double|", "float|", "char|", "unsigned|",
+	"signed|", "void|", NULL,
+};
+
 struct editor_syntax HLDB[]={
-	{ "c", C_HL_extensions,"//",HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS},
+	{ "c", C_HL_extensions,
+		C_HL_keywords,
+		"//","/*","*/",
+		HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS},
 };
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
@@ -64,11 +96,13 @@ struct editor_syntax HLDB[]={
 
 
 struct editor_row {
+	int idx;
 	int size;
 	int rsize;
 	char *chars;
 	char *render;
 	unsigned char *hl;	/* highlight */
+	int hl_open_comment;
 };
 
 struct editor_config {
@@ -113,6 +147,8 @@ static void abuf_free(struct abuf *ab) {
 
 static void enable_raw_mode(void) {
 
+#ifdef VMWOS
+#else
 	struct termios raw;
 
 	tcgetattr(STDIN_FILENO, &config.orig_termios);
@@ -146,13 +182,15 @@ static void enable_raw_mode(void) {
 
 
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-
+#endif
 }
 
 static void disable_raw_mode(void) {
 
+#ifdef VMWOS
+#else
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &config.orig_termios);
-
+#endif
 }
 
 
@@ -214,23 +252,34 @@ static int is_separator(int c) {
 
 static void editor_update_syntax(struct editor_row *row) {
 
-	int i;
+	int i,j;
 	char c;
-	int prev_sep,in_string;
+	int prev_sep,in_string,in_comment;
 	unsigned char prev_hl;
-	char *scs;
-	int scs_len;
+	char *scs,*mcs,*mce;
+	int scs_len,mcs_len,mce_len;
+	char **keywords;
+	int klen,kw2;
+	int changed;
 
 	row->hl = realloc(row->hl, row->rsize);
 	memset(row->hl, HL_NORMAL, row->rsize);
 
 	if (config.syntax==NULL) return;
 
+	keywords = config.syntax->keywords;
+
 	scs = config.syntax->singleline_comment_start;
+	mcs = config.syntax->multiline_comment_start;
+	mce = config.syntax->multiline_comment_end;
+
 	scs_len = scs?strlen(scs):0;
+	mcs_len = mcs?strlen(mcs):0;
+	mce_len = mce?strlen(mce):0;
 
 	prev_sep=1;
 	in_string=0;
+	in_comment=(row->idx>0 && config.row[row->idx-1].hl_open_comment);
 
 	i=0;
 	while (i < row->rsize) {
@@ -238,10 +287,31 @@ static void editor_update_syntax(struct editor_row *row) {
 
 		prev_hl = (i>0)?row->hl[i-1]:HL_NORMAL;
 
-		if (scs_len && !in_string) {
+		if (scs_len && !in_string && !in_comment) {
 			if (!strncmp(&row->render[i],scs,scs_len)) {
 				memset(&row->hl[i],HL_COMMENT,row->rsize-i);
 				break;
+			}
+		}
+
+		if (mcs_len && mce_len && !in_string) {
+			if (in_comment) {
+				row->hl[i] = HL_MLCOMMENT;
+				if (!strncmp(&row->render[i], mce, mce_len)) {
+					memset(&row->hl[i], HL_MLCOMMENT, mce_len);
+					i += mce_len;
+					in_comment = 0;
+					prev_sep = 1;
+					continue;
+				} else {
+					i++;
+					continue;
+				}
+			} else if (!strncmp(&row->render[i], mcs, mcs_len)) {
+				memset(&row->hl[i], HL_MLCOMMENT, mcs_len);
+				i += mcs_len;
+				in_comment = 1;
+				continue;
 			}
 		}
 
@@ -276,15 +346,43 @@ static void editor_update_syntax(struct editor_row *row) {
 				continue;
 			}
 		}
+
+		if (prev_sep) {
+			for (j = 0; keywords[j]; j++) {
+				klen = strlen(keywords[j]);
+				kw2 = keywords[j][klen - 1] == '|';
+				if (kw2) klen--;
+				if (!strncmp(&row->render[i], keywords[j], klen) &&
+					is_separator(row->render[i + klen])) {
+					memset(&row->hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, klen);
+					i += klen;
+					break;
+				}
+			}
+			if (keywords[j] != NULL) {
+				prev_sep = 0;
+				continue;
+			}
+		}
+
 		prev_sep = is_separator(c);
 		i++;
+	}
+
+	changed=(row->hl_open_comment!=in_comment);
+	row->hl_open_comment=in_comment;
+	if (changed && row->idx+1<config.numrows) {
+		editor_update_syntax(&config.row[row->idx+1]);
 	}
 }
 
 static int editor_syntax_to_color(int hl) {
 
 	switch (hl) {
-		case HL_COMMENT: return 36;
+		case HL_COMMENT:
+		case HL_MLCOMMENT: return 36;
+		case HL_KEYWORD1: return 33;
+		case HL_KEYWORD2: return 32;
 		case HL_STRING: return 35;
 		case HL_NUMBER: return 31;
 		case HL_MATCH: return 34;
@@ -354,12 +452,18 @@ static void editor_update_row(struct editor_row *row) {
 
 static void editor_insert_row(int at, char *s, size_t len) {
 
+	int j;
+
 	if ((at<0) || (at>config.numrows)) return;
 
 	config.row=realloc(config.row,sizeof(struct editor_row)*
 			(config.numrows+1));
 	memmove(&config.row[at+1],&config.row[at],
 			sizeof(struct editor_row)*(config.numrows-at));
+
+	for(j=at+1;j<=config.numrows;j++) config.row[j].idx++;
+
+	config.row[at].idx=at;
 
 	config.row[at].size=len;
 	config.row[at].chars=malloc(len+1);
@@ -369,6 +473,7 @@ static void editor_insert_row(int at, char *s, size_t len) {
 	config.row[at].rsize=0;
 	config.row[at].render=NULL;
 	config.row[at].hl=NULL;
+	config.row[at].hl_open_comment=0;
 	editor_update_row(&config.row[at]);
 
 	config.numrows++;
@@ -383,11 +488,16 @@ static void editor_free_row(struct editor_row *row) {
 
 static void editor_delete_row(int at) {
 
+	int j;
+
 	if ((at<0) || (at>=config.numrows)) return;
 
 	editor_free_row(&config.row[at]);
 	memmove(&config.row[at],&config.row[at+1],
 		sizeof(struct editor_row) * (config.numrows - at - 1));
+
+	for(j=at;j<config.numrows-1;j++) config.row[j].idx--;
+
 	config.numrows--;
 	config.dirty++;
 }
@@ -651,7 +761,7 @@ static void editor_draw_rows(struct abuf *ab) {
 	char welcome[80];
 	int welcomelen,padding,len;
 	int filerow;
-	char *c;
+	char *c,sym;
 	unsigned char *hl;
 	int color,clen;
 	char buf[16];
@@ -685,7 +795,18 @@ static void editor_draw_rows(struct abuf *ab) {
 			c = &config.row[filerow].render[config.coloff];
 			hl = &config.row[filerow].hl[config.coloff];
 			for (j = 0; j < len; j++) {
-				if (hl[j]==HL_NORMAL) {
+				/* handle control chars */
+				if (iscntrl(c[j])) {
+					sym=(c[j]<26)?'@'+c[j]:'?';
+					abuf_append(ab,"\x1b[7m",4);
+					abuf_append(ab,&sym,1);
+					abuf_append(ab,"\x1b[m",3);
+					if (current_color!=-1) {
+						clen = snprintf(buf, sizeof(buf), "\x1b[%dm", current_color);
+						abuf_append(ab,buf,clen);
+					}
+				}
+				else if (hl[j]==HL_NORMAL) {
 					if (current_color!=-1) {
 						abuf_append(ab, "\x1b[39m", 5);
 						current_color=-1;
