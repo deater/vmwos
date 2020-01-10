@@ -35,11 +35,40 @@ enum editor_keys {
 	PAGE_DOWN,
 };
 
+enum editor_highlight {
+	HL_NORMAL = 0,
+	HL_COMMENT,
+	HL_STRING,
+	HL_NUMBER,
+	HL_MATCH,
+};
+
+#define HL_HIGHLIGHT_NUMBERS (1<<0)
+#define HL_HIGHLIGHT_STRINGS (1<<1)
+
+struct editor_syntax {
+	char *filetype;
+	char **filematch;
+	char *singleline_comment_start;
+	int flags;
+};
+
+char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL};
+
+struct editor_syntax HLDB[]={
+	{ "c", C_HL_extensions,"//",HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS},
+};
+
+#define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
+
+
+
 struct editor_row {
 	int size;
 	int rsize;
 	char *chars;
 	char *render;
+	unsigned char *hl;	/* highlight */
 };
 
 struct editor_config {
@@ -55,6 +84,7 @@ struct editor_config {
 	char *filename;
 	char statusmsg[80];
 	time_t statusmsg_time;
+	struct editor_syntax *syntax;
 	struct termios orig_termios;
 
 };
@@ -156,7 +186,147 @@ static int editor_row_cx_to_rx(struct editor_row *row, int cx) {
 	return rx;
 }
 
+static int editor_row_rx_to_cx(struct editor_row *row, int rx) {
+	int cur_rx=0;
+	int cx;
+
+	for (cx=0;cx<row->size;cx++) {
+		if (row->chars[cx]=='\t') {
+			cur_rx+=(NANO_TAB_STOP-1)-(cur_rx&NANO_TAB_STOP);
+		}
+		cur_rx++;
+		if (cur_rx>rx) return cx;
+	}
+	return cx;
+}
+
+static int is_separator(int c) {
+	int result;
+
+	result= (( isspace(c)) || (c=='\0') ||
+			(strchr(",.()+-/*=~%<>[];", c) != NULL));
+
+
+	/* */
+
+	return result;
+}
+
+static void editor_update_syntax(struct editor_row *row) {
+
+	int i;
+	char c;
+	int prev_sep,in_string;
+	unsigned char prev_hl;
+	char *scs;
+	int scs_len;
+
+	row->hl = realloc(row->hl, row->rsize);
+	memset(row->hl, HL_NORMAL, row->rsize);
+
+	if (config.syntax==NULL) return;
+
+	scs = config.syntax->singleline_comment_start;
+	scs_len = scs?strlen(scs):0;
+
+	prev_sep=1;
+	in_string=0;
+
+	i=0;
+	while (i < row->rsize) {
+		c = row->render[i];
+
+		prev_hl = (i>0)?row->hl[i-1]:HL_NORMAL;
+
+		if (scs_len && !in_string) {
+			if (!strncmp(&row->render[i],scs,scs_len)) {
+				memset(&row->hl[i],HL_COMMENT,row->rsize-i);
+				break;
+			}
+		}
+
+		if (config.syntax->flags & HL_HIGHLIGHT_STRINGS) {
+			if (in_string) {
+				row->hl[i] = HL_STRING;
+				if (c == '\\' && i + 1 < row->rsize) {
+					row->hl[i + 1] = HL_STRING;
+					i += 2;
+					continue;
+				}
+				if (c == in_string) in_string = 0;
+				i++;
+				prev_sep = 1;
+				continue;
+			} else {
+				if (c == '"' || c == '\'') {
+				in_string = c;
+				row->hl[i] = HL_STRING;
+				i++;
+				continue;
+			}
+		}
+	}
+
+		if (config.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
+			if ((isdigit(c) && (prev_sep||prev_hl==HL_NUMBER)) ||
+				(c=='.' && prev_hl == HL_NUMBER)) {
+				row->hl[i] = HL_NUMBER;
+				i++;
+				prev_sep=0;
+				continue;
+			}
+		}
+		prev_sep = is_separator(c);
+		i++;
+	}
+}
+
+static int editor_syntax_to_color(int hl) {
+
+	switch (hl) {
+		case HL_COMMENT: return 36;
+		case HL_STRING: return 35;
+		case HL_NUMBER: return 31;
+		case HL_MATCH: return 34;
+		default: return 37;
+	}
+}
+
+
+static void editor_select_syntax_highlight(void) {
+
+	int i,j,is_ext;
+	char *ext;
+	struct editor_syntax *s;
+	int filerow;
+
+	config.syntax = NULL;
+	if (config.filename == NULL) return;
+
+	ext = strrchr(config.filename, '.');
+	for (j = 0; j < HLDB_ENTRIES; j++) {
+	s = &HLDB[j];
+
+	i=0;
+	while (s->filematch[i]) {
+		is_ext = (s->filematch[i][0] == '.');
+		if ((is_ext && ext && !strcmp(ext, s->filematch[i])) ||
+			(!is_ext && strstr(config.filename, s->filematch[i]))) {
+				config.syntax = s;
+
+				for (filerow = 0; filerow < config.numrows; filerow++) {
+					editor_update_syntax(&config.row[filerow]);
+				}
+
+				return;
+			}
+			i++;
+		}
+	}
+}
+
 static void editor_update_row(struct editor_row *row) {
+
 	int tabs = 0;
 	int j,idx=0;
 
@@ -179,6 +349,7 @@ static void editor_update_row(struct editor_row *row) {
 	row->render[idx]='\0';
 	row->rsize=idx;
 
+	editor_update_syntax(row);
 }
 
 static void editor_insert_row(int at, char *s, size_t len) {
@@ -197,6 +368,7 @@ static void editor_insert_row(int at, char *s, size_t len) {
 
 	config.row[at].rsize=0;
 	config.row[at].render=NULL;
+	config.row[at].hl=NULL;
 	editor_update_row(&config.row[at]);
 
 	config.numrows++;
@@ -206,6 +378,7 @@ static void editor_insert_row(int at, char *s, size_t len) {
 static void editor_free_row(struct editor_row *row) {
 	free(row->render);
 	free(row->chars);
+	free(row->hl);
 }
 
 static void editor_delete_row(int at) {
@@ -335,6 +508,8 @@ static void editor_open(char *filename) {
 
 	free(config.filename);
 	config.filename=strdup(filename);
+
+	editor_select_syntax_highlight();
 
 	fff=fopen(filename,"r");
 	if (!fff) {
@@ -472,10 +647,15 @@ static void editor_move_cursor(int key) {
 
 static void editor_draw_rows(struct abuf *ab) {
 
-	int y;
+	int y,j;
 	char welcome[80];
 	int welcomelen,padding,len;
 	int filerow;
+	char *c;
+	unsigned char *hl;
+	int color,clen;
+	char buf[16];
+	int current_color=-1;
 
 	welcomelen = snprintf(welcome, sizeof(welcome),
 		"VMW Nano editor -- version %s",VMW_NANO_VERSION);
@@ -501,8 +681,28 @@ static void editor_draw_rows(struct abuf *ab) {
 			len=config.row[filerow].rsize-config.coloff;
 			if (len<0) len=0;
 			if (len>config.screencols) len=config.screencols;
-			abuf_append(ab, &config.row[filerow].render[config.coloff],len);
 
+			c = &config.row[filerow].render[config.coloff];
+			hl = &config.row[filerow].hl[config.coloff];
+			for (j = 0; j < len; j++) {
+				if (hl[j]==HL_NORMAL) {
+					if (current_color!=-1) {
+						abuf_append(ab, "\x1b[39m", 5);
+						current_color=-1;
+					}
+					abuf_append(ab, &c[j], 1);
+				}
+				else {
+					color=editor_syntax_to_color(hl[j]);
+					if (color!=current_color) {
+						current_color=color;
+						clen= snprintf(buf, sizeof(buf), "\x1b[%dm", color);
+						abuf_append(ab, buf, clen);
+					}
+					abuf_append(ab, &c[j], 1);
+				}
+			}
+			abuf_append(ab, "\x1b[39m", 5);
 		}
 		/* clear to end of line */
 		abuf_append(ab,"\x1b[K",3);
@@ -550,7 +750,8 @@ static void editor_draw_status_bar(struct abuf *ab) {
 		config.filename?config.filename:"[No Name]",
 		config.numrows,
 		config.dirty?"(modified)":"");
-	rlen=snprintf(rstatus,sizeof(rstatus),"%d/%d",
+	rlen=snprintf(rstatus,sizeof(rstatus),"%s | %d/%d",
+		config.syntax?config.syntax->filetype: "none",
 		config.cy+1,config.numrows);
 
 	if (len>config.screencols) len=config.screencols;
@@ -703,7 +904,6 @@ static int get_window_size(int *rows, int *cols) {
 	return 0;
 }
 
-
 static void editor_save(void) {
 
 	int len;
@@ -716,7 +916,9 @@ static void editor_save(void) {
 			editor_set_status_message("Save aborted");
 			return;
 		}
+		editor_select_syntax_highlight();
 	}
+
 	buf=editor_rows_to_string(&len);
 
 	fd=open(config.filename, O_RDWR | O_CREAT, 0644);
@@ -734,6 +936,30 @@ static void editor_save(void) {
 	}
 	free(buf);
 	editor_set_status_message("Can't save! I/O error: %s",strerror(errno));
+}
+
+static void editor_find(void) {
+
+	char *query,*match;
+	int i;
+	struct editor_row *row;
+
+	query=editor_prompt("Search: %s (ESC to cancel)");
+	if (query==NULL) return;
+
+	for(i=0;i<config.numrows;i++) {
+		row=&config.row[i];
+		match=strstr(row->render,query);
+		if (match) {
+			config.cy=i;
+			config.cx = editor_row_rx_to_cx(row,match-row->render);
+			config.rowoff=config.numrows;
+			break;
+		}
+
+	}
+
+	free(query);
 }
 
 static void editor_process_key(void) {
@@ -769,6 +995,10 @@ static void editor_process_key(void) {
 			if (config.cy<config.numrows) {
 				config.cx=config.row[config.cy].size;
 			}
+			break;
+
+		case CTRL_KEY('w'):
+			editor_find();
 			break;
 
 		case BACKSPACE:
@@ -829,6 +1059,7 @@ static void editor_init(void) {
 	config.filename=NULL;
 	config.statusmsg[0]='\0';
 	config.statusmsg_time=0;
+	config.syntax=NULL;
 
 	result=get_window_size(&config.screenrows,&config.screencols);
 	if (result==-1) {
@@ -848,7 +1079,7 @@ int main(int argc, char **argv) {
 		editor_open(argv[1]);
 	}
 
-	editor_set_status_message("HELP: ^O = save | ^X = quit");
+	editor_set_status_message("HELP: ^O = save | ^X = quit | ^W = Search");
 
 	while(1) {
 		editor_refresh_screen();
