@@ -6,6 +6,10 @@
 #include "vmwos.h"
 #include "vlibc.h"
 
+/*****************************************************/
+/* String compare functions                          */
+/*****************************************************/
+
 int strncmp(const char *s1, const char *s2, uint32_t n) {
 
 	int i=0,r;
@@ -23,6 +27,10 @@ int strncmp(const char *s1, const char *s2, uint32_t n) {
 	return 0;
 }
 
+/*****************************************************/
+/* String length functions                           */
+/*****************************************************/
+
 int strlen(const char *s) {
 
 	int length=0;
@@ -31,6 +39,11 @@ int strlen(const char *s) {
 
 	return length;
 }
+
+/*****************************************************/
+/* String copy functions                             */
+/*****************************************************/
+
 
 /* At most n bytes of src are copied to dest */
 /* If no nul in the first n bytes of src, dest will *not* be nul terminated */
@@ -50,6 +63,63 @@ char *strncpy(char *dest, const char *src, uint32_t n) {
 	return dest;
 
 }
+
+/*****************************************************/
+/* String search functions                           */
+/*****************************************************/
+
+/* Returns a pointer to the first occurrence of the character c
+   in the string s, or NULL if not found.
+*/
+
+char *strchr (const char *s, int32_t c) {
+
+	do {
+		if (*s == c) return (char *)s;
+	} while (*s++);
+
+	return NULL;
+}
+
+
+/* Returns a pointer to the last occurrence of
+   the character c in the string s
+   or NULL if not found.
+*/
+
+char *strrchr (const char *s, int32_t c) {
+
+	char *returnval = NULL;
+
+	do {
+		if (*s == c) returnval = (char *) s;
+	} while (*s++);
+
+	return returnval;
+}
+
+/* Search for the substring sub in the string string,
+   not including the terminating null characters.
+   A pointer to the first occurrence of sub is returned,
+   or NULL if the substring is absent.
+   If sub points to a string with zero length, the function returns string.
+*/
+
+char *strstr (const char *s1, const char *s2) {
+
+	const char *p = s1;
+	const int32_t len = strlen(s2);
+
+	/* Find first char, and if that matches then to a strncmp */
+	for (; (p = strchr (p, *s2)) != 0; p++) {
+		if (strncmp (p, s2, len) == 0) return (char *)p;
+	}
+
+	return NULL;
+}
+
+
+
 
 
 int32_t atoi(char *string) {
