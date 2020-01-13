@@ -13,6 +13,7 @@ static int vsnprintf_internal(char *buffer, uint32_t size,
 
 	char int_buffer[18];
 	int int_pointer=0;
+	int precision=0;
 
 	int buffer_pointer=0;
 	int i;
@@ -30,6 +31,13 @@ static int vsnprintf_internal(char *buffer, uint32_t size,
 			pad_len=0;
 			pad_value=' ';
 			printed_size=0;
+
+			/* Precision: FIXME */
+			if (*string=='.') {
+				string++;
+				precision=1;
+				(void)precision;
+			}
 
 			/* Padding */
 			if ((*string>='0') && (*string<='9')) {

@@ -143,6 +143,8 @@ void *realloc(void *ptr, uint32_t size) {
 	return new_ptr;
 }
 
+/* Urgh, strdup() should never be passed NULL */
+/* We can't check for that though w/o the compiler warning us */
 char *strdup(const char *s) {
 
 	int64_t string_size;
