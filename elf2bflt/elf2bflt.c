@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <fcntl.h>
@@ -80,6 +81,8 @@ int main(int argc, char **argv) {
 
 	uint32_t bss_size=0,data_size=0,text_size=0;
 	uint32_t text_start=0,data_start=0,bss_start=0,bss_end=0;
+	uint32_t reloc_start=0,reloc_count=0;
+	uint32_t *relocations=NULL;
 //	uint32_t data_offset=0,text_offset=0,bss_offset=0;
 	uint32_t entry=0,size,offset;
 
@@ -225,8 +228,36 @@ int main(int argc, char **argv) {
 					printf("\ttext_size: %x\n",text_size);
 				}
 			}
-			else if (!strncmp(name,".data",5)) {
+			else if (!strncmp(name,".data.rel.local",15)) {
 
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
+
+				memcpy(&temp,&shptr[0x14],4);
+				data_size=temp;
+
+				reloc_count+=data_size/4;
+
+				if (debug) {
+					printf("Relocatable data at %x size %d\n",
+						offset,data_size);
+				}
+			}
+			else if (!strncmp(name,".data.rel.ro.local",18)) {
+
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
+
+				memcpy(&temp,&shptr[0x14],4);
+				data_size=temp;
+				reloc_count+=data_size/4;
+
+				if (debug) {
+					printf("Read-only Relocatable data at %x size %d\n",
+						offset,data_size);
+				}
+			}
+			else if (!strncmp(name,".data",6)) {
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
 
@@ -240,8 +271,12 @@ int main(int argc, char **argv) {
 				}
 
 			}
+			else if (!strncmp(name,".text.startup",13)) {
+				/* what to do with this? */
+			}
 			else {
-				//printf("What to do with %s\n",name);
+				fprintf(stderr,"ERROR: what to do with %s\n",name);
+				return 10;
 			}
 
 		}
@@ -294,6 +329,15 @@ int main(int argc, char **argv) {
 		bss_end=bss_start+bss_size;
 	}
 
+	if (reloc_count) {
+		reloc_start=bss_start;
+		relocations=calloc(reloc_count,sizeof(uint32_t));
+		if (relocations==NULL) {
+			fprintf(stderr,"Error allocating allocation space\n");
+			return 5;
+		}
+	}
+
 	/* magic */
 	write(out,"bFLT",4);
 
@@ -326,11 +370,13 @@ int main(int argc, char **argv) {
 	write(out,&temp,4);
 
 	/* reloc start */
-	temp=0;
+	if (debug) printf("BFLT: reloc_start %x\n",reloc_start);
+	temp=htonl(reloc_start);
 	write(out,&temp,4);
 
 	/* reloc count */
-	temp=0;
+	if (debug) printf("BFLT: reloc_count %d\n",reloc_count);
+	temp=htonl(reloc_count);
 	write(out,&temp,4);
 
 	/* flags */
