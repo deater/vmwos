@@ -126,16 +126,22 @@ int32_t atoi(char *string) {
 
 	int result=0;
 	char *ptr;
+	int sign=1;
 
 	ptr=string;
 
-	while(*ptr!=0) {
+	if (*ptr=='-') {
+		sign=-1;
+		ptr++;
+	}
+
+	while((*ptr!='0') && isdigit(*ptr)) {
 		result*=10;
 		result+=(*ptr)-'0';
 		ptr++;
 	}
 
-	return result;
+	return result*sign;
 }
 
 void *memset(void *s, int c, uint32_t n) {
