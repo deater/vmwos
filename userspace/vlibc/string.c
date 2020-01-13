@@ -135,7 +135,7 @@ int32_t atoi(char *string) {
 		ptr++;
 	}
 
-	while((*ptr!='0') && isdigit(*ptr)) {
+	while((*ptr!='\0') && isdigit(*ptr)) {
 		result*=10;
 		result+=(*ptr)-'0';
 		ptr++;
