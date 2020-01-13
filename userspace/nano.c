@@ -76,6 +76,14 @@ struct editor_syntax {
 
 static char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL};
 
+/* TODO */
+/* constants (all caps+underscores) -> red */
+/* enum/etc moved to type2, green, also things ending in _t */
+/* control flow: break/continue/return are purple */
+/* if/else/while/for = yellow */
+/* sizeof */
+/* space at end of line highlighted */
+
 static char *C_HL_keywords[] = {
 	"switch", "if", "while", "for", "break", "continue", "return",
 	"else", "struct", "union", "typedef", "static",
@@ -133,6 +141,7 @@ struct abuf {
 	int len;
 };
 
+	/* FIXME: use realloc and all that */
 static void abuf_append(struct abuf *ab, const char *s, int len) {
 
 	if (ab->len+len>=ABUF_MAX) return;
@@ -148,8 +157,6 @@ static void abuf_free(struct abuf *ab) {
 
 static void enable_raw_mode(void) {
 
-#ifdef VMWOS
-#else
 	struct termios raw;
 
 	tcgetattr(STDIN_FILENO, &config.orig_termios);
@@ -183,15 +190,13 @@ static void enable_raw_mode(void) {
 
 
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-#endif
+
 }
 
 static void disable_raw_mode(void) {
 
-#ifdef VMWOS
-#else
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &config.orig_termios);
-#endif
+
 }
 
 
@@ -1007,7 +1012,6 @@ static int get_cursor_position(int *rows, int *cols) {
 	if (ptr==NULL) return -1;
 	*cols=atoi(ptr+1);
 
-
 	return 0;
 }
 
@@ -1199,7 +1203,9 @@ static void editor_init(void) {
 
 	result=get_window_size(&config.screenrows,&config.screencols);
 	if (result==-1) {
-		safe_exit(1,"Error getting window size");
+		config.screencols=80;
+		config.screenrows=24;
+		//safe_exit(1,"Error getting window size");
 	}
 
 	/* Make room for status bar */
