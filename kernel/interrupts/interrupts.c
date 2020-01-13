@@ -209,8 +209,11 @@ void __attribute__((interrupt("FIQ"))) fiq_handler(void) {
 void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
 	uint32_t dfsr,dfar,fs;
 	register long lr asm ("lr");
+	uint32_t *code;
 
-	printk("MEMORY ABORT at PC=%x\n",lr-8);
+	code=(uint32_t *)(lr-8);
+
+	printk("MEMORY ABORT at PC=%x (%x)\n",lr-8,*code);
 
 	/* Read DFSR reg (see B4.1.52) */
 	asm volatile("mrc p15, 0, %0, c5, c0, 0" : "=r" (dfsr) : : "cc");
