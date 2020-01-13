@@ -1,3 +1,5 @@
+#include <stdarg.h>	/* hate to do this, needed for vsnprintf() */
+
 /* ctype.c */
 int32_t iscntrl(int32_t c);
 int32_t isdigit(int32_t c);
@@ -52,7 +54,7 @@ int printf(const char *string,...);
 int sprintf(char *string, char *fmt, ...);
 int snprintf(char *str, uint32_t size, const char *format, ...);
 int fprintf(FILE *stream, const char *string, ...);
-int vsnprintf(char *str, uint32_t size, const char *format, ...);
+int vsnprintf(char *str, uint32_t size, const char *format, va_list ap);
 
 /* random.c */
 int32_t rand(void);

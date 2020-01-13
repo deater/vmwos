@@ -208,16 +208,11 @@ int vsprintf(char *buffer, const char *string, ...) {
 
 }
 
-int vsnprintf(char *buffer, uint32_t size, const char *string, ...) {
+int vsnprintf(char *buffer, uint32_t size, const char *string, va_list argp) {
 
 	int result;
 
-	va_list argp;
-	va_start(argp, string);
-
 	result=vsnprintf_internal(buffer,size,string,argp);
-
-	va_end(argp);
 
         return result;
 
