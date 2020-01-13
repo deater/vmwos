@@ -242,6 +242,8 @@ struct statfs {
 	uint32_t f_spare[5];	/* Padding bytes reserved */
 };
 
+void *brk(void *address);
+
 void *mmap(void *addr, size_t length, int prot, int flags,
 	int fd, int offset);
 

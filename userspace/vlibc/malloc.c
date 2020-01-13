@@ -3,7 +3,7 @@
 
 #include "string.h"
 #include "vmwos.h"
-
+#include "syscalls.h"
 
 struct block_meta {
 	size_t size;
@@ -29,14 +29,43 @@ static struct block_meta *find_free_block(
 	return current;
 }
 
+/* Use when debugging on a ARM/Linux machine */
+//#define LINUX_DEBUG 1
+
+#if LINUX_DEBUG
+void *sbrk(int32_t increment) {
+	void *blah;
+
+	blah=brk(NULL);
+
+	if (increment==0) return blah;
+
+	blah=brk(blah+increment);
+	return blah;
+}
+
+#endif
+
+
 struct block_meta *request_space(struct block_meta* last, size_t size) {
 
 	struct block_meta *block;
 
-	void *request = vmwos_malloc(size + META_SIZE);
-	block=request;
+	void *request;
+	void *p;
+
+#if LINUX_DEBUG
+	p = sbrk(0);
+	request = sbrk(size + META_SIZE);
+#else
+	request = vmwos_malloc(size + META_SIZE);
+	p=request;
+#endif
+
+	block=p;
 
 	//assert((void*)block == request); // Not thread safe.
+
 	if (request == (void*) -1) {
 		return NULL; // sbrk failed.
 	}
@@ -89,7 +118,7 @@ void *malloc(uint32_t size) {
 		}
 	}
 
-	return(block+1);
+	return block+1;
 
 }
 

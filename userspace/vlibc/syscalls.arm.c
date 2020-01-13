@@ -6,21 +6,22 @@
 /* From Linux kernel, arch/arm/include/uapi/asm/unistd.h */
 /* That is auto-generated so not always there */
 /* On a real pi2 look in /usr/include/arm-linux-gnueabihf/asm/unistd.h */
-#define __NR_exit	1
-#define __NR_read	3
-#define __NR_write	4
-#define __NR_open	5
-#define __NR_close	6
-#define __NR_waitpid	7
-#define __NR_execve	11
-#define __NR_chdir	12
-#define __NR_time	13
-#define __NR_getpid	20
-#define __NR_times	43
-#define __NR_ioctl	54
-#define __NR_reboot	88
-#define __NR_mmap	90
-#define __NR_munmap	91
+#define __NR_exit		1
+#define __NR_read		3
+#define __NR_write		4
+#define __NR_open		5
+#define __NR_close		6
+#define __NR_waitpid		7
+#define __NR_execve		11
+#define __NR_chdir		12
+#define __NR_time		13
+#define __NR_getpid		20
+#define __NR_times		43
+#define __NR_brk		45
+#define __NR_ioctl		54
+#define __NR_reboot		88
+#define __NR_mmap		90
+#define __NR_munmap		91
 #define __NR_statfs		99
 #define __NR_stat		106
 #define __NR_sysinfo		116
@@ -388,6 +389,23 @@ int32_t fcntl(int fd, int cmd, ... /* arg */ ) {
 
         return 0;
 }
+
+/* 45 */
+void *brk(void *address) {
+
+	register long r7 __asm__("r7") = __NR_brk;
+	register long r0 __asm__("r0") = (long)address;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0) /* output */
+		: "r"(r7), "0"(r0) /* input */
+		: "memory");
+
+	return (void *)r0;
+
+}
+
 
 /* 90 */
 void *mmap(void *addr, size_t length, int prot, int flags,
