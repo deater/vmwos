@@ -1,3 +1,7 @@
+/* This code is based on the simple malloc from here:
+	https://danluu.com/malloc-tutorial/
+*/
+
 #include <stdint.h>
 #include <stddef.h>
 
