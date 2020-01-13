@@ -187,8 +187,9 @@ int tcsetattr(int fd, int optional_actions,
                      const struct termios *termios_p);
 
 
-#define TCSETS 0x5402
-#define TCGETS 0x5401
+#define	TCSETS		0x5402
+#define	TCGETS		0x5401
+#define	TCSAFLUSH       2
 
 int32_t ioctl3(int d, unsigned long request, unsigned long req2);
 int32_t ioctl4(int d, unsigned long request, unsigned long req2, unsigned long req3);
