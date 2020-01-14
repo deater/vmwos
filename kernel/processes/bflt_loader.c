@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-static int bflt_debug=1;
+static int bflt_debug=0;
 
 #include "lib/printk.h"
 #include "lib/string.h"
@@ -70,6 +70,8 @@ int32_t bflt_reloc(int32_t inode, void *binary_address) {
 	char bflt_header[64];
 	uint32_t temp_int;
 	uint32_t reloc_count,reloc_start;
+	uint32_t reloc_addr;
+	uint32_t old_val,new_val;
 
 	if (bflt_debug) printk("Relocating BFLT executable!\n");
 
@@ -90,7 +92,18 @@ int32_t bflt_reloc(int32_t inode, void *binary_address) {
 	if (bflt_debug) printk("BFLT: reloc_start=%x\n",reloc_start);
 
 	for(i=0;i<reloc_count;i++) {
-		printk("Reloc %d: \n",i);
+		result=romfs_read_file(inode,reloc_start+(i*4),&reloc_addr,4);
+		if (result<0) return -1;
+		reloc_addr=ntohl(reloc_addr);
+
+		memcpy(&old_val,(binary_address+reloc_addr),4);
+		new_val=(uint32_t)(old_val+binary_address);
+		memcpy((binary_address+reloc_addr),&new_val,4);
+
+		if (bflt_debug) {
+			printk("Reloc %d: %x, %x->%x\n",i,
+				reloc_addr,old_val,new_val);
+		}
 	}
 
 	return 0;
