@@ -22,20 +22,28 @@
 static int exec_debug=0;
 static int exec_summary_debug=1;
 
+int32_t bflt_load(int32_t inode,
+                uint32_t *stack_size, uint32_t *text_start,
+                uint32_t *data_start, uint32_t *bss_start,
+		uint32_t *bss_end, uint32_t *total_size);
+
+
+
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	int result,i;
 	int32_t inode;
 	struct stat stat_info;
 	void *binary_start,*stack_page;
-	int32_t stack_size,size;
 	int32_t argc=0;
 	char *argv_location;
 	int32_t argv_length=0;
 	uint32_t *stack_argv;
 	char *argv_ptr;
 	char magic[16];
-	uint32_t text_start;
+
+	uint32_t text_start,data_start,bss_start,bss_end;
+	uint32_t stack_size,total_size;
 
 
 	if (exec_debug) printk("Entering execve\n");
@@ -53,43 +61,28 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	if ((magic[0]=='b') && (magic[1]=='F') &&
 		(magic[2]=='L') && (magic[3]=='T')) {
 
-		char bflt_header[64];
-		uint32_t temp_int;
-		uint32_t data_start;
-		uint32_t bss_start,bss_end;
-
-		if (exec_debug) printk("Found BFLT executable!\n");
-
-		result=romfs_read_file(inode,0,&bflt_header,64);
-
-		/* Find stack size */
-		memcpy(&temp_int,&bflt_header[24],4);
-		stack_size=ntohl(temp_int);
-		if (exec_debug) printk("BFLT: stack size=%d\n",stack_size);
-
-		/* Find binary size */
-		memcpy(&temp_int,&bflt_header[8],4);
-		text_start=ntohl(temp_int);
-		if (exec_debug) printk("BFLT: text_start=%x\n",text_start);
-
-		memcpy(&temp_int,&bflt_header[12],4);
-		data_start=ntohl(temp_int);
-		if (exec_debug) printk("BFLT: data_start=%x\n",data_start);
-
-		memcpy(&temp_int,&bflt_header[16],4);
-		bss_start=ntohl(temp_int);
-		if (exec_debug) printk("BFLT: bss_start=%x\n",bss_start);
-
-		memcpy(&temp_int,&bflt_header[20],4);
-		bss_end=ntohl(temp_int);
-		if (exec_debug) printk("BFLT: bss_end=%x\n",bss_end);
-
-		size=bss_end-text_start;
-		if (exec_debug) printk("BFLT: total size=%x (%d)\n",size,size);
+		result=bflt_load(inode,&stack_size,
+			&text_start,&data_start,&bss_start,
+			&bss_end,&total_size);
 
 		current_proc[0]->datasize=bss_start-data_start;
 		current_proc[0]->bsssize=bss_end-bss_start;
 
+		/* Allocate stack */
+		stack_page=memory_allocate(stack_size,MEMORY_USER);
+
+		/* Allocate text memory */
+		binary_start=memory_allocate(total_size,MEMORY_USER);
+
+		if ((binary_start==NULL) || (stack_page==NULL)) {
+			if (binary_start!=NULL) memory_free(binary_start,total_size);
+			if (stack_page!=NULL) memory_free(stack_page,stack_size);
+			if (exec_debug) printk("execve: no memory\n");
+			return -ENOMEM;
+		}
+
+		/* Load executable */
+		romfs_read_file(inode,text_start,binary_start,total_size);
 
 	}
 	/* Otherwise, treat as raw binary */
@@ -107,34 +100,39 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		}
 
 		text_start=0;
-		size=stat_info.st_size;
-		if (exec_debug) printk("RAW: total size = %d\n",size);
+		total_size=stat_info.st_size;
+		if (exec_debug) printk("RAW: total size = %d\n",total_size);
+
+		/* Allocate stack */
+		stack_page=memory_allocate(stack_size,MEMORY_USER);
+
+		/* Allocate text memory */
+		binary_start=memory_allocate(total_size,MEMORY_USER);
+
+		if ((binary_start==NULL) || (stack_page==NULL)) {
+
+			if (binary_start!=NULL) memory_free(binary_start,total_size);
+			if (stack_page!=NULL) memory_free(stack_page,stack_size);
+
+			if (exec_debug) printk("execve: no memory\n");
+			return -ENOMEM;
+		}
+
+		/* Load executable */
+		romfs_read_file(inode,text_start,binary_start,total_size);
 	}
 
 
-	/* Allocate stack */
-	stack_page=memory_allocate(stack_size,MEMORY_USER);
-
-	/* Allocate text memory */
-	binary_start=memory_allocate(size,MEMORY_USER);
-
-	if ((binary_start==NULL) || (stack_page==NULL)) {
-
-		if (binary_start!=NULL) memory_free(binary_start,size);
-		if (stack_page!=NULL) memory_free(stack_page,stack_size);
-
-		if (exec_debug) printk("execve: no memory\n");
-		return -ENOMEM;
-	}
-
-	/* Load executable */
-	romfs_read_file(inode,text_start,binary_start,size);
-
+	/************/
 	/* Set name */
+	/************/
+
 	/* FIXME: strip off path before setting filename */
 	strlcpy(current_proc[0]->name,filename,32);
 
+	/*********************************/
 	/* Set up command line arguments */
+	/*********************************/
 
 	/* Set the location to be just above stack */
 	/* stack_page is beginning of stack page, but stack starts at end */
@@ -209,7 +207,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
         /* Setup the entry point */
         current_proc[0]->user_state.pc=(long)binary_start;
         current_proc[0]->text=binary_start;
-        current_proc[0]->textsize=size;
+        current_proc[0]->textsize=total_size;
 
 	/* Flush icache, as we have changed executable code */
 	/* so the various caches might be out of date */
@@ -222,7 +220,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			"allocated %dkB at %x and %dkB stack at %x, cpu %d\n",
 			filename,(long)current_proc[0],
 			current_proc[0]->pid,
-			size/1024,binary_start,
+			total_size/1024,binary_start,
 			stack_size/1024,stack_page,get_cpu());
 	}
 
