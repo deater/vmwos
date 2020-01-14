@@ -78,6 +78,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		/* Load executable */
 		romfs_read_file(inode,text_start,binary_start,total_size);
 
+		/* Relocate values in the executable */
+		bflt_reloc(inode,binary_start);
+
 	}
 	/* Otherwise, treat as raw binary */
 	else {

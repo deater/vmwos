@@ -3,6 +3,7 @@ int32_t bflt_load(int32_t inode,
                 uint32_t *data_start, uint32_t *bss_start,
                 uint32_t *bss_end, uint32_t *total_size);
 
+int32_t bflt_reloc(int32_t inode, void *binary_address);
 
 #define BFLT_MAGIC		"bFLT"
 
