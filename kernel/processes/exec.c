@@ -18,16 +18,10 @@
 
 #include "processes/process.h"
 #include "processes/exit.h"
+#include "processes/bflt_loader.h"
 
 static int exec_debug=0;
 static int exec_summary_debug=1;
-
-int32_t bflt_load(int32_t inode,
-                uint32_t *stack_size, uint32_t *text_start,
-                uint32_t *data_start, uint32_t *bss_start,
-		uint32_t *bss_end, uint32_t *total_size);
-
-
 
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
