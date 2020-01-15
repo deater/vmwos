@@ -332,7 +332,7 @@ void *memmove(void *dest, const void *src, size_t n) {
 		}
 	} else {
 		for(i=n-1;i>=0;i--) {
-			d[n] = s[n];
+			d[i] = s[i];
 		}
 	}
 
