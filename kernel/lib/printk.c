@@ -7,16 +7,18 @@
 
 #define MAX_PRINT_SIZE 256
 
-int vsprintf(char *buffer, char *string, va_list ap) {
+int vsnprintf(char *buffer, uint32_t size, const char *string, va_list ap) {
 
 	char int_buffer[18];
 	int int_pointer=0;
+	int precision=0;
 
 	int buffer_pointer=0;
 	int i;
 	unsigned long x;
 	uint64_t lx;
 	char pad_value,pad_len,printed_size;
+	int max_print_size=size;
 
 	while(1) {
 		if (*string==0) break;
@@ -27,6 +29,13 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 			pad_len=0;
 			pad_value=' ';
 			printed_size=0;
+
+			/* Precision: FIXME */
+			if (*string=='.') {
+				string++;
+				precision=1;
+				(void)precision;
+			}
 
 			/* Padding */
 			if ((*string>='0') && (*string<='9')) {
@@ -49,7 +58,7 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 					buffer[buffer_pointer]='-';
 					buffer_pointer++;
 					printed_size++;
-					if (buffer_pointer==MAX_PRINT_SIZE) break;
+					if (buffer_pointer==max_print_size) break;
 
 					x=~x;
 					x++;
@@ -68,14 +77,14 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 							pad_value;
 						buffer_pointer++;
 						if (buffer_pointer
-							==MAX_PRINT_SIZE) break;
+							==max_print_size) break;
 					}
 				}
 
 				for(i=int_pointer+1;i<10;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
-					if (buffer_pointer==MAX_PRINT_SIZE) break;
+					if (buffer_pointer==max_print_size) break;
 				}
 			}
 			/* long long x (FIXME!) */
@@ -103,7 +112,7 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 				for(i=int_pointer+1;i<18;i++) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
-					if (buffer_pointer==MAX_PRINT_SIZE)
+					if (buffer_pointer==max_print_size)
 						break;
 				}
 			}
@@ -130,7 +139,7 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 							pad_value;
 						buffer_pointer++;
 						if (buffer_pointer==
-							MAX_PRINT_SIZE) break;
+							max_print_size) break;
 					}
 				}
 
@@ -138,46 +147,51 @@ int vsprintf(char *buffer, char *string, va_list ap) {
 					buffer[buffer_pointer]=int_buffer[i];
 					buffer_pointer++;
 					if (buffer_pointer==
-							MAX_PRINT_SIZE) break;
+							max_print_size) break;
 				}
 			}
 			/* char */
 			else if (*string=='c') {
 				string++;
-				x=va_arg(ap, int);
+				x=va_arg(ap, unsigned long);
 				buffer[buffer_pointer]=x;
 				buffer_pointer++;
-				if (buffer_pointer==MAX_PRINT_SIZE) break;
+				if (buffer_pointer==max_print_size) break;
 			}
 			/* %% */
 			else if (*string=='%') {
 				string++;
 				buffer[buffer_pointer]='%';
 				buffer_pointer++;
-				if (buffer_pointer==MAX_PRINT_SIZE) break;
+				if (buffer_pointer==max_print_size) break;
 			}
 			/* string */
 			else if (*string=='s') {
 				char *s;
 				string++;
-				s=(char *)va_arg(ap, int);
+				s=(char *)va_arg(ap, long);
 				while(*s) {
 					buffer[buffer_pointer]=*s;
 					s++;
 					buffer_pointer++;
 					if (buffer_pointer==
-						MAX_PRINT_SIZE) break;
+						max_print_size) break;
 				}
 			}
 		}
 		else {
 			buffer[buffer_pointer]=*string;
 			buffer_pointer++;
-			if (buffer_pointer==MAX_PRINT_SIZE) break;
+			if (buffer_pointer==max_print_size) break;
 			string++;
 		}
-		if (buffer_pointer==MAX_PRINT_SIZE-1) break;
+		if (buffer_pointer==max_print_size-1) break;
 	}
+
+	if (buffer_pointer>=max_print_size) {
+		buffer_pointer=max_print_size-1;
+	}
+	buffer[buffer_pointer]='\0';
 
 	return buffer_pointer;
 }
@@ -190,7 +204,7 @@ int printk(char *string,...) {
 	va_list argp;
 	va_start(argp, string);
 
-	result=vsprintf(buffer,string,argp);
+	result=vsnprintf(buffer,MAX_PRINT_SIZE,string,argp);
 
 	va_end(argp);
 
@@ -208,7 +222,7 @@ int serial_printk(char *string,...) {
 	va_list argp;
 	va_start(argp, string);
 
-	result=vsprintf(buffer,string,argp);
+	result=vsnprintf(buffer,MAX_PRINT_SIZE,string,argp);
 
 	va_end(argp);
 
@@ -225,7 +239,7 @@ int sprintf(char *string, char *fmt, ...) {
 	va_list argp;
 	va_start(argp, fmt);
 
-	result=vsprintf(string,fmt,argp);
+	result=vsnprintf(string,MAX_PRINT_SIZE,fmt,argp);
 
 	va_end(argp);
 
