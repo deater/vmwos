@@ -5,9 +5,12 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "string.h"
+//#include "string.h"
 #include "vmwos.h"
 #include "syscalls.h"
+#include "vlibc.h"
+
+static int malloc_debug=1;
 
 struct block_meta {
 	size_t size;
@@ -51,7 +54,7 @@ void *sbrk(int32_t increment) {
 #endif
 
 
-struct block_meta *request_space(struct block_meta* last, size_t size) {
+static struct block_meta *request_space(struct block_meta* last, size_t size) {
 
 	struct block_meta *block;
 
@@ -86,7 +89,7 @@ struct block_meta *request_space(struct block_meta* last, size_t size) {
 }
 
 	/* Helper function */
-struct block_meta *get_block_ptr(void *ptr) {
+static struct block_meta *get_block_ptr(void *ptr) {
 	return (struct block_meta*)ptr - 1;
 }
 
@@ -101,13 +104,19 @@ void *malloc(uint32_t size) {
 	}
 
 	if (!global_base) { // First call.
+		if (malloc_debug) printf("Malloc: first call\n");
 		block = request_space(NULL, size);
 		if (!block) {
 			return NULL;
 		}
 		global_base = block;
+		if (malloc_debug) printf("Malloc: global_base=%x\n",global_base);
+
 	} else {
 		struct block_meta *last = global_base;
+
+		if (malloc_debug) printf("Malloc: global_base=%x (%p)\n",
+			global_base,&global_base);
 
 		block = find_free_block(&last, size);
 		if (!block) { // Failed to find free block.
@@ -120,6 +129,8 @@ void *malloc(uint32_t size) {
 			block->free = 0;
 			block->magic = 0x77777777;
 		}
+
+		if (malloc_debug) printf("Malloc: foubd_block=%x\n",block);
 	}
 
 	return block+1;
