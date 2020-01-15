@@ -219,6 +219,9 @@ int main(int argc, char **argv) {
 			/* Don't write out comment */
 			if (!strcmp(name,".comment")) {
 			}
+			/* Don't write out debug info */
+			else if (!strncmp(name,".debug",6)) {
+			}
 			else if (!strncmp(name,".text",6)) {
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
@@ -393,7 +396,7 @@ int main(int argc, char **argv) {
 					printf("\t.rel.dyn at 0x%x size %d\n",
 						offset,size);
 				}
-				printf("Trying up to %d\n",size/8);
+				if (debug) printf("Trying up to %d\n",size/8);
 				for(j=0;j<size;j+=8) {
 					temp_addr=*(uint32_t *)(&addr[offset+j]);
 					temp_type=*(uint32_t *)(&addr[offset+j]+4);
@@ -511,7 +514,11 @@ int main(int argc, char **argv) {
 
 			/* Don't write out comment */
 			if (!strcmp(name,".comment")) {
-				if (debug) printf("Skipping .comment\n");
+				if (debug) printf("Skipping %s\n",name);
+			}
+			/* Don't write out debug info */
+			else if (!strncmp(name,".debug",6)) {
+				if (debug) printf("Skipping %s\n",name);
 			}
 			else if ((!strncmp(name,".text",5)) ||
 				 (!strncmp(name,".rodata",6))) {
