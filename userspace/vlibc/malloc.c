@@ -10,7 +10,7 @@
 #include "syscalls.h"
 #include "vlibc.h"
 
-static int malloc_debug=1;
+static int malloc_debug=0;
 
 struct block_meta {
 	size_t size;

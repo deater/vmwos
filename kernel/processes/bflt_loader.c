@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-static int bflt_debug=1;
+static int bflt_debug=0;
 
 #include "lib/printk.h"
 #include "lib/string.h"
