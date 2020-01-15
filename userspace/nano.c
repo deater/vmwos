@@ -512,12 +512,23 @@ static void editor_delete_row(int at) {
 
 static void editor_row_insert_char(struct editor_row *row, int at, int c) {
 
+	/* If somehow off screen, put this at the end */
 	if ((at<0) || (at>row->size)) at=row->size;
+
+	/* Allocate space for the updated string (with extra char and NUL) */
 	row->chars=realloc(row->chars,row->size+2);
+
+	/* Push everything past the cursor to the right */
 	memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+
+	/* Update the size and insert the char */
 	row->size++;
 	row->chars[at] = c;
+
+	/* Update */
 	editor_update_row(row);
+
+	/* We've changed the file */
 	config.dirty++;
 }
 
