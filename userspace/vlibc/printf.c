@@ -190,6 +190,11 @@ static int vsnprintf_internal(char *buffer, uint32_t size,
 		if (buffer_pointer==max_print_size-1) break;
 	}
 
+	if (buffer_pointer>=max_print_size) {
+		buffer_pointer=max_print_size-1;
+	}
+	buffer[buffer_pointer]='\0';
+
 	return buffer_pointer;
 }
 
