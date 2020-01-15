@@ -58,7 +58,7 @@ int irq_disable(int which_one) {
 
 }
 
-#if 0
+
 
 static void user_reg_dump(void) {
 
@@ -82,7 +82,6 @@ static void user_reg_dump(void) {
 	printk("\n");
 }
 
-#endif
 
 void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 
@@ -226,6 +225,8 @@ void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
 	if (fs==1) printk("\tAlignment fault\n");
 	if (fs==2) printk("\tDebug event\n");
 	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",dfar);
+
+	user_reg_dump();
 
 	exit(-1);
 
