@@ -8,6 +8,9 @@ static int errno;
 #include "syscalls.h"
 #include "vlibc.h"
 #include "vmwos.h"
+
+static int get_errno(int value) { return value; }
+
 #else
 #include <stdio.h>
 #include <errno.h>
@@ -29,6 +32,8 @@ struct linux_dirent {
 int getdents(unsigned int fd, struct linux_dirent *dirp, unsigned int count) {
 	return syscall(SYS_getdents, fd, dirp, count);
 }
+
+static int get_errno(int value) { return errno; }
 
 #endif
 
@@ -224,14 +229,16 @@ static int ls_long(char *path) {
 	/* handle if it's a directory */
 	fd=open(path,O_RDONLY,0);
 	if (fd<0) {
-		printf("Error! %s\n",strerror(errno));
+		errno=get_errno(fd);
+		printf("Error opening dir %s! %s\n",path,strerror(errno));
 	}
 
 	/* First, find maxsize */
 	while(1) {
 		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
 		if (nread<0) {
-			printf("Error! %s\n",strerror(errno));
+			errno=get_errno(nread);
+			printf("Error getdents! %s\n",strerror(errno));
 			break;
 		}
 		if (nread==0) break;
@@ -257,7 +264,9 @@ static int ls_long(char *path) {
 	while(1) {
 		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
 		if (nread<0) {
-			printf("Error! %s\n",strerror(errno));
+			errno=get_errno(nread);
+			printf("Error getdents again fd=%d! %s\n",
+				fd,strerror(errno));
 			break;
 		}
 		if (nread==0) break;
@@ -307,14 +316,17 @@ static int ls_plain(char *path) {
 	/* handle if it's a directory */
 	fd=open(path,O_RDONLY,0);
 	if (fd<0) {
-		printf("Error! %s\n",strerror(errno));
+		errno=get_errno(fd);
+		printf("Error opening directory %s! %s\n",
+					path,strerror(errno));
 	}
 
 	/* get maximum filename size */
 	while(1) {
 		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
 		if (nread<0) {
-			printf("Error! %s\n",strerror(errno));
+			errno=get_errno(nread);
+			printf("Error getdents! %s\n",strerror(errno));
 			break;
 		}
 		if (nread==0) break;
@@ -342,7 +354,8 @@ static int ls_plain(char *path) {
 	while(1) {
 		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
 		if (nread<0) {
-			printf("Error! %s\n",strerror(errno));
+			errno=get_errno(fd);
+			printf("Error getdents again! %s\n",strerror(errno));
 			break;
 		}
 		if (nread==0) break;

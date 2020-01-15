@@ -19,14 +19,14 @@
 //int errno=0;
 
 static const char error_none[]=	"No error";
-static const char error_enoent[]=	"File not found";
-static const char error_ebadf[]=	"Bad file descriptor";
-static const char error_enomem[]=	"Not enougn memory";
-static const char error_enodev[]=	"No such device";
-static const char error_enotdir[]=	"Not a directory";
-static const char error_enfile[]=	"Not enough fds";
-static const char error_erange[]=	"Result out of range";
-static const char error_enosys[]=	"No such system call";
+static const char error_enoent[]=	"ENOENT: File not found";
+static const char error_ebadf[]=	"EBADF: Bad file descriptor";
+static const char error_enomem[]=	"ENOMEM: Not enougn memory";
+static const char error_enodev[]=	"ENODEV: No such device";
+static const char error_enotdir[]=	"ENOTDIR: Not a directory";
+static const char error_enfile[]=	"ENFILE: Not enough fds";
+static const char error_erange[]=	"ERANGE: Result out of range";
+static const char error_enosys[]=	"ENOSYS: No such system call";
 static const char error_generic[]=	"Unknown error";
 
 
