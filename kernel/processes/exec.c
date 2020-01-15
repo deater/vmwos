@@ -37,7 +37,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	char magic[16];
 
 	uint32_t text_start,data_start,bss_start,bss_end;
-	uint32_t stack_size,total_size;
+	uint32_t stack_size,total_program_size,total_ondisk_size;
 
 
 	if (exec_debug) printk("Entering execve\n");
@@ -57,7 +57,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 		result=bflt_load(inode,&stack_size,
 			&text_start,&data_start,&bss_start,
-			&bss_end,&total_size);
+			&bss_end,&total_ondisk_size,&total_program_size);
 
 		current_proc[0]->datasize=bss_start-data_start;
 		current_proc[0]->bsssize=bss_end-bss_start;
@@ -65,18 +65,21 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		/* Allocate stack */
 		stack_page=memory_allocate(stack_size,MEMORY_USER);
 
-		/* Allocate text memory */
-		binary_start=memory_allocate(total_size,MEMORY_USER);
+		/* Allocate root for text/data/bss */
+		/* note that memory_allocate() clears to zero */
+		/* so we don't have to explicitly clear the bss */
+		binary_start=memory_allocate(total_program_size,MEMORY_USER);
 
 		if ((binary_start==NULL) || (stack_page==NULL)) {
-			if (binary_start!=NULL) memory_free(binary_start,total_size);
+			if (binary_start!=NULL) memory_free(binary_start,total_program_size);
 			if (stack_page!=NULL) memory_free(stack_page,stack_size);
 			if (exec_debug) printk("execve: no memory\n");
 			return -ENOMEM;
 		}
 
 		/* Load executable */
-		romfs_read_file(inode,text_start,binary_start,total_size);
+		/* Size does not include bss */
+		romfs_read_file(inode,text_start,binary_start,total_ondisk_size);
 
 		/* Relocate values in the executable */
 		bflt_reloc(inode,binary_start);
@@ -97,18 +100,19 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		}
 
 		text_start=0;
-		total_size=stat_info.st_size;
-		if (exec_debug) printk("RAW: total size = %d\n",total_size);
+		total_ondisk_size=stat_info.st_size;
+		total_program_size=stat_info.st_size;
+		if (exec_debug) printk("RAW: total size = %d\n",total_program_size);
 
 		/* Allocate stack */
 		stack_page=memory_allocate(stack_size,MEMORY_USER);
 
 		/* Allocate text memory */
-		binary_start=memory_allocate(total_size,MEMORY_USER);
+		binary_start=memory_allocate(total_program_size,MEMORY_USER);
 
 		if ((binary_start==NULL) || (stack_page==NULL)) {
 
-			if (binary_start!=NULL) memory_free(binary_start,total_size);
+			if (binary_start!=NULL) memory_free(binary_start,total_program_size);
 			if (stack_page!=NULL) memory_free(stack_page,stack_size);
 
 			if (exec_debug) printk("execve: no memory\n");
@@ -116,7 +120,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		}
 
 		/* Load executable */
-		romfs_read_file(inode,text_start,binary_start,total_size);
+		romfs_read_file(inode,text_start,binary_start,total_ondisk_size);
 	}
 
 
@@ -187,7 +191,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		}
 	}
 
+	/*******************/
 	/* Setup the stack */
+	/*******************/
         current_proc[0]->user_state.r[13]=(long)argv_location;
         current_proc[0]->stack=stack_page;
         current_proc[0]->stacksize=stack_size;
@@ -196,15 +202,18 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	/* That way when a program exits it will return to where lr points */
 //	current_proc[0]->reg_state.r[14]=(long)exit;
 
-	/* Make r0=argc */
+	/****************************/
+	/* Make r0=argc and r1=argv */
+	/****************************/
 	current_proc[0]->user_state.r[0]=argc;
-	/* Make r1=argv */
 	current_proc[0]->user_state.r[1]=(long)argv_location;
 
+	/*************************/
         /* Setup the entry point */
+	/*************************/
         current_proc[0]->user_state.pc=(long)binary_start;
         current_proc[0]->text=binary_start;
-        current_proc[0]->textsize=total_size;
+        current_proc[0]->textsize=total_program_size;
 
 	/* Flush icache, as we have changed executable code */
 	/* so the various caches might be out of date */
@@ -217,7 +226,8 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 			"allocated %dkB at %x and %dkB stack at %x, cpu %d\n",
 			filename,(long)current_proc[0],
 			current_proc[0]->pid,
-			total_size/1024,binary_start,
+			(total_program_size/1024)+4*(!!(total_program_size%1024)),
+			binary_start,
 			stack_size/1024,stack_page,get_cpu());
 	}
 

@@ -1,7 +1,9 @@
 int32_t bflt_load(int32_t inode,
                 uint32_t *stack_size, uint32_t *text_start,
                 uint32_t *data_start, uint32_t *bss_start,
-                uint32_t *bss_end, uint32_t *total_size);
+                uint32_t *bss_end,
+		uint32_t *total_ondisk_size,
+                uint32_t *total_program_size);
 
 int32_t bflt_reloc(int32_t inode, void *binary_address);
 

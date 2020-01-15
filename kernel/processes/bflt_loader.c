@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-static int bflt_debug=0;
+static int bflt_debug=1;
 
 #include "lib/printk.h"
 #include "lib/string.h"
@@ -22,7 +22,9 @@ static int bflt_debug=0;
 int32_t bflt_load(int32_t inode,
 		uint32_t *stack_size, uint32_t *text_start,
 		uint32_t *data_start, uint32_t *bss_start,
-		uint32_t *bss_end, uint32_t *total_size) {
+		uint32_t *bss_end,
+		uint32_t *total_ondisk_size,
+		uint32_t *total_program_size) {
 
 	int result;
 	char bflt_header[64];
@@ -56,9 +58,13 @@ int32_t bflt_load(int32_t inode,
 	*bss_end=ntohl(temp_int);
 	if (bflt_debug) printk("BFLT: bss_end=%x\n",*bss_end);
 
-	*total_size=*bss_end-*text_start;
-	if (bflt_debug) printk("BFLT: total size=%x (%d)\n",
-				*total_size,*total_size);
+	*total_ondisk_size=*bss_start-*text_start;
+	if (bflt_debug) printk("BFLT: total ondisk size=%x (%d)\n",
+				*total_ondisk_size,*total_ondisk_size);
+
+	*total_program_size=*bss_end-*text_start;
+	if (bflt_debug) printk("BFLT: total program-size=%x (%d)\n",
+				*total_program_size,*total_program_size);
 
 	return 0;
 }
