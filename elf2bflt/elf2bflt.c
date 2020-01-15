@@ -9,7 +9,7 @@
 #include <sys/mman.h>
 #include <arpa/inet.h>
 
-static int debug=1;
+static int debug=0;
 
 #define SHT_NULL		0x0 	// Section header entry unused
 #define SHT_PROGBITS		0x1	// Program data
@@ -501,7 +501,7 @@ int main(int argc, char **argv) {
 	shptr=&addr[shoff];
 	if (debug) printf("Writing data:\n");
 	for(i=0;i<shnum;i++) {
-		printf("SHNUM %d/%d\n",i,shnum);
+		if (debug) printf("SHNUM %d/%d\n",i,shnum);
 		memcpy(&temp,&shptr[0x4],4);
 		if (temp==SHT_PROGBITS) {
 			if (debug) printf("Section header %d\n",i);
@@ -572,7 +572,7 @@ int main(int argc, char **argv) {
 				output_addr=offset;
 				for(j=0;j<size;j+=4) {
 					temp=*(uint32_t *)&addr[offset+j];
-					printf("TESTING RELOC %x\n",output_addr+j);
+					if (debug) printf("TESTING RELOC %x\n",output_addr+j);
 					if (is_relocated(output_addr+j,relocations,reloc_count)) {
 						if (debug) printf("Relocating %x\n",output_addr+j);
 						temp=temp-text_offset;
@@ -581,7 +581,7 @@ int main(int argc, char **argv) {
 				}
 			}
 			else {
-				printf("What to do with %s\n",name);
+				fprintf(stderr,"What to do with %s\n",name);
 				return -1;
 			}
 
