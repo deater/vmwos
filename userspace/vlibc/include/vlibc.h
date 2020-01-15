@@ -27,7 +27,8 @@ struct file_struct {
 	int eof;
 };
 typedef struct file_struct FILE;
-FILE stdin,stdout,stderr;
+
+FILE *stdin,*stdout,*stderr;
 
 int putchar(int c);
 int puts(char *s);

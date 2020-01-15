@@ -36,10 +36,13 @@ int getchar(void) {
 #define MAXFILES	16
 static FILE open_files[MAXFILES];
 
-FILE stdin  = {	.fd = 0, .eof=0	};
-FILE stdout = {	.fd = 1, .eof=0	};
-FILE stderr = { .fd = 2, .eof=0	};
+static FILE stdin_actual  = { .fd = 0, .eof=0	};
+static FILE stdout_actual = { .fd = 1, .eof=0	};
+static FILE stderr_actual = { .fd = 2, .eof=0	};
 
+FILE *stdin=&stdin_actual;
+FILE *stdout=&stdout_actual;
+FILE *stderr=&stderr_actual;
 
 FILE *fopen(const char *pathname, const char *mode) {
 
