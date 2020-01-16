@@ -115,16 +115,17 @@ struct editor_row {
 };
 
 struct editor_config {
-	int screenrows;
-	int screencols;
-	int cx,cy;
-	int rx;		/* rendered X location */
+	int screenrows;		/* Row height of screen */
+	int screencols;		/* Column width of screen */
+	int cx,cy;		/* Location in file */
+	int rx;			/* rendered X location */
 	int rowoff;
 	int coloff;
 	int numrows;
 	struct editor_row *row;
 	int dirty;
 	char *filename;
+	char *last_search;
 	char statusmsg[80];
 	time_t statusmsg_time;
 	struct editor_syntax *syntax;
@@ -956,6 +957,7 @@ static void editor_refresh_screen(void) {
 }
 
 
+/* Print a prompt in the status line */
 static char *editor_prompt(char *prompt) {
 
 	size_t bufsize=128;
@@ -975,16 +977,16 @@ static char *editor_prompt(char *prompt) {
 		if ((c==DEL_KEY)||(c==CTRL_KEY('h')) || (c==BACKSPACE)) {
 			if (buflen!=0) buf[--buflen]='\0';
 		}
-		/* escape cancels */
-		else if (c=='\x1b') {
+		/* ^C cancels */
+		else if (c==CTRL_KEY('c')) {
 			editor_set_status_message("");
 			free(buf);
 			return NULL;
 		} else if (c=='\r') {
-			if (buflen!=0) {
-				editor_set_status_message("");
+			editor_set_status_message("");
+//			if (buflen!=0) {
 				return buf;
-			}
+//			}
 		} else if ( (!iscntrl(c)) && (c<128)) {
 			if (buflen==bufsize-1) {
 				bufsize*=2;
@@ -1089,25 +1091,67 @@ static void editor_save(void) {
 	editor_set_status_message("Can't save! I/O error: %s",strerror(errno));
 }
 
+/* Search / Find */
+/* TODO: wrap to beginning if not found */
 static void editor_find(void) {
 
-	char *query,*match;
-	int i;
+	char *query,*actual_query,*match;
+	int i,match_found=0;
 	struct editor_row *row;
+	char prompt[128];
 
-	query=editor_prompt("Search: %s (ESC to cancel)");
+	if (config.last_search==NULL) {
+		query=editor_prompt("Search (^C to cancel) : %s");
+	}
+	else {
+		snprintf(prompt,128,"Search (^C to cancel) [%s] : %%s",
+			config.last_search);
+		query=editor_prompt(prompt);
+	}
+
+	/* If we cancelled, exit */
 	if (query==NULL) return;
 
-	for(i=0;i<config.numrows;i++) {
+	/* Update last query */
+	if (strlen(query)>0) {
+		free(config.last_search);
+		config.last_search=strdup(query);
+	}
+
+	/* If was empty, and we have a last-value, use that */
+	if (strlen(query)==0) {
+		actual_query=config.last_search;
+	}
+	else {
+		actual_query=query;
+	}
+
+	/* Note: start search from current position+1 */
+	/*	 this matches nano behavior */
+
+	for(i=config.cy;i<config.numrows;i++) {
 		row=&config.row[i];
-		match=strstr(row->render,query);
+
+		/* If on own row, start at position+1 */
+		if (i==config.cy) {
+			match=strstr(row->render+1+config.cx,actual_query);
+		}
+		else {
+			match=strstr(row->render,actual_query);
+		}
 		if (match) {
 			config.cy=i;
 			config.cx = editor_row_rx_to_cx(row,match-row->render);
 			config.rowoff=config.numrows;
+			match_found++;
 			break;
 		}
 
+	}
+
+	/* TODO: print "String \"Whatever\" not found */
+	if (match_found==0) {
+		editor_set_status_message("String not found");
 	}
 
 	free(query);
@@ -1122,9 +1166,12 @@ static void editor_process_key(void) {
 	c=editor_read_key();
 
 	switch(c) {
+		/* New line */
 		case '\r':
 			editor_insert_newline();
 			break;
+
+		/* Control-X = exit */
 		case CTRL_KEY('x'):
 			if ((config.dirty) && (quit_times>0)) {
 				editor_set_status_message("WARNING!! "
@@ -1136,6 +1183,8 @@ static void editor_process_key(void) {
 			}
 			safe_exit(0,NULL);
 			break;
+
+		/* Control-O = save */
 		case CTRL_KEY('o'):
 			editor_save();
 			break;
@@ -1199,15 +1248,21 @@ static void editor_init(void) {
 
 	int result;
 
+	/* Current X and Y in buffer */
 	config.cx=0;
 	config.cy=0;
+
+	/* Current row X */
 	config.rx=0;
+
+	/* Row and Column onscreen */
 	config.rowoff=0;
 	config.coloff=0;
 	config.numrows=0;
 	config.row=NULL;
 	config.dirty=0;
 	config.filename=NULL;
+	config.last_search=NULL;
 	config.statusmsg[0]='\0';
 	config.statusmsg_time=0;
 	config.syntax=NULL;
@@ -1225,15 +1280,23 @@ static void editor_init(void) {
 
 int main(int argc, char **argv) {
 
+	/* Enable tty raw mode */
 	enable_raw_mode();
+
+	/* Setup editor */
 	editor_init();
 
+	/* Check if we want to open a pre-existing file */
+	/* From the command line */
 	if (argc>=2) {
 		editor_open(argv[1]);
 	}
 
+	/* Print an initial HELP status message */
+	/* FIXME: make this permanent line nano does? */
 	editor_set_status_message("HELP: ^O = save | ^X = quit | ^W = Search");
 
+	/* Main editing loop */
 	while(1) {
 		editor_refresh_screen();
 		editor_process_key();
