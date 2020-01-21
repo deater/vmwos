@@ -23,10 +23,10 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name);
 int32_t romfs_read_file(uint32_t inode, uint32_t offset,
 			void *buf,uint32_t count);
 int32_t romfs_mount(struct superblock_t *superblock);
-int32_t romfs_stat(int32_t inode, struct stat *buf);
+int32_t romfs_stat(int32_t inode, struct vmwos_stat *buf);
 int32_t romfs_getdents(uint32_t dir_inode,
 		uint32_t *current_inode, void *buf,uint32_t size);
-int32_t romfs_statfs(struct superblock_t *superblock,struct statfs *buf);
+int32_t romfs_statfs(struct superblock_t *superblock,struct vmwos_statfs *buf);
 
 #define ROMFS_TYPE_HARDLINK	0
 #define ROMFS_TYPE_DIRECTORY	1

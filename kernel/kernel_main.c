@@ -139,7 +139,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	ramdisk_init(initrd_image,sizeof(initrd_image));
 
 	/* Mount the ramdisk */
-	mount("/dev/ramdisk","/","romfs",0,NULL);
+	mount_syscall("/dev/ramdisk","/","romfs",0,NULL);
 
 	/* Create idle task */
 	create_idle_task();

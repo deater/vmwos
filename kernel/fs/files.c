@@ -135,7 +135,7 @@ int32_t get_inode(const char *pathname) {
 	return inode;
 }
 
-int32_t close(uint32_t fd) {
+int32_t close_syscall(uint32_t fd) {
 
 	int32_t result;
 
@@ -146,7 +146,7 @@ int32_t close(uint32_t fd) {
 }
 
 
-int32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
+int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 
 	int32_t result;
 	int32_t inode;
@@ -171,7 +171,7 @@ int32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 
 }
 
-int32_t read(uint32_t fd, void *buf, uint32_t count) {
+int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	int32_t result;
 
@@ -199,7 +199,7 @@ int32_t read(uint32_t fd, void *buf, uint32_t count) {
 	return result;
 }
 
-int32_t write(uint32_t fd, void *buf, uint32_t count) {
+int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	int32_t result;
 
@@ -225,7 +225,7 @@ int32_t write(uint32_t fd, void *buf, uint32_t count) {
 	return result;
 }
 
-int32_t stat(const char *pathname, struct stat *buf) {
+int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf) {
 
 	int32_t inode;
 	int32_t result;
@@ -246,7 +246,7 @@ int32_t stat(const char *pathname, struct stat *buf) {
 
 struct superblock_t superblock_table[8];
 
-int32_t mount(const char *source, const char *target,
+int32_t mount_syscall(const char *source, const char *target,
 	const char *filesystemtype, uint32_t mountflags,
 	const void *data) {
 
@@ -283,7 +283,8 @@ void fd_table_init(void) {
 	return;
 }
 
-int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
+int32_t getdents_syscall(uint32_t fd,
+			struct vmwos_dirent *dirp, uint32_t count) {
 
 	int result;
 
@@ -308,11 +309,11 @@ int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 }
 
 /* Change current working directory */
-int32_t chdir(const char *path) {
+int32_t chdir_syscall(const char *path) {
 
 	int32_t inode,result;
 
-	struct stat buf;
+	struct vmwos_stat buf;
 
 	inode=get_inode(path);
 	if (inode<0) {
@@ -335,9 +336,9 @@ int32_t chdir(const char *path) {
 
 
 /* Get name of current working directory */
-char *getcwd(char *buf, size_t size) {
+char *getcwd_syscall(char *buf, size_t size) {
 
-	struct stat stat_buf;
+	struct vmwos_stat stat_buf;
 
 	int32_t inode,result;
 
@@ -353,7 +354,7 @@ char *getcwd(char *buf, size_t size) {
 
 }
 
-int32_t statfs(const char *path, struct statfs *buf) {
+int32_t statfs_syscall(const char *path, struct vmwos_statfs *buf) {
 	/* FIXME: lookup path */
 
 	return romfs_statfs(&superblock_table[0],buf);

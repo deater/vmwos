@@ -158,7 +158,7 @@ inode_link_loop:
 
 }
 
-int32_t romfs_stat(int32_t inode, struct stat *buf) {
+int32_t romfs_stat(int32_t inode, struct vmwos_stat *buf) {
 
 	int32_t header_offset,size,temp_int,read_count=0;
 	int32_t spec_info=0,type=0;
@@ -168,7 +168,7 @@ retry_inode:
 	if (debug) printk("romfs: Attempting to stat inode %x\n",inode);
 
 	/* Clear all to zero */
-	memset(buf,0,sizeof(struct stat));
+	memset(buf,0,sizeof(struct vmwos_stat));
 
 	/* Set inode value */
 	buf->st_ino=inode;
@@ -387,7 +387,7 @@ int32_t romfs_mount(struct superblock_t *superblock) {
 
 }
 
-int32_t romfs_statfs(struct superblock_t *superblock, struct statfs *buf) {
+int32_t romfs_statfs(struct superblock_t *superblock, struct vmwos_statfs *buf) {
 
 	buf->f_type=0x7275;	/* type (romfs) */
 	buf->f_bsize=1024;	/* blocksize */

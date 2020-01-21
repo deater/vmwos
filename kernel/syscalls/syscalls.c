@@ -92,21 +92,21 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_READ:
 //			printk("Trying to read: %d %x %d\n",r0,r1,r2);
-			result=read(r0,(char *)r1,(size_t)r2);
+			result=read_syscall(r0,(char *)r1,(size_t)r2);
 			break;
 
 		case SYSCALL_WRITE:
 //			printk("Trying to write: %d %x %d\n",
 //				r0,r1,r2);
-			result=write(r0,(char *)r1,(size_t)r2);
+			result=write_syscall(r0,(char *)r1,(size_t)r2);
 			break;
 
 		case SYSCALL_OPEN:
-			result=open((char *)r0,r1,r2);
+			result=open_syscall((char *)r0,r1,r2);
 			break;
 
 		case SYSCALL_CLOSE:
-			result=close(r0);
+			result=close_syscall(r0);
 			break;
 
 		case SYSCALL_WAITPID:
@@ -128,7 +128,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_CHDIR:
-			result=chdir((char *)r0);
+			result=chdir_syscall((char *)r0);
 			break;
 
 		case SYSCALL_UNAME:
@@ -140,7 +140,8 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_STAT:
-			result=stat((char *)r0,(struct stat *)r1);
+			result=stat_syscall((char *)r0,
+					(struct vmwos_stat *)r1);
 			break;
 
 		case SYSCALL_TIME:
@@ -162,15 +163,17 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_GETDENTS:
-			result=getdents(r0,(struct vmwos_dirent *)r1,r2);
+			result=getdents_syscall(r0,
+					(struct vmwos_dirent *)r1,r2);
 			break;
 
 		case SYSCALL_NANOSLEEP:
-			result=nanosleep((struct timespec *)r0,(struct timespec *)r1);
+			result=nanosleep((struct timespec *)r0,
+					(struct timespec *)r1);
 			break;
 
 		case SYSCALL_GETCWD:
-			result=(uint32_t)getcwd((char *)r0,r1);
+			result=(uint32_t)getcwd_syscall((char *)r0,r1);
 			break;
 
 		case SYSCALL_VFORK:
@@ -191,7 +194,8 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_STATFS:
-			result=statfs((const char *)r0,(struct statfs *)r1);
+			result=statfs_syscall((const char *)r0,
+						(struct vmwos_statfs *)r1);
 			break;
 
 		case SYSCALL_GETCPU:

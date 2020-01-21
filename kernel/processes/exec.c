@@ -27,7 +27,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	int result,i;
 	int32_t inode;
-	struct stat stat_info;
+	struct vmwos_stat stat_info;
 	void *binary_start,*stack_page;
 	int32_t argc=0;
 	char *argv_location;
