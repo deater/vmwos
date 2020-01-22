@@ -133,7 +133,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/************************/
 
 	/* Init the file descriptor table */
-	fd_table_init();
+	file_objects_init();
 
 	/* Initialize the ramdisk */
 	ramdisk_init(initrd_image,sizeof(initrd_image));

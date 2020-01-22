@@ -66,8 +66,10 @@ int32_t mount_syscall(const char *source, const char *target,
 int32_t getdents_syscall(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
 int32_t chdir_syscall(const char *pathname);
 char *getcwd_syscall(char *buf, size_t size);
+int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence);
 
-void fd_table_init(void);
+
+void file_objects_init(void);
 int32_t get_inode(const char *pathname);
 
 
