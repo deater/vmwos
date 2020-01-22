@@ -1,4 +1,5 @@
 #ifdef VMWOS
+
 static inline uint32_t htonl(uint32_t x) {
 	__asm__("rev %0, %0" : "+r"(x));
 	return x;
@@ -8,9 +9,10 @@ static inline uint32_t ntohl(uint32_t x) {
 	__asm__("rev %0, %0" : "+r"(x));
 	return x;
 }
+
 #else
 
-#if __BIG_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define htonl(x) (x)
 #define ntohl(x) (x)
 #else

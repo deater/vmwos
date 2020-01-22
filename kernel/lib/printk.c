@@ -232,7 +232,7 @@ int serial_printk(char *string,...) {
 
 }
 
-int sprintf(char *string, char *fmt, ...) {
+int sprintf(char *string, const char *fmt, ...) {
 
 	int result;
 
