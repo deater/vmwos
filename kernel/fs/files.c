@@ -13,49 +13,68 @@
 
 #include "processes/process.h"
 
+
+
+
 static int debug=0;
 
 static int32_t root_dir=0;
 
 #define MAX_FILENAME_SIZE 256
 
-#define MAX_FD	32
+#define MAX_FD_PER_PROC	8
+#define MAX_OPEN_FILES	64
 
-struct fd_info_t {
+
+struct file_object {
 	uint32_t valid;
 	uint32_t inode;
 	uint32_t file_ptr;
-} fd_table[MAX_FD];
+} file_objects[MAX_OPEN_FILES];
 
-int32_t fd_free(uint32_t fd) {
+struct file_object_operations {
+	int64_t (*llseek) (struct file_object *, int64_t, int32_t);
+	int32_t (*read) (struct file_object *, char *, int32_t);
+        int32_t (*write) (struct file_object *, const char *, int32_t);
+//        int (*readdir) (struct file *, void *, filldir_t);
+        int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
+	int32_t (*open) (int32_t *, struct file_object *);
+//        int (*flush) (struct file *);
+};
+
+
+
+
+
+int32_t file_object_free(struct file_object *file) {
 
 	return -EBADF;
 }
 
-int32_t fd_allocate(uint32_t inode) {
+int32_t file_object_allocate(uint32_t inode) {
 
-	int32_t fd;
+	int32_t index;
 
 	if (debug) printk("Attempting to allocate fd for inode %x\n",inode);
 
-	fd=0;
+	index=0;
 	while(1) {
-		if (fd_table[fd].valid==0) {
-			fd_table[fd].valid=1;
-			fd_table[fd].inode=inode;
-			fd_table[fd].file_ptr=0;
+		if (file_objects[index].valid==0) {
+			file_objects[index].valid=1;
+			file_objects[index].inode=inode;
+			file_objects[index].file_ptr=0;
 			break;
 		}
-		fd++;
-		if (fd>=MAX_FD) {
-			fd=-ENFILE;
+		index++;
+		if (index>=MAX_OPEN_FILES) {
+			index=-ENFILE;
 			break;
 		}
 	}
 
-	if (debug) printk("### Allocated fd %d\n",fd);
+	if (debug) printk("### Allocated file %d\n",index);
 
-	return fd;
+	return index;
 }
 
 
@@ -139,7 +158,7 @@ int32_t close_syscall(uint32_t fd) {
 
 	int32_t result;
 
-	result=fd_free(fd);
+	result=file_object_free(NULL);
 
 	return result;
 
@@ -160,7 +179,7 @@ int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 		return -ENOENT;
 	}
 
-	result=fd_allocate(inode);
+	result=file_object_allocate(inode);
 	if (result<0) {
 		return result;
 	}
@@ -179,21 +198,21 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 	if (fd==0) {
 		result=console_read(buf,count);
 	}
-	else if (fd>=MAX_FD) {
+	else if (fd>=MAX_OPEN_FILES) {
 		return -ENFILE;
 	}
-	else if (fd_table[fd].valid==0) {
+	else if (file_objects[fd].valid==0) {
 		printk("Attempting to read from unsupported fd %d\n",fd);
 		result=-EBADF;
 	}
 	else {
 		if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
 
-		result=romfs_read_file(fd_table[fd].inode,
-					fd_table[fd].file_ptr,
+		result=romfs_read_file(file_objects[fd].inode,
+					file_objects[fd].file_ptr,
 					buf,count);
 		if (result>0) {
-			fd_table[fd].file_ptr+=result;
+			file_objects[fd].file_ptr+=result;
 		}
 	}
 	return result;
@@ -267,18 +286,18 @@ int32_t mount_syscall(const char *source, const char *target,
 }
 
 
-void fd_table_init(void) {
+void file_objects_init(void) {
 	int i;
 
-	for(i=0;i<MAX_FD;i++) {
-		fd_table[i].valid=0;
+	for(i=0;i<MAX_OPEN_FILES;i++) {
+		file_objects[i].valid=0;
 	}
 
 	/* Special case 0/1/2 (stdin/stdout/stderr) */
 	/* FIXME: actually hook them up to be proper fds */
-	fd_table[0].valid=1;
-	fd_table[1].valid=1;
-	fd_table[2].valid=1;
+	file_objects[0].valid=1;
+	file_objects[1].valid=1;
+	file_objects[2].valid=1;
 
 	return;
 }
@@ -288,10 +307,10 @@ int32_t getdents_syscall(uint32_t fd,
 
 	int result;
 
-	if (fd>=MAX_FD) {
+	if (fd>=MAX_OPEN_FILES) {
 		return -ENFILE;
 	}
-	else if (fd_table[fd].valid==0) {
+	else if (file_objects[fd].valid==0) {
 		printk("Attempting to getdents from unsupported fd %d\n",fd);
 		result=-EBADF;
 	}
@@ -300,8 +319,8 @@ int32_t getdents_syscall(uint32_t fd,
 		if (debug) {
 		}
 
-		result=	romfs_getdents(fd_table[fd].inode,
-					&(fd_table[fd].file_ptr),
+		result=	romfs_getdents(file_objects[fd].inode,
+					&(file_objects[fd].file_ptr),
 					dirp,count);
 	}
 	return result;
