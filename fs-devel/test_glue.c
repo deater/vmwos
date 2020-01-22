@@ -6,13 +6,22 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#define NUM_CORES 1
+
+#include "../kernel/include/processes/process.h"
+
 int32_t mount_syscall(const char *source, const char *target,
         const char *filesystemtype, uint32_t mountflags,
         const void *data);
 
-#define NUM_CORES 1
+
+
+
+
 
 struct process_control_block_type *current_proc[NUM_CORES];
+
+struct process_control_block_type cp;
 
 int printk(const char *format, ...) {
 
@@ -73,6 +82,10 @@ int test_glue_setup(void) {
 
 	/* Mount the ramdisk */
 	mount_syscall("/dev/ramdisk","/","romfs",0,NULL);
+
+	current_proc[0]=&cp;
+
+	current_proc[0]->current_dir=0;
 
 	return 0;
 }
