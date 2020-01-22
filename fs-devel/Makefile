@@ -5,7 +5,15 @@ LFLAGS =
 
 FSA_LOC = ../kernel/fs/fs-armv7.a
 
-all:	test_df test_ls
+all:	test_df test_ls test_cat
+
+######
+
+test_cat:	test_cat.o test_glue.o
+	$(CC) -o test_cat test_cat.o $(LFLAGS) $(FSA_LOC) test_glue.o
+
+test_cat.o:	test_cat.c
+	$(CC) $(CFLAGS) -c test_cat.c
 
 ######
 
@@ -39,5 +47,5 @@ test_dev.o:	test_dev.c
 	$(CC) $(CFLAGS_TEST) -c test_dev.c
 
 clean:
-	rm -f *~ *.o *.a test_df test_ls
+	rm -f *~ *.o *.a test_cat test_df test_ls
 

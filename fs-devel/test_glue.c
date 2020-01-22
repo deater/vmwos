@@ -14,7 +14,7 @@ int32_t mount_syscall(const char *source, const char *target,
         const char *filesystemtype, uint32_t mountflags,
         const void *data);
 
-
+void file_objects_init(void);
 
 
 
@@ -84,8 +84,9 @@ int test_glue_setup(void) {
 	mount_syscall("/dev/ramdisk","/","romfs",0,NULL);
 
 	current_proc[0]=&cp;
-
 	current_proc[0]->current_dir=0;
+
+	file_objects_init();
 
 	return 0;
 }
