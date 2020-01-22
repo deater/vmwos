@@ -29,12 +29,12 @@ static int32_t root_dir=0;
 struct file_object {
 	uint32_t valid;
 	uint32_t inode;
-	uint32_t file_ptr;
+	uint64_t file_ptr;
 } file_objects[MAX_OPEN_FILES];
 
 struct file_object_operations {
 	int64_t (*llseek) (struct file_object *, int64_t, int32_t);
-	int32_t (*read) (struct file_object *, char *, int32_t);
+	int32_t (*read) (uint32_t, void *, uint32_t, uint64_t *);
         int32_t (*write) (struct file_object *, const char *, int32_t);
 //        int (*readdir) (struct file *, void *, filldir_t);
         int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
@@ -43,8 +43,13 @@ struct file_object_operations {
 };
 
 
-
-
+struct file_object_operations file_ops= {
+	NULL,			/* llseek() */
+	romfs_read_file,	/* read() */
+	NULL,			/* write() */
+	NULL,			/* ioctl() */
+	NULL			/* open() */
+};
 
 int32_t file_object_free(struct file_object *file) {
 
@@ -209,11 +214,14 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 		if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
 
 		result=romfs_read_file(file_objects[fd].inode,
-					file_objects[fd].file_ptr,
-					buf,count);
-		if (result>0) {
-			file_objects[fd].file_ptr+=result;
-		}
+					buf,count,
+					&file_objects[fd].file_ptr);
+
+		/* Helder adjusts file_ptr for us */
+
+//		if (result>0) {
+//			file_objects[fd].file_ptr+=result;
+//		}
 	}
 	return result;
 }

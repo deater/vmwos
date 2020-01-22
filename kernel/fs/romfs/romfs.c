@@ -413,14 +413,14 @@ int32_t romfs_statfs(struct superblock_t *superblock, struct vmwos_statfs *buf) 
 
 
 int32_t romfs_read_file(uint32_t inode,
-			uint32_t file_offset,
-			void *buf,uint32_t count) {
+			void *buf,uint32_t count,
+			uint64_t *file_offset) {
 
 	int32_t header_offset,size,temp_int,name_length,read_count=0;
 	int32_t max_count=0;
 
 	if (debug) printk("romfs: Attempting to read %d bytes from inode %x offset %d\n",
-			count,inode,file_offset);
+			count,inode,*file_offset);
 
 
 	header_offset=inode;		/* 0: Next */
@@ -445,15 +445,20 @@ int32_t romfs_read_file(uint32_t inode,
 
 	if (debug) printk("romfs: max count %d, size is %d\n",count,size);
 	max_count=count;
-	if (max_count>size-file_offset) {
-		max_count=size-file_offset;
+	if (max_count>size-*file_offset) {
+		max_count=size-*file_offset;
 		if (debug) printk("romfs: count is past end of file, limiting to %d\n",max_count);
 	}
 
 	if (debug) printk("romfs: reading %d bytes from %d into %x\n",
-		max_count,header_offset+file_offset,buf);
+		max_count,header_offset+*file_offset,buf);
 
-	read_count=ramdisk_read(header_offset+file_offset,max_count,buf);
+	read_count=ramdisk_read(header_offset+*file_offset,max_count,buf);
+
+	/* Update file pointer */
+	if (read_count>0) {
+		*file_offset+=read_count;
+	}
 
 	if (debug) printk("romfs: result was %d\n",read_count);
 
@@ -461,14 +466,17 @@ int32_t romfs_read_file(uint32_t inode,
 }
 
 
+	/* Reads most that can fit and updates offset */
+	/* Start again from the file offset */
+	/* Returns 0 when done */
 int32_t romfs_getdents(uint32_t dir_inode,
-			uint32_t *current_inode,
+			uint64_t *current_progress,
 			void *buf,uint32_t size) {
 
 	struct vmwos_dirent *dirent_ptr;
 
 	int32_t header_offset,temp_int,name_length,mode,next_header;
-	uint32_t inode=*current_inode;
+	uint32_t inode=*current_progress;
 	int32_t num_entries=0,current_length=0,total_length=0;
 
 	dirent_ptr=(struct vmwos_dirent *)buf;
@@ -477,10 +485,10 @@ int32_t romfs_getdents(uint32_t dir_inode,
 		printk("romfs_getdents: dir_inode %x current_inode %x\n",
 			dir_inode,inode);
 	}
-	if (*current_inode==0xffffffff) return 0;
+	if (inode==0xffffffff) return 0;
 
 	/* We are the entry itself? */
-	if (*current_inode==0) {
+	if (inode==0) {
 		header_offset=dir_inode;	/* 0: Next */
 		romfs_read_noinc(&temp_int,header_offset,4);
 		mode=ntohl(temp_int)&0x7;
@@ -538,7 +546,7 @@ int32_t romfs_getdents(uint32_t dir_inode,
 		dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
 	}
 
-	*current_inode=inode;
+	*current_progress=inode;
 
 	if (debug) printk("romfs_getdents: num_entries %d\n",num_entries);
 
