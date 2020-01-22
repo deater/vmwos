@@ -13,21 +13,24 @@
 #define ENODEV	19	/* No such device..... */
 #define ENOTDIR	20	/* Not a directory.... */
 #define ENFILE	23	/* Not enough fds..... */
+#define EROFS	30	/* Read only file sys. */
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */
 
 //int errno=0;
 
-static const char error_none[]=	"No error";
+static const char error_none[]=		"No error";
 static const char error_enoent[]=	"ENOENT: File not found";
 static const char error_ebadf[]=	"EBADF: Bad file descriptor";
 static const char error_enomem[]=	"ENOMEM: Not enougn memory";
 static const char error_enodev[]=	"ENODEV: No such device";
 static const char error_enotdir[]=	"ENOTDIR: Not a directory";
 static const char error_enfile[]=	"ENFILE: Not enough fds";
+static const char error_erofs[]=	"EROFS: Read only file system";
 static const char error_erange[]=	"ERANGE: Result out of range";
 static const char error_enosys[]=	"ENOSYS: No such system call";
 static const char error_generic[]=	"Unknown error";
+
 
 
 static const char *error_table[MAX_ERRNO]={
@@ -61,7 +64,7 @@ static const char *error_table[MAX_ERRNO]={
 	error_generic,	/* 27 */
 	error_generic,	/* 28 */
 	error_generic,	/* 29 */
-	error_generic,	/* 30 */
+	error_erofs,	/* 30 EROFS */
 	error_generic,	/* 31 */
 	error_generic,	/* 32 */
 	error_generic,	/* 33 */

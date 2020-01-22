@@ -72,7 +72,7 @@ static int df(char *device,char *mountpoint) {
 
 
 	if (debug) {
-		printf("Totalsize = %d*%d = %ld\n",
+		printf("Totalsize = %d*%d = %lld\n",
 			blocksize,totalblocks,totalsize);
 	}
 

@@ -33,9 +33,9 @@ struct file_object {
 } file_objects[MAX_OPEN_FILES];
 
 struct file_object_operations {
+	int32_t (*read) (uint32_t, char *, uint32_t, uint64_t *);
+        int32_t (*write) (uint32_t, const char *, uint32_t, uint64_t *);
 	int64_t (*llseek) (struct file_object *, int64_t, int32_t);
-	int32_t (*read) (uint32_t, void *, uint32_t, uint64_t *);
-        int32_t (*write) (struct file_object *, const char *, int32_t);
 //        int (*readdir) (struct file *, void *, filldir_t);
         int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
 	int32_t (*open) (int32_t *, struct file_object *);
@@ -44,9 +44,9 @@ struct file_object_operations {
 
 
 struct file_object_operations file_ops= {
-	NULL,			/* llseek() */
 	romfs_read_file,	/* read() */
-	NULL,			/* write() */
+	romfs_write_file,	/* write() */
+	NULL,			/* llseek() */
 	NULL,			/* ioctl() */
 	NULL			/* open() */
 };
@@ -213,7 +213,7 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 	else {
 		if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
 
-		result=romfs_read_file(file_objects[fd].inode,
+		result=file_ops.read(file_objects[fd].inode,
 					buf,count,
 					&file_objects[fd].file_ptr);
 
@@ -246,8 +246,10 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 		result = console_write(buf, count);
 	}
 	else {
-		printk("Attempting to write unsupported fd %d\n",fd);
-		result=-EBADF;
+
+		result=file_ops.write(file_objects[fd].inode,
+					buf,count,
+					&file_objects[fd].file_ptr);
 	}
 	return result;
 }

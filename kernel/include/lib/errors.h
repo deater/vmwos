@@ -11,6 +11,7 @@
 #define ENOTDIR	20	/* Not a directory.... */
 #define EINVAL	22	/* Invalid argument... */
 #define ENFILE	23	/* Not enough fds..... */
+#define EROFS	30	/* Read-only file sys. */
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */
 

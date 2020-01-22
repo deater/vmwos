@@ -413,7 +413,7 @@ int32_t romfs_statfs(struct superblock_t *superblock, struct vmwos_statfs *buf) 
 
 
 int32_t romfs_read_file(uint32_t inode,
-			void *buf,uint32_t count,
+			char *buf,uint32_t count,
 			uint64_t *file_offset) {
 
 	int32_t header_offset,size,temp_int,name_length,read_count=0;
@@ -554,3 +554,10 @@ int32_t romfs_getdents(uint32_t dir_inode,
 }
 
 
+int32_t romfs_write_file(uint32_t inode,
+                        const char *buf,uint32_t count, uint64_t *offset) {
+
+	/* read only filesystem */
+
+	return -EROFS;
+}

@@ -20,13 +20,18 @@ struct romfs_file_header_t {
 int32_t open_romfs_file(char *name,
 		struct romfs_file_header_t *file);
 int32_t romfs_get_inode(int32_t dir_inode, const char *name);
-int32_t romfs_read_file(uint32_t inode,
-			void *buf,uint32_t count, uint64_t *offset);
 int32_t romfs_mount(struct superblock_t *superblock);
 int32_t romfs_stat(int32_t inode, struct vmwos_stat *buf);
 int32_t romfs_getdents(uint32_t dir_inode,
 		uint64_t *current_progress, void *buf,uint32_t size);
 int32_t romfs_statfs(struct superblock_t *superblock,struct vmwos_statfs *buf);
+
+int32_t romfs_read_file(uint32_t inode,
+			char *buf,uint32_t count, uint64_t *offset);
+int32_t romfs_write_file(uint32_t inode,
+			const char *buf,uint32_t count, uint64_t *offset);
+
+
 
 #define ROMFS_TYPE_HARDLINK	0
 #define ROMFS_TYPE_DIRECTORY	1
