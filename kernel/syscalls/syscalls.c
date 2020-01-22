@@ -45,6 +45,7 @@ extern int blinking_enabled;
 uint32_t swi_handler_c(
 	uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3) {
 
+	register long r4 asm ("r4");
 	register long r7 asm ("r7");
 
 	/* Keep running interrupts while inside of SWI */
@@ -81,6 +82,7 @@ uint32_t swi_handler_c(
 #endif
 
 	uint32_t result=-ENOSYS;
+	uint64_t result64;
 
 //	printk("Starting syscall %d\n",r7);
 
@@ -131,12 +133,23 @@ uint32_t swi_handler_c(
 			result=chdir_syscall((char *)r0);
 			break;
 
-		case SYSCALL_UNAME:
+		case SYSCALL_SYSINFO:	/* 116 */
+			result=sysinfo((struct sysinfo *)r0);
+			break;
+
+		case SYSCALL_UNAME:	/* 122 */
 			result=uname((struct utsname *)r0);
 			break;
 
-		case SYSCALL_SYSINFO:
-			result=sysinfo((struct sysinfo *)r0);
+		case SYSCALL_LLSEEK:	/* 140 */
+			result64=llseek_syscall(r0,((int64_t)r1)<<32|r2,r4);
+			if (result64>=0) {
+				*((uint64_t *)r3)=result64;
+				result=0;
+			}
+			else {
+				result=result64;
+			}
 			break;
 
 		case SYSCALL_STAT:

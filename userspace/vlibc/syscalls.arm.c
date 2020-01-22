@@ -26,6 +26,7 @@
 #define __NR_stat		106
 #define __NR_sysinfo		116
 #define	__NR_uname		122
+#define __NR__llseek		140
 #define __NR_getdents		141
 #define __NR_nanosleep  	162
 #define __NR_nanosleep  	162
@@ -460,6 +461,29 @@ int statfs(const char *path, struct statfs *buf) {
 
 	return r0;
 }
+
+/* 140 */
+int32_t llseek(uint32_t fd, uint32_t offset_high,
+		uint32_t offset_low, uint64_t *result,
+		uint32_t whence) {
+
+	register long r7 __asm__("r7") = __NR__llseek;
+	register long r0 __asm__("r0") = (long)fd;
+	register long r1 __asm__("r1") = (long)offset_high;
+	register long r2 __asm__("r2") = (long)offset_low;
+	register long r3 __asm__("r3") = (long)result;
+	register long r4 __asm__("r4") = (long)whence;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
+		: "memory");
+
+	return r0;
+
+}
+
 
 /* 194 */
 

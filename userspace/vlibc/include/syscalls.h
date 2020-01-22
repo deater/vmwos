@@ -99,6 +99,9 @@ int32_t read(int fd, void *buf, size_t count);
 int32_t open(const char *filename, uint32_t flags, uint32_t mode);
 int32_t close(uint32_t fd);
 int32_t ftruncate(int32_t fd, int64_t length);
+int32_t lseek64(int32_t fd, unsigned long offset_high,
+                   unsigned long offset_low, loff_t *result,
+                   unsigned int whence);
 
 
 int32_t vfork(void);

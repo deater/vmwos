@@ -388,3 +388,9 @@ int32_t statfs_syscall(const char *path, struct vmwos_statfs *buf) {
 
 	return romfs_statfs(&superblock_table[0],buf);
 }
+
+int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
+
+
+	return -ENOSYS;
+}
