@@ -29,10 +29,12 @@ int32_t bflt_load(int32_t inode,
 	int result;
 	char bflt_header[64];
 	uint32_t temp_int;
+	uint64_t file_offset;
 
 	if (bflt_debug) printk("Running BFLT executable!\n");
 
-	result=romfs_read_file(inode,0,&bflt_header,64);
+	file_offset=0;
+	result=romfs_read_file(inode,(char *)&bflt_header,64,&file_offset);
 	if (result<0) return result;
 
 	/* Find stack size */
@@ -78,10 +80,12 @@ int32_t bflt_reloc(int32_t inode, void *binary_address) {
 	uint32_t reloc_count,reloc_start;
 	uint32_t reloc_addr;
 	uint32_t old_val,new_val;
+	uint64_t file_offset;
 
 	if (bflt_debug) printk("Relocating BFLT executable!\n");
 
-	result=romfs_read_file(inode,0,&bflt_header,64);
+	file_offset=0;
+	result=romfs_read_file(inode,(char *)&bflt_header,64,&file_offset);
 	if (result<0) return result;
 
 	/* Find Number of Relocations */
@@ -98,7 +102,9 @@ int32_t bflt_reloc(int32_t inode, void *binary_address) {
 	if (bflt_debug) printk("BFLT: reloc_start=%x\n",reloc_start);
 
 	for(i=0;i<reloc_count;i++) {
-		result=romfs_read_file(inode,reloc_start+(i*4),&reloc_addr,4);
+		file_offset=reloc_start+(i*4);
+		result=romfs_read_file(inode,(char *)&reloc_addr,
+							4,&file_offset);
 		if (result<0) return -1;
 		reloc_addr=ntohl(reloc_addr);
 

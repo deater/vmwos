@@ -38,7 +38,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	uint32_t text_start,data_start,bss_start,bss_end;
 	uint32_t stack_size,total_program_size,total_ondisk_size;
-
+	uint64_t file_offset;
 
 	if (exec_debug) printk("Entering execve\n");
 
@@ -49,7 +49,8 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	}
 
 	/* See what kind of file it is */
-	result=romfs_read_file(inode,0,&magic,16);
+	file_offset=0;
+	result=romfs_read_file(inode,(char *)&magic,16,&file_offset);
 
 	/* see if a bFLT file */
 	if ((magic[0]=='b') && (magic[1]=='F') &&
@@ -79,7 +80,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 		/* Load executable */
 		/* Size does not include bss */
-		romfs_read_file(inode,text_start,binary_start,total_ondisk_size);
+		file_offset=text_start;
+		romfs_read_file(inode,
+				binary_start,total_ondisk_size,&file_offset);
 
 		/* Relocate values in the executable */
 		bflt_reloc(inode,binary_start);
@@ -120,7 +123,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		}
 
 		/* Load executable */
-		romfs_read_file(inode,text_start,binary_start,total_ondisk_size);
+		file_offset=text_start;
+		romfs_read_file(inode,
+			binary_start,total_ondisk_size,&file_offset);
 	}
 
 
