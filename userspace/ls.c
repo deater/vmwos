@@ -42,7 +42,7 @@ static int get_errno(int value) { return errno; }
 #define LS_NORMAL_COLOR	"\033[0m"	/* normal */
 
 
-
+#define MAX_PATH 256
 #define BUF_SIZE 1024
 
 static int print_date(long int s) {
@@ -176,12 +176,20 @@ static unsigned int ilog10(unsigned int value) {
 		0;
 }
 
-static void list_file_long(char *name, int maxsize) {
+static void list_file_long(char *name, char *path, int maxsize) {
 
 	struct stat stat_buf;
 	int padding,i;
+	char full_path[MAX_PATH];
 
-	stat(name,&stat_buf);
+	if (path==NULL) {
+		snprintf(full_path,MAX_PATH,"%s",name);
+	}
+	else {
+		snprintf(full_path,MAX_PATH,"%s/%s",path,name);
+	}
+
+	stat(full_path,&stat_buf);
 	print_permissions(stat_buf.st_mode);
 	printf(" %2d %d %d ",
 		stat_buf.st_nlink,
@@ -205,6 +213,7 @@ static void list_file_long(char *name, int maxsize) {
 static int ls_long(char *path) {
 
 	int fd,result;
+	char full_path[MAX_PATH];
 	char buf[BUF_SIZE];
 	int nread;
 	int offset;
@@ -222,7 +231,7 @@ static int ls_long(char *path) {
 
 	/* handle if it's not a directory */
 	if ( (stat_buf.st_mode&S_IFMT)!=S_IFDIR) {
-		list_file_long(path,stat_buf.st_size);
+		list_file_long(path,NULL,stat_buf.st_size);
 		return 0;
 	}
 
@@ -246,7 +255,8 @@ static int ls_long(char *path) {
 		offset=0;
 		while(offset<nread) {
 			d=(struct vmwos_dirent *)(buf+offset);
-			stat(d->d_name,&stat_buf);
+			snprintf(full_path,MAX_PATH,"%s/%s",path,d->d_name);
+			stat(full_path,&stat_buf);
 			if (stat_buf.st_size>max_len) max_len=stat_buf.st_size;
 
 			offset+=d->d_reclen;
@@ -275,7 +285,7 @@ static int ls_long(char *path) {
 		while(offset<nread) {
 			d=(struct vmwos_dirent *)(buf+offset);
 //			printf("Inode: %ld\n",d->d_ino);
-			list_file_long(d->d_name,max_len);
+			list_file_long(d->d_name,path,max_len);
 			offset+=d->d_reclen;
 		}
 	}
@@ -290,6 +300,7 @@ static int ls_long(char *path) {
 static int ls_plain(char *path) {
 
 	int fd,result;
+	char full_path[MAX_PATH];
 	char buf[BUF_SIZE];
 	int nread;
 	int offset;
@@ -363,7 +374,8 @@ static int ls_plain(char *path) {
 		offset=0;
 		while(offset<nread) {
 			d=(struct vmwos_dirent *)(buf+offset);
-			stat(d->d_name,&stat_buf);
+			snprintf(full_path,MAX_PATH,"%s/%s",path,d->d_name);
+			stat(full_path,&stat_buf);
 			print_file_color(stat_buf.st_mode, d->d_name);
 			offset+=d->d_reclen;
 			whichcol++;
