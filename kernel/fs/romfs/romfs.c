@@ -574,7 +574,7 @@ int32_t romfs_write_file(uint32_t inode,
 
 static struct superblock_operations romfs_sb_ops = {
 	.statfs = romfs_statfs,
-
+	.lookup_inode = romfs_lookup_inode,
 };
 
 

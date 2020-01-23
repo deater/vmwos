@@ -23,11 +23,9 @@ static int debug=0;
 static struct file_object file_objects[MAX_OPEN_FILES];
 
 struct file_object_operations file_ops= {
-	romfs_read_file,	/* read() */
-	romfs_write_file,	/* write() */
-	llseek_generic,		/* llseek() */
-	NULL,			/* ioctl() */
-	NULL			/* open() */
+	.read   = romfs_read_file,
+	.write  = romfs_write_file,
+	.llseek = llseek_generic,
 };
 
 int32_t file_object_free(struct file_object *file) {

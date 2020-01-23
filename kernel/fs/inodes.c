@@ -12,8 +12,6 @@
 #include "fs/inodes.h"
 #include "fs/superblock.h"
 
-#include "fs/romfs/romfs.h"
-
 #include "processes/process.h"
 
 static int debug=0;
@@ -87,7 +85,7 @@ int32_t get_inode(const char *pathname, struct inode_type *inode) {
 	/* point one past leading slash */
 	ptr=full_path+1;
 
-	result=romfs_lookup_inode(inode,ptr);
+	sb->sb_ops.lookup_inode(inode,ptr);
 
 	return result;
 }

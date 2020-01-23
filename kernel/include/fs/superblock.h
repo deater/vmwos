@@ -29,7 +29,8 @@ struct superblock_operations {
 //	void (*put_super) (struct super_block *);
 //	void (*write_super) (struct super_block *);
 //	int (*sync_fs) (struct super_block *, int);
-	int (*statfs) (struct superblock_type *, struct vmwos_statfs *);
+	int32_t (*statfs) (struct superblock_type *, struct vmwos_statfs *);
+	int32_t (*lookup_inode) (struct inode_type *, const char *);
 //	int (*remount_fs) (struct super_block *, int *, char *);
 //	void (*clear_inode) (struct inode *);
 //	void (*umount_begin) (struct super_block *);
