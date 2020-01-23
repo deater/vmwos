@@ -26,11 +26,7 @@ static int32_t root_dir=0;
 #define MAX_OPEN_FILES	64
 
 
-struct file_object {
-	uint32_t valid;
-	uint32_t inode;
-	uint64_t file_ptr;
-} file_objects[MAX_OPEN_FILES];
+static struct file_object file_objects[MAX_OPEN_FILES];
 
 struct file_object_operations {
 	int32_t (*read) (uint32_t, char *, uint32_t, uint64_t *);
@@ -46,7 +42,7 @@ struct file_object_operations {
 struct file_object_operations file_ops= {
 	romfs_read_file,	/* read() */
 	romfs_write_file,	/* write() */
-	NULL,			/* llseek() */
+	llseek_generic,		/* llseek() */
 	NULL,			/* ioctl() */
 	NULL			/* open() */
 };
@@ -67,7 +63,8 @@ int32_t file_object_allocate(uint32_t inode) {
 		if (file_objects[index].valid==0) {
 			file_objects[index].valid=1;
 			file_objects[index].inode=inode;
-			file_objects[index].file_ptr=0;
+			file_objects[index].file_offset=0;
+			file_objects[index].count=0;
 			break;
 		}
 		index++;
@@ -215,7 +212,7 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 		result=file_ops.read(file_objects[fd].inode,
 					buf,count,
-					&file_objects[fd].file_ptr);
+					&file_objects[fd].file_offset);
 
 		/* Helder adjusts file_ptr for us */
 
@@ -249,7 +246,7 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 		result=file_ops.write(file_objects[fd].inode,
 					buf,count,
-					&file_objects[fd].file_ptr);
+					&file_objects[fd].file_offset);
 	}
 	return result;
 }
@@ -330,7 +327,7 @@ int32_t getdents_syscall(uint32_t fd,
 		}
 
 		result=	romfs_getdents(file_objects[fd].inode,
-					&(file_objects[fd].file_ptr),
+					&(file_objects[fd].file_offset),
 					dirp,count);
 	}
 	return result;
@@ -389,8 +386,36 @@ int32_t statfs_syscall(const char *path, struct vmwos_statfs *buf) {
 	return romfs_statfs(&superblock_table[0],buf);
 }
 
+
+int64_t llseek_generic(struct file_object *file,
+		int64_t offset, int32_t whence) {
+
+	if (file==NULL) return -EBADF;
+
+	switch(whence) {
+		case SEEK_SET:
+			file->file_offset=offset;
+			break;
+		case SEEK_CUR:
+			file->file_offset+=offset;
+			break;
+		case SEEK_END:
+			/* FIXME: need to get size from inode */
+			return -ENOSYS;
+			break;
+		default:
+			return -EINVAL;
+	}
+
+	return file->file_offset;
+}
+
+
 int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
 
+	int64_t result;
 
-	return -ENOSYS;
+	result=file_ops.llseek(&file_objects[fd],offset,whence);
+
+	return result;
 }

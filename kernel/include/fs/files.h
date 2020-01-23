@@ -1,3 +1,10 @@
+struct file_object {
+        uint64_t file_offset;
+        uint32_t valid;
+        uint32_t inode;
+        uint32_t count;
+};
+
 /* We do things in hex in vmwos, none of this octal nonsense */
 #define S_IFMT		0xf000	/* mask			*/
 #define S_IFSOCK	0xc000	/* socket		*/
@@ -72,4 +79,12 @@ int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence);
 void file_objects_init(void);
 int32_t get_inode(const char *pathname);
 
+
+#define SEEK_SET	0	/* Seek from beginning of file */
+#define SEEK_CUR	1	/* Seek from current position  */
+#define SEEK_END	2	/* Seek from end of file       */
+
+
+int64_t llseek_generic(struct file_object *file,
+                int64_t offset, int32_t whence);
 
