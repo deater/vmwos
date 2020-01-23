@@ -14,7 +14,10 @@ static int bflt_debug=0;
 #include "drivers/block/ramdisk.h"
 
 #include "fs/files.h"
+#include "fs/inodes.h"
+#include "fs/superblock.h"
 #include "fs/romfs/romfs.h"
+
 
 
 #include "processes/bflt_loader.h"

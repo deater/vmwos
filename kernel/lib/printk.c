@@ -232,14 +232,14 @@ int serial_printk(char *string,...) {
 
 }
 
-int sprintf(char *string, const char *fmt, ...) {
+int snprintf(char *string, int32_t len, const char *fmt, ...) {
 
 	int result;
 
 	va_list argp;
 	va_start(argp, fmt);
 
-	result=vsnprintf(string,MAX_PRINT_SIZE,fmt,argp);
+	result=vsnprintf(string,len,fmt,argp);
 
 	va_end(argp);
 

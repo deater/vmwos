@@ -1,56 +1,29 @@
+#define MAX_FILENAME_SIZE	256
+#define	MAX_PATH_LEN		1024
+#define MAX_SUBDIR_DEPTH	16
+
+#define MAX_FD_PER_PROC 8
+#define MAX_OPEN_FILES  64
+
+struct file_object_operations;
+
 struct file_object {
         uint64_t file_offset;
+	struct file_operations *fops;
         uint32_t valid;
         uint32_t inode;
         uint32_t count;
+	char name[MAX_PATH_LEN];
 };
 
-/* We do things in hex in vmwos, none of this octal nonsense */
-#define S_IFMT		0xf000	/* mask			*/
-#define S_IFSOCK	0xc000	/* socket		*/
-#define S_IFLNK		0xa000	/* symbolic link	*/
-#define S_IFREG		0x8000	/* regular file		*/
-#define S_IFBLK		0x6000	/* block device		*/
-#define S_IFDIR		0x4000	/* directory		*/
-#define S_IFCHR		0x2000	/* character device	*/
-#define S_IFIFO		0x1000	/* FIFO			*/
-
-
-struct vmwos_stat {
-	uint32_t	st_dev;		/* device containing file */
-	int32_t		st_ino;		/* inode number */
-	int32_t		st_mode;	/* protection bits */
-	int32_t		st_nlink;	/* hard links */
-	int32_t		st_uid;		/* uid of owner */
-	int32_t		st_gid;		/* group id of owner */
-	int32_t		st_rdev;	/* device ID (if special) */
-	uint32_t	st_size;	/* total size, bytes */
-	uint32_t	st_blksize;     /* I/O blocksize */
-	uint32_t	st_blocks;      /* number of blocks allocated */
-	uint32_t	st_atime;	/* access time */
-	uint32_t	st_mtime;	/* modification time */
-	uint32_t	st_ctime;	/* status change time */
-};
-
-struct vmwos_statfs {
-	uint32_t f_type;	/* Filesystem type */
-	uint32_t f_bsize;	/* Filesystem blocksize */
-	uint32_t f_blocks;	/* Total blocks */
-	uint32_t f_bfree;	/* Free blocks */
-	uint32_t f_bavail;	/* Free blocks avail to user */
-	uint32_t f_files;	/* Total file nodes */
-	uint32_t f_ffree;	/* Free file nodes */
-	uint32_t f_fsid;	/* Filesystem id */
-	uint32_t f_namelen;	/* Max filename length */
-	uint32_t f_frsize;	/* Fragment size */
-	uint32_t f_flags;	/* Flags */
-	uint32_t padding[5];
-
-};
-
-struct superblock_t {
-	uint32_t size;
-	uint32_t free;
+struct file_object_operations {
+        int32_t (*read) (uint32_t, char *, uint32_t, uint64_t *);
+        int32_t (*write) (uint32_t, const char *, uint32_t, uint64_t *);
+        int64_t (*llseek) (struct file_object *, int64_t, int32_t);
+//        int (*readdir) (struct file *, void *, filldir_t);
+        int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
+        int32_t (*open) (int32_t *, struct file_object *);
+//        int (*flush) (struct file *);
 };
 
 struct vmwos_dirent {
@@ -62,14 +35,20 @@ struct vmwos_dirent {
 
 
 int32_t close_syscall(uint32_t fd);
+
+#define O_RDONLY        0x0000
+#define O_WRONLY        0x0001
+#define O_RDWR          0x0002
+#define O_CREAT         0x0040
+#define O_EXCL          0x0080
+#define O_NOCTTY        0x0100
+#define O_TRUNC         0x0200
+#define O_APPEND        0x0400
+#define O_NONBLOCK      0x0800
+
 int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode);
 int32_t read_syscall(uint32_t fd, void *buf, uint32_t count);
 int32_t write_syscall(uint32_t fd, void *buf, uint32_t count);
-int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf);
-int32_t statfs_syscall(const char *path, struct vmwos_statfs *buf);
-int32_t mount_syscall(const char *source, const char *target,
-	const char *filesystemtype, uint32_t mountflags,
-	const void *data);
 int32_t getdents_syscall(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
 int32_t chdir_syscall(const char *pathname);
 char *getcwd_syscall(char *buf, size_t size);
@@ -77,8 +56,6 @@ int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence);
 
 
 void file_objects_init(void);
-int32_t get_inode(const char *pathname);
-
 
 #define SEEK_SET	0	/* Seek from beginning of file */
 #define SEEK_CUR	1	/* Seek from current position  */

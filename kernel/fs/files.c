@@ -9,35 +9,18 @@
 #include "drivers/console/console_io.h"
 
 #include "fs/files.h"
+#include "fs/inodes.h"
+#include "fs/superblock.h"
+
 #include "fs/romfs/romfs.h"
 
 #include "processes/process.h"
 
-
-
-
 static int debug=0;
 
-static int32_t root_dir=0;
-
-#define MAX_FILENAME_SIZE 256
-
-#define MAX_FD_PER_PROC	8
-#define MAX_OPEN_FILES	64
-
+int32_t root_dir=0;
 
 static struct file_object file_objects[MAX_OPEN_FILES];
-
-struct file_object_operations {
-	int32_t (*read) (uint32_t, char *, uint32_t, uint64_t *);
-        int32_t (*write) (uint32_t, const char *, uint32_t, uint64_t *);
-	int64_t (*llseek) (struct file_object *, int64_t, int32_t);
-//        int (*readdir) (struct file *, void *, filldir_t);
-        int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
-	int32_t (*open) (int32_t *, struct file_object *);
-//        int (*flush) (struct file *);
-};
-
 
 struct file_object_operations file_ops= {
 	romfs_read_file,	/* read() */
@@ -166,6 +149,87 @@ int32_t close_syscall(uint32_t fd) {
 
 }
 
+#if 0
+static int make_path_canonical(const char *pathname, char *canon_name) {
+
+	char temp_path[MAX_PATH_LEN];
+	int i,j,len,out_offset;
+	int slashes[MAX_SUBDIR_DEPTH];
+	int num_slashes=0;
+	int total_dots=0;
+
+	/* Make path absolute */
+
+	if (pathname[0]=='/') {
+		strncpy(temp_path,pathname,MAX_PATH_LEN);
+	}
+	else {
+		/* FIXME */
+		snprintf(temp_path,MAX_PATH_LEN,"%s/%s","/home",pathname);
+	}
+
+	/* remove all . and .. */
+
+	len=strlen(temp_path);
+	out_offset=0;
+	num_slashes=0;
+
+	i=0;
+	while(1) {
+		/* Handle slashes, remove duplicate slashes */
+		if (temp_path[i]=='/') {
+			canon_name[out_offset]=temp_path[i];
+			slashes[num_slashes]=out_offset;
+			num_slashes++;
+			out_offset++;
+			i++;
+			while(temp_path[i]=='/') i++;
+
+			/* Handle dots */
+			if (temp_path[i]=='.') {
+				total_dots=0;
+				j=i;
+				while(1) {
+					if (temp_path[j]=='.') {
+						total_dots++;
+					}
+					else {
+						if (temp_path[j]!='/') {
+							total_dots=0;
+						}
+						break;
+					}
+					j++;
+				}
+				printk("Total dots=%d\n",total_dots);
+				/* . , current dir, skip */
+				if (total_dots==1) {
+					i+=total_dots+1;
+				} else
+				/* . , current dir, go down a dir */
+				if (total_dots==2) {
+					i+=total_dots+1;
+					num_slashes--;
+					out_offset=slashes[num_slashes-1];
+				}
+			}
+		}
+
+
+
+		canon_name[out_offset]=temp_path[i];
+		out_offset++;
+		i++;
+		if (i>len) break;
+	}
+	(void)slashes;
+	return 0;
+}
+#endif
+
+/****************************************************/
+/* open                                             */
+/****************************************************/
 
 int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 
@@ -175,6 +239,17 @@ int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 	if (debug) {
 		printk("### Trying to open %s\n",pathname);
 	}
+
+#if 0
+	result=make_path_canonical(pathname,canon_name);
+	if (result<0) {
+		return -E2BIG;
+	}
+
+	if (debug) {
+		printk("### Canonical name is %s\n",canon_name);
+	}
+#endif
 
 	inode=get_inode(pathname);
 	if (inode<0) {

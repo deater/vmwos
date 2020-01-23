@@ -3,6 +3,7 @@
 /* /usr/include/asm-generic/errno-base.h		*/
 
 #define ENOENT	2	/* File not found..... */
+#define E2BIG	7	/* Argument too big... */
 #define EBADF	9	/* Bad file descriptor */
 #define ECHILD	10      /* No child process... */
 #define ENOMEM	12	/* Not enough memory.. */

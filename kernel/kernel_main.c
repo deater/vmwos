@@ -15,6 +15,7 @@
 #include "drivers/audio/audio.h"
 
 #include "fs/files.h"
+#include "fs/superblock.h"
 
 #include "memory/memory.h"
 

@@ -104,9 +104,9 @@ int32_t ftruncate(int32_t fd, int64_t length);
 #define SEEK_CUR	1	/* Seek from current position	*/
 #define SEEK_END	2	/* Seek from end of file	*/
 
-int32_t lseek64(int32_t fd, unsigned long offset_high,
-                   unsigned long offset_low, loff_t *result,
-                   unsigned int whence);
+int32_t lseek64(int32_t fd, uint32_t offset_high,
+                   uint32_t offset_low, uint64_t *result,
+                   uint32_t whence);
 
 
 int32_t vfork(void);

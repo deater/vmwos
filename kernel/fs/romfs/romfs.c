@@ -28,9 +28,11 @@
 #include "drivers/block/ramdisk.h"
 
 #include "fs/files.h"
+#include "fs/inodes.h"
+#include "fs/superblock.h"
 #include "fs/romfs/romfs.h"
 
-#define MAX_FILENAME_SIZE	256
+#define ROMFS_MAX_FILENAME_SIZE	256
 
 static int debug=0;
 
@@ -261,7 +263,7 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 	int temp_int;
 	int32_t inode=0,next=0,spec=0;
 	uint32_t offset=dir_inode; /* file_headers_start; */
-	char filename[MAX_FILENAME_SIZE];
+	char filename[ROMFS_MAX_FILENAME_SIZE];
 
 	if (debug) {
 		printk("romfs_get_inode: Trying to get inode for file %s\n",name);
@@ -295,11 +297,11 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 		/* Get current filename, which is in chunks of 16 bytes */
 		offset+=16;
 
-		romfs_read_string(offset,filename,MAX_FILENAME_SIZE);
+		romfs_read_string(offset,filename,ROMFS_MAX_FILENAME_SIZE);
 		if (debug) printk("romfs_get_inode: %s is %s? %x\n",name,filename,inode);
 
 		/* Match filename */
-		if (!strncmp(name,filename,MAX_FILENAME_SIZE)) {
+		if (!strncmp(name,filename,ROMFS_MAX_FILENAME_SIZE)) {
 
 			/* Follow any hard links */
 			inode=romfs_inode_follow_links(inode);
@@ -398,7 +400,7 @@ int32_t romfs_statfs(struct superblock_t *superblock, struct vmwos_statfs *buf) 
 	buf->f_files=10;	/* Total inodes */
 	buf->f_ffree=0;		/* Free inodes */
 	buf->f_fsid=0;		/* Filesystem ID */
-	buf->f_namelen=MAX_FILENAME_SIZE;
+	buf->f_namelen=ROMFS_MAX_FILENAME_SIZE;
 				/* Maximum length of filenames */
 	buf->f_frsize=0;	/* Fragment size */
 	buf->f_flags=0;		/* Mount flags */

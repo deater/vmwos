@@ -15,6 +15,7 @@
 #include "time/time.h"
 
 #include "fs/files.h"
+#include "fs/inodes.h"
 
 void enter_userspace(void) {
 
