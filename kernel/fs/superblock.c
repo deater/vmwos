@@ -16,7 +16,7 @@
 
 #include "processes/process.h"
 
-//static int debug=1;
+static int debug=0;
 
 struct superblock_t superblock_table[8];
 
@@ -32,6 +32,7 @@ int32_t mount_syscall(const char *source, const char *target,
 		result=romfs_mount(&superblock_table[0]);
 		if (result>=0) {
 			root_dir=result;
+			if (debug) printk("ROOT_DIR=%x\n",root_dir);
 			result=0;
 		}
 	}

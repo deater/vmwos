@@ -18,17 +18,19 @@
 
 static int debug=0;
 
-static int32_t root_dir=0;
-
+extern int32_t root_dir;
 
 /* Split a filename into the path part and the actual name part */
-static const char *split_filename(const char *start_ptr, char *name,
+const char *split_filename(const char *start_ptr, char *name,
 			int len) {
 
 	const char *ptr=start_ptr;
 	char *out=name;
 	int length=0;
 
+	if (debug) {
+		printk("Splitting %s\n",start_ptr);
+	}
 	while(1) {
 		if (*ptr==0) {
 			*out=0;
@@ -53,48 +55,37 @@ static const char *split_filename(const char *start_ptr, char *name,
 	return ptr;
 }
 
-int32_t get_inode(const char *pathname) {
+/* Starts at root directory */
+/* searches for current component */
+/* If directory, continues down */
 
-	int32_t inode;
-	char name[MAX_FILENAME_SIZE];
-	const char *ptr=pathname;
-	int32_t dir_inode;
+int32_t get_inode(const char *pathname, struct inode_type *inode) {
+
+	int32_t result;
+	const char *ptr;
+	char full_path[MAX_PATH_LEN];
+
+	/* FIXME: search to see which filesystem we are in */
+	/* deepest is # of /s? */
 
 	/* start at root directory */
-	if (*ptr=='/') {
-		dir_inode=root_dir;
-		ptr++;
+	inode->number=root_dir;
+
+	/* expand path */
+	if (pathname[0]=='/') {
+		strncpy(full_path,pathname,MAX_PATH_LEN);
 	}
 	else {
-		dir_inode=current_proc[get_cpu()]->current_dir;
+		/* FIXME: prepend current working directory */
+		snprintf(full_path,MAX_PATH_LEN,"%s/%s","/home",pathname);
 	}
 
-	if (*ptr==0) {
-		return dir_inode;
-	}
+	/* point one past leading slash */
+	ptr=full_path+1;
 
-	while(1) {
-		if (debug) {
-			printk("get_inode: about to split %s\n",ptr);
-		}
+	result=romfs_lookup_inode(inode,ptr);
 
-		ptr=split_filename(ptr,name,MAX_FILENAME_SIZE);
-
-		if (debug) {
-			printk("get_inode: di=%x path_part %s\n",
-							dir_inode,name);
-		}
-
-		if (ptr==NULL) break;
-		dir_inode=romfs_get_inode(dir_inode,name);
-	}
-
-	inode=romfs_get_inode(dir_inode,name);
-	if (inode<0) {
-		if (debug) printk("get_inode: error opening %s\n",name);
-	}
-
-	return inode;
+	return result;
 }
 
 #if 0
@@ -177,19 +168,31 @@ static int make_path_canonical(const char *pathname, char *canon_name) {
 
 int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf) {
 
-	int32_t inode;
 	int32_t result;
+	struct inode_type inode;
 
 	if (debug) {
 		printk("### Trying to stat %s\n",pathname);
 	}
 
-	inode=get_inode(pathname);
-	if (inode<0) {
+	result=get_inode(pathname,&inode);
+	if (result<0) {
 		return -ENOENT;
 	}
 
-	result=romfs_stat(inode, buf);
+	buf->st_dev=inode.device;
+	buf->st_ino=inode.number;
+	buf->st_mode=inode.mode;
+	buf->st_nlink=inode.hard_links;
+	buf->st_uid=inode.uid;
+	buf->st_gid=inode.gid;
+	buf->st_rdev=inode.rdev;
+	buf->st_size=inode.size;
+	buf->st_blksize=inode.blocksize;
+	buf->st_blocks=inode.blocks;
+	buf->st_atime=inode.atime;
+	buf->st_mtime=inode.mtime;
+	buf->st_ctime=inode.ctime;
 
 	return result;
 }

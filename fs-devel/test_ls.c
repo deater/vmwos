@@ -213,7 +213,7 @@ static void list_file_long(char *name, char *path, int maxsize) {
 	padding=ilog10(maxsize)-ilog10(stat_buf.st_size);
 	for(i=0;i<padding;i++) printf(" ");
 
-	printf("%d ",stat_buf.st_size);
+	printf("%lld ",stat_buf.st_size);
 
 	print_date(stat_buf.st_mtime);
 

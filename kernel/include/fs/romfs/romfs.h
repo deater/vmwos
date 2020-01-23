@@ -19,9 +19,12 @@ struct romfs_file_header_t {
 
 int32_t open_romfs_file(char *name,
 		struct romfs_file_header_t *file);
-int32_t romfs_get_inode(int32_t dir_inode, const char *name);
+int32_t romfs_get_inode(int32_t inode_number, struct inode_type *inode);
 int32_t romfs_mount(struct superblock_t *superblock);
-int32_t romfs_stat(int32_t inode, struct vmwos_stat *buf);
+
+int32_t romfs_read_inode(struct inode_type *inode);
+int32_t romfs_lookup_inode(struct inode_type *dir_inode, const char *name);
+
 int32_t romfs_getdents(uint32_t dir_inode,
 		uint64_t *current_progress, void *buf,uint32_t size);
 int32_t romfs_statfs(struct superblock_t *superblock,struct vmwos_statfs *buf);

@@ -160,33 +160,36 @@ inode_link_loop:
 
 }
 
-int32_t romfs_stat(int32_t inode, struct vmwos_stat *buf) {
+/* Read data from inode->number into inode */
+int32_t romfs_read_inode(struct inode_type *inode) {
 
 	int32_t header_offset,size,temp_int,read_count=0;
 	int32_t spec_info=0,type=0;
+	int32_t number;
 
 retry_inode:
 
-	if (debug) printk("romfs: Attempting to stat inode %x\n",inode);
+	number=inode->number;
+
+	if (debug) printk("romfs: Attempting to stat inode %x\n",number);
 
 	/* Clear all to zero */
-	memset(buf,0,sizeof(struct vmwos_stat));
+	memset(inode,0,sizeof(struct inode_type));
 
 	/* Set inode value */
-	buf->st_ino=inode;
+	inode->number=number;
 
 	/* Default mode is global read/write */
 		/* -rw-rw-rw- */
-	buf->st_mode=0666;
+	inode->mode=0666;
 
-
-	header_offset=inode;		/* 0: Next */
+	header_offset=inode->number;		/* 0: Next */
 	romfs_read_noinc(&temp_int,header_offset,4);
 	type=ntohl(temp_int);
 
 	/* check if executable */
 	if (type&0x8) {
-		buf->st_mode|=0111;
+		inode->mode|=0111;
 	}
 
 	type&=0x7;
@@ -202,36 +205,36 @@ retry_inode:
 			break;
 		case 1: /* directory */
 			if (debug) printk("DIRECTORY\n");
-			buf->st_mode|=S_IFDIR;
+			inode->mode|=S_IFDIR;
 			/* spec_info is first file in subdir's header */
 			break;
 		case 2: /* regular file */
 			/* sinfo must be zero */
 			if (debug) printk("REGULAR FILE\n");
-			buf->st_mode|=S_IFREG;
+			inode->mode|=S_IFREG;
 			break;
 		case 3: /* symbolic link */
 			/* sinfo must be zero */
 			if (debug) printk("SYMBOLIC_LINK\n");
-			buf->st_mode|=S_IFLNK;
+			inode->mode|=S_IFLNK;
 			break;
 		case 4: /* block device */
 			if (debug) printk("BLOCK DEVICE\n");
-			buf->st_mode|=S_IFBLK;
-			buf->st_rdev=spec_info;
+			inode->mode|=S_IFBLK;
+			inode->rdev=spec_info;
 			break;
 		case 5: /* char device */
 			if (debug) printk("CHAR DEVICE\n");
-			buf->st_mode|=S_IFCHR;
-			buf->st_rdev=spec_info;
+			inode->mode|=S_IFCHR;
+			inode->rdev=spec_info;
 			break;
 		case 6: /* socket */
 			if (debug) printk("SOCKET\n");
-			buf->st_mode|=S_IFSOCK;
+			inode->mode|=S_IFSOCK;
 			break;
 		case 7: /* fifo */
 			if (debug) printk("FIFO\n");
-			buf->st_mode|=S_IFIFO;
+			inode->mode|=S_IFIFO;
 			break;
 		default:
 			break;
@@ -239,14 +242,14 @@ retry_inode:
 
 	/* was hard link, let's follow it */
 	if (type==0) {
-		inode=spec_info;
+		inode->number=spec_info;
 		goto retry_inode;
 	}
 
 	header_offset+=4;		/* 8: Size */
 	romfs_read_noinc(&temp_int,header_offset,4);
 	size=ntohl(temp_int);
-	buf->st_size=size;
+	inode->size=size;
 
 	header_offset+=4;		/* 12: Checksum */
 
@@ -258,15 +261,20 @@ retry_inode:
 }
 
 /* We cheat and just use the file header offset as the inode */
-int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
+static int32_t romfs_lookup_inode_dir(struct inode_type *dir_inode,
+		const char *name) {
 
 	int temp_int;
-	int32_t inode=0,next=0,spec=0;
-	uint32_t offset=dir_inode; /* file_headers_start; */
+	int32_t inode_number=0,next=0,spec=0;
+	uint32_t offset;
 	char filename[ROMFS_MAX_FILENAME_SIZE];
 
+	offset=dir_inode->number;
+
 	if (debug) {
-		printk("romfs_get_inode: Trying to get inode for file %s\n",name);
+		printk("romfs_lookup_inode_dir: "
+				"Trying to get inode for file %s in dir %x\n",
+				name,offset);
 	}
 
 	/* Check to make sure our dir_inode is in fact a dir_inode */
@@ -279,7 +287,7 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 	if ( (next&0x7)!=1) {
 		if (debug) {
 			printk("romfs_get_inode: inode %x (%x) is not a dir\n",
-				next,dir_inode);
+				next,offset);
 		}
 		return -ENOTDIR;
 	}
@@ -288,7 +296,7 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 	offset=spec;
 
 	while(1) {
-		inode=offset;
+		inode_number=offset;
 
 		/* Get pointer to next file */
 		romfs_read_noinc(&temp_int,offset,4);
@@ -298,15 +306,18 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 		offset+=16;
 
 		romfs_read_string(offset,filename,ROMFS_MAX_FILENAME_SIZE);
-		if (debug) printk("romfs_get_inode: %s is %s? %x\n",name,filename,inode);
+		if (debug) printk("romfs_get_inode: %s is %s? %x\n",
+				name,filename,inode_number);
 
 		/* Match filename */
 		if (!strncmp(name,filename,ROMFS_MAX_FILENAME_SIZE)) {
 
 			/* Follow any hard links */
-			inode=romfs_inode_follow_links(inode);
+			inode_number=romfs_inode_follow_links(inode_number);
 
-			return inode;
+			dir_inode->number=inode_number;
+
+			return 0;
 		}
 
 		offset=next;
@@ -315,6 +326,37 @@ int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 	}
 
 	return -1;
+}
+
+/* We cheat and just use the file header offset as the inode */
+int32_t romfs_lookup_inode(struct inode_type *inode, const char *name) {
+
+	const char *ptr;
+	char dir[MAX_FILENAME_SIZE];
+	int32_t result;
+
+	ptr=name;
+
+	while(1) {
+		if (debug) {
+			printk("romfs_lookup_inode: about to split %s\n",ptr);
+		}
+
+		ptr=split_filename(ptr,dir,MAX_FILENAME_SIZE);
+
+		if (debug) {
+			printk("romfs path_part %s\n",dir);
+		}
+
+                romfs_lookup_inode_dir(inode,dir);
+
+                if (ptr==NULL) break;
+
+        }
+
+	result=romfs_read_inode(inode);
+
+	return result;
 }
 
 static uint32_t romfs_get_size(struct superblock_t *superblock) {

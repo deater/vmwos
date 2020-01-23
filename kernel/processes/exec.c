@@ -28,8 +28,7 @@ static int exec_summary_debug=1;
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	int result,i;
-	int32_t inode;
-	struct vmwos_stat stat_info;
+	struct inode_type inode;
 	void *binary_start,*stack_page;
 	int32_t argc=0;
 	char *argv_location;
@@ -44,21 +43,21 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	if (exec_debug) printk("Entering execve\n");
 
-	inode=get_inode(filename);
-	if (inode<0) {
+	result=get_inode(filename,&inode);
+	if (result<0) {
 		if (exec_debug) printk("Error get_inode(%s)\n",filename);
-		return inode;
+		return result;
 	}
 
 	/* See what kind of file it is */
 	file_offset=0;
-	result=romfs_read_file(inode,(char *)&magic,16,&file_offset);
+	result=romfs_read_file(inode.number,(char *)&magic,16,&file_offset);
 
 	/* see if a bFLT file */
 	if ((magic[0]=='b') && (magic[1]=='F') &&
 		(magic[2]=='L') && (magic[3]=='T')) {
 
-		result=bflt_load(inode,&stack_size,
+		result=bflt_load(inode.number,&stack_size,
 			&text_start,&data_start,&bss_start,
 			&bss_end,&total_ondisk_size,&total_program_size);
 
@@ -83,11 +82,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		/* Load executable */
 		/* Size does not include bss */
 		file_offset=text_start;
-		romfs_read_file(inode,
+		romfs_read_file(inode.number,
 				binary_start,total_ondisk_size,&file_offset);
 
 		/* Relocate values in the executable */
-		bflt_reloc(inode,binary_start);
+		bflt_reloc(inode.number,binary_start);
 
 	}
 	/* Otherwise, treat as raw binary */
@@ -98,15 +97,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		stack_size=DEFAULT_USER_STACK_SIZE;
 		if (exec_debug) printk("RAW: stack size = %d\n",stack_size);
 
-		result=romfs_stat(inode,&stat_info);
-		if (result<0) {
-			if (exec_debug) printk("Error stat()\n");
-			return result;
-		}
-
 		text_start=0;
-		total_ondisk_size=stat_info.st_size;
-		total_program_size=stat_info.st_size;
+		total_ondisk_size=inode.size;
+		total_program_size=inode.size;
 		if (exec_debug) printk("RAW: total size = %d\n",total_program_size);
 
 		/* Allocate stack */
@@ -126,7 +119,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 		/* Load executable */
 		file_offset=text_start;
-		romfs_read_file(inode,
+		romfs_read_file(inode.number,
 			binary_start,total_ondisk_size,&file_offset);
 	}
 

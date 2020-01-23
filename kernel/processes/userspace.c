@@ -41,12 +41,17 @@ void start_userspace(char *init_filename) {
 
 	struct process_control_block_type *init_process;
 	int32_t result;
+	struct inode_type inode;
 
 	init_process=process_create();
 	current_proc[0]=init_process;
 	/* Should this be NULL instead? */
 	init_process->parent=init_process;
-	init_process->current_dir=get_inode("/");
+
+	/* FIXME */
+	get_inode("/",&inode);
+	init_process->current_dir=inode.number;
+
 
 	result=execve(init_filename,NULL,NULL);
 	if (result<0) {

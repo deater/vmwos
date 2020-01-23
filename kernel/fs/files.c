@@ -63,82 +63,6 @@ int32_t file_object_allocate(uint32_t inode) {
 }
 
 
-/* Split a filename into the path part and the actual name part */
-static const char *split_filename(const char *start_ptr, char *name,
-			int len) {
-
-	const char *ptr=start_ptr;
-	char *out=name;
-	int length=0;
-
-	while(1) {
-		if (*ptr==0) {
-			*out=0;
-			return NULL;
-		}
-
-		if (length>=(len-1)) {
-			*out=0;
-			return NULL;
-		}
-
-		if (*ptr=='/') {
-			*out=0;
-			ptr++;
-			break;
-		}
-		*out=*ptr;
-		ptr++;
-		out++;
-		length++;
-	}
-	return ptr;
-}
-
-int32_t get_inode(const char *pathname) {
-
-	int32_t inode;
-	char name[MAX_FILENAME_SIZE];
-	const char *ptr=pathname;
-	int32_t dir_inode;
-
-	/* start at root directory */
-	if (*ptr=='/') {
-		dir_inode=root_dir;
-		ptr++;
-	}
-	else {
-		dir_inode=current_proc[get_cpu()]->current_dir;
-	}
-
-	if (*ptr==0) {
-		return dir_inode;
-	}
-
-	while(1) {
-		if (debug) {
-			printk("get_inode: about to split %s\n",ptr);
-		}
-
-		ptr=split_filename(ptr,name,MAX_FILENAME_SIZE);
-
-		if (debug) {
-			printk("get_inode: di=%x path_part %s\n",
-							dir_inode,name);
-		}
-
-		if (ptr==NULL) break;
-		dir_inode=romfs_get_inode(dir_inode,name);
-	}
-
-	inode=romfs_get_inode(dir_inode,name);
-	if (inode<0) {
-		if (debug) printk("get_inode: error opening %s\n",name);
-	}
-
-	return inode;
-}
-
 int32_t close_syscall(uint32_t fd) {
 
 	int32_t result;
@@ -149,83 +73,6 @@ int32_t close_syscall(uint32_t fd) {
 
 }
 
-#if 0
-static int make_path_canonical(const char *pathname, char *canon_name) {
-
-	char temp_path[MAX_PATH_LEN];
-	int i,j,len,out_offset;
-	int slashes[MAX_SUBDIR_DEPTH];
-	int num_slashes=0;
-	int total_dots=0;
-
-	/* Make path absolute */
-
-	if (pathname[0]=='/') {
-		strncpy(temp_path,pathname,MAX_PATH_LEN);
-	}
-	else {
-		/* FIXME */
-		snprintf(temp_path,MAX_PATH_LEN,"%s/%s","/home",pathname);
-	}
-
-	/* remove all . and .. */
-
-	len=strlen(temp_path);
-	out_offset=0;
-	num_slashes=0;
-
-	i=0;
-	while(1) {
-		/* Handle slashes, remove duplicate slashes */
-		if (temp_path[i]=='/') {
-			canon_name[out_offset]=temp_path[i];
-			slashes[num_slashes]=out_offset;
-			num_slashes++;
-			out_offset++;
-			i++;
-			while(temp_path[i]=='/') i++;
-
-			/* Handle dots */
-			if (temp_path[i]=='.') {
-				total_dots=0;
-				j=i;
-				while(1) {
-					if (temp_path[j]=='.') {
-						total_dots++;
-					}
-					else {
-						if (temp_path[j]!='/') {
-							total_dots=0;
-						}
-						break;
-					}
-					j++;
-				}
-				printk("Total dots=%d\n",total_dots);
-				/* . , current dir, skip */
-				if (total_dots==1) {
-					i+=total_dots+1;
-				} else
-				/* . , current dir, go down a dir */
-				if (total_dots==2) {
-					i+=total_dots+1;
-					num_slashes--;
-					out_offset=slashes[num_slashes-1];
-				}
-			}
-		}
-
-
-
-		canon_name[out_offset]=temp_path[i];
-		out_offset++;
-		i++;
-		if (i>len) break;
-	}
-	(void)slashes;
-	return 0;
-}
-#endif
 
 /****************************************************/
 /* open                                             */
@@ -234,29 +81,22 @@ static int make_path_canonical(const char *pathname, char *canon_name) {
 int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 
 	int32_t result;
-	int32_t inode;
+	struct inode_type inode;
 
 	if (debug) {
 		printk("### Trying to open %s\n",pathname);
 	}
 
-#if 0
-	result=make_path_canonical(pathname,canon_name);
+	result=get_inode(pathname,&inode);
 	if (result<0) {
-		return -E2BIG;
-	}
-
-	if (debug) {
-		printk("### Canonical name is %s\n",canon_name);
-	}
-#endif
-
-	inode=get_inode(pathname);
-	if (inode<0) {
 		return -ENOENT;
 	}
 
-	result=file_object_allocate(inode);
+	if (debug) {
+		printk("\tFound inode %x\n",inode.number);
+	}
+
+	result=file_object_allocate(inode.number);
 	if (result<0) {
 		return result;
 	}
@@ -326,48 +166,6 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 	return result;
 }
 
-int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf) {
-
-	int32_t inode;
-	int32_t result;
-
-	if (debug) {
-		printk("### Trying to stat %s\n",pathname);
-	}
-
-	inode=get_inode(pathname);
-	if (inode<0) {
-		return -ENOENT;
-	}
-
-	result=romfs_stat(inode, buf);
-
-	return result;
-}
-
-struct superblock_t superblock_table[8];
-
-int32_t mount_syscall(const char *source, const char *target,
-	const char *filesystemtype, uint32_t mountflags,
-	const void *data) {
-
-	int32_t result=0;
-
-	if (!strncmp(filesystemtype,"romfs",5)) {
-		result=romfs_mount(&superblock_table[0]);
-		if (result>=0) {
-			root_dir=result;
-			result=0;
-		}
-	}
-	else {
-		result=-ENODEV;
-	}
-
-	return result;
-}
-
-
 void file_objects_init(void) {
 	int i;
 
@@ -412,25 +210,19 @@ int32_t getdents_syscall(uint32_t fd,
 /* Change current working directory */
 int32_t chdir_syscall(const char *path) {
 
-	int32_t inode,result;
+	int32_t result;
+	struct inode_type inode;
 
-	struct vmwos_stat buf;
-
-	inode=get_inode(path);
-	if (inode<0) {
+	result=get_inode(path,&inode);
+	if (result<0) {
 		return -ENOENT;
 	}
 
-	result=romfs_stat(inode, &buf);
-	if (result<0) {
-		return result;
-	}
-
-	if ((buf.st_mode&S_IFMT)!=S_IFDIR) {
+	if ((inode.mode&S_IFMT)!=S_IFDIR) {
 		return -ENOTDIR;
 	}
 
-	current_proc[get_cpu()]->current_dir=inode;
+	current_proc[get_cpu()]->current_dir=inode.number;
 
 	return 0;
 }
@@ -439,6 +231,7 @@ int32_t chdir_syscall(const char *path) {
 /* Get name of current working directory */
 char *getcwd_syscall(char *buf, size_t size) {
 
+#if 0
 	struct vmwos_stat stat_buf;
 
 	int32_t inode,result;
@@ -448,19 +241,12 @@ char *getcwd_syscall(char *buf, size_t size) {
 	result=romfs_stat(inode, &stat_buf);
 
 	(void)result;
-
+#endif
 	strncpy(buf,"BROKEN",size);
 
 	return buf;
 
 }
-
-int32_t statfs_syscall(const char *path, struct vmwos_statfs *buf) {
-	/* FIXME: lookup path */
-
-	return romfs_statfs(&superblock_table[0],buf);
-}
-
 
 int64_t llseek_generic(struct file_object *file,
 		int64_t offset, int32_t whence) {

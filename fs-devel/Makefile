@@ -10,7 +10,7 @@ all:	test_df test_ls test_cat
 ######
 
 test_cat:	test_cat.o test_glue.o
-	$(CC) -o test_cat test_cat.o $(LFLAGS) $(FSA_LOC) test_glue.o
+	$(CC) -o test_cat test_cat.o $(LFLAGS) test_glue.o $(FSA_LOC)
 
 test_cat.o:	test_cat.c
 	$(CC) $(CFLAGS) -c test_cat.c
