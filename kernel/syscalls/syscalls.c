@@ -16,10 +16,9 @@
 #include "drivers/random/bcm2835_rng.h"
 #include "drivers/audio/audio.h"
 
+#include "fs/files.h"
 #include "fs/inodes.h"
 #include "fs/superblock.h"
-#include "fs/files.h"
-
 
 #include "time/time.h"
 

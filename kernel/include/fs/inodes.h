@@ -12,6 +12,7 @@ struct inode_type {
 	uint64_t	atime;		/* access time */
 	uint64_t	mtime;		/* modification time */
 	uint64_t	ctime;		/* status change time */
+	struct superblock_type *sb;	/* associated superblock */
 };
 
 

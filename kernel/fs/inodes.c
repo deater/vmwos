@@ -18,7 +18,7 @@
 
 static int debug=0;
 
-extern int32_t root_dir;
+//extern int32_t root_dir;
 
 /* Split a filename into the path part and the actual name part */
 const char *split_filename(const char *start_ptr, char *name,
@@ -64,12 +64,16 @@ int32_t get_inode(const char *pathname, struct inode_type *inode) {
 	int32_t result;
 	const char *ptr;
 	char full_path[MAX_PATH_LEN];
+	struct superblock_type *sb;
 
-	/* FIXME: search to see which filesystem we are in */
-	/* deepest is # of /s? */
+	sb=superblock_lookup(pathname);
+	if (sb==NULL) {
+		return -ENOENT;
+	}
 
 	/* start at root directory */
-	inode->number=root_dir;
+	inode->number=sb->root_dir;
+	inode->sb=sb;
 
 	/* expand path */
 	if (pathname[0]=='/') {
@@ -87,84 +91,6 @@ int32_t get_inode(const char *pathname, struct inode_type *inode) {
 
 	return result;
 }
-
-#if 0
-static int make_path_canonical(const char *pathname, char *canon_name) {
-
-	char temp_path[MAX_PATH_LEN];
-	int i,j,len,out_offset;
-	int slashes[MAX_SUBDIR_DEPTH];
-	int num_slashes=0;
-	int total_dots=0;
-
-	/* Make path absolute */
-
-	if (pathname[0]=='/') {
-		strncpy(temp_path,pathname,MAX_PATH_LEN);
-	}
-	else {
-		/* FIXME */
-		snprintf(temp_path,MAX_PATH_LEN,"%s/%s","/home",pathname);
-	}
-
-	/* remove all . and .. */
-
-	len=strlen(temp_path);
-	out_offset=0;
-	num_slashes=0;
-
-	i=0;
-	while(1) {
-		/* Handle slashes, remove duplicate slashes */
-		if (temp_path[i]=='/') {
-			canon_name[out_offset]=temp_path[i];
-			slashes[num_slashes]=out_offset;
-			num_slashes++;
-			out_offset++;
-			i++;
-			while(temp_path[i]=='/') i++;
-
-			/* Handle dots */
-			if (temp_path[i]=='.') {
-				total_dots=0;
-				j=i;
-				while(1) {
-					if (temp_path[j]=='.') {
-						total_dots++;
-					}
-					else {
-						if (temp_path[j]!='/') {
-							total_dots=0;
-						}
-						break;
-					}
-					j++;
-				}
-				printk("Total dots=%d\n",total_dots);
-				/* . , current dir, skip */
-				if (total_dots==1) {
-					i+=total_dots+1;
-				} else
-				/* . , current dir, go down a dir */
-				if (total_dots==2) {
-					i+=total_dots+1;
-					num_slashes--;
-					out_offset=slashes[num_slashes-1];
-				}
-			}
-		}
-
-
-
-		canon_name[out_offset]=temp_path[i];
-		out_offset++;
-		i++;
-		if (i>len) break;
-	}
-	(void)slashes;
-	return 0;
-}
-#endif
 
 int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf) {
 

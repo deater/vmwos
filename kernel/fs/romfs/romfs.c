@@ -163,9 +163,12 @@ inode_link_loop:
 /* Read data from inode->number into inode */
 int32_t romfs_read_inode(struct inode_type *inode) {
 
-	int32_t header_offset,size,temp_int,read_count=0;
+	int32_t header_offset,size,temp_int;
 	int32_t spec_info=0,type=0;
 	int32_t number;
+	struct superblock_type *sb;
+
+	sb=inode->sb;
 
 retry_inode:
 
@@ -256,8 +259,10 @@ retry_inode:
 
 	header_offset+=4;		/* 16: filename */
 
-	return read_count;
+	/* restore superblock we came in with */
+	inode->sb=sb;
 
+	return 0;
 }
 
 /* We cheat and just use the file header offset as the inode */
@@ -337,6 +342,9 @@ int32_t romfs_lookup_inode(struct inode_type *inode, const char *name) {
 
 	ptr=name;
 
+	/* called with empty string, which would be / */
+	if (ptr[0]=='\0') goto lookup_inode_done;
+
 	while(1) {
 		if (debug) {
 			printk("romfs_lookup_inode: about to split %s\n",ptr);
@@ -356,13 +364,14 @@ int32_t romfs_lookup_inode(struct inode_type *inode, const char *name) {
                 if (ptr==NULL) break;
 
         }
+lookup_inode_done:
 
 	result=romfs_read_inode(inode);
 
 	return result;
 }
 
-static uint32_t romfs_get_size(struct superblock_t *superblock) {
+static uint32_t romfs_get_size(struct superblock_type *superblock) {
 
 	int temp_int;
 	uint32_t offset=0;
@@ -387,54 +396,8 @@ static uint32_t romfs_get_size(struct superblock_t *superblock) {
 
 }
 
-int32_t romfs_mount(struct superblock_t *superblock) {
-
-	int temp_int;
-	struct romfs_header_t header;
-	uint32_t offset=0;
-	int32_t result=0;
-
-	/* Read header */
-	romfs_read_noinc(header.magic,offset,8);
-	if (memcmp(header.magic,"-rom1fs-",8)) {
-		printk("Wrong magic number!\n");
-		return -1;
-	}
-	offset+=8;
-	if (debug) printk("Found romfs filesystem!\n");
-
-	/* Read size */
-	romfs_read_noinc(&temp_int,offset,4);
-	header.size=ntohl(temp_int);
-	offset+=4;
-	if (debug) printk("\tSize: %d bytes\n",header.size);
-
-	/* Read checksum */
-	romfs_read_noinc(&temp_int,offset,4);
-	header.checksum=ntohl(temp_int);
-	offset+=4;
-	/* FIXME: validate checksum */
-	if (debug) printk("\tChecksum: %x\n",header.size);
-
-
-	/* Read volume name */
-	/* FIXME: We ignore anything more than 16-bytes */
-	/* We really don't care about volume name */
-	result=romfs_read_string(offset,header.volume_name,16);
-	offset+=result;
-	if (debug) {
-		printk("\tVolume: %s, file_headers start at %x\n",
-			header.volume_name,offset);
-	}
-
-	/* This is the inode of the root director */
-	file_headers_start=offset;
-
-	return file_headers_start;
-
-}
-
-int32_t romfs_statfs(struct superblock_t *superblock, struct vmwos_statfs *buf) {
+int32_t romfs_statfs(struct superblock_type *superblock,
+		struct vmwos_statfs *buf) {
 
 	buf->f_type=0x7275;	/* type (romfs) */
 	buf->f_bsize=1024;	/* blocksize */
@@ -607,4 +570,63 @@ int32_t romfs_write_file(uint32_t inode,
 	/* read only filesystem */
 
 	return -EROFS;
+}
+
+static struct superblock_operations romfs_sb_ops = {
+	.statfs = romfs_statfs,
+
+};
+
+
+int32_t romfs_mount(struct superblock_type *superblock) {
+
+	int temp_int;
+	struct romfs_header_t header;
+	uint32_t offset=0;
+	int32_t result=0;
+
+	/* Read header */
+	romfs_read_noinc(header.magic,offset,8);
+	if (memcmp(header.magic,"-rom1fs-",8)) {
+		printk("Wrong magic number!\n");
+		return -1;
+	}
+	offset+=8;
+	if (debug) printk("Found romfs filesystem!\n");
+
+	/* Read size */
+	romfs_read_noinc(&temp_int,offset,4);
+	header.size=ntohl(temp_int);
+	offset+=4;
+	if (debug) printk("\tSize: %d bytes\n",header.size);
+
+	/* Read checksum */
+	romfs_read_noinc(&temp_int,offset,4);
+	header.checksum=ntohl(temp_int);
+	offset+=4;
+	/* FIXME: validate checksum */
+	if (debug) printk("\tChecksum: %x\n",header.size);
+
+
+	/* Read volume name */
+	/* FIXME: We ignore anything more than 16-bytes */
+	/* We really don't care about volume name */
+	result=romfs_read_string(offset,header.volume_name,16);
+	offset+=result;
+	if (debug) {
+		printk("\tVolume: %s, file_headers start at %x\n",
+			header.volume_name,offset);
+	}
+
+	/* This is the inode of the root director */
+	file_headers_start=offset;
+
+	/* Point to our superblock operations */
+	superblock->sb_ops=romfs_sb_ops;
+
+	/* point to root dir of filesystem */
+	superblock->root_dir=file_headers_start;
+
+	return 0;
+
 }
