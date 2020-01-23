@@ -348,7 +348,10 @@ int32_t romfs_lookup_inode(struct inode_type *inode, const char *name) {
 			printk("romfs path_part %s\n",dir);
 		}
 
-                romfs_lookup_inode_dir(inode,dir);
+		result=romfs_lookup_inode_dir(inode,dir);
+		if (result<0) {
+			return result;
+		}
 
                 if (ptr==NULL) break;
 
