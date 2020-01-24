@@ -83,7 +83,7 @@ int32_t get_inode(const char *pathname, struct inode_type *inode) {
 	/* point one past leading slash */
 	ptr=full_path+1;
 
-	sb->sb_ops.lookup_inode(inode,ptr);
+	result=sb->sb_ops.lookup_inode(inode,ptr);
 
 	return result;
 }
