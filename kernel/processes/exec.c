@@ -45,7 +45,9 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	result=get_inode(filename,&inode);
 	if (result<0) {
-		if (exec_debug) printk("Error get_inode(%s)\n",filename);
+		if (exec_debug) {
+			printk("Error %d in get_inode(%s)\n",result,filename);
+		}
 		return result;
 	}
 
