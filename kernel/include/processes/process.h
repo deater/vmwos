@@ -9,6 +9,11 @@
 #define PROCESS_STATUS_READY	1
 #define PROCESS_STATUS_EXITED	2
 
+/* Also defined in files.h */
+#define MAX_FD_PER_PROC	8
+#define	MAX_PATH_LEN	1024
+
+
 extern struct process_control_block_type *proc_first;
 
 struct process_control_block_type {
@@ -38,21 +43,26 @@ struct process_control_block_type {
 	int32_t pid;					/* 172 */
 	int32_t exit_value;				/* 176 */
 	struct process_control_block_type *parent;	/* 180 */
-	int32_t current_dir;				/* 184 */
 
-	void *stack;					/* 188 */
-	uint32_t stacksize;				/* 192 */
-	void *text;					/* 196 */
-	uint32_t textsize;				/* 200 */
-	void *data;					/* 204 */
-	uint32_t datasize;				/* 208 */
-	void *bss;					/* 212 */
-	uint32_t bsssize;				/* 216 */
-	char name[32];					/* 220 */
-							/* 252 */
-	/* Current size = 252 */
+	/* Memory Layout */
+	void *stack;					/* 184 */
+	uint32_t stacksize;				/* 188 */
+	void *text;					/* 192 */
+	uint32_t textsize;				/* 196 */
+	void *data;					/* 200 */
+	uint32_t datasize;				/* 204 */
+	void *bss;					/* 208 */
+	uint32_t bsssize;				/* 212 */
+	char name[32];					/* 216 */
+							/* 248 */
 
-	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-252)/4];
+	/* File related things */
+	int32_t fds[MAX_FD_PER_PROC];	/* 8*4 = 32 */	/* 280 */
+	char current_dir[MAX_PATH_LEN];	/* 1024 */	/*1304 */
+
+	/* Current size = 1304 */
+
+	uint32_t stack_padding[(DEFAULT_KERNEL_STACK_SIZE-1304)/4];
 
 };
 

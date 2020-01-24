@@ -203,12 +203,41 @@ int32_t getdents_syscall(uint32_t fd,
 }
 
 /* Change current working directory */
+/* FIXME: should make path canonical somehow */
 int32_t chdir_syscall(const char *path) {
 
-	int32_t result;
+	int32_t result,len;
 	struct inode_type inode;
+	char new_path[MAX_PATH_LEN];
 
-	result=get_inode(path,&inode);
+	/* See if too big */
+	len=strlen(path);
+	if (len>MAX_PATH_LEN) {
+		return -E2BIG;
+	}
+
+	/* expand path */
+
+	/* Absolute */
+        if (path[0]=='/') {
+                strncpy(new_path,path,MAX_PATH_LEN);
+        }
+	/* Relative */
+        else {
+                /* prepend old path */
+                snprintf(new_path,MAX_PATH_LEN,"%s/%s",
+                        current_proc[get_cpu()]->current_dir,
+                        path);
+        }
+
+	/* Strip off trailing slashes if not in root */
+	if ((len>1) && (new_path[len-1]=='/')) {
+		len--;
+		new_path[len]='\0';
+	}
+
+	/* Check to see if destination exists */
+	result=get_inode(new_path,&inode);
 	if (result<0) {
 		return -ENOENT;
 	}
@@ -217,7 +246,8 @@ int32_t chdir_syscall(const char *path) {
 		return -ENOTDIR;
 	}
 
-	current_proc[get_cpu()]->current_dir=inode.number;
+	/* Things check out, copy over old path */
+	strncpy(current_proc[get_cpu()]->current_dir,new_path,MAX_PATH_LEN);
 
 	return 0;
 }
@@ -226,15 +256,8 @@ int32_t chdir_syscall(const char *path) {
 /* Get name of current working directory */
 char *getcwd_syscall(char *buf, size_t size) {
 
-#if 0
-	struct vmwos_stat stat_buf;
 
-	int32_t inode,result;
-
-	inode=current_proc[get_cpu()]->current_dir;
-
-#endif
-	strncpy(buf,"BROKEN",size);
+	strncpy(buf,current_proc[get_cpu()]->current_dir,size);
 
 	return buf;
 

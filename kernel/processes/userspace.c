@@ -15,7 +15,6 @@
 #include "time/time.h"
 
 #include "fs/files.h"
-#include "fs/inodes.h"
 
 static int debug=0;
 
@@ -43,7 +42,6 @@ void start_userspace(char *init_filename) {
 
 	struct process_control_block_type *init_process;
 	int32_t result;
-	struct inode_type inode;
 
 	if (debug) printk("Starting init...\n");
 
@@ -52,9 +50,8 @@ void start_userspace(char *init_filename) {
 	/* Should this be NULL instead? */
 	init_process->parent=init_process;
 
-	/* FIXME */
-	get_inode("/",&inode);
-	init_process->current_dir=inode.number;
+	/* Set current working directory */
+	strncpy(init_process->current_dir,"/",MAX_PATH_LEN);
 
 	if (debug) printk("Execing init...\n");
 

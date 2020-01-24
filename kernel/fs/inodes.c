@@ -25,7 +25,7 @@ const char *split_filename(const char *start_ptr, char *name,
 	int length=0;
 
 	if (debug) {
-		printk("Splitting %s\n",start_ptr);
+		printk("Splitting \"%s\"\n",start_ptr);
 	}
 	while(1) {
 		if (*ptr==0) {
@@ -48,6 +48,8 @@ const char *split_filename(const char *start_ptr, char *name,
 		out++;
 		length++;
 	}
+	if (debug) printk("Got %s\n",ptr);
+
 	return ptr;
 }
 
@@ -76,12 +78,15 @@ int32_t get_inode(const char *pathname, struct inode_type *inode) {
 		strncpy(full_path,pathname,MAX_PATH_LEN);
 	}
 	else {
-		/* FIXME: prepend current working directory */
-		snprintf(full_path,MAX_PATH_LEN,"%s/%s","/home",pathname);
+		/* prepend current working directory */
+		snprintf(full_path,MAX_PATH_LEN,"%s/%s",
+			current_proc[get_cpu()]->current_dir,
+			pathname);
 	}
 
-	/* point one past leading slash */
-	ptr=full_path+1;
+	/* point past leading slashes */
+	ptr=full_path;
+	while((*ptr=='/')&&(*ptr!='\0')) ptr++;
 
 	result=sb->sb_ops.lookup_inode(inode,ptr);
 
