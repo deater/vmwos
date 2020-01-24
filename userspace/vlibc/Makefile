@@ -6,11 +6,11 @@ all:	vlibc.a
 vlibc.a:	start.o \
 		ctype.o error.o malloc.o printf.o random.o stdio.o string.o \
 		system.o time.o tty.o \
-		idiv.o memcpy.o vmwos.o syscalls.arm.o
+		idiv.o uldivmod.o memcpy.o vmwos.o syscalls.arm.o
 	$(CROSS)$(AR) crs vlibc.a start.o \
 		ctype.o error.o malloc.o printf.o random.o stdio.o string.o \
 		system.o time.o tty.o \
-		idiv.o memcpy.o vmwos.o syscalls.arm.o
+		idiv.o uldivmod.o memcpy.o vmwos.o syscalls.arm.o
 
 start.o:	start.c
 	$(CROSS)$(CC) $(CFLAGS) -c start.c
