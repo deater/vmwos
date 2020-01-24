@@ -15,17 +15,29 @@
 
 #define BUF_SIZE 128
 
+static int debug=1;
 
 static int cat(int in_fd, int out_fd) {
 
 	char buffer[BUF_SIZE];
 	int result;
+	int64_t pos;
 
 	while(1) {
 		result=read(in_fd,buffer,BUF_SIZE);
-		if (result<=0) break;
+		if (result<=0) {
+			if (debug) {
+				printf("\nFinish with result=%d\n",result);
+				pos=lseek(in_fd,SEEK_CUR,0);
+				printf("\nFinish file pos=%lld\n",pos);
+			}
+			break;
+		}
 		result=write(out_fd,buffer,result);
-		if (result<=0) break;
+		if (result<=0) {
+			printf("cat: Unexpected write error %d\n",result);
+			break;
+		}
 	}
 
 	return 0;

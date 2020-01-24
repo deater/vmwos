@@ -181,3 +181,17 @@ int32_t getline(char **buf, size_t *n, FILE *stream) {
 	return getdelim(buf, n, '\n', stream);
 }
 
+
+int64_t lseek(int fd, int64_t offset, int whence) {
+
+	uint64_t real_result;
+	int32_t result;
+
+	result=lseek64(fd,(offset>>32),offset&0xffffffff,&real_result,whence);
+	if (result<0) {
+		return result;
+	}
+
+	return real_result;
+
+}

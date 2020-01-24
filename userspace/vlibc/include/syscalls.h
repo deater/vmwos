@@ -11,18 +11,18 @@
 
 struct stat {
 	uint32_t	st_dev;		/* ID of dev containing file */
-	uint32_t	st_ino;		/* inode */
-	uint32_t	st_mode;	/* file type and mode */
-	uint32_t	st_nlink;	/* number of hard links */
-	uint32_t	st_uid;		/* user ID of owner */
-	uint32_t	st_gid;		/* group ID of owner */
-	uint32_t	st_rdev;	/* device ID for special file */
-	uint32_t	st_size;	/* file size, in bytes */
+	int32_t		st_ino;		/* inode */
+	int32_t		st_mode;	/* file type and mode */
+	int32_t		st_nlink;	/* number of hard links */
+	int32_t		st_uid;		/* user ID of owner */
+	int32_t		st_gid;		/* group ID of owner */
+	int32_t		st_rdev;	/* device ID for special file */
+	uint64_t	st_size;	/* file size, in bytes */
 	uint32_t	st_blksize;	/* blocksize for file I/O */
 	uint32_t	st_blocks;	/* number of 512B blocks */
-	uint32_t	st_atime;	/* last access time */
-	uint32_t	st_mtime;	/* last modify time */
-	uint32_t	st_ctime;	/* last status change time */
+	uint64_t	st_atime;	/* last access time */
+	uint64_t	st_mtime;	/* last modify time */
+	uint64_t	st_ctime;	/* last status change time */
 };
 
 int32_t stat(const char *pathname, struct stat *buf);

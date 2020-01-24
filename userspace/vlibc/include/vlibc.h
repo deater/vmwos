@@ -30,6 +30,8 @@ typedef struct file_struct FILE;
 
 FILE *stdin,*stdout,*stderr;
 
+int64_t lseek(int fd, int64_t offset, int whence);
+
 int putchar(int c);
 int puts(char *s);
 int getchar(void);

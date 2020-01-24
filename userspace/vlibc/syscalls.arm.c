@@ -463,7 +463,8 @@ int statfs(const char *path, struct statfs *buf) {
 }
 
 /* 140 */
-int32_t llseek(uint32_t fd, uint32_t offset_high,
+/* AKA _llseek */
+int32_t lseek64(int32_t fd, uint32_t offset_high,
 		uint32_t offset_low, uint64_t *result,
 		uint32_t whence) {
 
