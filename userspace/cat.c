@@ -28,7 +28,7 @@ static int cat(int in_fd, int out_fd) {
 		if (result<=0) {
 			if (debug) {
 				printf("\nFinish with result=%d\n",result);
-				pos=lseek(in_fd,SEEK_CUR,0);
+				pos=lseek(in_fd,0,SEEK_CUR);
 				printf("\nFinish file pos=%lld\n",pos);
 			}
 			break;
