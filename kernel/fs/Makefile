@@ -3,7 +3,7 @@ include ../Makefile_kernel.inc
 
 INCLUDE = -I../include
 
-CFLAGS_ARMV7 := -g
+# CFLAGS_ARMV7 += -g
 
 all:	fs-arm1176.a fs-armv7.a
 
