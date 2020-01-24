@@ -12,8 +12,6 @@
 
 #include "fs/romfs/romfs.h"
 
-//extern int32_t root_dir;
-
 static int debug=0;
 
 struct superblock_type superblock_table[MAX_MOUNTS];
@@ -83,6 +81,9 @@ int32_t mount_syscall(const char *source, const char *target,
 	}
 
 	strncpy(sb->mountpoint,target,MAX_FILENAME_SIZE);
+
+	printk("Mounted %dK %s filesystem at %s\n",
+		sb->size/1024,filesystemtype,target);
 
 	return result;
 }

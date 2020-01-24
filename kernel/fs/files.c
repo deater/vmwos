@@ -16,8 +16,6 @@
 
 static int debug=0;
 
-//int32_t root_dir=0;
-
 static struct file_object file_objects[MAX_OPEN_FILES];
 
 int32_t file_object_free(struct file_object *file) {
