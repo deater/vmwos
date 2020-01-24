@@ -12,8 +12,6 @@
 #include "fs/inodes.h"
 #include "fs/superblock.h"
 
-#include "fs/romfs/romfs.h"
-
 #include "processes/process.h"
 
 static int debug=0;
@@ -21,12 +19,6 @@ static int debug=0;
 //int32_t root_dir=0;
 
 static struct file_object file_objects[MAX_OPEN_FILES];
-
-struct file_object_operations file_ops= {
-	.read   = romfs_read_file,
-	.write  = romfs_write_file,
-	.llseek = llseek_generic,
-};
 
 int32_t file_object_free(struct file_object *file) {
 
@@ -99,6 +91,9 @@ int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 		return result;
 	}
 
+	/* Set up the file_ops */
+	inode.sb->sb_ops.setup_fileops(&file_objects[result]);
+
 	if (debug) printk("### opened fd %d\n",result);
 
 	return result;
@@ -108,59 +103,60 @@ int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	int32_t result;
+	struct file_object *file;
 
-
+	/* Hack for now */
 	if (fd==0) {
 		result=console_read(buf,count);
+		return result;
 	}
-	else if (fd>=MAX_OPEN_FILES) {
+
+	if (fd>=MAX_OPEN_FILES) {
 		return -ENFILE;
 	}
-	else if (file_objects[fd].valid==0) {
-		printk("Attempting to read from unsupported fd %d\n",fd);
-		result=-EBADF;
-	}
-	else {
-		if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
 
-		result=file_ops.read(file_objects[fd].inode,
+	file=&file_objects[fd];
+
+	if (file->valid==0) {
+		printk("Attempting to read from unsupported fd %d\n",fd);
+		return -EBADF;
+	}
+
+	if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
+
+	result=file->file_ops->read(file_objects[fd].inode,
 					buf,count,
 					&file_objects[fd].file_offset);
 
-		/* Helder adjusts file_ptr for us */
-
-//		if (result>0) {
-//			file_objects[fd].file_ptr+=result;
-//		}
-	}
 	return result;
 }
 
 int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	int32_t result;
+	struct file_object *file;
 
-	if (fd==2) {
-		int i;
-		char *string = (char *)buf;
-		if (debug) {
-			printk("Writing %d bytes, %d\n",count,string[count-1]);
-			for(i=0;i<count;i++) {
-				printk("%x ",string[i]);
-			}
-			printk("\n");
-		}
-	}
-
+	/* Hack */
 	if ((fd==1) || (fd==2)) {
 		result = console_write(buf, count);
+		return result;
 	}
-	else {
 
-		result=file_ops.write(file_objects[fd].inode,
+	if (fd>=MAX_OPEN_FILES) {
+		return -ENFILE;
+	}
+
+	file=&file_objects[fd];
+
+	if (file->valid==0) {
+		printk("Attempting to write to unsupported fd %d\n",fd);
+		return -EBADF;
+	}
+
+	result=file->file_ops->write(file_objects[fd].inode,
 					buf,count,
 					&file_objects[fd].file_offset);
-	}
+
 	return result;
 }
 
@@ -172,7 +168,7 @@ void file_objects_init(void) {
 	}
 
 	/* Special case 0/1/2 (stdin/stdout/stderr) */
-	/* FIXME: actually hook them up to be proper fds */
+	/* FIXME: actually hook them up to be proper file objects */
 	file_objects[0].valid=1;
 	file_objects[1].valid=1;
 	file_objects[2].valid=1;
@@ -184,23 +180,26 @@ int32_t getdents_syscall(uint32_t fd,
 			struct vmwos_dirent *dirp, uint32_t count) {
 
 	int result;
+	struct file_object *file;
 
 	if (fd>=MAX_OPEN_FILES) {
 		return -ENFILE;
 	}
-	else if (file_objects[fd].valid==0) {
-		printk("Attempting to getdents from unsupported fd %d\n",fd);
-		result=-EBADF;
-	}
-	/* FIXME: check if it's a directory fd */
-	else {
-		if (debug) {
-		}
 
-		result=	romfs_getdents(file_objects[fd].inode,
+	file=&file_objects[fd];
+
+	if (file->valid==0) {
+		printk("Attempting to getdents from unsupported fd %d\n",fd);
+		return -EBADF;
+	}
+
+	/* FIXME: check if it's a directory fd */
+	if (debug) {
+	}
+
+	result=file->file_ops->getdents(file_objects[fd].inode,
 					&(file_objects[fd].file_offset),
 					dirp,count);
-	}
 	return result;
 
 }
@@ -236,9 +235,6 @@ char *getcwd_syscall(char *buf, size_t size) {
 
 	inode=current_proc[get_cpu()]->current_dir;
 
-	result=romfs_stat(inode, &stat_buf);
-
-	(void)result;
 #endif
 	strncpy(buf,"BROKEN",size);
 
@@ -274,7 +270,8 @@ int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
 
 	int64_t result;
 
-	result=file_ops.llseek(&file_objects[fd],offset,whence);
+	result=file_objects[fd].file_ops->llseek(&file_objects[fd],
+							offset,whence);
 
 	return result;
 }

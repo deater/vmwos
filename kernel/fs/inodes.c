@@ -16,8 +16,6 @@
 
 static int debug=0;
 
-//extern int32_t root_dir;
-
 /* Split a filename into the path part and the actual name part */
 const char *split_filename(const char *start_ptr, char *name,
 			int len) {

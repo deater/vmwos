@@ -572,9 +572,24 @@ int32_t romfs_write_file(uint32_t inode,
 	return -EROFS;
 }
 
+static struct file_object_operations romfs_file_ops= {
+        .read   = romfs_read_file,
+        .write  = romfs_write_file,
+        .llseek = llseek_generic,
+	.getdents = romfs_getdents,
+};
+
+int32_t romfs_setup_fileops(struct file_object *file) {
+
+	file->file_ops=&romfs_file_ops;
+
+	return 0;
+}
+
 static struct superblock_operations romfs_sb_ops = {
 	.statfs = romfs_statfs,
 	.lookup_inode = romfs_lookup_inode,
+	.setup_fileops = romfs_setup_fileops,
 };
 
 
@@ -630,3 +645,4 @@ int32_t romfs_mount(struct superblock_type *superblock) {
 	return 0;
 
 }
+

@@ -31,6 +31,7 @@ struct superblock_operations {
 //	int (*sync_fs) (struct super_block *, int);
 	int32_t (*statfs) (struct superblock_type *, struct vmwos_statfs *);
 	int32_t (*lookup_inode) (struct inode_type *, const char *);
+	int32_t (*setup_fileops) (struct file_object *);
 //	int (*remount_fs) (struct super_block *, int *, char *);
 //	void (*clear_inode) (struct inode *);
 //	void (*umount_begin) (struct super_block *);

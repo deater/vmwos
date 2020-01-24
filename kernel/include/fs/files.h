@@ -9,21 +9,11 @@ struct file_object_operations;
 
 struct file_object {
         uint64_t file_offset;
-	struct file_operations *fops;
+	struct file_object_operations *file_ops;
         uint32_t valid;
         uint32_t inode;
         uint32_t count;
 	char name[MAX_PATH_LEN];
-};
-
-struct file_object_operations {
-        int32_t (*read) (uint32_t, char *, uint32_t, uint64_t *);
-        int32_t (*write) (uint32_t, const char *, uint32_t, uint64_t *);
-        int64_t (*llseek) (struct file_object *, int64_t, int32_t);
-//        int (*readdir) (struct file *, void *, filldir_t);
-        int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
-        int32_t (*open) (int32_t *, struct file_object *);
-//        int (*flush) (struct file *);
 };
 
 struct vmwos_dirent {
@@ -32,6 +22,18 @@ struct vmwos_dirent {
 	uint32_t        d_reclen;
 	char            d_name[];
 };
+
+struct file_object_operations {
+        int32_t (*read) (uint32_t, char *, uint32_t, uint64_t *);
+        int32_t (*write) (uint32_t, const char *, uint32_t, uint64_t *);
+        int64_t (*llseek) (struct file_object *, int64_t, int32_t);
+        int32_t (*getdents) (uint32_t, uint64_t *, void *, uint32_t);
+        int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
+        int32_t (*open) (int32_t *, struct file_object *);
+//        int (*flush) (struct file *);
+};
+
+
 
 
 int32_t close_syscall(uint32_t fd);
