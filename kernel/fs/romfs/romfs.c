@@ -636,6 +636,9 @@ int32_t romfs_mount(struct superblock_type *superblock) {
 	/* This is the inode of the root director */
 	file_headers_start=offset;
 
+	/* Set size */
+	superblock->size=header.size;
+
 	/* Point to our superblock operations */
 	superblock->sb_ops=romfs_sb_ops;
 
