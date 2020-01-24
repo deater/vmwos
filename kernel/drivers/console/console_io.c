@@ -126,19 +126,21 @@ static uint32_t console_get_char(void) {
 
 int console_write(const void *buf, size_t count) {
 
-	int result;
+	int result_serial;
+	int result_framebuffer;
 
 	if (console_locking_enabled) mutex_lock(&console_print_mutex);
 
 	/* Write to Serial port */
-	result=serial_write(buf, count);
+	result_serial=serial_write(buf, count);
 
 	/* Write to framebuffer */
-	result=framebuffer_console_write(buf, count);
+	result_framebuffer=framebuffer_console_write(buf, count);
+	(void)result_framebuffer;
 
 	if (console_locking_enabled) mutex_unlock(&console_print_mutex);
 
-	return result;
+	return result_serial;
 
 }
 
