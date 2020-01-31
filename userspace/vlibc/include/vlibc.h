@@ -23,9 +23,11 @@ char *strerror(int errnum);
 #define BUFSIZ		4096
 
 struct file_struct {
+	int valid;
 	int fd;
 	int eof;
 };
+
 typedef struct file_struct FILE;
 
 FILE *stdin,*stdout,*stderr;
@@ -44,6 +46,7 @@ int32_t getline(char **lineptr, size_t *n, FILE *stream);
 int32_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
 int32_t fgetc(FILE *stream);
 int32_t feof(FILE *stream);
+int32_t fileno(FILE *stream);
 
 /* malloc.c */
 void *malloc(uint32_t size);

@@ -36,9 +36,9 @@ int getchar(void) {
 #define MAXFILES	16
 static FILE open_files[MAXFILES];
 
-static FILE stdin_actual  = { .fd = 0, .eof=0	};
-static FILE stdout_actual = { .fd = 1, .eof=0	};
-static FILE stderr_actual = { .fd = 2, .eof=0	};
+static FILE stdin_actual  = { .valid = 1, .fd = 0, .eof=0	};
+static FILE stdout_actual = { .valid = 1, .fd = 1, .eof=0	};
+static FILE stderr_actual = { .valid = 1, .fd = 2, .eof=0	};
 
 FILE *stdin=&stdin_actual;
 FILE *stdout=&stdout_actual;
@@ -46,14 +46,28 @@ FILE *stderr=&stderr_actual;
 
 FILE *fopen(const char *pathname, const char *mode) {
 
-	int fd;
+	int fd,i,found=0;
+
+	/* Find open file struct */
+	/* Yes, we should probably malloc() these */
+	for(i=0;i<MAXFILES;i++) {
+		if (open_files[i].valid==0) {
+			found=1;
+			break;
+		}
+	}
+	if (!found) {
+		return NULL;
+	}
 
 	fd=open(pathname,O_RDONLY,0);
 	if (fd<0) return NULL;
 
-	open_files[0].fd=fd;
+	open_files[i].fd=fd;
+	open_files[i].valid=1;
+	open_files[i].eof=0;
 
-	return &open_files[0];
+	return &open_files[i];
 
 }
 
@@ -66,7 +80,7 @@ char *fgets(char *s, int size, FILE *stream) {
 		result=read(stream->fd,&ch,1);
 		if (result<1) break;
 
-		if (count>=size) break;
+		if (count>=size-1) break;
 
 		s[count]=ch;
 
@@ -74,6 +88,7 @@ char *fgets(char *s, int size, FILE *stream) {
 		count++;
 	}
 	if (count==0) return NULL;
+
 	s[count+1]=0;
 
 	return s;
@@ -81,8 +96,9 @@ char *fgets(char *s, int size, FILE *stream) {
 
 int fclose(FILE *stream) {
 
-	return close(stream->fd);
+	stream->valid=0;
 
+	return close(stream->fd);
 }
 
 int32_t fgetc(FILE *stream) {
@@ -110,6 +126,11 @@ int32_t feof(FILE *stream) {
 
 }
 
+int32_t fileno(FILE *stream) {
+
+	return stream->fd;
+
+}
 
 int32_t getdelim(char **buf, size_t *n, int delim, FILE *stream) {
 

@@ -92,7 +92,6 @@ int main(int argc, char **argv) {
 
 	printf("Filesystem\tSize\tUsed\tAvail\tUse%%\tMounted on\n");
 
-
 	fff=fopen("/etc/fstab","r");
 	if (fff==NULL) {
 		if (debug) printf("df: Couldn't open fstab!\n");
@@ -100,12 +99,14 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
+	if (debug) printf("fstab opened, fd=%d\n",fileno(fff));
+
 	while(1) {
 		result=fgets(buffer,256,fff);
 
 		if (debug) {
-			printf("fgets result: %x\n",result);
-			if (result!=NULL) printf("fgets result: %s\n",result);
+			printf("fgets result: %p (expected %p)\n",result,buffer);
+			if (result!=NULL) printf("fgets read: %s\n",result);
 		}
 
 		if (result==NULL) break;
