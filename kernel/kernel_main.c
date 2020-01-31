@@ -148,7 +148,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Setup the second ramdisk */
 	dev=ramdisk_init(initrd2_image,sizeof(initrd2_image));
 	if (dev!=NULL) {
-//	mount_syscall("ramdisk1","/mnt","dos33fs",0,NULL);
+		mount_syscall("ramdisk1","/mnt","dos33fs",0,NULL);
 	}
 
 	/* Create idle task */

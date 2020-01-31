@@ -11,6 +11,7 @@
 #include "fs/superblock.h"
 
 #include "fs/romfs/romfs.h"
+#include "fs/dos33fs/dos33fs.h"
 
 #include "drivers/block.h"
 
@@ -78,6 +79,15 @@ int32_t mount_syscall(const char *source, const char *target,
 
 	if (!strncmp(filesystemtype,"romfs",5)) {
 		result=romfs_mount(sb,block);
+		if (result<0) {
+			return -EINVAL;
+		}
+		//root_dir=sb->root_dir;
+		if (debug) printk("ROOT_DIR=%x\n",sb->root_dir);
+		result=0;
+	}
+	else if (!strncmp(filesystemtype,"dos33fs",5)) {
+		result=dos33fs_mount(sb,block);
 		if (result<0) {
 			return -EINVAL;
 		}
