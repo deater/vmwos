@@ -92,11 +92,6 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 
 	if (debug) printk("ilac: inodes[0].count=%d\n",inodes[0].count);
 
-	sb=superblock_lookup(pathname);
-	if (sb==NULL) {
-		return -ENOENT;
-	}
-
 	temp_inode=inode_allocate();
 	if (temp_inode==NULL) {
 		return -ENOMEM;
@@ -104,10 +99,6 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 
 	if (debug) printk("ilac: got an inode %p count=%d\n",
 					temp_inode,temp_inode->count);
-
-	/* start at root directory */
-	temp_inode->number=sb->root_dir;
-	temp_inode->sb=sb;
 
 	/* expand path */
 	if (pathname[0]=='/') {
@@ -120,9 +111,22 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 			pathname);
 	}
 
-	/* point past leading slashes */
+	/* Look to see which mountpoint we are in */
+	sb=superblock_lookup(pathname);
+	if (sb==NULL) {
+		return -ENOENT;
+	}
+
+	/* start at root directory */
+	temp_inode->number=sb->root_dir;
+	temp_inode->sb=sb;
+
+	/* point past mountpoint */
 	ptr=full_path;
-	while((*ptr=='/')&&(*ptr!='\0')) ptr++;
+	ptr+=strlen(sb->mountpoint);
+
+//	ptr=full_path;
+//	while((*ptr=='/')&&(*ptr!='\0')) ptr++;
 
 	result=sb->sb_ops.lookup_inode(temp_inode,ptr);
 

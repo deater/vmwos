@@ -42,8 +42,39 @@ struct superblock_type *superblock_allocate(void) {
 
 struct superblock_type *superblock_lookup(const char *path) {
 
-	/* FIXME */
-	return &superblock_table[0];
+	int32_t i,which_root=0;
+	struct superblock_type *sb_root=NULL;
+
+	/* find root */
+	for(i=0;i<MAX_MOUNTS;i++) {
+		if (superblock_table[i].valid) {
+			if (!strncmp("/",
+				superblock_table[i].mountpoint,
+				strlen(superblock_table[i].mountpoint))) {
+				sb_root=&superblock_table[i];
+				which_root=i;
+				break;
+			}
+		}
+	}
+
+	/* find other mountpoint */
+	for(i=0;i<MAX_MOUNTS;i++) {
+		if (i==which_root) continue;
+		if (superblock_table[i].valid) {
+			if (!strncmp(
+				superblock_table[i].mountpoint,
+				path,
+				strlen(superblock_table[i].mountpoint))) {
+				return &superblock_table[i];
+			}
+		}
+	}
+	return sb_root;
+
+	/* return root path */
+
+
 }
 
 
