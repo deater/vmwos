@@ -61,9 +61,14 @@ static struct inode_type *inode_allocate(void) {
 
 	/* FIXME: locking */
 
+	/* FIXME: search for existing first */
+
 	/* allocate an inode */
 	for(i=0;i<NUM_INODES;i++) {
 		if (inodes[i].count==0) {
+			if (debug) printk("Allocated inode %d (%p) count=%d\n",
+						i,&inodes[i],
+						inodes[i].count);
 			inodes[i].count=1;
 			return &inodes[i];
 		}
@@ -85,6 +90,8 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 	struct superblock_type *sb;
 	struct inode_type *temp_inode;
 
+	if (debug) printk("ilac: inodes[0].count=%d\n",inodes[0].count);
+
 	sb=superblock_lookup(pathname);
 	if (sb==NULL) {
 		return -ENOENT;
@@ -94,6 +101,9 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 	if (temp_inode==NULL) {
 		return -ENOMEM;
 	}
+
+	if (debug) printk("ilac: got an inode %p count=%d\n",
+					temp_inode,temp_inode->count);
 
 	/* start at root directory */
 	temp_inode->number=sb->root_dir;
@@ -129,6 +139,8 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 int32_t inode_free(struct inode_type *inode) {
 
 	/* FIXME: locking */
+
+	if (debug) printk("Freeing inode %p count=%d\n",inode,inode->count);
 
 	if (inode->count) inode->count--;
 

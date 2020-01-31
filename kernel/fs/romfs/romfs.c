@@ -167,33 +167,22 @@ inode_link_loop:
 }
 
 /* Read data from inode->number into inode */
+/* Data comes in partially filled, we just fill in rest */
 int32_t romfs_read_inode(struct inode_type *inode) {
 
 	int32_t header_offset,size,temp_int;
 	int32_t spec_info=0,type=0;
-	int32_t number;
-	struct superblock_type *sb;
-
-	sb=inode->sb;
 
 retry_inode:
 
-	number=inode->number;
-
-	if (debug) printk("romfs: Attempting to stat inode %x\n",number);
-
-	/* Clear all to zero */
-	memset(inode,0,sizeof(struct inode_type));
-
-	/* Set inode value */
-	inode->number=number;
+	if (debug) printk("romfs: Attempting to stat inode %x\n",inode->number);
 
 	/* Default mode is global read/write */
 		/* -rw-rw-rw- */
 	inode->mode=0666;
 
 	header_offset=inode->number;		/* 0: Next */
-	romfs_read_noinc(sb,&temp_int,header_offset,4);
+	romfs_read_noinc(inode->sb,&temp_int,header_offset,4);
 	type=ntohl(temp_int);
 
 	/* check if executable */
@@ -204,7 +193,7 @@ retry_inode:
 	type&=0x7;
 
 	header_offset+=4;		/* 4: spec.info */
-	romfs_read_noinc(sb,&temp_int,header_offset,4);
+	romfs_read_noinc(inode->sb,&temp_int,header_offset,4);
 	spec_info=ntohl(temp_int);
 
 	switch(type) {
@@ -256,7 +245,7 @@ retry_inode:
 	}
 
 	header_offset+=4;		/* 8: Size */
-	romfs_read_noinc(sb,&temp_int,header_offset,4);
+	romfs_read_noinc(inode->sb,&temp_int,header_offset,4);
 	size=ntohl(temp_int);
 	inode->size=size;
 
@@ -265,8 +254,6 @@ retry_inode:
 
 	header_offset+=4;		/* 16: filename */
 
-	/* restore superblock we came in with */
-	inode->sb=sb;
 
 	return 0;
 }
@@ -438,7 +425,8 @@ int32_t romfs_read_file(
 	int32_t header_offset,size,temp_int,name_length,read_count=0;
 	int32_t max_count=0;
 
-	if (debug) printk("romfs: Attempting to read %d bytes from inode %x offset %d\n",
+	if (debug) printk("romfs: Attempting to read %d bytes "
+			"from inode %x offset %d\n",
 			count,inode,*file_offset);
 
 
@@ -466,7 +454,8 @@ int32_t romfs_read_file(
 	max_count=count;
 	if (max_count>size-*file_offset) {
 		max_count=size-*file_offset;
-		if (debug) printk("romfs: count is past end of file, limiting to %d\n",max_count);
+		if (debug) printk("romfs: count is past end of file, "
+					"limiting to %d\n",max_count);
 	}
 
 	if (debug) printk("romfs: reading %d bytes from %d into %x\n",
