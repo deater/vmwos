@@ -12,6 +12,8 @@
 
 #include "fs/romfs/romfs.h"
 
+#include "drivers/block.h"
+
 static int debug=0;
 
 struct superblock_type superblock_table[MAX_MOUNTS];
@@ -59,16 +61,23 @@ int32_t mount_syscall(const char *source, const char *target,
 
 	int32_t result=0;
 	struct superblock_type *sb;
+	struct block_dev_type *block;
 
 	sb=superblock_allocate();
 	if (sb==NULL) {
+		printk("Unable to allocate superblock\n");
 		return -ERANGE;
+	}
+
+	block=block_dev_find(source);
+	if (block==NULL) {
+		return -ENODEV;
 	}
 
 	/* FIXME: setup a data structure to search all compiled-in fses */
 
 	if (!strncmp(filesystemtype,"romfs",5)) {
-		result=romfs_mount(sb);
+		result=romfs_mount(sb,block);
 		if (result<0) {
 			return -EINVAL;
 		}
@@ -95,20 +104,23 @@ int32_t mount_syscall(const char *source, const char *target,
 
 int32_t statfs_syscall(const char *path, struct vmwos_statfs *buf) {
 
-	struct inode_type inode;
+	struct inode_type *inode;
 	int32_t result;
 
 	if (debug) printk("### statfs on \"%s\"\n",path);
 
-	result=get_inode(path,&inode);
+	result=inode_lookup_and_alloc(path,&inode);
 	if (result<0) {
 		if (debug) printk("\tget_inode result %d\n",result);
 		return result;
 	}
 
 	if (debug) printk("\tgot inode %x of %s\n",
-		inode.number,inode.sb->mountpoint);
+		inode->number,inode->sb->mountpoint);
 
-	return inode.sb->sb_ops.statfs(inode.sb,buf);
+	result=inode->sb->sb_ops.statfs(inode->sb,buf);
 
+	inode_free(inode);
+
+	return result;
 }

@@ -44,6 +44,7 @@ struct superblock_type {
 	int32_t root_dir;
 	char mountpoint[MAX_PATH_LEN];
 	struct superblock_operations sb_ops;	/* superblock operations */
+	struct block_dev_type *block;
 };
 
 

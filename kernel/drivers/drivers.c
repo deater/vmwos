@@ -4,6 +4,7 @@
 #include "lib/printk.h"
 
 #include "drivers/drivers.h"
+
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "drivers/led/led.h"
@@ -13,6 +14,7 @@
 #include "drivers/random/bcm2835_rng.h"
 #include "drivers/thermal/thermal.h"
 #include "drivers/pmu/arm-pmu.h"
+
 
 void drivers_init_all(void) {
 

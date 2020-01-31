@@ -8,9 +8,10 @@ all:	drivers-arm1176.a drivers-armv7.a
 #### ARM1176
 
 drivers-arm1176.a:	drivers.arm1176.o \
+		block.arm1176.o \
 		audio/audio.arm1176.a \
 		bcm2835/bcm2835.arm1176.a \
-		block/block.arm1176.a \
+		ramdisk/ramdisk.arm1176.a \
 		console/console.arm1176.a \
 		firmware/firmware.arm1176.a \
 		framebuffer/framebuffer.arm1176.a \
@@ -25,9 +26,10 @@ drivers-arm1176.a:	drivers.arm1176.o \
 
 	$(CROSS)$(AR) crsT drivers-arm1176.a \
 		drivers.arm1176.o \
+		ramdisk/ramdisk.arm1176.a \
+		block.arm1176.o \
 		audio/audio.arm1176.a \
 		bcm2835/bcm2835.arm1176.a \
-		block/block.arm1176.a \
 		console/console.arm1176.a \
 		firmware/firmware.arm1176.a \
 		framebuffer/framebuffer.arm1176.a \
@@ -43,6 +45,9 @@ drivers-arm1176.a:	drivers.arm1176.o \
 drivers.arm1176.o:	drivers.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o drivers.arm1176.o -c drivers.c
 
+block.arm1176.o:	block.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o block.arm1176.o -c block.c
+
 
 audio/audio.arm1176.a:	force_look
 	cd audio && make
@@ -50,8 +55,8 @@ audio/audio.arm1176.a:	force_look
 bcm2835/bcm2835.arm1176.a:	force_look
 	cd bcm2835 && make
 
-block/block.arm1176.a:	force_look
-	cd block && make
+ramdisk/ramdisk.arm1176.a:	force_look
+	cd ramdisk && make
 
 console/console.arm1176.a:	force_look
 	cd console && make
@@ -91,9 +96,10 @@ timer/timer.arm1176.a:	force_look
 
 drivers-armv7.a:	\
 		drivers.armv7.o \
+		ramdisk/ramdisk.armv7.a \
+		block.armv7.o \
 		audio/audio.armv7.a \
 		bcm2835/bcm2835.armv7.a \
-		block/block.armv7.a \
 		console/console.armv7.a \
 		firmware/firmware.armv7.a \
 		framebuffer/framebuffer.armv7.a \
@@ -108,9 +114,10 @@ drivers-armv7.a:	\
 
 	$(CROSS)$(AR) crsT drivers-armv7.a \
 		drivers.armv7.o \
+		block.armv7.o \
 		audio/audio.armv7.a \
 		bcm2835/bcm2835.armv7.a \
-		block/block.armv7.a \
+		ramdisk/ramdisk.armv7.a \
 		console/console.armv7.a \
 		firmware/firmware.armv7.a \
 		framebuffer/framebuffer.armv7.a \
@@ -127,14 +134,17 @@ drivers-armv7.a:	\
 drivers.armv7.o:	drivers.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o drivers.armv7.o -c drivers.c
 
+block.armv7.o:	block.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o block.armv7.o -c block.c
+
 audio/audio.armv7.a:	force_look
 	cd audio && make
 
 bcm2835/bcm2835.armv7.a:	force_look
 	cd bcm2835 && make
 
-block/block.armv7.a:	force_look
-	cd block && make
+ramdisk/ramdisk.armv7.a:	force_look
+	cd ramdisk && make
 
 console/console.armv7.a:	force_look
 	cd console && make
@@ -179,7 +189,6 @@ clean:
 	rm -f *~ *.o *.a
 	cd audio && make clean
 	cd bcm2835 && make clean
-	cd block && make clean
 	cd console && make clean
 	cd firmware && make clean
 	cd framebuffer && make clean
@@ -187,10 +196,8 @@ clean:
 	cd keyboard && make clean
 	cd led && make clean
 	cd pmu && make clean
+	cd ramdisk && make clean
 	cd random && make clean
 	cd serial && make clean
 	cd thermal && make clean
 	cd timer && make clean
-
-
-

@@ -31,6 +31,9 @@ image:	shell \
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
 	echo "};" >> initrd.h
+	echo "unsigned char initrd2_image[]={" > initrd2.h
+	xxd -i < pt3_player.dsk >> initrd2.h
+	echo "};" >> initrd2.h
 
 $(ELF2BFLT):
 	cd ../elf2bflt && make

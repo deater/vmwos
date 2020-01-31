@@ -8,7 +8,7 @@
 #include "boot/smp_boot.h"
 
 #include "drivers/drivers.h"
-#include "drivers/block/ramdisk.h"
+#include "drivers/ramdisk/ramdisk.h"
 #include "drivers/serial/serial.h"
 #include "drivers/console/console_io.h"
 
@@ -28,6 +28,7 @@
 
 /* Initrd hack */
 #include "../userspace/initrd.h"
+#include "../userspace/initrd2.h"
 
 #include "version.h"
 
@@ -36,6 +37,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	(void) r0;	/* Ignore boot method */
 	uint32_t rounded_memory;
+	struct block_dev_type *dev;
 
 	/*******************/
 	/* Detect Hardware */
@@ -137,11 +139,17 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/* Init the file descriptor table */
 	file_objects_init();
 
-	/* Initialize the ramdisk */
-	ramdisk_init(initrd_image,sizeof(initrd_image));
+	/* Setup first ramdisk */
+	dev=ramdisk_init(initrd_image,sizeof(initrd_image));
+	if (dev!=NULL) {
+		mount_syscall("ramdisk0","/","romfs",0,NULL);
+	}
 
-	/* Mount the ramdisk */
-	mount_syscall("/dev/ramdisk","/","romfs",0,NULL);
+	/* Setup the second ramdisk */
+	dev=ramdisk_init(initrd2_image,sizeof(initrd2_image));
+	if (dev!=NULL) {
+//	mount_syscall("ramdisk1","/mnt","dos33fs",0,NULL);
+	}
 
 	/* Create idle task */
 	create_idle_task();

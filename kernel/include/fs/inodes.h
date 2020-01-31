@@ -1,6 +1,9 @@
+#define NUM_INODES	64
+
 struct inode_type {
 	uint32_t	device;		/* device containing file */
 	int32_t		number;		/* inode number */
+	int32_t		count;		/* total users of this */
 	int32_t		mode;		/* protection bits */
 	int32_t		hard_links;	/* hard links */
 	int32_t		uid;		/* uid of owner */
@@ -14,7 +17,6 @@ struct inode_type {
 	uint64_t	ctime;		/* status change time */
 	struct superblock_type *sb;	/* associated superblock */
 };
-
 
 /* We do things in hex in vmwos, none of this octal nonsense */
 #define S_IFMT		0xf000	/* mask			*/
@@ -46,7 +48,8 @@ struct vmwos_stat {
 
 int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf);
 
-int32_t get_inode(const char *pathname, struct inode_type *inode);
+int32_t inode_lookup_and_alloc(const char *pathname, struct inode_type **inode);
+int32_t inode_free(struct inode_type *inode);
 
 const char *split_filename(const char *start_ptr, char *name, int len);
 

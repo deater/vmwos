@@ -25,7 +25,7 @@
 #include "lib/endian.h"
 #include "lib/errors.h"
 
-#include "drivers/block/ramdisk.h"
+#include "drivers/block.h"
 
 #include "fs/files.h"
 #include "fs/inodes.h"
@@ -39,17 +39,20 @@ static int debug=0;
 /* offset where files start */
 static uint32_t file_headers_start=0;
 
-static int32_t romfs_read_noinc(void *buffer, uint32_t offset, uint32_t size) {
+static int32_t romfs_read_noinc(
+	struct superblock_type *sb,
+	void *buffer, uint32_t offset, uint32_t size) {
 
 	/* Read from underlying block layer */
 	/* FIXME: hardcoded to the ramdisk */
-	ramdisk_read(offset,size,buffer);
+	sb->block->block_ops->read(sb->block,offset,size,buffer);
 
 	return 0;
 }
 
 /* romfs strings are nul-terminated and come in 16-byte chunks */
-static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
+static int32_t romfs_read_string(struct superblock_type *sb,
+			int32_t offset, char *buffer, int32_t size) {
 
 	char temp_buffer[16];
 	int32_t our_offset=offset;
@@ -61,7 +64,7 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 
 	while(1) {
 		/* read 16-byte chunk from the filesystem */
-		romfs_read_noinc(temp_buffer,our_offset,16);
+		romfs_read_noinc(sb,temp_buffer,our_offset,16);
 		our_offset+=16;
 
 		/* Make sure to not overrun the buffer		*/
@@ -88,7 +91,8 @@ static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
 }
 
 /* romfs strings are nul-terminated and come in 16-byte chunks */
-static int32_t romfs_string_length(int32_t offset) {
+static int32_t romfs_string_length(struct superblock_type *sb,
+					int32_t offset) {
 
 	char temp_buffer[16];
 	int32_t our_offset=offset;
@@ -96,7 +100,7 @@ static int32_t romfs_string_length(int32_t offset) {
 
 	while(1) {
 		/* read 16-byte chunk from the filesystem */
-		romfs_read_noinc(temp_buffer,our_offset,16);
+		romfs_read_noinc(sb,temp_buffer,our_offset,16);
 		our_offset+=16;
 
 		/* Only exit if hit the end of the string */
@@ -112,7 +116,8 @@ static int32_t romfs_string_length(int32_t offset) {
 }
 
 /* romfs strings are nul-terminated and come in 16-byte chunks */
-static int32_t romfs_string_length_chunks(int32_t offset) {
+static int32_t romfs_string_length_chunks(struct superblock_type *sb,
+						int32_t offset) {
 
 	char temp_buffer[16];
 	int32_t our_offset=offset;
@@ -120,7 +125,7 @@ static int32_t romfs_string_length_chunks(int32_t offset) {
 
 	while(1) {
 		/* read 16-byte chunk from the filesystem */
-		romfs_read_noinc(temp_buffer,our_offset,16);
+		romfs_read_noinc(sb,temp_buffer,our_offset,16);
 		our_offset+=16;
 
 		/* Only exit if hit the end of the string */
@@ -135,20 +140,21 @@ static int32_t romfs_string_length_chunks(int32_t offset) {
 	return max_length;
 }
 
-static int32_t romfs_inode_follow_links(int32_t inode) {
+static int32_t romfs_inode_follow_links(struct superblock_type *sb,
+		int32_t inode) {
 
 	int32_t header_offset,temp_int;
 	int32_t type,spec_info;
 
 inode_link_loop:
 	header_offset=inode;		/* 0: Next */
-	romfs_read_noinc(&temp_int,header_offset,4);
+	romfs_read_noinc(sb,&temp_int,header_offset,4);
 	type=ntohl(temp_int);
 
 	type&=0x7;
 
 	header_offset+=4;		/* 4: spec.info */
-	romfs_read_noinc(&temp_int,header_offset,4);
+	romfs_read_noinc(sb,&temp_int,header_offset,4);
 	spec_info=ntohl(temp_int);
 
 	if (type==0) {
@@ -187,7 +193,7 @@ retry_inode:
 	inode->mode=0666;
 
 	header_offset=inode->number;		/* 0: Next */
-	romfs_read_noinc(&temp_int,header_offset,4);
+	romfs_read_noinc(sb,&temp_int,header_offset,4);
 	type=ntohl(temp_int);
 
 	/* check if executable */
@@ -198,7 +204,7 @@ retry_inode:
 	type&=0x7;
 
 	header_offset+=4;		/* 4: spec.info */
-	romfs_read_noinc(&temp_int,header_offset,4);
+	romfs_read_noinc(sb,&temp_int,header_offset,4);
 	spec_info=ntohl(temp_int);
 
 	switch(type) {
@@ -250,7 +256,7 @@ retry_inode:
 	}
 
 	header_offset+=4;		/* 8: Size */
-	romfs_read_noinc(&temp_int,header_offset,4);
+	romfs_read_noinc(sb,&temp_int,header_offset,4);
 	size=ntohl(temp_int);
 	inode->size=size;
 
@@ -284,9 +290,9 @@ static int32_t romfs_lookup_inode_dir(struct inode_type *dir_inode,
 
 	/* Check to make sure our dir_inode is in fact a dir_inode */
 
-	romfs_read_noinc(&temp_int,offset,4);
+	romfs_read_noinc(dir_inode->sb,&temp_int,offset,4);
 	next=ntohl(temp_int);
-	romfs_read_noinc(&temp_int,offset+4,4);
+	romfs_read_noinc(dir_inode->sb,&temp_int,offset+4,4);
 	spec=ntohl(temp_int);
 
 	if ( (next&0x7)!=1) {
@@ -304,13 +310,14 @@ static int32_t romfs_lookup_inode_dir(struct inode_type *dir_inode,
 		inode_number=offset;
 
 		/* Get pointer to next file */
-		romfs_read_noinc(&temp_int,offset,4);
+		romfs_read_noinc(dir_inode->sb,&temp_int,offset,4);
 		next=ntohl(temp_int)&~0xf;
 
 		/* Get current filename, which is in chunks of 16 bytes */
 		offset+=16;
 
-		romfs_read_string(offset,filename,ROMFS_MAX_FILENAME_SIZE);
+		romfs_read_string(dir_inode->sb,offset,
+					filename,ROMFS_MAX_FILENAME_SIZE);
 		if (debug) printk("romfs_get_inode: %s is %s? %x\n",
 				name,filename,inode_number);
 
@@ -318,7 +325,8 @@ static int32_t romfs_lookup_inode_dir(struct inode_type *dir_inode,
 		if (!strncmp(name,filename,ROMFS_MAX_FILENAME_SIZE)) {
 
 			/* Follow any hard links */
-			inode_number=romfs_inode_follow_links(inode_number);
+			inode_number=romfs_inode_follow_links(dir_inode->sb,
+								inode_number);
 
 			dir_inode->number=inode_number;
 
@@ -371,14 +379,14 @@ lookup_inode_done:
 	return result;
 }
 
-static uint32_t romfs_get_size(struct superblock_type *superblock) {
+static uint32_t romfs_get_size(struct superblock_type *sb) {
 
 	int temp_int;
 	uint32_t offset=0;
 	struct romfs_header_t header;
 
 	/* Read header */
-	romfs_read_noinc(header.magic,offset,8);
+	romfs_read_noinc(sb,header.magic,offset,8);
 	if (memcmp(header.magic,"-rom1fs-",8)) {
 		printk("Wrong magic number!\n");
 		return -1;
@@ -387,7 +395,7 @@ static uint32_t romfs_get_size(struct superblock_type *superblock) {
 	if (debug) printk("Found romfs filesystem!\n");
 
 	/* Read size */
-	romfs_read_noinc(&temp_int,offset,4);
+	romfs_read_noinc(sb,&temp_int,offset,4);
 	header.size=ntohl(temp_int);
 	offset+=4;
 	if (debug) printk("\tSize: %d bytes\n",header.size);
@@ -422,7 +430,8 @@ int32_t romfs_statfs(struct superblock_type *superblock,
 }
 
 
-int32_t romfs_read_file(uint32_t inode,
+int32_t romfs_read_file(
+			struct superblock_type *sb, uint32_t inode,
 			char *buf,uint32_t count,
 			uint64_t *file_offset) {
 
@@ -438,14 +447,14 @@ int32_t romfs_read_file(uint32_t inode,
 	header_offset+=4;		/* 4: type */
 
 	header_offset+=4;		/* 8: Size */
-	romfs_read_noinc(&temp_int,header_offset,4);
+	romfs_read_noinc(sb,&temp_int,header_offset,4);
 	size=ntohl(temp_int);
 
 	header_offset+=4;		/* 12: Checksum */
 
 
 	header_offset+=4;		/* 16: filename */
-	name_length=romfs_string_length_chunks(header_offset);
+	name_length=romfs_string_length_chunks(sb,header_offset);
 	header_offset+=name_length;
 	if (debug) printk("romfs: inode %d name_length %d header_offset %d\n",
 			inode,name_length,header_offset);
@@ -463,7 +472,8 @@ int32_t romfs_read_file(uint32_t inode,
 	if (debug) printk("romfs: reading %d bytes from %d into %x\n",
 		max_count,header_offset+*file_offset,buf);
 
-	read_count=ramdisk_read(header_offset+*file_offset,max_count,buf);
+	read_count=sb->block->block_ops->read(sb->block,
+				header_offset+*file_offset,max_count,buf);
 
 	/* Update file pointer */
 	if (read_count>0) {
@@ -479,7 +489,8 @@ int32_t romfs_read_file(uint32_t inode,
 	/* Reads most that can fit and updates offset */
 	/* Start again from the file offset */
 	/* Returns 0 when done */
-int32_t romfs_getdents(uint32_t dir_inode,
+int32_t romfs_getdents(struct superblock_type *sb,
+			uint32_t dir_inode,
 			uint64_t *current_progress,
 			void *buf,uint32_t size) {
 
@@ -500,7 +511,7 @@ int32_t romfs_getdents(uint32_t dir_inode,
 	/* We are the entry itself? */
 	if (inode==0) {
 		header_offset=dir_inode;	/* 0: Next */
-		romfs_read_noinc(&temp_int,header_offset,4);
+		romfs_read_noinc(sb,&temp_int,header_offset,4);
 		mode=ntohl(temp_int)&0x7;
 		/* Check to be sure it's a directory */
 		if ( mode!=1) {
@@ -510,21 +521,21 @@ int32_t romfs_getdents(uint32_t dir_inode,
 		}
 		/* Get inode of first file */
 		header_offset+=4;		/* 4: type */
-		romfs_read_noinc(&temp_int,header_offset,4);
+		romfs_read_noinc(sb,&temp_int,header_offset,4);
 		inode=ntohl(temp_int);
 	}
 
 	while(1) {
 
 		header_offset=inode;		/* 0: Next */
-		romfs_read_noinc(&temp_int,header_offset,4);
+		romfs_read_noinc(sb,&temp_int,header_offset,4);
 		next_header=ntohl(temp_int)&~0xf;
 		header_offset+=4;		/* 4: type */
 		header_offset+=4;		/* 8: Size */
 		header_offset+=4;		/* 12: Checksum */
 		header_offset+=4;		/* 16: filename */
 
-		name_length=romfs_string_length(header_offset);
+		name_length=romfs_string_length(sb,header_offset);
 
 		if (debug) {
 			printk("romfs_getdents: inode %d next %d\n",
@@ -546,7 +557,8 @@ int32_t romfs_getdents(uint32_t dir_inode,
 		dirent_ptr->d_ino=inode;
 		dirent_ptr->d_off=current_length;
 		dirent_ptr->d_reclen=current_length;
-		romfs_read_string(header_offset,dirent_ptr->d_name,name_length);
+		romfs_read_string(sb,
+				header_offset,dirent_ptr->d_name,name_length);
 		dirent_ptr->d_name[name_length]=0;
 		num_entries++;
 		if (debug) printk("romfs_getdents: added %s namelen %d reclen %d\n",
@@ -564,7 +576,8 @@ int32_t romfs_getdents(uint32_t dir_inode,
 }
 
 
-int32_t romfs_write_file(uint32_t inode,
+int32_t romfs_write_file(
+			struct superblock_type *superblock, uint32_t inode,
                         const char *buf,uint32_t count, uint64_t *offset) {
 
 	/* read only filesystem */
@@ -593,15 +606,18 @@ static struct superblock_operations romfs_sb_ops = {
 };
 
 
-int32_t romfs_mount(struct superblock_type *superblock) {
+int32_t romfs_mount(struct superblock_type *sb, struct block_dev_type *block) {
 
 	int temp_int;
 	struct romfs_header_t header;
 	uint32_t offset=0;
 	int32_t result=0;
 
+	/* Set up block device pointer */
+	sb->block=block;
+
 	/* Read header */
-	romfs_read_noinc(header.magic,offset,8);
+	romfs_read_noinc(sb,header.magic,offset,8);
 	if (memcmp(header.magic,"-rom1fs-",8)) {
 		printk("Wrong magic number!\n");
 		return -1;
@@ -610,13 +626,13 @@ int32_t romfs_mount(struct superblock_type *superblock) {
 	if (debug) printk("Found romfs filesystem!\n");
 
 	/* Read size */
-	romfs_read_noinc(&temp_int,offset,4);
+	romfs_read_noinc(sb,&temp_int,offset,4);
 	header.size=ntohl(temp_int);
 	offset+=4;
 	if (debug) printk("\tSize: %d bytes\n",header.size);
 
 	/* Read checksum */
-	romfs_read_noinc(&temp_int,offset,4);
+	romfs_read_noinc(sb,&temp_int,offset,4);
 	header.checksum=ntohl(temp_int);
 	offset+=4;
 	/* FIXME: validate checksum */
@@ -626,7 +642,7 @@ int32_t romfs_mount(struct superblock_type *superblock) {
 	/* Read volume name */
 	/* FIXME: We ignore anything more than 16-bytes */
 	/* We really don't care about volume name */
-	result=romfs_read_string(offset,header.volume_name,16);
+	result=romfs_read_string(sb,offset,header.volume_name,16);
 	offset+=result;
 	if (debug) {
 		printk("\tVolume: %s, file_headers start at %x\n",
@@ -637,13 +653,13 @@ int32_t romfs_mount(struct superblock_type *superblock) {
 	file_headers_start=offset;
 
 	/* Set size */
-	superblock->size=header.size;
+	sb->size=header.size;
 
 	/* Point to our superblock operations */
-	superblock->sb_ops=romfs_sb_ops;
+	sb->sb_ops=romfs_sb_ops;
 
 	/* point to root dir of filesystem */
-	superblock->root_dir=file_headers_start;
+	sb->root_dir=file_headers_start;
 
 	return 0;
 

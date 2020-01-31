@@ -11,12 +11,9 @@
 #include "lib/memcpy.h"
 #include "lib/smp.h"
 
-#include "drivers/block/ramdisk.h"
-
 #include "fs/files.h"
 #include "fs/inodes.h"
 #include "fs/superblock.h"
-#include "fs/romfs/romfs.h"
 
 #include "processes/process.h"
 #include "processes/exit.h"
@@ -28,7 +25,6 @@ static int exec_summary_debug=1;
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	int result,i;
-	struct inode_type inode;
 	void *binary_start,*stack_page;
 	int32_t argc=0;
 	char *argv_location;
@@ -36,6 +32,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 	uint32_t *stack_argv;
 	char *argv_ptr;
 	char magic[16];
+	struct file_object *file;
 
 	uint32_t text_start,data_start,bss_start,bss_end;
 	uint32_t stack_size,total_program_size,total_ondisk_size;
@@ -43,23 +40,29 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	if (exec_debug) printk("Entering execve\n");
 
-	result=get_inode(filename,&inode);
+	result=open_file_object(&file,filename,O_RDONLY,0);
 	if (result<0) {
 		if (exec_debug) {
-			printk("Error %d in get_inode(%s)\n",result,filename);
+			printk("Error %d opening %s\n",result,filename);
 		}
 		return result;
 	}
 
+	/* FIXME: Check if executable */
+
+	/* FIXME: Check pemissions */
+
 	/* See what kind of file it is */
 	file_offset=0;
-	result=romfs_read_file(inode.number,(char *)&magic,16,&file_offset);
+	result=file->file_ops->read(file->inode->sb,file->inode->number,
+			(char *)&magic,16,&file_offset);
 
 	/* see if a bFLT file */
 	if ((magic[0]=='b') && (magic[1]=='F') &&
 		(magic[2]=='L') && (magic[3]=='T')) {
 
-		result=bflt_load(inode.number,&stack_size,
+		result=bflt_load(file,
+			&stack_size,
 			&text_start,&data_start,&bss_start,
 			&bss_end,&total_ondisk_size,&total_program_size);
 
@@ -84,11 +87,11 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		/* Load executable */
 		/* Size does not include bss */
 		file_offset=text_start;
-		romfs_read_file(inode.number,
+		file->file_ops->read(file->inode->sb,file->inode->number,
 				binary_start,total_ondisk_size,&file_offset);
 
 		/* Relocate values in the executable */
-		bflt_reloc(inode.number,binary_start);
+		bflt_reloc(file,binary_start);
 
 	}
 	/* Otherwise, treat as raw binary */
@@ -100,8 +103,8 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		if (exec_debug) printk("RAW: stack size = %d\n",stack_size);
 
 		text_start=0;
-		total_ondisk_size=inode.size;
-		total_program_size=inode.size;
+		total_ondisk_size=file->inode->size;
+		total_program_size=file->inode->size;
 		if (exec_debug) printk("RAW: total size = %d\n",total_program_size);
 
 		/* Allocate stack */
@@ -121,9 +124,12 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 		/* Load executable */
 		file_offset=text_start;
-		romfs_read_file(inode.number,
+		file->file_ops->read(file->inode->sb,file->inode->number,
 			binary_start,total_ondisk_size,&file_offset);
 	}
+
+	/* Done loading executable? */
+	file_object_free(file);
 
 
 	/************/

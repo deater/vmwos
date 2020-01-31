@@ -8,12 +8,11 @@
 struct file_object_operations;
 
 struct file_object {
-        uint64_t file_offset;
-	struct file_object_operations *file_ops;
-        uint32_t valid;
-        uint32_t inode;
-        uint32_t count;
-	char name[MAX_PATH_LEN];
+        uint64_t file_offset;				/* current offset */
+	struct file_object_operations *file_ops;	/* file_ops struct */
+        struct inode_type *inode;			/* inode */
+        uint32_t count;					/* # users of file */
+	char name[MAX_PATH_LEN];			/* name of file */
 };
 
 struct vmwos_dirent {
@@ -23,16 +22,25 @@ struct vmwos_dirent {
 	char            d_name[];
 };
 
+struct superblock_type;
+
 struct file_object_operations {
-        int32_t (*read) (uint32_t, char *, uint32_t, uint64_t *);
-        int32_t (*write) (uint32_t, const char *, uint32_t, uint64_t *);
+        int32_t (*read) (struct superblock_type *superblock,
+				uint32_t, char *, uint32_t, uint64_t *);
+        int32_t (*write) (struct superblock_type *superblock,
+			uint32_t, const char *, uint32_t, uint64_t *);
         int64_t (*llseek) (struct file_object *, int64_t, int32_t);
-        int32_t (*getdents) (uint32_t, uint64_t *, void *, uint32_t);
+        int32_t (*getdents) (struct superblock_type *superblock,
+			uint32_t, uint64_t *, void *, uint32_t);
         int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
         int32_t (*open) (int32_t *, struct file_object *);
 //        int (*flush) (struct file *);
 };
 
+struct inode_type *file_get_inode(int32_t which);
+int32_t open_file_object(struct file_object **file,
+			const char *pathname, uint32_t flags, uint32_t mode);
+int32_t file_object_free(struct file_object *file);
 
 
 

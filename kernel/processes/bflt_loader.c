@@ -11,7 +11,7 @@ static int bflt_debug=0;
 #include "lib/memcpy.h"
 #include "lib/smp.h"
 
-#include "drivers/block/ramdisk.h"
+//#include "drivers/block/ramdisk.h"
 
 #include "fs/files.h"
 #include "fs/inodes.h"
@@ -22,7 +22,7 @@ static int bflt_debug=0;
 
 #include "processes/bflt_loader.h"
 
-int32_t bflt_load(int32_t inode,
+int32_t bflt_load(struct file_object *file,
 		uint32_t *stack_size, uint32_t *text_start,
 		uint32_t *data_start, uint32_t *bss_start,
 		uint32_t *bss_end,
@@ -37,7 +37,8 @@ int32_t bflt_load(int32_t inode,
 	if (bflt_debug) printk("Running BFLT executable!\n");
 
 	file_offset=0;
-	result=romfs_read_file(inode,(char *)&bflt_header,64,&file_offset);
+	result=file->file_ops->read(file->inode->sb,file->inode->number,
+		(char *)&bflt_header,64,&file_offset);
 	if (result<0) return result;
 
 	/* Find stack size */
@@ -75,7 +76,7 @@ int32_t bflt_load(int32_t inode,
 }
 
 
-int32_t bflt_reloc(int32_t inode, void *binary_address) {
+int32_t bflt_reloc(struct file_object *file, void *binary_address) {
 
 	int result,i;
 	char bflt_header[64];
@@ -88,7 +89,8 @@ int32_t bflt_reloc(int32_t inode, void *binary_address) {
 	if (bflt_debug) printk("Relocating BFLT executable!\n");
 
 	file_offset=0;
-	result=romfs_read_file(inode,(char *)&bflt_header,64,&file_offset);
+	result=file->file_ops->read(file->inode->sb,file->inode->number,
+		(char *)&bflt_header,64,&file_offset);
 	if (result<0) return result;
 
 	/* Find Number of Relocations */
@@ -106,7 +108,8 @@ int32_t bflt_reloc(int32_t inode, void *binary_address) {
 
 	for(i=0;i<reloc_count;i++) {
 		file_offset=reloc_start+(i*4);
-		result=romfs_read_file(inode,(char *)&reloc_addr,
+		result=file->file_ops->read(file->inode->sb,file->inode->number,
+							(char *)&reloc_addr,
 							4,&file_offset);
 		if (result<0) return -1;
 		reloc_addr=ntohl(reloc_addr);
