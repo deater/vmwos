@@ -6,13 +6,13 @@ GENROMFS = genromfs
 
 all:	$(ELF2BFLT) \
 	shell \
-	cat cat_count cause_error core_poke cp df hello ll ls \
+	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
 	memory_test nano printa printb pwd sysinfo tbo uname \
 	chiptune chiptune6
 	cd demo && $(MAKE)
 
 image:	shell \
-	cat cat_count cause_error core_poke cp df hello ll ls \
+	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
 	memory_test nano printa printb pwd sysinfo tbo uname chiptune chiptune6
 	mkdir -p image
 	mkdir -p image/bin
@@ -21,7 +21,7 @@ image:	shell \
 	mkdir -p image/proc
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error core_poke cp df \
-		hello ll ls memory_test nano printa printb pwd \
+		hello hexdump ll ls memory_test nano printa printb pwd \
 		sysinfo tbo uname chiptune chiptune6 ./image/bin
 	cp demo/demosplash2019 ./image/bin
 	cp CATME ./image/home
@@ -64,6 +64,9 @@ df:	df.elf
 
 hello:	hello.elf
 	$(ELF2BFLT) hello.elf hello
+
+hexdump:	hexdump.elf
+	$(ELF2BFLT) hexdump.elf hexdump
 
 ls:	ls.elf
 	$(ELF2BFLT) ls.elf ls
@@ -134,6 +137,9 @@ df.elf:	df.o ./vlibc/vlibc.a
 hello.elf:	hello.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf hello.o ./vlibc/vlibc.a
 
+hexdump.elf:	hexdump.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hexdump.elf hexdump.o ./vlibc/vlibc.a
+
 ls.elf:	ls.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ls.elf ls.o ./vlibc/vlibc.a
 
@@ -202,6 +208,9 @@ df.o:	df.c
 hello.o:	hello.c
 	$(CROSS)$(CC) $(CFLAGS) -c hello.c
 
+hexdump.o:	hexdump.c
+	$(CROSS)$(CC) $(CFLAGS) -c hexdump.c
+
 memory_test.o:	memory_test.c
 	$(CROSS)$(CC) $(CFLAGS) -c memory_test.c
 
@@ -244,7 +253,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error chiptune chiptune6 \
-		core_poke df ll ls memory_test nano \
+		core_poke cp df hexdump ll ls memory_test nano \
 		printa printb pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
