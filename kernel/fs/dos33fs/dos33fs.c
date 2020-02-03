@@ -21,175 +21,269 @@
 
 static int debug=1;
 
-#if 0
+
+static uint32_t ts(int32_t track, int32_t sector) {
+
+	int sectors_per_track=16; /* usually, older disks had 13 */
+
+	return ((track*sectors_per_track)+sector)*DOS33_BLOCK_SIZE;
+}
+
+static uint32_t inode_to_block(uint32_t inode_num) {
+
+	uint32_t track, sector;
+
+	/* We store inode as TRACK(8bits)Sector(8bits)Entry(8bits) */
+
+	track=(inode_num>>16)&0xff;
+	sector=(inode_num>>8)&0xff;
+
+	return ts(track,sector);
+}
+
+
+
+static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
+					const char *searchname,
+					uint32_t *found_inode_num) {
+
+
+	int32_t name_length;
+	uint32_t inode;
+	char current_block[DOS33_BLOCK_SIZE];
+	uint32_t block_location,i;
+	uint32_t cat_offset=0;
+	char filename[31];
+	int32_t filename_ptr;
+
+	if (debug) {
+		printk("dos33fs: looking for %s in %x\n",searchname,dir_inode);
+	}
+
+	/* fake a "." entry */
+	if (!strncmp(searchname,".",strlen(searchname))) {
+		*found_inode_num=(dir_inode->number|0xff);
+		if (debug) printk("dos33fs: faking . %x\n",*found_inode_num);
+		return 0;
+	}
+
+	/* fake a ".." entry */
+	if (!strncmp(searchname,"..",strlen(searchname))) {
+		*found_inode_num=(((dir_inode->number)&~0xff)|0xfe);
+		if (debug) printk("dos33fs: faking .. %x\n",*found_inode_num);
+		return 0;
+	}
+
+	while(1) {
+		/* start at starting dir */
+		block_location=inode_to_block(dir_inode->number);
+		dir_inode->sb->block->block_ops->read(dir_inode->sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
+
+		cat_offset=DOS33_CAT_FIRST_ENTRY;
+
+		for(i=0;i<DOS33_CAT_MAX_ENTRIES;i++) {
+
+			inode=((dir_inode->number)&~0xff)|i;
+
+			/* if zero then not allocated */
+			if (current_block[cat_offset]==0) continue;
+			/* if ff then deleted */
+			if (current_block[cat_offset]==0xff) continue;
+
+			/* copy in filename */
+			memcpy(filename,
+				&current_block[cat_offset+
+						DOS33_CAT_OFFSET_FILE_NAME],
+				DOS33_MAX_FILENAME_SIZE);
+			filename[DOS33_MAX_FILENAME_SIZE]='\0';
+
+			/* end of filename is padded with spaces (0xa0) */
+			/* so remove them from string */
+			filename_ptr=DOS33_MAX_FILENAME_SIZE-1;
+			while((filename_ptr>-1) &&
+					(filename[filename_ptr]==0xa0)) {
+				filename_ptr--;
+			}
+			filename_ptr++;
+			filename[filename_ptr]='\0';
+
+			/* Apple II stores strings with high bit set, */
+			/* so clear those */
+			/* also calculate string length */
+			name_length=0;
+			while(filename[name_length]!=0) {
+				filename[name_length]=filename[name_length]&0x7f;
+				name_length++;
+			}
+
+			if (debug) printk("dos33: trying %s\n",filename);
+			if (!strncmp(searchname,filename,strlen(searchname))) {
+				if (debug) printk("dos33: %s found\n",searchname);
+				*found_inode_num=inode;
+				return 0;
+			}
+
+		}
+		break;
+	}
+
+	if (debug) printk("dos33: %s not found\n",searchname);
+
+	return -1;
+}
+
 
 /* Read data from inode->number into inode */
 /* Data comes in partially filled, we just fill in rest */
-int32_t romfs_read_inode(struct inode_type *inode) {
+int32_t dos33_read_inode(struct inode_type *inode) {
 
-	int32_t header_offset,size,temp_int;
-	int32_t spec_info=0,type=0;
+	int32_t size=0;
+	int32_t type=0;
 
-retry_inode:
+	uint32_t block_location,cat_entry;
 
-	if (debug) printk("romfs: Attempting to stat inode %x\n",inode->number);
+	char current_block[DOS33_BLOCK_SIZE];
+
+	if (debug) {
+		printk("dos33: Attempting to stat inode %x\n",inode->number);
+	}
+
+	/* special case . */
+	if ((inode->number&0xff)==0xff) {
+		if (debug) {
+			printk("Special case . inode %x\n",inode->number);
+		}
+		inode->mode|=S_IFDIR;
+		inode->mode=0666;
+		return 0;
+	}
+
+	/* special case .. */
+	if ((inode->number&0xff)==0xfe) {
+		if (debug) {
+			printk("Special case .. inode %x\n",inode->number);
+		}
+		inode->mode|=S_IFDIR;
+		inode->mode=0666;
+		return 0;
+	}
+
+
+	block_location=inode_to_block(inode->number);
+	cat_entry=(inode->number&0xff);
+	if (cat_entry>=DOS33_CAT_MAX_ENTRIES) {
+		printk("Cat entry %d out of bounds\n",cat_entry);
+		return -ENOENT;
+	}
+
+
+	inode->sb->block->block_ops->read(inode->sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
 
 	/* Default mode is global read/write */
 		/* -rw-rw-rw- */
 	inode->mode=0666;
 
-	header_offset=inode->number;		/* 0: Next */
-	romfs_read_noinc(inode->sb,&temp_int,header_offset,4);
-	type=ntohl(temp_int);
+	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+				DOS33_CAT_FIRST_ENTRY+
+					(cat_entry*DOS33_CAT_ENTRY_SIZE)];
 
-	/* check if executable */
-	if (type&0x8) {
-		inode->mode|=0111;
+	/* See if locked (read-only) */
+	if (type&DOS33_FILE_TYPE_LOCKED) {
+		inode->mode&=~0222;
 	}
 
-	type&=0x7;
+	/* regular file */
+	inode->mode|=S_IFREG;
 
-	header_offset+=4;		/* 4: spec.info */
-	romfs_read_noinc(inode->sb,&temp_int,header_offset,4);
-	spec_info=ntohl(temp_int);
+	/* default size is only measured in multiples of blocksize */
+	/* 16-bit little-endian low/high */
+	size=current_block[DOS33_CAT_OFFSET_FILE_LENGTH_L+
+				DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]+
+		(current_block[DOS33_CAT_OFFSET_FILE_LENGTH_H+
+				DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]<<8);
 
-	switch(type) {
-		case 0: /* hard link */
-			/* spec_info is inode of destination */
-			if (debug) printk("HARD LINK to %x\n",spec_info);
+	inode->blocks=size;
+	inode->blocksize=DOS33_BLOCK_SIZE;
+	size*=DOS33_BLOCK_SIZE;
+
+	/* Do things based on type */
+	switch(type&0x7f) {
+		case DOS33_FILE_TYPE_T:	/* text */
 			break;
-		case 1: /* directory */
-			if (debug) printk("DIRECTORY\n");
-			inode->mode|=S_IFDIR;
-			/* spec_info is first file in subdir's header */
+		case DOS33_FILE_TYPE_I:	/* integer basic */
 			break;
-		case 2: /* regular file */
-			/* sinfo must be zero */
-			if (debug) printk("REGULAR FILE\n");
-			inode->mode|=S_IFREG;
+		case DOS33_FILE_TYPE_A:	/* applesoft basic */
 			break;
-		case 3: /* symbolic link */
-			/* sinfo must be zero */
-			if (debug) printk("SYMBOLIC_LINK\n");
-			inode->mode|=S_IFLNK;
+		case DOS33_FILE_TYPE_B:	/* binary */
+			/* Mark executable */
+			inode->mode|=0111;
+
+			/* FIXME: actual file size can be found by reading */
+			/* first few bytes of executable */
 			break;
-		case 4: /* block device */
-			if (debug) printk("BLOCK DEVICE\n");
-			inode->mode|=S_IFBLK;
-			inode->rdev=spec_info;
-			break;
-		case 5: /* char device */
-			if (debug) printk("CHAR DEVICE\n");
-			inode->mode|=S_IFCHR;
-			inode->rdev=spec_info;
-			break;
-		case 6: /* socket */
-			if (debug) printk("SOCKET\n");
-			inode->mode|=S_IFSOCK;
-			break;
-		case 7: /* fifo */
-			if (debug) printk("FIFO\n");
-			inode->mode|=S_IFIFO;
-			break;
+		case DOS33_FILE_TYPE_S:	/* S? */
+		case DOS33_FILE_TYPE_R:	/* Relocatable? */
+		case DOS33_FILE_TYPE_A2:/* A again */
+		case DOS33_FILE_TYPE_B2:/* B again */
 		default:
 			break;
 	}
 
-	/* was hard link, let's follow it */
-	if (type==0) {
-		inode->number=spec_info;
-		goto retry_inode;
-	}
 
-	header_offset+=4;		/* 8: Size */
-	romfs_read_noinc(inode->sb,&temp_int,header_offset,4);
-	size=ntohl(temp_int);
 	inode->size=size;
 
-	header_offset+=4;		/* 12: Checksum */
-
-
-	header_offset+=4;		/* 16: filename */
-
+	/* timestamp */
+	/* DOS3.3 was released in August of 1980 */
+	inode->atime=334939200;
+	inode->mtime=334939200;
+	inode->ctime=334939200;
 
 	return 0;
 }
 
-/* We cheat and just use the file header offset as the inode */
-static int32_t romfs_lookup_inode_dir(struct inode_type *dir_inode,
+
+static int32_t dos33_lookup_inode_dir(struct inode_type *dir_inode,
 		const char *name) {
 
-	int temp_int;
-	int32_t inode_number=0,next=0,spec=0;
-	uint32_t offset;
-	char filename[ROMFS_MAX_FILENAME_SIZE];
-
-	offset=dir_inode->number;
+	uint32_t inode_found;
+	int32_t result;
 
 	if (debug) {
-		printk("romfs_lookup_inode_dir: "
+		printk("dos33_lookup_inode_dir: "
 				"Trying to get inode for file %s in dir %x\n",
-				name,offset);
+				name,dir_inode->number);
 	}
+
+	/* First check for special "." or ".." */
+	if (!strncmp(name,"..",strlen(name))) {
+		return 0;
+	}
+	if (!strncmp(name,".",strlen(name))) {
+		return 0;
+	}
+
 
 	/* Check to make sure our dir_inode is in fact a dir_inode */
+	/* FIXME: ? */
 
-	romfs_read_noinc(dir_inode->sb,&temp_int,offset,4);
-	next=ntohl(temp_int);
-	romfs_read_noinc(dir_inode->sb,&temp_int,offset+4,4);
-	spec=ntohl(temp_int);
-
-	if ( (next&0x7)!=1) {
-		if (debug) {
-			printk("romfs_get_inode: inode %x (%x) is not a dir\n",
-				next,offset);
-		}
-		return -ENOTDIR;
+	result= dos33fs_find_filename(dir_inode,name,&inode_found);
+	if (result==0) {
+		dir_inode->number=inode_found;
 	}
 
-	/* first file in directory is pointed to by spec */
-	offset=spec;
-
-	while(1) {
-		inode_number=offset;
-
-		/* Get pointer to next file */
-		romfs_read_noinc(dir_inode->sb,&temp_int,offset,4);
-		next=ntohl(temp_int)&~0xf;
-
-		/* Get current filename, which is in chunks of 16 bytes */
-		offset+=16;
-
-		romfs_read_string(dir_inode->sb,offset,
-					filename,ROMFS_MAX_FILENAME_SIZE);
-		if (debug) printk("romfs_get_inode: %s is %s? %x\n",
-				name,filename,inode_number);
-
-		/* Match filename */
-		if (!strncmp(name,filename,ROMFS_MAX_FILENAME_SIZE)) {
-
-			/* Follow any hard links */
-			inode_number=romfs_inode_follow_links(dir_inode->sb,
-								inode_number);
-
-			dir_inode->number=inode_number;
-
-			return 0;
-		}
-
-		offset=next;
-
-		if (next==0) break;
-	}
-
-	return -1;
+	return result;
 }
-#endif
 
-/* We cheat and just use the file header offset as the inode */
+
+/* Inode number is TRACK<<16 | SECTOR<<8 | ENTRY */
+/* . and .. are special cases */
+
 int32_t dos33fs_lookup_inode(struct inode_type *inode, const char *name) {
 
-#if 0
 	const char *ptr;
 	char dir[MAX_FILENAME_SIZE];
 	int32_t result;
@@ -201,16 +295,16 @@ int32_t dos33fs_lookup_inode(struct inode_type *inode, const char *name) {
 
 	while(1) {
 		if (debug) {
-			printk("romfs_lookup_inode: about to split %s\n",ptr);
+			printk("dos33_lookup_inode: about to split %s\n",ptr);
 		}
 
 		ptr=split_filename(ptr,dir,MAX_FILENAME_SIZE);
 
 		if (debug) {
-			printk("romfs path_part %s\n",dir);
+			printk("dos33 path_part %s\n",dir);
 		}
 
-		result=romfs_lookup_inode_dir(inode,dir);
+		result=dos33_lookup_inode_dir(inode,dir);
 		if (result<0) {
 			return result;
 		}
@@ -220,41 +314,10 @@ int32_t dos33fs_lookup_inode(struct inode_type *inode, const char *name) {
         }
 lookup_inode_done:
 
-	result=romfs_read_inode(inode);
+	result=dos33_read_inode(inode);
 
 	return result;
-#endif
-
-	return 0;
 }
-
-#if 0
-
-static uint32_t romfs_get_size(struct superblock_type *sb) {
-
-	int temp_int;
-	uint32_t offset=0;
-	struct romfs_header_t header;
-
-	/* Read header */
-	romfs_read_noinc(sb,header.magic,offset,8);
-	if (memcmp(header.magic,"-rom1fs-",8)) {
-		printk("Wrong magic number!\n");
-		return -1;
-	}
-	offset+=8;
-	if (debug) printk("Found romfs filesystem!\n");
-
-	/* Read size */
-	romfs_read_noinc(sb,&temp_int,offset,4);
-	header.size=ntohl(temp_int);
-	offset+=4;
-	if (debug) printk("\tSize: %d bytes\n",header.size);
-
-	return header.size;
-
-}
-#endif
 
 int32_t dos33fs_statfs(struct superblock_type *superblock,
 		struct vmwos_statfs *buf) {
@@ -301,95 +364,136 @@ int32_t dos33fs_read_file(
 	return 0;
 }
 
-
-
 int32_t dos33fs_getdents(struct superblock_type *sb,
 			uint32_t dir_inode,
 			uint64_t *current_progress,
 			void *buf,uint32_t size) {
 
-#if 0
 	struct vmwos_dirent *dirent_ptr;
 
-	int32_t header_offset,temp_int,name_length,mode,next_header;
+	int32_t name_length;
 	uint32_t inode=*current_progress;
 	int32_t num_entries=0,current_length=0,total_length=0;
+	char current_block[DOS33_BLOCK_SIZE];
+	uint32_t block_location,i;
+	uint32_t cat_offset=0;
+	unsigned char filename[31];
+	int32_t filename_ptr;
 
 	dirent_ptr=(struct vmwos_dirent *)buf;
 
 	if (debug) {
-		printk("romfs_getdents: dir_inode %x current_inode %x\n",
+		printk("dos33fs_getdents: dir_inode %x current_inode %x\n",
 			dir_inode,inode);
 	}
-	if (inode==0xffffffff) return 0;
 
-	/* We are the entry itself? */
-	if (inode==0) {
-		header_offset=dir_inode;	/* 0: Next */
-		romfs_read_noinc(sb,&temp_int,header_offset,4);
-		mode=ntohl(temp_int)&0x7;
-		/* Check to be sure it's a directory */
-		if ( mode!=1) {
-			printk("romfs_getdents: offset %x inode %x not a directory!\n",
-				header_offset,temp_int);
-			return -ENOTDIR;
-		}
-		/* Get inode of first file */
-		header_offset+=4;		/* 4: type */
-		romfs_read_noinc(sb,&temp_int,header_offset,4);
-		inode=ntohl(temp_int);
+	/* start from scratch and iterate until we hit current progress */
+	block_location=inode_to_block(dir_inode);
+	sb->block->block_ops->read(sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
+
+
+	/* fake up a "." and ".." entry */
+	name_length=strlen(".");
+	dirent_ptr->d_ino=inode | 0xff;
+	dirent_ptr->d_off=current_length;
+	dirent_ptr->d_reclen=current_length;
+	memcpy(dirent_ptr->d_name,".",name_length);
+	dirent_ptr->d_name[name_length]=0;
+	num_entries++;
+	if (debug) {
+		printk("dos33_getdents: "
+				"added %s namelen %d reclen %d\n",
+				dirent_ptr->d_name,name_length,
+				dirent_ptr->d_reclen);
 	}
+	total_length+=current_length;
+	dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
 
-	while(1) {
+	name_length=strlen("..");
+	dirent_ptr->d_ino=inode | 0xfe;
+	dirent_ptr->d_off=current_length;
+	dirent_ptr->d_reclen=current_length;
+	memcpy(dirent_ptr->d_name,"..",name_length);
+	dirent_ptr->d_name[name_length]=0;
+	num_entries++;
+	if (debug) {
+		printk("dos33_getdents: "
+				"added %s namelen %d reclen %d\n",
+				dirent_ptr->d_name,name_length,
+				dirent_ptr->d_reclen);
+	}
+	total_length+=current_length;
+	dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
 
-		header_offset=inode;		/* 0: Next */
-		romfs_read_noinc(sb,&temp_int,header_offset,4);
-		next_header=ntohl(temp_int)&~0xf;
-		header_offset+=4;		/* 4: type */
-		header_offset+=4;		/* 8: Size */
-		header_offset+=4;		/* 12: Checksum */
-		header_offset+=4;		/* 16: filename */
 
-		name_length=romfs_string_length(sb,header_offset);
+	cat_offset=DOS33_CAT_FIRST_ENTRY;
 
-		if (debug) {
-			printk("romfs_getdents: inode %d next %d\n",
-				inode,next_header);
+	for(i=0;i<DOS33_CAT_MAX_ENTRIES;i++) {
+
+		inode=(dir_inode&0xff)|i;
+
+		/* if zero then not allocated */
+		/* note: this means track 0 can never be used for data */
+		if (current_block[cat_offset]==0) continue;
+		/* if ff then deleted */
+		if (current_block[cat_offset]==0xff) continue;
+
+		/* copy in filename */
+		memcpy(filename,
+			&current_block[cat_offset+DOS33_CAT_OFFSET_FILE_NAME],
+			DOS33_MAX_FILENAME_SIZE);
+		filename[DOS33_MAX_FILENAME_SIZE]='\0';
+
+		/* end of filename is padded with spaces (0xa0) */
+		/* so remove them from string */
+		filename_ptr=DOS33_MAX_FILENAME_SIZE-1;
+		while((filename_ptr>-1) && (filename[filename_ptr]==0xa0)) {
+			filename_ptr--;
+		}
+		filename_ptr++;
+		filename[filename_ptr]='\0';
+
+		/* Apple II stores strings with high bit set, so clear those */
+		/* also calculate string length */
+		name_length=0;
+		while(filename[name_length]!=0) {
+			filename[name_length]=filename[name_length]&0x7f;
+			name_length++;
 		}
 
-		/* NULL terminated */
-		current_length=(sizeof(uint32_t)*3)+name_length+1;
-		/* pad to integer boundary */
-		if (current_length%4) {
-			current_length+=4-(current_length%4);
-		}
+		/* calculate length of entry */
+                current_length=(sizeof(uint32_t)*3)+name_length+1;
+                /* pad to integer boundary */
+                if (current_length%4) {
+                        current_length+=4-(current_length%4);
+                }
 
-		if (current_length+total_length>size) break;
-		if (inode==0) {
-			inode=0xffffffff;
-			break;
-		}
+                if (current_length+total_length>size) break;
+
+		/* stick things in the struct */
 		dirent_ptr->d_ino=inode;
 		dirent_ptr->d_off=current_length;
 		dirent_ptr->d_reclen=current_length;
-		romfs_read_string(sb,
-				header_offset,dirent_ptr->d_name,name_length);
+		memcpy(dirent_ptr->d_name,filename,name_length);
 		dirent_ptr->d_name[name_length]=0;
 		num_entries++;
-		if (debug) printk("romfs_getdents: added %s namelen %d reclen %d\n",
-			dirent_ptr->d_name,name_length,dirent_ptr->d_reclen);
-		inode=next_header;
+		if (debug) {
+			printk("dos33_getdents: "
+				"added %s namelen %d reclen %d\n",
+				dirent_ptr->d_name,name_length,
+				dirent_ptr->d_reclen);
+		}
+
 		total_length+=current_length;
 		dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
 	}
 
 	*current_progress=inode;
 
-	if (debug) printk("romfs_getdents: num_entries %d\n",num_entries);
+	if (debug) printk("dos33_getdents: num_entries %d\n",num_entries);
 
 	return total_length;
-#endif
-	return 0;
 }
 
 
@@ -422,12 +526,7 @@ static struct superblock_operations dos33fs_sb_ops = {
 	.setup_fileops = dos33fs_setup_fileops,
 };
 
-static uint32_t ts(int32_t track, int32_t sector) {
 
-	int sectors_per_track=16; /* usually, older disks had 13 */
-
-	return ((track*sectors_per_track)+sector)*DOS33_BLOCK_SIZE;
-}
 
 static int ones_lookup[16]={
 	/* 0x0 = 0000 */ 0,
@@ -513,7 +612,9 @@ int32_t dos33fs_mount(struct superblock_type *sb,
 	sb->sb_ops=dos33fs_sb_ops;
 
 	/* point to root dir of filesystem */
-	sb->root_dir=0;
+	/* we fake a "." directory entry */
+	sb->root_dir=vtoc[DOS33_VTOC_FIRST_CAT_TRACK]<<16 |
+			vtoc[DOS33_VTOC_FIRST_CAT_SECTOR]<<8 | 0xff;
 
 	if (debug) {
 		printk("Mounted DOS33fs vol %d Tracks %d Sectors %d\n",
