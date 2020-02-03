@@ -38,6 +38,13 @@
 #define DOS33_FILE_TYPE_B2		0x40
 #define DOS33_FILE_TYPE_LOCKED		0x80
 
+/* T/S lists */
+#define DOS33_TS_NEXT_T			0x01
+#define DOS33_TS_NEXT_S			0x02
+#define DOS33_TS_SECTOR_OFFSET_L	0x05
+#define DOS33_TS_SECTOR_OFFSET_H	0x06
+#define DOS33_TS_FIRST_TS_T		0x0C
+#define DOS33_TS_FIRST_TS_S		0x0D
 
 
 int32_t dos33fs_mount(struct superblock_type *superblock,

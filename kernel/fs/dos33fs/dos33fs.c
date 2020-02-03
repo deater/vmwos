@@ -337,12 +337,11 @@ lookup_inode_done:
 int32_t dos33fs_statfs(struct superblock_type *superblock,
 		struct vmwos_statfs *buf) {
 
-
 	buf->f_type=DOS33_SUPER_MAGIC;	/* type (dos33fs) */
 	buf->f_bsize=DOS33_BLOCK_SIZE;	/* blocksize (256 bytes) */
-	buf->f_blocks=superblock->size / DOS33_BLOCK_SIZE;
+	buf->f_blocks=superblock->blocks;
 				/* Total data blocks */
-	buf->f_bfree=0;		/* Free blocks in filesystem */
+	buf->f_bfree=superblock->blocks_free;		/* Free blocks in filesystem */
 	buf->f_bavail=0;	/* Free blocks available to user */
 	buf->f_files=10;	/* Total inodes */
 	buf->f_ffree=0;		/* Free inodes */
@@ -359,24 +358,112 @@ int32_t dos33fs_statfs(struct superblock_type *superblock,
 	return 0;
 }
 
-
+	/* FIXME: files can have holes in them? */
+	/* FIXME: binary files we can cheat and get actual file size */
 int32_t dos33fs_read_file(
 			struct superblock_type *sb, uint32_t inode,
-			char *buf,uint32_t count,
+			char *buf,uint32_t desired_count,
 			uint64_t *file_offset) {
 
-#if 0
-	int32_t header_offset,size,temp_int,name_length,read_count=0;
-	int32_t max_count=0;
+	int32_t read_count=0,filesize_sectors=0;
+	int32_t which_sector,sector_offset;
+	uint32_t next_t,next_s,entry,block_location;
+	uint32_t data_t,data_s,data_location;
+	uint32_t copy_begin,copy_length;
+
+	char current_block[DOS33_BLOCK_SIZE];
+	char current_data[DOS33_BLOCK_SIZE];
 
 	if (debug) printk("dos33fs: Attempting to read %d bytes "
-			"from inode %x offset %d\n",
-			count,inode,*file_offset);
+			"from inode %x offset %lld\n",
+			desired_count,inode,*file_offset);
+
+	/* calc offset in file */
+	which_sector=(*file_offset)/DOS33_BLOCK_SIZE;
+	sector_offset=(*file_offset)-(which_sector*DOS33_BLOCK_SIZE);
+
+	/* Load the catalog entry */
+	next_t=(inode>>16)&0xff;
+	next_s=(inode>>8)&0xff;
+	entry=(inode&0xff);
+
+	block_location=ts(next_t,next_s);
+	sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+
+	filesize_sectors=current_block[DOS33_CAT_OFFSET_FILE_LENGTH_L+
+				DOS33_CAT_FIRST_ENTRY+
+				(entry*DOS33_CAT_ENTRY_SIZE)]+
+		(current_block[DOS33_CAT_OFFSET_FILE_LENGTH_H+
+				DOS33_CAT_FIRST_ENTRY+
+				(entry*DOS33_CAT_ENTRY_SIZE)]<<8);
+
+	/* FIXME HACK */
+	filesize_sectors--;
+	filesize_sectors--;
+
+	if (debug) printk("Starting with sector %d out of total %d\n",which_sector,
+			filesize_sectors);
+
+	if (which_sector>filesize_sectors) {
+		if (debug) printk("Out of bounds on read, ws=%d fs=%d\n",which_sector,
+			filesize_sectors);
+		return 0;
+	}
+
+	/* open first track/sector list page */
+	block_location=ts(next_t,next_s);
+	sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	while(1) {
+		/* FIXME: handle moving to next T/S when hit end */
+
+		/* open first data list page */
+		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
+		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
+
+		if (debug) printk("Loading data from t:%d s:%d\n",data_t,data_s);
+
+		/* File hole */
+		if ((data_t==0) && (data_s==0)) {
+			memset(current_data,0,DOS33_BLOCK_SIZE);
+		}
+		else {
+			data_location=ts(data_t,data_s);
+			sb->block->block_ops->read(sb->block,
+				data_location,DOS33_BLOCK_SIZE,current_data);
+		}
+
+		copy_begin=sector_offset;
+		copy_length=DOS33_BLOCK_SIZE-sector_offset;
+
+		if (copy_length>desired_count) {
+			copy_length=desired_count;
+		}
+
+		memcpy(buf,current_data+copy_begin,copy_length);
+
+		read_count+=copy_length;
+		desired_count-=read_count;
+
+		if (desired_count==0) break;
+
+		which_sector++;
+
+	}
+
+	if (read_count>0) {
+		*file_offset+=read_count;
+	}
 
 	return read_count;
-#endif
 
-	return 0;
 }
 
 int32_t dos33fs_getdents(struct superblock_type *sb,
@@ -662,7 +749,9 @@ int32_t dos33fs_mount(struct superblock_type *sb,
 	dos33_get_blocks_free(vtoc,&blocks,&blocks_free);
 
 	/* Set size */
-	sb->size=blocks*DOS33_BLOCK_SIZE;
+	sb->blocks=blocks;
+	sb->blocks_free=blocks_free;
+	sb->block_size=DOS33_BLOCK_SIZE;
 
 	/* Point to our superblock operations */
 	sb->sb_ops=dos33fs_sb_ops;

@@ -642,7 +642,9 @@ int32_t romfs_mount(struct superblock_type *sb, struct block_dev_type *block) {
 	file_headers_start=offset;
 
 	/* Set size */
-	sb->size=header.size;
+	sb->blocks=header.size;
+	sb->blocks_free=0;
+	sb->block_size=1;
 
 	/* Point to our superblock operations */
 	sb->sb_ops=romfs_sb_ops;

@@ -39,8 +39,9 @@ struct superblock_operations {
 
 struct superblock_type {
 	int32_t valid;
-	uint32_t size;
-	uint32_t free;
+	uint32_t blocks;
+	uint32_t blocks_free;
+	uint32_t block_size;
 	int32_t root_dir;
 	char mountpoint[MAX_PATH_LEN];
 	struct superblock_operations sb_ops;	/* superblock operations */

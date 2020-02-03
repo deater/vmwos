@@ -133,7 +133,7 @@ int32_t mount_syscall(const char *source, const char *target,
 	strncpy(sb->mountpoint,target,MAX_FILENAME_SIZE);
 
 	printk("Mounted %dK %s filesystem at %s\n",
-		sb->size/1024,filesystemtype,target);
+		sb->blocks*sb->block_size/1024,filesystemtype,target);
 
 	return result;
 }
