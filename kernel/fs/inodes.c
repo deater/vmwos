@@ -117,7 +117,7 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 		return -ENOENT;
 	}
 
-	/* start at root directory */
+	/* start at root directory of mountpoint */
 	temp_inode->number=sb->root_dir;
 	temp_inode->sb=sb;
 
@@ -125,8 +125,8 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 	ptr=full_path;
 	ptr+=strlen(sb->mountpoint);
 
-//	ptr=full_path;
-//	while((*ptr=='/')&&(*ptr!='\0')) ptr++;
+	/* skip any leading /s */
+	while((*ptr=='/')&&(*ptr!='\0')) ptr++;
 
 	result=sb->sb_ops.lookup_inode(temp_inode,ptr);
 
