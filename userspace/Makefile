@@ -6,13 +6,13 @@ GENROMFS = genromfs
 
 all:	$(ELF2BFLT) \
 	shell \
-	cat cat_count cause_error core_poke df hello ll ls \
+	cat cat_count cause_error core_poke cp df hello ll ls \
 	memory_test nano printa printb pwd sysinfo tbo uname \
 	chiptune chiptune6
 	cd demo && $(MAKE)
 
 image:	shell \
-	cat cat_count cause_error core_poke df hello ll ls \
+	cat cat_count cause_error core_poke cp df hello ll ls \
 	memory_test nano printa printb pwd sysinfo tbo uname chiptune chiptune6
 	mkdir -p image
 	mkdir -p image/bin
@@ -20,7 +20,7 @@ image:	shell \
 	mkdir -p image/home/ansis
 	mkdir -p image/proc
 	mkdir -p image/etc
-	cp shell cat cat_count cause_error core_poke df \
+	cp shell cat cat_count cause_error core_poke cp df \
 		hello ll ls memory_test nano printa printb pwd \
 		sysinfo tbo uname chiptune chiptune6 ./image/bin
 	cp demo/demosplash2019 ./image/bin
@@ -55,6 +55,9 @@ chiptune6:	chiptune6.elf
 
 core_poke:	core_poke.elf
 	$(ELF2BFLT) core_poke.elf core_poke
+
+cp:	cp.elf
+	$(ELF2BFLT) cp.elf cp
 
 df:	df.elf
 	$(ELF2BFLT) df.elf df
@@ -122,6 +125,9 @@ cause_error.elf:	cause_error.o ./vlibc/vlibc.a
 core_poke.elf:	core_poke.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o core_poke.elf core_poke.o ./vlibc/vlibc.a
 
+cp.elf:	cp.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cp.elf cp.o ./vlibc/vlibc.a
+
 df.elf:	df.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o df.elf df.o ./vlibc/vlibc.a
 
@@ -177,6 +183,9 @@ chiptune.o:	chiptune.c
 
 chiptune6.o:	chiptune6.c
 	$(CROSS)$(CC) $(CFLAGS) -c chiptune6.c
+
+cp.o:	cp.c
+	$(CROSS)$(CC) $(CFLAGS) -c cp.c
 
 ay8912.o:	ay8912.c
 	$(CROSS)$(CC) $(CFLAGS) -c ay8912.c
