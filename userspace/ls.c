@@ -551,7 +551,7 @@ int main(int argc, char **argv) {
 	}
 	else {
 		if (debug) printf("Listing %s\n",file_to_list);
-		if (list_inode) ls_inode(".");
+		if (list_inode) ls_inode(file_to_list);
 		else if (list_long) ls_long(file_to_list);
 		else ls_plain(file_to_list);
 	}
