@@ -4,9 +4,14 @@
 #define DOS33_VTOC_SIZE		256
 #define DOS33_MAX_VTOCS		2
 
-#define DOS33_CAT_ENTRY_SIZE	0x22
-#define DOS33_CAT_MAX_ENTRIES	7
+/* catalog sector */
+#define DOS33_CAT_NEXT_TRACK	0x01
+#define DOS33_CAT_NEXT_SECTOR	0x02
+
+/* catalog entries */
 #define DOS33_CAT_FIRST_ENTRY	0xb
+#define DOS33_CAT_ENTRY_SIZE	0x23
+#define DOS33_CAT_MAX_ENTRIES	7
 
 #define DOS33_CAT_OFFSET_FIRST_T	0x0
 #define DOS33_CAT_OFFSET_FIRST_S	0x1

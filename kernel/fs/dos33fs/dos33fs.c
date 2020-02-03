@@ -19,7 +19,7 @@
 
 #include "fs/dos33fs/dos33fs.h"
 
-static int debug=1;
+static int debug=0;
 
 
 static uint32_t ts(int32_t track, int32_t sector) {
@@ -55,6 +55,7 @@ static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 	uint32_t cat_offset=0;
 	char filename[31];
 	int32_t filename_ptr;
+	uint32_t next_t,next_s;
 
 	if (debug) {
 		printk("dos33fs: looking for %s in %x\n",searchname,dir_inode);
@@ -74,9 +75,12 @@ static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 		return 0;
 	}
 
+	next_t=(dir_inode->number>>16)&0xff;
+	next_s=(dir_inode->number>>8)&0xff;
+
 	while(1) {
 		/* start at starting dir */
-		block_location=inode_to_block(dir_inode->number);
+		block_location=ts(next_t,next_s);
 		dir_inode->sb->block->block_ops->read(dir_inode->sb->block,
 				block_location,DOS33_VTOC_SIZE,current_block);
 
@@ -84,7 +88,7 @@ static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 
 		for(i=0;i<DOS33_CAT_MAX_ENTRIES;i++) {
 
-			inode=((dir_inode->number)&~0xff)|i;
+			inode=(next_t<<16)|(next_s<<8)|i;
 
 			/* if zero then not allocated */
 			if (current_block[cat_offset]==0) continue;
@@ -119,13 +123,23 @@ static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 
 			if (debug) printk("dos33: trying %s\n",filename);
 			if (!strncmp(searchname,filename,strlen(searchname))) {
-				if (debug) printk("dos33: %s found\n",searchname);
+				if (debug) printk("dos33: %s found %x\n",searchname,inode);
 				*found_inode_num=inode;
 				return 0;
 			}
 
+			cat_offset+=DOS33_CAT_ENTRY_SIZE;
 		}
-		break;
+
+		/* see if there are more directory entries */
+		next_t=current_block[DOS33_CAT_NEXT_TRACK];
+		next_s=current_block[DOS33_CAT_NEXT_SECTOR];
+
+		if ((next_t==0) && (next_s==0)) {
+			if (debug) printk("dos33_find: exit at end\n");
+			break;
+		}
+
 	}
 
 	if (debug) printk("dos33: %s not found\n",searchname);
@@ -152,20 +166,20 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 	/* special case . */
 	if ((inode->number&0xff)==0xff) {
 		if (debug) {
-			printk("Special case . inode %x\n",inode->number);
+			printk("dos33: ri: Special case . inode %x\n",inode->number);
 		}
-		inode->mode|=S_IFDIR;
 		inode->mode=0666;
+		inode->mode|=S_IFDIR;
 		return 0;
 	}
 
 	/* special case .. */
 	if ((inode->number&0xff)==0xfe) {
 		if (debug) {
-			printk("Special case .. inode %x\n",inode->number);
+			printk("dos33: ri: Special case .. inode %x\n",inode->number);
 		}
-		inode->mode|=S_IFDIR;
 		inode->mode=0666;
+		inode->mode|=S_IFDIR;
 		return 0;
 	}
 
@@ -272,6 +286,7 @@ static int32_t dos33_lookup_inode_dir(struct inode_type *dir_inode,
 
 	result= dos33fs_find_filename(dir_inode,name,&inode_found);
 	if (result==0) {
+		if (debug) printk("Found inode %x\n",inode_found);
 		dir_inode->number=inode_found;
 	}
 
@@ -379,6 +394,7 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 	uint32_t cat_offset=0;
 	unsigned char filename[31];
 	int32_t filename_ptr;
+	int32_t next_t,next_s,next_i;
 
 	dirent_ptr=(struct vmwos_dirent *)buf;
 
@@ -387,95 +403,18 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 			dir_inode,inode);
 	}
 
-	/* start from scratch and iterate until we hit current progress */
-	block_location=inode_to_block(dir_inode);
-	sb->block->block_ops->read(sb->block,
-				block_location,DOS33_VTOC_SIZE,current_block);
-
-
-	/* fake up a "." and ".." entry */
-	name_length=strlen(".");
-	dirent_ptr->d_ino=inode | 0xff;
-	dirent_ptr->d_off=current_length;
-	dirent_ptr->d_reclen=current_length;
-	memcpy(dirent_ptr->d_name,".",name_length);
-	dirent_ptr->d_name[name_length]=0;
-	num_entries++;
-	if (debug) {
-		printk("dos33_getdents: "
-				"added %s namelen %d reclen %d\n",
-				dirent_ptr->d_name,name_length,
-				dirent_ptr->d_reclen);
+	/* special case meaning we finished last time */
+	if (*current_progress==0xffffffff) {
+		return 0;
 	}
-	total_length+=current_length;
-	dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
 
-	name_length=strlen("..");
-	dirent_ptr->d_ino=inode | 0xfe;
-	dirent_ptr->d_off=current_length;
-	dirent_ptr->d_reclen=current_length;
-	memcpy(dirent_ptr->d_name,"..",name_length);
-	dirent_ptr->d_name[name_length]=0;
-	num_entries++;
-	if (debug) {
-		printk("dos33_getdents: "
-				"added %s namelen %d reclen %d\n",
-				dirent_ptr->d_name,name_length,
-				dirent_ptr->d_reclen);
-	}
-	total_length+=current_length;
-	dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
-
-
-	cat_offset=DOS33_CAT_FIRST_ENTRY;
-
-	for(i=0;i<DOS33_CAT_MAX_ENTRIES;i++) {
-
-		inode=(dir_inode&0xff)|i;
-
-		/* if zero then not allocated */
-		/* note: this means track 0 can never be used for data */
-		if (current_block[cat_offset]==0) continue;
-		/* if ff then deleted */
-		if (current_block[cat_offset]==0xff) continue;
-
-		/* copy in filename */
-		memcpy(filename,
-			&current_block[cat_offset+DOS33_CAT_OFFSET_FILE_NAME],
-			DOS33_MAX_FILENAME_SIZE);
-		filename[DOS33_MAX_FILENAME_SIZE]='\0';
-
-		/* end of filename is padded with spaces (0xa0) */
-		/* so remove them from string */
-		filename_ptr=DOS33_MAX_FILENAME_SIZE-1;
-		while((filename_ptr>-1) && (filename[filename_ptr]==0xa0)) {
-			filename_ptr--;
-		}
-		filename_ptr++;
-		filename[filename_ptr]='\0';
-
-		/* Apple II stores strings with high bit set, so clear those */
-		/* also calculate string length */
-		name_length=0;
-		while(filename[name_length]!=0) {
-			filename[name_length]=filename[name_length]&0x7f;
-			name_length++;
-		}
-
-		/* calculate length of entry */
-                current_length=(sizeof(uint32_t)*3)+name_length+1;
-                /* pad to integer boundary */
-                if (current_length%4) {
-                        current_length+=4-(current_length%4);
-                }
-
-                if (current_length+total_length>size) break;
-
-		/* stick things in the struct */
-		dirent_ptr->d_ino=inode;
+	if (*current_progress==0) {
+		/* fake up a "." and ".." entry */
+		name_length=strlen(".");
+		dirent_ptr->d_ino=inode | 0xff;
 		dirent_ptr->d_off=current_length;
 		dirent_ptr->d_reclen=current_length;
-		memcpy(dirent_ptr->d_name,filename,name_length);
+		memcpy(dirent_ptr->d_name,".",name_length);
 		dirent_ptr->d_name[name_length]=0;
 		num_entries++;
 		if (debug) {
@@ -484,9 +423,126 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 				dirent_ptr->d_name,name_length,
 				dirent_ptr->d_reclen);
 		}
-
 		total_length+=current_length;
 		dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
+
+		name_length=strlen("..");
+		dirent_ptr->d_ino=inode | 0xfe;
+		dirent_ptr->d_off=current_length;
+		dirent_ptr->d_reclen=current_length;
+		memcpy(dirent_ptr->d_name,"..",name_length);
+		dirent_ptr->d_name[name_length]=0;
+		num_entries++;
+		if (debug) {
+			printk("dos33_getdents: "
+					"added %s namelen %d reclen %d\n",
+					dirent_ptr->d_name,name_length,
+					dirent_ptr->d_reclen);
+		}
+		total_length+=current_length;
+		dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
+	}
+
+	if (*current_progress==0) {
+		next_t=(dir_inode>>16)&0xff;
+		next_s=(dir_inode>>8)&0xff;
+		next_i=0;
+	}
+	else {
+		next_t=(*current_progress>>16)&0xff;
+		next_s=(*current_progress>>8)&0xff;
+		next_i=(*current_progress)&0xff;
+	}
+
+	while(1) {
+		cat_offset=DOS33_CAT_FIRST_ENTRY;
+
+		/* start from scratch and iterate until we hit current progress */
+		block_location=ts(next_t,next_s);
+		sb->block->block_ops->read(sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
+
+		for(i=next_i;i<DOS33_CAT_MAX_ENTRIES;i++) {
+
+			inode=(next_t<<16)|(next_s<<8)|i;
+
+			/* if zero then not allocated */
+			/* note: this means track 0 can never be used for data */
+			if (current_block[cat_offset]==0) continue;
+			/* if ff then deleted */
+			if (current_block[cat_offset]==0xff) continue;
+
+			/* copy in filename */
+			memcpy(filename,
+				&current_block[cat_offset+DOS33_CAT_OFFSET_FILE_NAME],
+				DOS33_MAX_FILENAME_SIZE);
+			filename[DOS33_MAX_FILENAME_SIZE]='\0';
+
+			/* end of filename is padded with spaces (0xa0) */
+			/* so remove them from string */
+			filename_ptr=DOS33_MAX_FILENAME_SIZE-1;
+			while((filename_ptr>-1) && (filename[filename_ptr]==0xa0)) {
+				filename_ptr--;
+			}
+			filename_ptr++;
+			filename[filename_ptr]='\0';
+
+			/* Apple II stores strings with high bit set, so clear those */
+			/* also calculate string length */
+			name_length=0;
+			while(filename[name_length]!=0) {
+				filename[name_length]=filename[name_length]&0x7f;
+				name_length++;
+			}
+
+			/* calculate length of entry */
+        	        current_length=(sizeof(uint32_t)*3)+name_length+1;
+                	/* pad to integer boundary */
+                	if (current_length%4) {
+                        	current_length+=4-(current_length%4);
+	                }
+
+	                if (current_length+total_length>size) break;
+
+			/* stick things in the struct */
+			dirent_ptr->d_ino=inode;
+			dirent_ptr->d_off=current_length;
+			dirent_ptr->d_reclen=current_length;
+			memcpy(dirent_ptr->d_name,filename,name_length);
+			dirent_ptr->d_name[name_length]=0;
+			num_entries++;
+			if (debug) {
+				printk("dos33_getdents: "
+					"added %s namelen %d reclen %d inode %x\n",
+					dirent_ptr->d_name,name_length,
+					dirent_ptr->d_reclen,inode);
+			}
+
+			cat_offset+=DOS33_CAT_ENTRY_SIZE;
+			total_length+=current_length;
+			dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
+		}
+
+		/* if too big to fit more, break */
+                if (current_length+total_length>size) {
+			if (debug) printk("dos33_getdents: exit too big\n");
+			break;
+		}
+
+		/* see if there are more directory entries */
+		next_t=current_block[DOS33_CAT_NEXT_TRACK];
+		next_s=current_block[DOS33_CAT_NEXT_SECTOR];
+		next_i=0;
+
+		if ((next_t==0) && (next_s==0)) {
+			if (debug) printk("dos33_getdents: exit at end\n");
+			/* special case meaning we're done */
+			inode=0xffffffff;
+			break;
+		}
+
+		/* follow pointer to next */
+
 	}
 
 	*current_progress=inode;
