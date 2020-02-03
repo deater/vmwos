@@ -39,6 +39,8 @@ static int get_errno(int value) { return errno; }
 
 #define LS_EXE_COLOR	"\033[1;32m"	/* bright green */
 #define LS_DIR_COLOR	"\033[1;34m"	/* bright blue */
+#define LS_DEV_COLOR	"\033[1;33m"	/* bright yellow */
+#define LS_LINK_COLOR	"\033[1;36m"	/* bright cyan */
 #define LS_NORMAL_COLOR	"\033[0m"	/* normal */
 
 
@@ -151,11 +153,22 @@ static int print_permissions(int mode) {
 static void print_file_color(int mode, char *name) {
 
 	/* FIXME: check isatty() before printing color */
+
+	/* Dir */
 	if ((mode&S_IFMT)==S_IFDIR) {
 		printf("%s%s%s",LS_DIR_COLOR,name,LS_NORMAL_COLOR);
 	}
+	/* Executable */
 	else if (mode & 0x1) {
 		printf("%s%s%s",LS_EXE_COLOR,name,LS_NORMAL_COLOR);
+	}
+	/* Device */
+	else if ((mode & S_IFMT)==S_IFBLK) {
+		printf("%s%s%s",LS_DEV_COLOR,name,LS_NORMAL_COLOR);
+	}
+	/* Link */
+	else if ((mode & S_IFMT)==S_IFLNK) {
+		printf("%s%s%s",LS_LINK_COLOR,name,LS_NORMAL_COLOR);
 	}
 	else {
 		printf("%s",name);
@@ -297,6 +310,109 @@ static int ls_long(char *path) {
 	return 0;
 }
 
+static int ls_inode(char *path) {
+
+	int fd,result;
+	char full_path[MAX_PATH];
+	char buf[BUF_SIZE];
+	int nread;
+	int offset;
+	struct vmwos_dirent *d;
+	struct stat stat_buf;
+	unsigned int max_filename_len=0;
+	unsigned int columns,colwidth,i,whichcol=0;
+
+	result=stat(path,&stat_buf);
+	if (result<0) {
+		printf("Cannot access %s: no such file or directory!\n",path);
+		return -1;
+	}
+
+//	printf("Mode: %x\n",stat_buf.st_mode);
+
+	/* handle if it's not a directory */
+	if ( (stat_buf.st_mode&S_IFMT)!=S_IFDIR) {
+		print_file_color(stat_buf.st_mode, path);
+		printf("\n");
+		return 0;
+	}
+
+	/* handle if it's a directory */
+	fd=open(path,O_RDONLY,0);
+	if (fd<0) {
+		errno=get_errno(fd);
+		printf("Error opening directory %s! %s\n",
+					path,strerror(errno));
+	}
+
+	/* get maximum filename size */
+	while(1) {
+		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
+		if (nread<0) {
+			errno=get_errno(nread);
+			printf("Error getdents! %s\n",strerror(errno));
+			break;
+		}
+		if (nread==0) break;
+
+		offset=0;
+		while(offset<nread) {
+			d=(struct vmwos_dirent *)(buf+offset);
+			if (strlen(d->d_name)>max_filename_len) {
+				max_filename_len=strlen(d->d_name);
+			}
+			offset+=d->d_reclen;
+		}
+	}
+
+	/* make room for inode size */
+	max_filename_len+=9;
+
+	columns=80/(max_filename_len+1);
+	colwidth=80/columns;
+
+//	FIXME: implement lseek
+//	lseek(fd,0,SEEK_SET);
+
+	close(fd);
+	fd=open(path,O_RDONLY,0);
+
+	/* Print files */
+	while(1) {
+		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
+		if (nread<0) {
+			errno=get_errno(fd);
+			printf("Error getdents again! %s\n",strerror(errno));
+			break;
+		}
+		if (nread==0) break;
+
+		offset=0;
+		while(offset<nread) {
+			d=(struct vmwos_dirent *)(buf+offset);
+			snprintf(full_path,MAX_PATH,"%s/%s",path,d->d_name);
+			stat(full_path,&stat_buf);
+			printf("%08x ",d->d_ino);
+			print_file_color(stat_buf.st_mode, d->d_name);
+			offset+=d->d_reclen;
+			whichcol++;
+			for(i=0;i<colwidth-(strlen(d->d_name)+9);i++) {
+				printf(" ");
+			}
+			if (whichcol>=columns) {
+				whichcol=0;
+				printf("\n");
+			}
+		}
+	}
+
+	close(fd);
+	printf("\n");
+
+	return 0;
+}
+
+
 static int ls_plain(char *path) {
 
 	int fd,result;
@@ -395,6 +511,7 @@ static int ls_plain(char *path) {
 	return 0;
 }
 
+
 static int debug=0;
 
 int main(int argc, char **argv) {
@@ -402,6 +519,7 @@ int main(int argc, char **argv) {
 	int i;
 	char *file_to_list=NULL;
 	int list_long=0;
+	int list_inode=0;
 
 //	printf("%d\n",errno);
 
@@ -414,8 +532,10 @@ int main(int argc, char **argv) {
 
 	for(i=1;i<argc;i++) {
 		if (argv[i][0]=='-') {
-			/* command line arg */
+			/* list long */
 			if (argv[i][1]=='l') list_long=1;
+			/* list inodes */
+			if (argv[i][1]=='i') list_inode=1;
 		}
 		else {
 			file_to_list=argv[i];
@@ -425,12 +545,14 @@ int main(int argc, char **argv) {
 
 	if (file_to_list==NULL) {
 		if (debug) printf("Listing current dir\n");
-		if (list_long) ls_long(".");
+		if (list_inode) ls_inode(".");
+		else if (list_long) ls_long(".");
 		else ls_plain(".");
 	}
 	else {
 		if (debug) printf("Listing %s\n",file_to_list);
-		if (list_long) ls_long(file_to_list);
+		if (list_inode) ls_inode(".");
+		else if (list_long) ls_long(file_to_list);
 		else ls_plain(file_to_list);
 	}
 	if (debug) printf("Ready to return\n");
