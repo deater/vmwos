@@ -7,13 +7,14 @@ GENROMFS = genromfs
 all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
-	memory_test nano printa printb pwd sysinfo tbo uname \
+	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
 	chiptune chiptune6
 	cd demo && $(MAKE)
 
 image:	shell \
 	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
-	memory_test nano printa printb pwd sysinfo tbo uname chiptune chiptune6
+	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
+	chiptune chiptune6
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
@@ -21,7 +22,7 @@ image:	shell \
 	mkdir -p image/proc
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error core_poke cp df \
-		hello hexdump ll ls memory_test nano printa printb pwd \
+		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
 		sysinfo tbo uname chiptune chiptune6 ./image/bin
 	cp demo/demosplash2019 ./image/bin
 	cp CATME ./image/home
@@ -73,6 +74,9 @@ ls:	ls.elf
 
 ll:	ll.elf
 	$(ELF2BFLT) ll.elf ll
+
+md5sum:	md5sum.elf
+	$(ELF2BFLT) md5sum.elf md5sum
 
 memory_test:	memory_test.elf
 	$(ELF2BFLT) memory_test.elf memory_test
@@ -146,6 +150,9 @@ ls.elf:	ls.o ./vlibc/vlibc.a
 ll.elf:	ll.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ll.elf ll.o
 
+md5sum.elf:	md5sum.o
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o md5sum.elf md5sum.o ./vlibc/vlibc.a
+
 memory_test.elf:	memory_test.o
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o memory_test.elf memory_test.o ./vlibc/vlibc.a
 
@@ -211,6 +218,9 @@ hello.o:	hello.c
 hexdump.o:	hexdump.c
 	$(CROSS)$(CC) $(CFLAGS) -c hexdump.c
 
+md5sum.o:	md5sum.c
+	$(CROSS)$(CC) $(CFLAGS) -c md5sum.c
+
 memory_test.o:	memory_test.c
 	$(CROSS)$(CC) $(CFLAGS) -c memory_test.c
 
@@ -253,7 +263,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error chiptune chiptune6 \
-		core_poke cp df hexdump ll ls memory_test nano \
+		core_poke cp df hexdump ll ls md5sum memory_test nano \
 		printa printb pwd shell slideshow sysinfo tbo uname \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
