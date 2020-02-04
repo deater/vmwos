@@ -14,7 +14,7 @@
 
 #include "processes/process.h"
 
-static int debug=0;
+static int debug=1;
 
 static struct inode_type inodes[NUM_INODES];
 
@@ -76,6 +76,30 @@ static struct inode_type *inode_allocate(void) {
 	return NULL;
 }
 
+static struct inode_type *inode_find_existing(
+		struct superblock_type *sb,
+		int32_t inode_number) {
+
+	int i;
+
+	/* find an inode */
+	for(i=0;i<NUM_INODES;i++) {
+		if (inodes[i].sb==sb) {
+			if (inodes[i].number==inode_number) {
+				if (debug) {
+					printk("Found existing inode %x\n",
+						inode_number);
+				}
+				inodes[i].count++;
+				return &inodes[i];
+			}
+
+		}
+	}
+	return NULL;
+}
+
+
 
 /* Starts at root directory */
 /* searches for current component */
@@ -135,8 +159,13 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 		return -ENOENT;
 	}
 
-	*inode=temp_inode;
-
+	*inode=inode_find_existing(temp_inode->sb,temp_inode->number);
+	if (*inode==NULL) {
+		*inode=temp_inode;
+	}
+	else {
+		inode_free(temp_inode);
+	}
 	return result;
 }
 
