@@ -54,7 +54,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 	/* See what kind of file it is */
 	file_offset=0;
-	result=file->file_ops->read(file->inode->sb,file->inode->number,
+	result=file->file_ops->read(file->inode,
 			(char *)&magic,16,&file_offset);
 
 	/* see if a bFLT file */
@@ -87,7 +87,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 		/* Load executable */
 		/* Size does not include bss */
 		file_offset=text_start;
-		file->file_ops->read(file->inode->sb,file->inode->number,
+		file->file_ops->read(file->inode,
 				binary_start,total_ondisk_size,&file_offset);
 
 		/* Relocate values in the executable */
@@ -124,7 +124,7 @@ int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
 		/* Load executable */
 		file_offset=text_start;
-		file->file_ops->read(file->inode->sb,file->inode->number,
+		file->file_ops->read(file->inode,
 			binary_start,total_ondisk_size,&file_offset);
 	}
 

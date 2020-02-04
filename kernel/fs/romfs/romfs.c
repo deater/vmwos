@@ -417,20 +417,21 @@ int32_t romfs_statfs(struct superblock_type *superblock,
 }
 
 
-int32_t romfs_read_file(
-			struct superblock_type *sb, uint32_t inode,
+int32_t romfs_read_file(struct inode_type *inode,
 			char *buf,uint32_t count,
 			uint64_t *file_offset) {
 
 	int32_t header_offset,size,temp_int,name_length,read_count=0;
 	int32_t max_count=0;
+	struct superblock_type *sb;
 
 	if (debug) printk("romfs: Attempting to read %d bytes "
 			"from inode %x offset %d\n",
-			count,inode,*file_offset);
+			count,inode->number,*file_offset);
 
+	sb=inode->sb;
 
-	header_offset=inode;		/* 0: Next */
+	header_offset=inode->number;	/* 0: Next */
 
 	header_offset+=4;		/* 4: type */
 

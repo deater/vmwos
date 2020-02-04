@@ -37,7 +37,7 @@ int32_t bflt_load(struct file_object *file,
 	if (bflt_debug) printk("Running BFLT executable!\n");
 
 	file_offset=0;
-	result=file->file_ops->read(file->inode->sb,file->inode->number,
+	result=file->file_ops->read(file->inode,
 		(char *)&bflt_header,64,&file_offset);
 	if (result<0) return result;
 
@@ -89,7 +89,7 @@ int32_t bflt_reloc(struct file_object *file, void *binary_address) {
 	if (bflt_debug) printk("Relocating BFLT executable!\n");
 
 	file_offset=0;
-	result=file->file_ops->read(file->inode->sb,file->inode->number,
+	result=file->file_ops->read(file->inode,
 		(char *)&bflt_header,64,&file_offset);
 	if (result<0) return result;
 
@@ -108,7 +108,7 @@ int32_t bflt_reloc(struct file_object *file, void *binary_address) {
 
 	for(i=0;i<reloc_count;i++) {
 		file_offset=reloc_start+(i*4);
-		result=file->file_ops->read(file->inode->sb,file->inode->number,
+		result=file->file_ops->read(file->inode,
 							(char *)&reloc_addr,
 							4,&file_offset);
 		if (result<0) return -1;

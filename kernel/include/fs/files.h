@@ -25,8 +25,7 @@ struct vmwos_dirent {
 struct superblock_type;
 
 struct file_object_operations {
-        int32_t (*read) (struct superblock_type *superblock,
-				uint32_t, char *, uint32_t, uint64_t *);
+        int32_t (*read) (struct inode_type *, char *, uint32_t, uint64_t *);
         int32_t (*write) (struct superblock_type *superblock,
 			uint32_t, const char *, uint32_t, uint64_t *);
         int64_t (*llseek) (struct file_object *, int64_t, int32_t);

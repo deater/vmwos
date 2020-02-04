@@ -167,8 +167,7 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 	if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
 
 	result=file->file_ops->read(
-				file_objects[fd].inode->sb,
-				file_objects[fd].inode->number,
+				file_objects[fd].inode,
 				buf,count,
 				&file_objects[fd].file_offset);
 

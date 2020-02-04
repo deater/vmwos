@@ -361,31 +361,35 @@ int32_t dos33fs_statfs(struct superblock_type *superblock,
 	/* FIXME: files can have holes in them? */
 	/* FIXME: binary files we can cheat and get actual file size */
 int32_t dos33fs_read_file(
-			struct superblock_type *sb, uint32_t inode,
+			//struct superblock_type *sb, uint32_t inode,
+			struct inode_type *inode,
 			char *buf,uint32_t desired_count,
 			uint64_t *file_offset) {
 
-	int32_t read_count=0,filesize_sectors=0;
+	int32_t read_count=0,filesize=0,filesize_sectors=0;
 	int32_t which_sector,sector_offset;
 	uint32_t next_t,next_s,entry,block_location;
 	uint32_t data_t,data_s,data_location;
 	uint32_t copy_begin,copy_length;
+	struct superblock_type *sb;
 
 	char current_block[DOS33_BLOCK_SIZE];
 	char current_data[DOS33_BLOCK_SIZE];
 
+	sb=inode->sb;
+
 	if (debug) printk("dos33fs: Attempting to read %d bytes "
 			"from inode %x offset %lld\n",
-			desired_count,inode,*file_offset);
+			desired_count,inode->number,*file_offset);
 
 	/* calc offset in file */
 	which_sector=(*file_offset)/DOS33_BLOCK_SIZE;
 	sector_offset=(*file_offset)-(which_sector*DOS33_BLOCK_SIZE);
 
 	/* Load the catalog entry */
-	next_t=(inode>>16)&0xff;
-	next_s=(inode>>8)&0xff;
-	entry=(inode&0xff);
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	entry=(inode->number&0xff);
 
 	block_location=ts(next_t,next_s);
 	sb->block->block_ops->read(sb->block,
@@ -404,17 +408,25 @@ int32_t dos33fs_read_file(
 				(entry*DOS33_CAT_ENTRY_SIZE)]<<8);
 
 	/* FIXME HACK */
-	filesize_sectors--;
-	filesize_sectors--;
+	/* this is only an approximation as it includes metadata */
+	/* like T/S sectors */
+	/* We get a better value once we read first data block */
+	/* as the fs stores the filesize in the data (urgh!) */
+	filesize=filesize_sectors*DOS33_BLOCK_SIZE;
 
-	if (debug) printk("Starting with sector %d out of total %d\n",which_sector,
-			filesize_sectors);
+	(void)filesize;
 
-	if (which_sector>filesize_sectors) {
-		if (debug) printk("Out of bounds on read, ws=%d fs=%d\n",which_sector,
-			filesize_sectors);
-		return 0;
+	if (debug) {
+		printk("Starting with sector %d out of total %d\n",
+			which_sector,filesize_sectors);
 	}
+
+//	if (which_sector>filesize_sectors) {
+//		if (debug) {
+//			printk("Out of bounds on read, ws=%d fs=%d\n",
+//			which_sector,filesize_sectors);
+//		return 0;
+//	}
 
 	/* open first track/sector list page */
 	block_location=ts(next_t,next_s);
@@ -428,7 +440,9 @@ int32_t dos33fs_read_file(
 		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
 		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
 
-		if (debug) printk("Loading data from t:%d s:%d\n",data_t,data_s);
+		if (debug) {
+			printk("Loading data from t:%d s:%d\n",data_t,data_s);
+		}
 
 		/* File hole */
 		if ((data_t==0) && (data_s==0)) {
