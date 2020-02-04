@@ -46,6 +46,9 @@ static int hexdump(int in_fd) {
 
 		printf("  |");
 		for(i=0;i<BUF_SIZE;i++) {
+
+			if (i>=result) break;
+
 			if ((buffer[i]>=' ') && (buffer[i]<127)) {
 				printf("%c",buffer[i]);
 			}
