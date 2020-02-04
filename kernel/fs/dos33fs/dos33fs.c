@@ -19,7 +19,7 @@
 
 #include "fs/dos33fs/dos33fs.h"
 
-static int debug=0;
+static int debug=1;
 
 
 static uint32_t ts(int32_t track, int32_t sector) {
@@ -237,7 +237,7 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 		if (debug) {
 			printk("dos33: ri: Special case . inode %x\n",inode->number);
 		}
-		inode->mode=0666;
+		inode->mode=0777;
 		inode->mode|=S_IFDIR;
 		return 0;
 	}
@@ -247,7 +247,7 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 		if (debug) {
 			printk("dos33: ri: Special case .. inode %x\n",inode->number);
 		}
-		inode->mode=0666;
+		inode->mode=0777;
 		inode->mode|=S_IFDIR;
 		return 0;
 	}
@@ -631,7 +631,11 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 
 	if (*current_progress==0) {
 		/* fake up a "." and ".." entry */
+
 		name_length=strlen(".");
+		current_length=(sizeof(uint32_t)*3)+name_length+1;
+                if (current_length%4) current_length+=4-(current_length%4);
+		if (current_length+total_length>size) return -E2BIG;
 		dirent_ptr->d_ino=inode | 0xff;
 		dirent_ptr->d_off=current_length;
 		dirent_ptr->d_reclen=current_length;
@@ -640,14 +644,17 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 		num_entries++;
 		if (debug) {
 			printk("dos33_getdents: "
-				"added %s namelen %d reclen %d\n",
-				dirent_ptr->d_name,name_length,
-				dirent_ptr->d_reclen);
+					"added %s namelen %d reclen %d\n",
+					dirent_ptr->d_name,name_length,
+					dirent_ptr->d_reclen);
 		}
 		total_length+=current_length;
 		dirent_ptr=(struct vmwos_dirent *)(((char *)dirent_ptr)+current_length);
 
 		name_length=strlen("..");
+		current_length=(sizeof(uint32_t)*3)+name_length+1;
+                if (current_length%4) current_length+=4-(current_length%4);
+		if (current_length+total_length>size) return -E2BIG;
 		dirent_ptr->d_ino=inode | 0xfe;
 		dirent_ptr->d_off=current_length;
 		dirent_ptr->d_reclen=current_length;
