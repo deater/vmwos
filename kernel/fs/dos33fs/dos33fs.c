@@ -19,7 +19,7 @@
 
 #include "fs/dos33fs/dos33fs.h"
 
-static int debug=1;
+static int debug=0;
 
 
 static uint32_t ts(int32_t track, int32_t sector) {

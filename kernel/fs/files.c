@@ -234,7 +234,7 @@ int32_t getdents_syscall(uint32_t fd,
 	file=&file_objects[fd];
 
 	if (file->count==0) {
-		printk("Attempting to getdents from unsupported fd %d\n",fd);
+		printk("Attempting to getdents from unknown fd %d\n",fd);
 		return -EBADF;
 	}
 

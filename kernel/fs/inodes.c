@@ -14,7 +14,7 @@
 
 #include "processes/process.h"
 
-static int debug=1;
+static int debug=0;
 
 static struct inode_type inodes[NUM_INODES];
 
@@ -114,15 +114,20 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 	struct superblock_type *sb;
 	struct inode_type *temp_inode;
 
-	if (debug) printk("ilac: inodes[0].count=%d\n",inodes[0].count);
+	if (debug) {
+		printk("ilac: looking up %s, inodes[0].count=%d\n",
+			pathname,inodes[0].count);
+	}
 
 	temp_inode=inode_allocate();
 	if (temp_inode==NULL) {
 		return -ENOMEM;
 	}
 
-	if (debug) printk("ilac: got an inode %p count=%d\n",
+	if (debug) {
+		printk("ilac: got an inode %p count=%d\n",
 					temp_inode,temp_inode->count);
+	}
 
 	/* expand path */
 	if (pathname[0]=='/') {
@@ -135,8 +140,12 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 			pathname);
 	}
 
+	if (debug) {
+		printk("ilac: looking up sb for %s\n",full_path);
+	}
+
 	/* Look to see which mountpoint we are in */
-	sb=superblock_lookup(pathname);
+	sb=superblock_lookup(full_path);
 	if (sb==NULL) {
 		return -ENOENT;
 	}
