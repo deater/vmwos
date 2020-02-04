@@ -255,6 +255,11 @@ retry_inode:
 	header_offset+=4;		/* 16: filename */
 
 
+	/* arbitrary timestamp */
+        inode->atime=256246800;
+        inode->mtime=256246800;
+        inode->ctime=256246800;
+
 	return 0;
 }
 

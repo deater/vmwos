@@ -4,6 +4,7 @@
 #include "lib/errors.h"
 #include "lib/printk.h"
 #include "lib/string.h"
+#include "lib/memset.h"
 #include "lib/smp.h"
 
 #include "drivers/console/console_io.h"
@@ -184,7 +185,14 @@ int32_t inode_free(struct inode_type *inode) {
 
 	if (debug) printk("Freeing inode %p count=%d\n",inode,inode->count);
 
+
 	if (inode->count) inode->count--;
+
+	/* clear out the inode with invalid data */
+	if (inode->count==0 ) {
+		memset(inode,'V',sizeof(struct inode_type));
+	}
+
 
 	return 0;
 }
