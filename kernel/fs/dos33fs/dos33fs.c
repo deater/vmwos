@@ -147,6 +147,75 @@ static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 	return -1;
 }
 
+static int32_t dos33_get_filesize(struct inode_type *inode,
+		char *current_block, int32_t type) {
+
+	int32_t size=0;
+	int32_t next_t,next_s,which,location;
+
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	which=inode->number&0xff;
+
+	/* Load the catalog sector */
+	location=ts(next_t,next_s);
+	inode->sb->block->block_ops->read(inode->sb->block,
+				location,DOS33_BLOCK_SIZE,current_block);
+
+	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
+			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
+			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+
+	/* Load the first T/S sector */
+	location=ts(next_t,next_s);
+	inode->sb->block->block_ops->read(inode->sb->block,
+				location,DOS33_BLOCK_SIZE,current_block);
+
+	/* These files have the data in the file */
+	if ((type==DOS33_FILE_TYPE_B) ||
+		(type==DOS33_FILE_TYPE_I) || (type==DOS33_FILE_TYPE_A)) {
+
+
+		/* load first data block of file */
+		next_t=current_block[DOS33_TS_FIRST_TS_T];
+		next_s=current_block[DOS33_TS_FIRST_TS_S];
+
+		location=ts(next_t,next_s);
+		inode->sb->block->block_ops->read(inode->sb->block,
+				location,DOS33_BLOCK_SIZE,current_block);
+
+		/* BASIC programs, size first 2 little endian bytes */
+		if ((type==DOS33_FILE_TYPE_I) || (type==DOS33_FILE_TYPE_A)) {
+			size=(current_block[0]&0xff)|
+				((current_block[1]&0xff)<<8);
+
+			/* file size should include the metadata */
+			size+=2;
+		}
+		/* Binary first 4 bytes are ADDRESS then SIZE (little endian) */
+		/* 16-bits. */
+
+		if (type==DOS33_FILE_TYPE_B) {
+			size=(current_block[2]&0xff)|
+				((current_block[3]&0xff)<<8);
+		}
+	}
+	else {
+		/* Type T (and I guess the rest) you only */
+		/* get a multiple of sector-size that you find */
+		/* by searching the T/S lists */
+
+		/* FIXME: do we care enough to implement this properly? */
+		/* I guess if we ever have any LOGO programs? */
+	}
+
+	return size;
+}
+
+
+
+
 
 /* Read data from inode->number into inode */
 /* Data comes in partially filled, we just fill in rest */
@@ -222,7 +291,6 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 
 	inode->blocks=size;
 	inode->blocksize=DOS33_BLOCK_SIZE;
-	size*=DOS33_BLOCK_SIZE;
 
 	/* Do things based on type */
 	switch(type&0x7f) {
@@ -235,9 +303,6 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 		case DOS33_FILE_TYPE_B:	/* binary */
 			/* Mark executable */
 			inode->mode|=0111;
-
-			/* FIXME: actual file size can be found by reading */
-			/* first few bytes of executable */
 			break;
 		case DOS33_FILE_TYPE_S:	/* S? */
 		case DOS33_FILE_TYPE_R:	/* Relocatable? */
@@ -248,13 +313,20 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 	}
 
 
-	inode->size=size;
 
 	/* timestamp */
 	/* DOS3.3 was released in August of 1980 */
 	inode->atime=334939200;
 	inode->mtime=334939200;
 	inode->ctime=334939200;
+
+
+	/* metadata for filesize is stored in the file? */
+	/* not really optimal */
+
+	size=dos33_get_filesize(inode,current_block,type&0x7f);
+
+	inode->size=size;
 
 	return 0;
 }
@@ -351,10 +423,6 @@ int32_t dos33fs_statfs(struct superblock_type *superblock,
 	buf->f_frsize=0;	/* Fragment size */
 	buf->f_flags=0;		/* Mount flags */
 
-
-//	printk("romfs statfs: returning %d/%d bytes as size\n",
-//			buf->f_bsize,buf->f_blocks);
-
 	return 0;
 }
 
@@ -366,12 +434,14 @@ int32_t dos33fs_read_file(
 			char *buf,uint32_t desired_count,
 			uint64_t *file_offset) {
 
-	int32_t read_count=0,filesize=0,filesize_sectors=0;
+	int32_t read_count=0,type,advance_ts;
 	int32_t which_sector,sector_offset;
 	uint32_t next_t,next_s,entry,block_location;
 	uint32_t data_t,data_s,data_location;
 	uint32_t copy_begin,copy_length;
 	struct superblock_type *sb;
+	uint32_t adjusted_offset;
+	int32_t current_sector,last_sector,last_sector_offset;
 
 	char current_block[DOS33_BLOCK_SIZE];
 	char current_data[DOS33_BLOCK_SIZE];
@@ -381,10 +451,6 @@ int32_t dos33fs_read_file(
 	if (debug) printk("dos33fs: Attempting to read %d bytes "
 			"from inode %x offset %lld\n",
 			desired_count,inode->number,*file_offset);
-
-	/* calc offset in file */
-	which_sector=(*file_offset)/DOS33_BLOCK_SIZE;
-	sector_offset=(*file_offset)-(which_sector*DOS33_BLOCK_SIZE);
 
 	/* Load the catalog entry */
 	next_t=(inode->number>>16)&0xff;
@@ -399,41 +465,73 @@ int32_t dos33fs_read_file(
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
 
-	filesize_sectors=current_block[DOS33_CAT_OFFSET_FILE_LENGTH_L+
-				DOS33_CAT_FIRST_ENTRY+
-				(entry*DOS33_CAT_ENTRY_SIZE)]+
-		(current_block[DOS33_CAT_OFFSET_FILE_LENGTH_H+
-				DOS33_CAT_FIRST_ENTRY+
-				(entry*DOS33_CAT_ENTRY_SIZE)]<<8);
+//	filesize_sectors=current_block[DOS33_CAT_OFFSET_FILE_LENGTH_L+
+//				DOS33_CAT_FIRST_ENTRY+
+//				(entry*DOS33_CAT_ENTRY_SIZE)]+
+//		(current_block[DOS33_CAT_OFFSET_FILE_LENGTH_H+
+//				DOS33_CAT_FIRST_ENTRY+
+//				(entry*DOS33_CAT_ENTRY_SIZE)]<<8);
 
-	/* FIXME HACK */
-	/* this is only an approximation as it includes metadata */
-	/* like T/S sectors */
-	/* We get a better value once we read first data block */
-	/* as the fs stores the filesize in the data (urgh!) */
-	filesize=filesize_sectors*DOS33_BLOCK_SIZE;
 
-	(void)filesize;
 
-	if (debug) {
-		printk("Starting with sector %d out of total %d\n",
-			which_sector,filesize_sectors);
+	/* For binary files, skip the ADDR/LEN header */
+	if (type==DOS33_FILE_TYPE_B) {
+		adjusted_offset=*file_offset+4;
+		last_sector=(inode->size+4)/DOS33_BLOCK_SIZE;
+		last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
+	} else {
+		adjusted_offset=*file_offset;
+		last_sector=inode->size/DOS33_BLOCK_SIZE;
+		last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
 	}
 
-//	if (which_sector>filesize_sectors) {
-//		if (debug) {
-//			printk("Out of bounds on read, ws=%d fs=%d\n",
-//			which_sector,filesize_sectors);
-//		return 0;
-//	}
+	/* If off end of file, return */
+	if (*file_offset>inode->size) {
+		if (debug) {
+			printk("Out of bounds on read, ws=%d fs=%d\n",
+				*file_offset,inode->size);
+		}
+		return 0;
+	}
 
-	/* open first track/sector list page */
-	block_location=ts(next_t,next_s);
-	sb->block->block_ops->read(sb->block,
-				block_location,DOS33_BLOCK_SIZE,current_block);
+
+
+	/* calc offset in file */
+	which_sector=(adjusted_offset)/DOS33_BLOCK_SIZE;
+	sector_offset=(adjusted_offset)-(which_sector*DOS33_BLOCK_SIZE);
+
+	current_sector=which_sector;
+
+	/* start with new ts list */
+	advance_ts=1;
+
+	while(which_sector>120) {
+		which_sector-=120;
+		advance_ts++;
+	}
 
 	while(1) {
+
+		while (advance_ts) {
+			/* setup new track/sector list page */
+			block_location=ts(next_t,next_s);
+			if (block_location==0) {
+				printk("Error! Off end!\n");
+				return -ENOENT;
+			}
+
+			/* set up next for next time on the list */
+			next_t=current_block[DOS33_TS_NEXT_T];
+			next_s=current_block[DOS33_TS_NEXT_S];
+
+			sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+			advance_ts--;
+		}
+
 		/* FIXME: handle moving to next T/S when hit end */
 
 		/* open first data list page */
@@ -454,22 +552,44 @@ int32_t dos33fs_read_file(
 				data_location,DOS33_BLOCK_SIZE,current_data);
 		}
 
+		/* make sure copy is in range */
+
+		/* start at sector_offset */
 		copy_begin=sector_offset;
 		copy_length=DOS33_BLOCK_SIZE-sector_offset;
 
+		/* adjust down to account for requested size */
 		if (copy_length>desired_count) {
 			copy_length=desired_count;
 		}
 
-		memcpy(buf,current_data+copy_begin,copy_length);
+		/* adjust if we hit end of file */
+		if (current_sector==last_sector) {
+			if (copy_begin+copy_length>last_sector_offset) {
+				copy_length=last_sector_offset-sector_offset;
+				desired_count=copy_length;
+			}
+		}
 
+		memcpy(buf,current_data+copy_begin,copy_length);
+		buf+=copy_length;
+
+		/* total bytes read increments by how many bytes copied */
 		read_count+=copy_length;
-		desired_count-=read_count;
+
+		/* bytes left to copy decremented by bytes we've copied */
+		desired_count-=copy_length;
 
 		if (desired_count==0) break;
 
+		/* adjust sector we're reading from */
+		current_sector++;
 		which_sector++;
-
+		if (which_sector>=120) {
+			advance_ts++;
+			which_sector-=120;
+		}
+		sector_offset=0;
 	}
 
 	if (read_count>0) {
