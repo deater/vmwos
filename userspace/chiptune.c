@@ -42,11 +42,12 @@ static int song_done=0;
 
 static int line=0,subframe=0,current_pattern=0;
 
+static struct pt3_image_t pt3_image;
+
 static void change_song(void) {
 
 	which_song=0;
 
-	struct pt3_image_t pt3_image;
 	pt3_image.data=__I2_PT3;
 	pt3_image.length=__I2_PT3_len;
 //	[0] = {	.data=__I2_PT3,	.length=__I2_PT3_len, },
@@ -115,16 +116,45 @@ static void NextBuffer(int which_half) {
 
 }
 
-
+static unsigned char pt3file[8192];
 
 int main(int argc, char **argv) {
 
 	int old_pattern=0;
 	struct timespec t;
+	int fd,result;
 
 	/* Init first song */
 	printf("Loading song\n");
-	change_song();
+
+	if (argc<2) {
+		change_song();
+	}
+	else {
+		fd=open(argv[1],O_RDONLY,0);
+		if (fd<0) {
+			printf("Error opening %s\n",argv[1]);
+			return -1;
+		}
+		result=read(fd,pt3file,8192);
+		if (result<0) {
+			printf("Error reading!\n");
+			return -1;
+		}
+		close(fd);
+
+		printf("Read %d bytes from %s\n",result,argv[1]);
+
+		which_song=0;
+		pt3_image.data=pt3file;
+		pt3_image.length=result;
+		pt3_load_song(&pt3_image, &pt3, &pt3_2);
+
+		current_pattern=0;
+		line=0;
+		subframe=0;
+	}
+
 
 	/* Init ay code */
 	printf("Init AY library\n");
