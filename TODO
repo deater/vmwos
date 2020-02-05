@@ -3,14 +3,10 @@ Global TODO
 
 Known Kernel Bugs:
 	+ pi3: "temp" temperature stops working once virtual memory is enabled
-	+ something is still off about the chdir code
-	+ pi1: segfault kill on inavlid memory access causes weird behavior
-		(probably not restoring stack correctly)
 	+ device_tree code truncates the command line at 255 bytes
 	+ the occasional "unknown interrupt" (memtest triggers this on pi3)
 		The lightning bolt appears, so probably a low-power problem
 		(how do we read this source?)
-
 	+ Framebuffer access takes forever, should not do inside of a
 		syscall  (should buffer and only send out every 60 Hz or so?)
 	+ Interrupts are disabled during a syscall, so we can lose clock
@@ -22,21 +18,27 @@ Known Kernel Bugs:
 	+ Compiling error with old gcc -- smp code setting the constant
 		for the stack values.  Split to two instructions rather
 		than relying on movt insns
+	+ file descriptors on fork -- should probably increment the
+		use count on all open files when we fork
+
+
+Old bugs (still there?)
+	+ pi1: segfault kill on inavlid memory access causes weird behavior
+		(probably not restoring stack correctly)
+
 
 
 Known Userspace Bugs:
 	+
 
 Kernel feature requests:
+
 	+ system calls
 		- mmap() syscall
-		- getcwd() syscall
 		- fcntl O_NONBLOCK support (for tbo)
 	+ filesystems
-		- VFS filesystem abstraction
 		- fat filesystem driver
 		- ext2 filesystem driver
-		- dos33fs
 	+ block layer
 		- loopback device
 		- partition table support
@@ -74,7 +76,6 @@ Userspace feature requests:
 		- tab completion
 	+ New utilities/programs
 		- init (actual, rather than shell)
-		- text editor
 		- assembler
 		- compiler
 		- du
@@ -87,6 +88,7 @@ Pi Generational Support
 		[PATCH 4/4] irqchip: Add bcm2836 interrupt controller for Raspberry     Pi 2
 	+ Pi3 -- add ARMv8 (arm64) support
 	+ Pi3 ACT LED (behind i2c GPIO extender)
+	+ Pi4 support (major changes)
 
 Performance:
 	+ tophalf/bottomhalf IRQ split
