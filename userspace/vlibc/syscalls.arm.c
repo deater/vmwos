@@ -16,6 +16,7 @@
 #define __NR_execve		11
 #define __NR_chdir		12
 #define __NR_time		13
+#define __NR_chmod		15
 #define __NR_getpid		20
 #define __NR_times		43
 #define __NR_brk		45
@@ -81,7 +82,7 @@ int32_t read(int fd, void *buf, size_t count) {
 	return update_errno(r0);
 }
 
-
+/* 4 */
 int32_t write(int fd, const void *buf, uint32_t size) {
 
 	register long r7 __asm__("r7") = __NR_write;
@@ -98,6 +99,7 @@ int32_t write(int fd, const void *buf, uint32_t size) {
 	return update_errno(r0);
 }
 
+/* 5 */
 int32_t open(const char *filename, uint32_t flags, uint32_t mode) {
 
 	register long r7 __asm__("r7") = __NR_open;
@@ -114,6 +116,7 @@ int32_t open(const char *filename, uint32_t flags, uint32_t mode) {
 	return update_errno(r0);
 }
 
+/* 6 */
 int32_t close(uint32_t fd) {
 
 	register long r7 __asm__("r7") = __NR_close;
@@ -128,6 +131,7 @@ int32_t close(uint32_t fd) {
 	return update_errno(r0);
 }
 
+/* 7 */
 int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
 
 	register long r7 __asm__("r7") = __NR_waitpid;
@@ -146,6 +150,7 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
 
 }
 
+/* 11 */
 int32_t execve(const char *filename, char *const argv[],
 		char *const envp[]) {
 
@@ -165,6 +170,7 @@ int32_t execve(const char *filename, char *const argv[],
 
 }
 
+/* 12 */
 int32_t chdir(const char *path) {
 
 	register long r7 __asm__("r7") = __NR_chdir;
@@ -179,6 +185,24 @@ int32_t chdir(const char *path) {
 	return r0;
 }
 
+/* 15 */
+int32_t chmod(const char *path, int32_t mode) {
+
+	register long r7 __asm__("r7") = __NR_chmod;
+	register long r0 __asm__("r0") = (long)path;
+	register long r1 __asm__("r1") = (long)mode;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return r0;
+}
+
+
+/* 183 */
 char *getcwd(char *buf, uint32_t size) {
 
 	register long r7 __asm__("r7") = __NR_getcwd;
@@ -194,6 +218,7 @@ char *getcwd(char *buf, uint32_t size) {
 	return (char *)r0;
 }
 
+/* 20 */
 int32_t getpid(void) {
 
 	register long r7 __asm__("r7") = __NR_getpid;

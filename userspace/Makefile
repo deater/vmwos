@@ -6,13 +6,13 @@ GENROMFS = genromfs
 
 all:	$(ELF2BFLT) \
 	shell \
-	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
+	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
 	chiptune chiptune6 write_test
 	cd demo && $(MAKE)
 
 image:	shell \
-	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
+	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
 	chiptune chiptune6 write_test
 	mkdir -p image
@@ -21,7 +21,7 @@ image:	shell \
 	mkdir -p image/home/ansis
 	mkdir -p image/proc
 	mkdir -p image/etc
-	cp shell cat cat_count cause_error core_poke cp df \
+	cp shell cat cat_count cause_error chmod core_poke cp df \
 		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
 		sysinfo tbo uname write_test chiptune chiptune6 ./image/bin
 	cp demo/demosplash2019 ./image/bin
@@ -53,6 +53,9 @@ chiptune:	chiptune.elf
 
 chiptune6:	chiptune6.elf
 	$(ELF2BFLT) chiptune6.elf chiptune6
+
+chmod:	chmod.elf
+	$(ELF2BFLT) chmod.elf chmod
 
 core_poke:	core_poke.elf
 	$(ELF2BFLT) core_poke.elf core_poke
@@ -129,6 +132,9 @@ chiptune.elf:	chiptune.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
 chiptune6.elf:	chiptune6.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o chiptune6.elf chiptune6.o ay8912.o pt3_lib.o ./vlibc/vlibc.a
 
+chmod.elf:	chmod.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o chmod.elf chmod.o ./vlibc/vlibc.a
+
 cause_error.elf:	cause_error.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o cause_error.elf cause_error.o ./vlibc/vlibc.a
 
@@ -203,6 +209,9 @@ chiptune.o:	chiptune.c
 chiptune6.o:	chiptune6.c
 	$(CROSS)$(CC) $(CFLAGS) -c chiptune6.c
 
+chmod.o:	chmod.c
+	$(CROSS)$(CC) $(CFLAGS) -c chmod.c
+
 cp.o:	cp.c
 	$(CROSS)$(CC) $(CFLAGS) -c cp.c
 
@@ -272,7 +281,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error chiptune chiptune6 \
-		core_poke cp df hexdump ll ls md5sum memory_test nano \
+		chmod core_poke cp df hexdump ll ls md5sum memory_test nano \
 		printa printb pwd shell slideshow sysinfo tbo uname \
 		write_test \
 		initrd.h initrd.romfs
