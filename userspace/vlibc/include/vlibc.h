@@ -12,8 +12,21 @@ int32_t __aeabi_idiv(int32_t dividend, int32_t divisor);
 int32_t __aeabi_idivmod(int32_t dividend, int32_t divisor);
 
 /* error.c */
-extern int errno;
-char *strerror(int errnum);
+extern int32_t errno;
+const char *strerror(int errnum);
+
+#define MAX_ERRNO	40
+
+#define ENOENT	2	/* File not found..... */
+#define E2BIG   7       /* Argument too big... */
+#define EBADF	9	/* Bad file descriptor */
+#define ENOMEM	12	/* Not enough memory.. */
+#define ENODEV	19	/* No such device..... */
+#define ENOTDIR	20	/* Not a directory.... */
+#define ENFILE	23	/* Not enough fds..... */
+#define EROFS	30	/* Read only file sys. */
+#define ERANGE	34	/* Result out of range */
+#define ENOSYS	38	/* No such system call */
 
 /* stdio.c */
 #define STDIN_FILENO	0
@@ -89,3 +102,4 @@ char *time_pretty(int32_t time, char *buffer, int32_t size);
 
 /* tty.c */
 void cfmakeraw(struct termios *termios_p);
+

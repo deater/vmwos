@@ -8,7 +8,6 @@
 #include <stdarg.h>
 
 #ifdef VMWOS
-static int errno;
 typedef uint64_t time_t;
 typedef int32_t ssize_t;
 
@@ -1088,7 +1087,8 @@ static void editor_save(void) {
 		close(fd);
 	}
 	free(buf);
-	editor_set_status_message("Can't save! I/O error: %s",strerror(errno));
+	editor_set_status_message("Can't save! I/O error: %s (%d)",
+		strerror(errno),errno);
 }
 
 /* Search / Find */

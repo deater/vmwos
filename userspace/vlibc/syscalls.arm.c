@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "syscalls.h"
+#include "vlibc.h"
 
 /* From Linux kernel, arch/arm/include/uapi/asm/unistd.h */
 /* That is auto-generated so not always there */
@@ -37,6 +38,17 @@
 #define __NR_statfs64		266
 #define __NR_getcpu		345
 
+int32_t errno=0;
+
+static int32_t update_errno(int32_t value) {
+
+	if ((value<0) && (value>-MAX_ERRNO)) {
+		errno=-value;
+		return -1;
+	}
+	return value;
+}
+
 /* 1 */
 int32_t exit(int32_t status) {
 
@@ -49,7 +61,7 @@ int32_t exit(int32_t status) {
 		: "r"(r7), "0"(r0)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 /* 3 */
@@ -66,7 +78,7 @@ int32_t read(int fd, void *buf, size_t count) {
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 
@@ -83,7 +95,7 @@ int32_t write(int fd, const void *buf, uint32_t size) {
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 int32_t open(const char *filename, uint32_t flags, uint32_t mode) {
@@ -99,7 +111,7 @@ int32_t open(const char *filename, uint32_t flags, uint32_t mode) {
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 int32_t close(uint32_t fd) {
@@ -113,7 +125,7 @@ int32_t close(uint32_t fd) {
 		: "r"(r7), "0"(r0)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {

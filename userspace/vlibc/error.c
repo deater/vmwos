@@ -4,21 +4,7 @@
 
 #include "syscalls.h"
 #include "vmwos.h"
-
-#define MAX_ERRNO	40
-
-#define ENOENT	2	/* File not found..... */
-#define E2BIG   7       /* Argument too big... */
-#define EBADF	9	/* Bad file descriptor */
-#define ENOMEM	12	/* Not enough memory.. */
-#define ENODEV	19	/* No such device..... */
-#define ENOTDIR	20	/* Not a directory.... */
-#define ENFILE	23	/* Not enough fds..... */
-#define EROFS	30	/* Read only file sys. */
-#define ERANGE	34	/* Result out of range */
-#define ENOSYS	38	/* No such system call */
-
-//int errno=0;
+#include "vlibc.h"
 
 static const char error_none[]=		"No error";
 static const char error_enoent[]=	"ENOENT: File not found";
@@ -74,8 +60,8 @@ static const char *error_table[MAX_ERRNO]={
 	error_generic,	/* 35 */
 	error_generic,	/* 36 */
 	error_generic,	/* 37 */
-	error_generic,	/* 38 */
-	error_enosys,	/* 39 ENOSYS */
+	error_enosys,	/* 38 ENOSYS */
+	error_generic,	/* 39 */
 };
 
 
