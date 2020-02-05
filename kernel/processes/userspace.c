@@ -53,6 +53,11 @@ void start_userspace(char *init_filename) {
 	/* Set current working directory */
 	strncpy(init_process->current_dir,"/",MAX_PATH_LEN);
 
+	/* Set up stdin / stdout / stderr */
+	init_process->fds[0]=0;
+	init_process->fds[1]=1;
+	init_process->fds[2]=2;
+
 	if (debug) printk("Execing init...\n");
 
 	result=execve(init_filename,NULL,NULL);

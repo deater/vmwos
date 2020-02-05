@@ -328,6 +328,12 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 
 	inode->size=size;
 
+	/* zero out other stuff */
+	inode->uid=0;
+	inode->gid=0;
+	inode->rdev=0;
+	inode->hard_links=1;
+
 	return 0;
 }
 
@@ -600,8 +606,7 @@ int32_t dos33fs_read_file(
 
 }
 
-int32_t dos33fs_getdents(struct superblock_type *sb,
-			uint32_t dir_inode,
+int32_t dos33fs_getdents(struct inode_type *dir_inode,
 			uint64_t *current_progress,
 			void *buf,uint32_t size) {
 
@@ -616,6 +621,11 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 	unsigned char filename[31];
 	int32_t filename_ptr;
 	int32_t next_t,next_s,next_i;
+
+	struct superblock_type *sb;
+
+	sb=dir_inode->sb;
+
 
 	dirent_ptr=(struct vmwos_dirent *)buf;
 
@@ -672,8 +682,8 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 	}
 
 	if (*current_progress==0) {
-		next_t=(dir_inode>>16)&0xff;
-		next_s=(dir_inode>>8)&0xff;
+		next_t=(dir_inode->number>>16)&0xff;
+		next_s=(dir_inode->number>>8)&0xff;
 		next_i=0;
 	}
 	else {
@@ -781,8 +791,7 @@ int32_t dos33fs_getdents(struct superblock_type *sb,
 }
 
 
-int32_t dos33fs_write_file(
-			struct superblock_type *superblock, uint32_t inode,
+int32_t dos33fs_write_file(struct inode_type *inode,
                         const char *buf,uint32_t count, uint64_t *offset) {
 
 	/* read only filesystem */

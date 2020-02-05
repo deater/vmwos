@@ -122,6 +122,9 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 
 	temp_inode=inode_allocate();
 	if (temp_inode==NULL) {
+		if (debug) {
+			printk("ilac: no inodes avail!\n");
+		}
 		return -ENOMEM;
 	}
 
@@ -185,7 +188,6 @@ int32_t inode_free(struct inode_type *inode) {
 
 	if (debug) printk("Freeing inode %p count=%d\n",inode,inode->count);
 
-
 	if (inode->count) inode->count--;
 
 	/* clear out the inode with invalid data */
@@ -193,6 +195,7 @@ int32_t inode_free(struct inode_type *inode) {
 		memset(inode,'V',sizeof(struct inode_type));
 	}
 
+	inode->count=0;
 
 	return 0;
 }

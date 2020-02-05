@@ -26,11 +26,11 @@ struct superblock_type;
 
 struct file_object_operations {
         int32_t (*read) (struct inode_type *, char *, uint32_t, uint64_t *);
-        int32_t (*write) (struct superblock_type *superblock,
-			uint32_t, const char *, uint32_t, uint64_t *);
+        int32_t (*write) (struct inode_type *,
+			const char *, uint32_t, uint64_t *);
         int64_t (*llseek) (struct file_object *, int64_t, int32_t);
-        int32_t (*getdents) (struct superblock_type *superblock,
-			uint32_t, uint64_t *, void *, uint32_t);
+        int32_t (*getdents) (struct inode_type *,
+			uint64_t *, void *, uint32_t);
         int32_t (*ioctl) (struct file_object *, uint32_t, uint32_t);
         int32_t (*open) (int32_t *, struct file_object *);
 //        int (*flush) (struct file *);

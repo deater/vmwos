@@ -186,6 +186,9 @@ struct process_control_block_type *process_create(void) {
 	new_proc->user_time=0;
 	new_proc->kernel_time=0;
 
+	/* Set up file descriptors */
+	for(i=0;i<MAX_FD_PER_PROC;i++) new_proc->fds[i]=-1;
+
 	/* LOCK */
 	/* FIXME: what happens when we rollover */
 	new_proc->pid=avail_pid;

@@ -22,11 +22,21 @@ int32_t file_object_free(struct file_object *file) {
 
 	/* FIXME: locking */
 
+	if (debug) {
+		printk("Attempting to free file object %p\n",file);
+	}
+
 	/* Free the corresponding inode */
 	if (file->inode) inode_free(file->inode);
 
 	/* Reduce the count */
 	if (file->count) file->count--;
+
+	if (debug) {
+		if (file->count==0) {
+			printk("File object %p completely free\n",file);
+		}
+	}
 
 	return 0;
 }
@@ -35,8 +45,10 @@ int32_t file_object_allocate(struct inode_type *inode) {
 
 	int32_t index;
 
-	if (debug) printk("Attempting to allocate fd for inode %x\n",
-		inode->number);
+	if (debug) {
+		printk("Attempting to allocate file object for inode %x\n",
+			inode->number);
+	}
 
 	index=0;
 	while(1) {
@@ -53,16 +65,69 @@ int32_t file_object_allocate(struct inode_type *inode) {
 		}
 	}
 
-	if (debug) printk("### Allocated file %d\n",index);
+	if (debug) {
+		printk("### Allocated file object %d (%p)\n",
+			index,&file_objects[index]);
+	}
 
 	return index;
+}
+
+/* Map user-program fd to the file_object struct */
+static int32_t map_fd_to_file(uint32_t fd, struct file_object **file) {
+
+	int32_t fo;
+
+	if (fd<0) {
+		return -ENFILE;
+	}
+
+	if (fd>=MAX_FD_PER_PROC) {
+		return -ENFILE;
+	}
+
+	fo=current_proc[get_cpu()]->fds[fd];
+	if (fo>=MAX_OPEN_FILES) {
+		return -ENFILE;
+	}
+	if (fo<0) {
+		return -ENFILE;
+	}
+
+	*file=&file_objects[fo];
+
+	if (file_objects[fo].count==0) {
+		printk("Attempting to read from uknown fd %d fo %d\n",fd,fo);
+		return -EBADF;
+	}
+
+	if (debug) {
+		printk("Opening fd %d, found %d (%p)\n",
+			fd,fo,file);
+	}
+
+	return 0;
+
 }
 
 int32_t close_syscall(uint32_t fd) {
 
 	int32_t result;
+	struct file_object *file;
 
-	result=file_object_free(&file_objects[fd]);
+	result=map_fd_to_file(fd, &file);
+	if (result<0) {
+		return result;
+	}
+
+	result=file_object_free(file);
+
+	current_proc[get_cpu()]->fds[fd]=-1;
+
+
+	if (debug) {
+		printk("Closing fd %d, file %p\n",fd,file);
+	}
 
 	return result;
 
@@ -134,13 +199,30 @@ int32_t open_file_object(
 
 int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 
-	int32_t result;
+	int32_t result,i;
 
+	/* need to map this to a per-process file descriptor */
+	for(i=0;i<MAX_FD_PER_PROC;i++) {
+		if (current_proc[get_cpu()]->fds[i]==-1) {
+			break;
+		}
+	}
+	if (i==MAX_FD_PER_PROC) {
+		return -ENFILE;
+	}
+
+	/* result is which file_object[] */
 	result=open_file(pathname,flags,mode);
 
-	return result;
-
+	if (result<0) {
+		return result;
+	}
+	else {
+		current_proc[get_cpu()]->fds[i]=result;
+		return i;
+	}
 }
+
 
 int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
@@ -153,23 +235,20 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 		return result;
 	}
 
-	if (fd>=MAX_OPEN_FILES) {
-		return -ENFILE;
+	result=map_fd_to_file(fd,&file);
+	if (result<0) {
+		return result;
 	}
 
-	file=&file_objects[fd];
-
-	if (file->count==0) {
-		printk("Attempting to read from unopened fd %d\n",fd);
-		return -EBADF;
+	if (debug) {
+		printk("Attempting to read %d bytes from fd %d into %x\n",
+			count,fd,buf);
 	}
-
-	if (debug) printk("Attempting to read %d bytes from fd %d into %x\n",count,fd,buf);
 
 	result=file->file_ops->read(
-				file_objects[fd].inode,
+				file->inode,
 				buf,count,
-				&file_objects[fd].file_offset);
+				&(file->file_offset));
 
 	return result;
 }
@@ -185,20 +264,12 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 		return result;
 	}
 
-	if (fd>=MAX_OPEN_FILES) {
-		return -ENFILE;
+	result=map_fd_to_file(fd,&file);
+	if (result<0) {
+		return result;
 	}
 
-	file=&file_objects[fd];
-
-	if (file->count==0) {
-		printk("Attempting to write to unopened fd %d\n",fd);
-		return -EBADF;
-	}
-
-	result=file->file_ops->write(
-				file_objects[fd].inode->sb,
-				file_objects[fd].inode->number,
+	result=file->file_ops->write(file->inode,
 					buf,count,
 					&file_objects[fd].file_offset);
 
@@ -242,9 +313,7 @@ int32_t getdents_syscall(uint32_t fd,
 	if (debug) {
 	}
 
-	result=file->file_ops->getdents(
-					file_objects[fd].inode->sb,
-					file_objects[fd].inode->number,
+	result=file->file_ops->getdents(file_objects[fd].inode,
 					&(file_objects[fd].file_offset),
 					dirp,count);
 	return result;
@@ -342,9 +411,14 @@ int64_t llseek_generic(struct file_object *file,
 int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
 
 	int64_t result;
+	struct file_object *file;
 
-	result=file_objects[fd].file_ops->llseek(&file_objects[fd],
-							offset,whence);
+	result=map_fd_to_file(fd, &file);
+	if (result<0) {
+		return result;
+	}
+
+	result=file->file_ops->llseek(file,offset,whence);
 
 	return result;
 }

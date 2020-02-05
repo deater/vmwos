@@ -260,6 +260,12 @@ retry_inode:
         inode->mtime=256246800;
         inode->ctime=256246800;
 
+	/* zero out other stuff */
+	inode->uid=0;
+	inode->gid=0;
+	inode->rdev=0;
+	inode->hard_links=1;
+
 	return 0;
 }
 
@@ -484,8 +490,7 @@ int32_t romfs_read_file(struct inode_type *inode,
 	/* Reads most that can fit and updates offset */
 	/* Start again from the file offset */
 	/* Returns 0 when done */
-int32_t romfs_getdents(struct superblock_type *sb,
-			uint32_t dir_inode,
+int32_t romfs_getdents(struct inode_type *dir_inode,
 			uint64_t *current_progress,
 			void *buf,uint32_t size) {
 
@@ -494,6 +499,9 @@ int32_t romfs_getdents(struct superblock_type *sb,
 	int32_t header_offset,temp_int,name_length,mode,next_header;
 	uint32_t inode=*current_progress;
 	int32_t num_entries=0,current_length=0,total_length=0;
+	struct superblock_type *sb;
+
+	sb=dir_inode->sb;
 
 	dirent_ptr=(struct vmwos_dirent *)buf;
 
@@ -505,7 +513,7 @@ int32_t romfs_getdents(struct superblock_type *sb,
 
 	/* We are the entry itself? */
 	if (inode==0) {
-		header_offset=dir_inode;	/* 0: Next */
+		header_offset=dir_inode->number;	/* 0: Next */
 		romfs_read_noinc(sb,&temp_int,header_offset,4);
 		mode=ntohl(temp_int)&0x7;
 		/* Check to be sure it's a directory */
@@ -571,8 +579,7 @@ int32_t romfs_getdents(struct superblock_type *sb,
 }
 
 
-int32_t romfs_write_file(
-			struct superblock_type *superblock, uint32_t inode,
+int32_t romfs_write_file(struct inode_type *inode,
                         const char *buf,uint32_t count, uint64_t *offset) {
 
 	/* read only filesystem */
