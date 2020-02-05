@@ -32,6 +32,14 @@ static int debug=0;
 #define	SHT_LOOS		0x60000000 // Start OS-specific.
 #define SHT_ARM_ATTRIBUTES	0x70000003
 
+#define BFLT_FLAG_RAM		0x0001 /* load program entirely into RAM */
+#define BFLT_FLAG_GOTPIC	0x0002 /* program is PIC with GOT */
+#define BFLT_FLAG_GZIP		0x0004 /* all but the header is compressed */
+#define BFLT_FLAG_GZDATA	0x0008 /* only data/relocs compressed (XIP) */
+#define BFLT_FLAG_KTRACE	0x0010 /* ktrace debugging (not implemented) */
+#define BFLT_FLAG_L1STK		0x0020 /* 4k stack in L1 (not imp)  */
+
+
 static void print_type_name(uint32_t type) {
 
 	switch(type) {
@@ -95,6 +103,7 @@ int main(int argc, char **argv) {
 	uint32_t temp_addr,temp_type;
 	uint32_t text_offset=0;//data_offset=0,bss_offset=0;
 	uint32_t entry=0,size,offset,output_addr;
+	uint32_t uses_got=0;
 
 	if (argc<3) {
 		print_usage(argv[0]);
@@ -310,6 +319,21 @@ int main(int argc, char **argv) {
 						offset,temp,data_size);
 				}
 			}
+			else if (!strncmp(name,".got",4)) {
+				memcpy(&temp,&shptr[0x10],4);
+				offset=temp;
+
+				memcpy(&temp,&shptr[0x14],4);
+				data_size+=temp;
+
+				uses_got=1;
+
+				if (debug) {
+					printf("\t.got at 0x%x size %d (total %d)\n",
+						offset,temp,data_size);
+				}
+
+			}
 			else if (!strncmp(name,".data",6)) {
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
@@ -493,6 +517,7 @@ int main(int argc, char **argv) {
 
 	/* flags */
 	temp=0;
+	if (uses_got) temp|=BFLT_FLAG_GOTPIC;
 	write(out,&temp,4);
 
 	/* padding */
@@ -558,6 +583,7 @@ int main(int argc, char **argv) {
 			else if ((!strncmp(name,".data.rel.local",15)) ||
 				(!strncmp(name,".data.rel.ro.local",18)) ||
 				(!strncmp(name,".got.plt",8)) ||
+				(!strncmp(name,".got",4)) ||
 				(!strncmp(name,".data",5))) {
 
 				if (debug) printf("Writing data: %s\n",name);
@@ -602,6 +628,7 @@ int main(int argc, char **argv) {
 	/* Write out relocations */
 
 	/* FIXME: relocate GOT too */
+	/* but... the got entries seem to appear in rel.dyn??? */
 	if (reloc_count) {
 		lseek(out,reloc_start,SEEK_SET);
 		for(j=0;j<reloc_count;j++) {
