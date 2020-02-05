@@ -76,8 +76,6 @@ int32_t file_object_allocate(struct inode_type *inode) {
 /* Map user-program fd to the file_object struct */
 static int32_t map_fd_to_file(uint32_t fd, struct file_object **file) {
 
-	int32_t fo;
-
 	if (fd<0) {
 		return -ENFILE;
 	}
@@ -86,24 +84,19 @@ static int32_t map_fd_to_file(uint32_t fd, struct file_object **file) {
 		return -ENFILE;
 	}
 
-	fo=current_proc[get_cpu()]->fds[fd];
-	if (fo>=MAX_OPEN_FILES) {
-		return -ENFILE;
-	}
-	if (fo<0) {
+	*file=current_proc[get_cpu()]->files[fd];
+	if (*file==NULL) {
 		return -ENFILE;
 	}
 
-	*file=&file_objects[fo];
-
-	if (file_objects[fo].count==0) {
-		printk("Attempting to read from uknown fd %d fo %d\n",fd,fo);
+	if ((*file)->count==0) {
+		printk("ERROR: Attempting to read from uknown fd %d\n",fd);
 		return -EBADF;
 	}
 
 	if (debug) {
-		printk("Opening fd %d, found %d (%p)\n",
-			fd,fo,file);
+		printk("Opening fd %d, found %p\n",
+			fd,*file);
 	}
 
 	return 0;
@@ -122,7 +115,7 @@ int32_t close_syscall(uint32_t fd) {
 
 	result=file_object_free(file);
 
-	current_proc[get_cpu()]->fds[fd]=-1;
+	current_proc[get_cpu()]->files[fd]=NULL;
 
 
 	if (debug) {
@@ -200,10 +193,11 @@ int32_t open_file_object(
 int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 
 	int32_t result,i;
+	struct file_object *file;
 
 	/* need to map this to a per-process file descriptor */
 	for(i=0;i<MAX_FD_PER_PROC;i++) {
-		if (current_proc[get_cpu()]->fds[i]==-1) {
+		if (current_proc[get_cpu()]->files[i]==NULL) {
 			break;
 		}
 	}
@@ -212,13 +206,13 @@ int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 	}
 
 	/* result is which file_object[] */
-	result=open_file(pathname,flags,mode);
+	result=open_file_object(&file,pathname,flags,mode);
 
 	if (result<0) {
 		return result;
 	}
 	else {
-		current_proc[get_cpu()]->fds[i]=result;
+		current_proc[get_cpu()]->files[i]=file;
 		return i;
 	}
 }
@@ -282,12 +276,6 @@ void file_objects_init(void) {
 	for(i=0;i<MAX_OPEN_FILES;i++) {
 		file_objects[i].count=0;
 	}
-
-	/* Special case 0/1/2 (stdin/stdout/stderr) */
-	/* FIXME: actually hook them up to be proper file objects */
-	file_objects[0].count=1;
-	file_objects[1].count=1;
-	file_objects[2].count=1;
 
 	return;
 }
@@ -421,4 +409,16 @@ int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
 	result=file->file_ops->llseek(file,offset,whence);
 
 	return result;
+}
+
+/* setup stdin/stdout/stderr */
+struct file_object *file_special(int which) {
+
+	struct file_object *file;
+
+	file=&file_objects[which];
+	file->count=1;
+
+	return file;
+
 }

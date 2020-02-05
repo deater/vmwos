@@ -21,7 +21,6 @@
 
 static int debug=0;
 
-
 static uint32_t ts(int32_t track, int32_t sector) {
 
 	int sectors_per_track=16; /* usually, older disks had 13 */

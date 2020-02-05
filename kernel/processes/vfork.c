@@ -6,6 +6,8 @@
 #include "lib/memcpy.h"
 #include "lib/smp.h"
 
+#include "fs/files.h"
+
 #include "processes/process.h"
 #include "processes/scheduler.h"
 
@@ -16,6 +18,7 @@ int32_t vfork(void) {
 	int32_t child_pid;
 	struct process_control_block_type *child,*parent,*prev,*next;
 	uint32_t new_stack;
+	int32_t i;
 
 	parent=current_proc[0];
 
@@ -33,6 +36,12 @@ int32_t vfork(void) {
 
 	/* Copy process info over, including kernel stack */
 	memcpy(child,parent,sizeof(struct process_control_block_type));
+
+	/* Increment the file use count for any open files */
+	for(i=0;i<MAX_FD_PER_PROC;i++) {
+		/* FIXME: Locking */
+		if (child->files[i]!=NULL) child->files[i]->count++;
+	}
 
 	child->pid=child_pid;
 	child->prev=prev;

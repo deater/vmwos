@@ -57,7 +57,7 @@ struct process_control_block_type {
 							/* 248 */
 
 	/* File related things */
-	int32_t fds[MAX_FD_PER_PROC];	/* 8*4 = 32 */	/* 280 */
+	struct file_object *files[MAX_FD_PER_PROC];	/* 8*4 = 32 */	/* 280 */
 	char current_dir[MAX_PATH_LEN];	/* 1024 */	/*1304 */
 
 	/* Current size = 1304 */

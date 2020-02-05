@@ -65,6 +65,8 @@ int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence);
 
 
 void file_objects_init(void);
+struct file_object *file_special(int which);
+
 
 #define SEEK_SET	0	/* Seek from beginning of file */
 #define SEEK_CUR	1	/* Seek from current position  */

@@ -156,8 +156,10 @@ int32_t statfs_syscall(const char *path, struct vmwos_statfs *buf) {
 		return result;
 	}
 
-	if (debug) printk("\tgot inode %x of %s\n",
-		inode->number,inode->sb->mountpoint);
+	if (debug) {
+		printk("\tgot inode %x of %s\n",
+			inode->number,inode->sb->mountpoint);
+	}
 
 	result=inode->sb->sb_ops.statfs(inode->sb,buf);
 

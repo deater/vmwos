@@ -186,16 +186,22 @@ int32_t inode_free(struct inode_type *inode) {
 
 	/* FIXME: locking */
 
-	if (debug) printk("Freeing inode %p count=%d\n",inode,inode->count);
+	if (debug) {
+		printk("inode_free: before %p count=%d\n",inode,inode->count);
+	}
+
+	if (inode->count==0) {
+		printk("ERROR: Attempting to free already freed inode!\n");
+		return -1;
+	}
 
 	if (inode->count) inode->count--;
 
 	/* clear out the inode with invalid data */
 	if (inode->count==0 ) {
 		memset(inode,'V',sizeof(struct inode_type));
+		inode->count=0;
 	}
-
-	inode->count=0;
 
 	return 0;
 }

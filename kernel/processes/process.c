@@ -188,7 +188,7 @@ struct process_control_block_type *process_create(void) {
 	new_proc->kernel_time=0;
 
 	/* Set up file descriptors */
-	for(i=0;i<MAX_FD_PER_PROC;i++) new_proc->fds[i]=-1;
+	for(i=0;i<MAX_FD_PER_PROC;i++) new_proc->files[i]=NULL;
 
 	/* LOCK */
 	/* FIXME: what happens when we rollover */
@@ -237,7 +237,7 @@ int32_t process_destroy(struct process_control_block_type *proc) {
 
 	/* close open files */
 	for(i=0;i<MAX_FD_PER_PROC;i++) {
-		if (proc->fds[i]!=-1) close_syscall(proc->fds[i]);
+		if (proc->files[i]!=NULL) file_object_free(proc->files[i]);
 	}
 
 	/* free memory */
