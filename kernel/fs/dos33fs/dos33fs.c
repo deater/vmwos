@@ -19,7 +19,7 @@
 
 #include "fs/dos33fs/dos33fs.h"
 
-static int debug=0;
+static int debug=1;
 
 static uint32_t ts(int32_t track, int32_t sector) {
 
@@ -911,6 +911,12 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 		}
 
 		memcpy(current_data+copy_begin,buf,copy_length);
+
+		/* write back out to disk */
+		data_location=ts(data_t,data_s);
+		sb->block->block_ops->write(sb->block,
+				data_location,DOS33_BLOCK_SIZE,current_data);
+
 		buf+=copy_length;
 
 		/* total bytes written increments by how many bytes copied */
