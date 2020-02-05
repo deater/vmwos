@@ -8,13 +8,13 @@ all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
-	chiptune chiptune6
+	chiptune chiptune6 write_test
 	cd demo && $(MAKE)
 
 image:	shell \
 	cat cat_count cause_error core_poke cp df hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
-	chiptune chiptune6
+	chiptune chiptune6 write_test
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
@@ -23,7 +23,7 @@ image:	shell \
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error core_poke cp df \
 		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
-		sysinfo tbo uname chiptune chiptune6 ./image/bin
+		sysinfo tbo uname write_test chiptune chiptune6 ./image/bin
 	cp demo/demosplash2019 ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
@@ -108,6 +108,9 @@ tbo:	tbo.elf
 uname:	uname.elf
 	$(ELF2BFLT) uname.elf uname
 
+write_test:	write_test.elf
+	$(ELF2BFLT) write_test.elf write_test
+
 ###
 
 
@@ -180,6 +183,9 @@ tbo.elf:	tbo.o ./vlibc/vlibc.a
 uname.elf:	uname.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o uname.elf uname.o ./vlibc/vlibc.a
 
+write_test.elf:	write_test.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o write_test.elf write_test.o ./vlibc/vlibc.a
+
 ####
 
 cat.o:	cat.c
@@ -245,6 +251,9 @@ tbo.o:	tbo.c
 uname.o:	uname.c
 	$(CROSS)$(CC) $(CFLAGS) -c uname.c
 
+write_test.o:	write_test.c
+	$(CROSS)$(CC) $(CFLAGS) -c write_test.c
+
 shell.o:	shell.c
 	$(CROSS)$(CC) $(CFLAGS) -c shell.c
 
@@ -265,6 +274,7 @@ clean:
 		hello cat cat_count cause_error chiptune chiptune6 \
 		core_poke cp df hexdump ll ls md5sum memory_test nano \
 		printa printb pwd shell slideshow sysinfo tbo uname \
+		write_test \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
 	cd demo && make clean
