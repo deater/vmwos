@@ -12,6 +12,7 @@ struct file_object {
 	struct file_object_operations *file_ops;	/* file_ops struct */
         struct inode_type *inode;			/* inode */
         uint32_t count;					/* # users of file */
+	uint32_t flags;					/* flags used at open */
 	char name[MAX_PATH_LEN];			/* name of file */
 };
 
@@ -44,6 +45,8 @@ int32_t file_object_free(struct file_object *file);
 
 
 int32_t close_syscall(uint32_t fd);
+
+#define O_RW_MASK	0x0003
 
 #define O_RDONLY        0x0000
 #define O_WRONLY        0x0001

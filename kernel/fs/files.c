@@ -132,10 +132,12 @@ struct inode_type *file_get_inode(int32_t which) {
 }
 
 /****************************************************/
-/* open                                             */
+/* open file object                                 */
 /****************************************************/
 
-int32_t open_file(const char *pathname, uint32_t flags, uint32_t mode) {
+int32_t open_file_object(
+	struct file_object **file,
+	const char *pathname, uint32_t flags, uint32_t mode) {
 
 	int32_t result;
 	struct inode_type *inode;
@@ -144,6 +146,13 @@ int32_t open_file(const char *pathname, uint32_t flags, uint32_t mode) {
 		printk("### Trying to open %s\n",pathname);
 	}
 
+	/* Want to create new file? */
+	if (flags&O_CREAT) {
+		/* FIXME */
+		return -ENOSYS;
+	}
+
+	/* Lookup existing inode */
 	result=inode_lookup_and_alloc(pathname,&inode);
 	if (result<0) {
 		return -ENOENT;
@@ -158,24 +167,31 @@ int32_t open_file(const char *pathname, uint32_t flags, uint32_t mode) {
 		return result;
 	}
 
+	*file=&file_objects[result];
+
+	(*file)->flags=flags;
+
 	/* Set up the file_ops */
-	inode->sb->sb_ops.setup_fileops(&file_objects[result]);
+	inode->sb->sb_ops.setup_fileops(*file);
+
+	/* If O_APPEND then set position to end of file */
+	if (flags&O_APPEND) {
+		(*file)->file_offset=inode->size;
+	}
 
 	if (debug) printk("### opened fd %d\n",result);
 
-	return result;
+	return 0;
 }
 
-/****************************************************/
-/* open file object                                 */
-/****************************************************/
 
+
+#if 0
 int32_t open_file_object(
 	struct file_object **file,
 	const char *pathname, uint32_t flags, uint32_t mode) {
 
 	int32_t result;
-
 	result=open_file(pathname,flags,mode);
 	if (result<0) {
 		return result;
@@ -185,6 +201,7 @@ int32_t open_file_object(
 
 	return 0;
 }
+#endif
 
 /****************************************************/
 /* open syscall                                     */
@@ -223,7 +240,7 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 	int32_t result;
 	struct file_object *file;
 
-	/* Hack for now */
+	/* Handle stdin: Hack for now */
 	if (fd==0) {
 		result=console_read(buf,count);
 		return result;
@@ -232,6 +249,11 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 	result=map_fd_to_file(fd,&file);
 	if (result<0) {
 		return result;
+	}
+
+	/* If trying to read a write-only file... */
+	if ((file->flags&O_RW_MASK) == O_WRONLY) {
+		return -EBADF;
 	}
 
 	if (debug) {
@@ -261,6 +283,13 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 	result=map_fd_to_file(fd,&file);
 	if (result<0) {
 		return result;
+	}
+
+	/* Check permissions */
+
+	/* If trying to read a write-only file... */
+	if ((file->flags&O_RW_MASK) == O_RDONLY) {
+		return -EBADF;
 	}
 
 	result=file->file_ops->write(file->inode,
@@ -418,6 +447,23 @@ struct file_object *file_special(int which) {
 
 	file=&file_objects[which];
 	file->count=1;
+
+	/* stdin */
+	if (which==0) {
+		file->flags=O_RDONLY;
+	}
+
+	/* stdout */
+	if (which==1) {
+		file->flags=O_WRONLY;
+	}
+
+	/* stderr */
+	if (which==2) {
+		file->flags=O_WRONLY;
+	}
+
+
 
 	return file;
 
