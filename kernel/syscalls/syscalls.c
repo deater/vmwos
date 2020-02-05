@@ -90,36 +90,36 @@ uint32_t swi_handler_c(
 //	printk("Starting syscall %d\n",r7);
 
 	switch(r7) {
-		case SYSCALL_EXIT:
+		case SYSCALL_EXIT:	/* 1 */
 			//printk("Process exiting with %d\n",r0);
 			exit(r0);
 			break;
 
-		case SYSCALL_READ:
+		case SYSCALL_READ:	/* 3 */
 //			printk("Trying to read: %d %x %d\n",r0,r1,r2);
 			result=read_syscall(r0,(char *)r1,(size_t)r2);
 			break;
 
-		case SYSCALL_WRITE:
+		case SYSCALL_WRITE:	/* 4 */
 //			printk("Trying to write: %d %x %d\n",
 //				r0,r1,r2);
 			result=write_syscall(r0,(char *)r1,(size_t)r2);
 			break;
 
-		case SYSCALL_OPEN:
+		case SYSCALL_OPEN:	/* 5 */
 			result=open_syscall((char *)r0,r1,r2);
 			break;
 
-		case SYSCALL_CLOSE:
+		case SYSCALL_CLOSE:	/* 6 */
 			result=close_syscall(r0);
 			break;
 
-		case SYSCALL_WAITPID:
+		case SYSCALL_WAITPID:	/* 7 */
 			//printk("Trying to waitpid on pid %d\n",r0);
 			result=waitpid(r0,(int32_t *)r1,r2,current_proc[get_cpu()]);
 			break;
 
-		case SYSCALL_EXECVE:
+		case SYSCALL_EXECVE:	/* 11 */
 			//printk("Trying to exec %s\n",(char *)r0);
 			result=execve((char *)r0,(char **)r1,(char **)r2);
 			/* wake up our parent (why would we do that???)*/
@@ -132,8 +132,16 @@ uint32_t swi_handler_c(
 			/* argv, otherwise it gets overwritten when we start */
 			break;
 
-		case SYSCALL_CHDIR:
+		case SYSCALL_CHDIR:	/* 12 */
 			result=chdir_syscall((char *)r0);
+			break;
+
+		case SYSCALL_TIME:	/* 13 */
+			result=time_since_boot();
+			break;
+
+		case SYSCALL_CHMOD:	/* 15 */
+			result=chmod_syscall((char *)r0,r1);
 			break;
 
 		case SYSCALL_SYSINFO:	/* 116 */
@@ -158,10 +166,6 @@ uint32_t swi_handler_c(
 		case SYSCALL_STAT:
 			result=stat_syscall((char *)r0,
 					(struct vmwos_stat *)r1);
-			break;
-
-		case SYSCALL_TIME:
-			result=time_since_boot();
 			break;
 
 		case SYSCALL_GETPID:

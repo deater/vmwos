@@ -239,3 +239,27 @@ int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf) {
 	return result;
 }
 
+int32_t chmod_syscall(const char *pathname, int32_t mode) {
+
+	int32_t result;
+	struct inode_type *inode;
+
+	if (debug) {
+		printk("### Trying to chmod %s\n",pathname);
+	}
+
+	result=inode_lookup_and_alloc(pathname,&inode);
+	if (result<0) {
+		return -ENOENT;
+	}
+
+	/* FIXME: lots of checks */
+
+	/* FIXME: actually update to disk */
+
+	inode_free(inode);
+
+	return result;
+}
+
+
