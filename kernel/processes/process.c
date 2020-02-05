@@ -11,6 +11,7 @@
 #include "memory/memory.h"
 #include "processes/process.h"
 #include "time/time.h"
+#include "fs/files.h"
 
 static int process_debug=0;
 
@@ -222,6 +223,8 @@ struct process_control_block_type *process_create(void) {
 
 int32_t process_destroy(struct process_control_block_type *proc) {
 
+	int i;
+
 	if (process_debug) {
 		printk("ATTEMPTING TO DESTROY PROCESS %d\n",proc->pid);
 	}
@@ -233,7 +236,9 @@ int32_t process_destroy(struct process_control_block_type *proc) {
 	process_remove(proc);
 
 	/* close open files */
-	/* FIXME */
+	for(i=0;i<MAX_FD_PER_PROC;i++) {
+		if (proc->fds[i]!=-1) close_syscall(proc->fds[i]);
+	}
 
 	/* free memory */
 	if (proc->stack) {
