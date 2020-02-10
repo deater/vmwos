@@ -22,12 +22,13 @@ struct superblock_operations {
 //	void (*destroy_inode) (struct inode *);
 //	void (*read_inode) (struct inode *);
 //	void (*dirty_inode) (struct inode *);
-//	void (*write_inode) (struct inode *, int);
+	void (*write_inode) (struct inode_type *);
+	int32_t (*truncate_inode) (struct inode_type *, uint64_t);
 //	void (*put_inode) (struct inode *);
 //	void (*drop_inode) (struct inode *);
 //	void (*delete_inode) (struct inode *);
 //	void (*put_super) (struct super_block *);
-//	void (*write_super) (struct super_block *);
+	void (*write_superblock) (struct superblock_type *);
 //	int (*sync_fs) (struct super_block *, int);
 	int32_t (*statfs) (struct superblock_type *, struct vmwos_statfs *);
 	int32_t (*lookup_inode) (struct inode_type *, const char *);

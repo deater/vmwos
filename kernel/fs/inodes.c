@@ -264,11 +264,15 @@ int32_t chmod_syscall(const char *pathname, int32_t mode) {
 
 int32_t truncate_inode(struct inode_type *inode, int64_t size) {
 
+	int32_t result;
+
 	if (debug) {
 		printk("Truncating inode %x to %lld\n",inode->number,size);
 	}
 
-	return -ENOSYS;
+	result=inode->sb->sb_ops.truncate_inode(inode,size);
+
+	return result;
 }
 
 int32_t truncate64_syscall(const char *pathname, uint64_t size) {

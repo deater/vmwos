@@ -958,7 +958,20 @@ int32_t dos33fs_setup_fileops(struct file_object *file) {
 	return 0;
 }
 
+static void dos33fs_write_inode(struct inode_type *inode) {
+
+	/* FIXME */
+	return;
+}
+
+static int32_t dos33fs_truncate_inode(struct inode_type *inode, uint64_t size) {
+
+	return -ENOSYS;
+}
+
 static struct superblock_operations dos33fs_sb_ops = {
+	.truncate_inode = dos33fs_truncate_inode,
+	.write_inode = dos33fs_write_inode,
 	.statfs = dos33fs_statfs,
 	.lookup_inode = dos33fs_lookup_inode,
 	.setup_fileops = dos33fs_setup_fileops,

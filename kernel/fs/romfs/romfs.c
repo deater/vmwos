@@ -179,6 +179,8 @@ retry_inode:
 
 	/* Default mode is global read/write */
 		/* -rw-rw-rw- */
+	/* should it be read-only instead? 0444? */
+		/* -r--r--r-- */
 	inode->mode=0666;
 
 	header_offset=inode->number;		/* 0: Next */
@@ -601,7 +603,19 @@ int32_t romfs_setup_fileops(struct file_object *file) {
 	return 0;
 }
 
+void romfs_write_inode(struct inode_type *inode) {
+
+	return;
+}
+
+int32_t romfs_truncate_inode(struct inode_type *inode, uint64_t size) {
+
+	return -EROFS;
+}
+
 static struct superblock_operations romfs_sb_ops = {
+	.write_inode = romfs_write_inode,
+	.truncate_inode = romfs_truncate_inode,
 	.statfs = romfs_statfs,
 	.lookup_inode = romfs_lookup_inode,
 	.setup_fileops = romfs_setup_fileops,
