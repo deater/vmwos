@@ -468,3 +468,25 @@ struct file_object *file_special(int which) {
 	return file;
 
 }
+
+int32_t ftruncate64_syscall(int32_t fd, uint64_t size) {
+
+	int32_t result;
+	struct file_object *file;
+
+	result=map_fd_to_file(fd,&file);
+	if (result<0) {
+		return result;
+	}
+
+	/* If trying to truncate a read-only file... */
+	if ((file->flags&O_RW_MASK) == O_RDONLY) {
+		return -EBADF;
+	}
+
+	result=truncate_inode(file->inode,size);
+
+	return result;
+}
+
+

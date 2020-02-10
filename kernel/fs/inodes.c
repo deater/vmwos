@@ -262,4 +262,29 @@ int32_t chmod_syscall(const char *pathname, int32_t mode) {
 	return result;
 }
 
+int32_t truncate_inode(struct inode_type *inode, int64_t size) {
+
+	if (debug) {
+		printk("Truncating inode %x to %lld\n",inode->number,size);
+	}
+
+	return -ENOSYS;
+}
+
+int32_t truncate64_syscall(const char *pathname, uint64_t size) {
+
+	int32_t result;
+	struct inode_type *inode;
+
+	result=inode_lookup_and_alloc(pathname,&inode);
+        if (result<0) {
+                return -ENOENT;
+        }
+
+	result=truncate_inode(inode,size);
+
+	inode_free(inode);
+
+	return result;
+}
 

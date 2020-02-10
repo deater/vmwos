@@ -79,3 +79,5 @@ struct file_object *file_special(int which);
 int64_t llseek_generic(struct file_object *file,
                 int64_t offset, int32_t whence);
 
+int32_t ftruncate64_syscall(int32_t fd, uint64_t size);
+

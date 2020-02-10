@@ -7,6 +7,8 @@
 /* From Linux kernel, arch/arm/include/uapi/asm/unistd.h */
 /* That is auto-generated so not always there */
 /* On a real pi2 look in /usr/include/arm-linux-gnueabihf/asm/unistd.h */
+/* /usr/include/arm-linux-gnueabihf/asm/unistd-common.h */
+
 #define __NR_exit		1
 #define __NR_read		3
 #define __NR_write		4
@@ -26,6 +28,7 @@
 #define __NR_munmap		91
 #define __NR_statfs		99
 #define __NR_stat		106
+#define __NR_fstat		108
 #define __NR_sysinfo		116
 #define	__NR_uname		122
 #define __NR__llseek		140
@@ -34,6 +37,7 @@
 #define __NR_nanosleep  	162
 #define __NR_getcwd		183
 #define __NR_vfork		190
+#define __NR_truncate64		193
 #define __NR_ftruncate64	194
 #define __NR_clock_gettime	263
 #define __NR_statfs64		266
@@ -522,6 +526,26 @@ int32_t lseek64(int32_t fd, uint32_t offset_high,
 
 }
 
+/* 193 */
+
+/* note, 64-bit values need to be aligned in even registers like this?*/
+/* assuming we are using something similar to EABI here */
+int32_t truncate(const char *path, int64_t length) {
+
+	register long r7 __asm__("r7") = __NR_ftruncate64;
+	register long r0 __asm__("r0") = (long)path;
+	register long r1 __asm__("r1") = 0;
+	register long r2 __asm__("r2") = length&0xffffffff;
+	register long r3 __asm__("r3") = length>>32;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2), "r"(r3)
+		: "memory");
+
+	return r0;
+}
 
 /* 194 */
 

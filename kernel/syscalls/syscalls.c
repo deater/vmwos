@@ -214,6 +214,15 @@ uint32_t swi_handler_c(
 			result=vfork();
 			break;
 
+		case SYSCALL_TRUNCATE64:	/* 193 */
+			result=truncate64_syscall((char *)r0,
+							((int64_t)r2)<<32|r3);
+			break;
+
+		case SYSCALL_FTRUNCATE64:	/* 194 */
+			result=ftruncate64_syscall(r0,((int64_t)r2)<<32|r3);
+			break;
+
 		case SYSCALL_CLOCK_GETTIME:	/* 263 */
 			result=clock_gettime(r0,(struct timespec *)r1);
 			break;
