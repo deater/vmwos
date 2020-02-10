@@ -144,6 +144,38 @@ uint32_t swi_handler_c(
 			result=chmod_syscall((char *)r0,r1);
 			break;
 
+		case SYSCALL_GETPID:	/* 20 */
+			result=current_proc[get_cpu()]->pid;
+			break;
+
+		case SYSCALL_TIMES:	/* 43 */
+			result=times((struct tms *)r0);
+			break;
+
+		case SYSCALL_IOCTL:	/* 54 */
+			printk("UNIMPLEMENTED SYSCALL: IOCTL(%x,%x,%x)\n",
+				r0,r1,r2);
+			result=-1;
+			break;
+
+		case SYSCALL_MMAP:	/* 90 */
+			result=-ENOSYS;
+			break;
+
+		case SYSCALL_MUNMAP:	/* 91 */
+			result=-ENOSYS;
+			break;
+
+		case SYSCALL_STATFS:	/* 99 */
+			result=statfs_syscall((const char *)r0,
+						(struct vmwos_statfs *)r1);
+			break;
+
+		case SYSCALL_STAT:	/* 106 */
+			result=stat_syscall((char *)r0,
+					(struct vmwos_stat *)r1);
+			break;
+
 		case SYSCALL_SYSINFO:	/* 116 */
 			result=sysinfo((struct sysinfo *)r0);
 			break;
@@ -163,62 +195,30 @@ uint32_t swi_handler_c(
 			}
 			break;
 
-		case SYSCALL_STAT:
-			result=stat_syscall((char *)r0,
-					(struct vmwos_stat *)r1);
-			break;
-
-		case SYSCALL_GETPID:
-			result=current_proc[get_cpu()]->pid;
-			break;
-
-		case SYSCALL_TIMES:
-			result=times((struct tms *)r0);
-			break;
-
-		case SYSCALL_IOCTL:
-			printk("UNIMPLEMENTED SYSCALL: IOCTL(%x,%x,%x)\n",
-				r0,r1,r2);
-			result=-1;
-			break;
-
-		case SYSCALL_GETDENTS:
+		case SYSCALL_GETDENTS:	/* 141 */
 			result=getdents_syscall(r0,
 					(struct vmwos_dirent *)r1,r2);
 			break;
 
-		case SYSCALL_NANOSLEEP:
+		case SYSCALL_NANOSLEEP:	/* 162 */
 			result=nanosleep((struct timespec *)r0,
 					(struct timespec *)r1);
 			break;
 
-		case SYSCALL_GETCWD:
+		case SYSCALL_GETCWD:	/* 183 */
 			result=(uint32_t)getcwd_syscall((char *)r0,r1);
 			break;
 
-		case SYSCALL_VFORK:
+		case SYSCALL_VFORK:	/* 190 */
 			//printk("Trying to vfork\n");
 			result=vfork();
 			break;
 
-		case SYSCALL_CLOCK_GETTIME:
+		case SYSCALL_CLOCK_GETTIME:	/* 263 */
 			result=clock_gettime(r0,(struct timespec *)r1);
 			break;
 
-		case SYSCALL_MMAP:
-			result=-ENOSYS;
-			break;
-
-		case SYSCALL_MUNMAP:
-			result=-ENOSYS;
-			break;
-
-		case SYSCALL_STATFS:
-			result=statfs_syscall((const char *)r0,
-						(struct vmwos_statfs *)r1);
-			break;
-
-		case SYSCALL_GETCPU:
+		case SYSCALL_GETCPU:		/* 345 */
 			result=getcpu((uint32_t *)r0,
 					(uint32_t *)r1,
 					(void *)r2);
