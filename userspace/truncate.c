@@ -25,10 +25,14 @@ static void usage(void) {
 int main(int argc, char **argv) {
 
 	int c,size=0,result;
+	int use_ftruncate=0,fd;
 
 	opterr=0;
-	while ((c=getopt(argc,argv,"hs:"))!=-1) {
+	while ((c=getopt(argc,argv,"fhs:"))!=-1) {
 		switch(c) {
+			case 'f':
+				use_ftruncate=1;
+				break;
 			case 's':
 				size=atoi(optarg);
 				break;
@@ -40,12 +44,31 @@ int main(int argc, char **argv) {
 	}
 
 	if (optind<argc) {
-		printf("Truncating %s to size %d\n",argv[optind],size);
 
-		result=truncate(argv[optind],size);
-		if (result<0) {
-			printf("Error truncating: %d %s\n",
-				errno,strerror(errno));
+		if (use_ftruncate) {
+			printf("Ftruncating %s to size %d\n",argv[optind],size);
+
+			fd=open(argv[optind],O_WRONLY,0);
+			if (fd<0) {
+				printf("Error opening: %s\n",strerror(errno));
+			}
+			else {
+				result=ftruncate(fd,size);
+				if (result<0) {
+					printf("Error truncating: %d %s\n",
+						errno,strerror(errno));
+				}
+				close(fd);
+			}
+		}
+		else {
+			printf("Truncating %s to size %d\n",argv[optind],size);
+
+			result=truncate(argv[optind],size);
+			if (result<0) {
+				printf("Error truncating: %d %s\n",
+					errno,strerror(errno));
+			}
 		}
 	}
 	else {
