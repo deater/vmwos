@@ -119,6 +119,10 @@ uint32_t swi_handler_c(
 			result=waitpid(r0,(int32_t *)r1,r2,current_proc[get_cpu()]);
 			break;
 
+		case SYSCALL_UNLINK:	/* 10 */
+			result=unlink_syscall((char *)r0);
+			break;
+
 		case SYSCALL_EXECVE:	/* 11 */
 			//printk("Trying to exec %s\n",(char *)r0);
 			result=execve((char *)r0,(char **)r1,(char **)r2);

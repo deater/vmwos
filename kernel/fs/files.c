@@ -226,6 +226,10 @@ int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 }
 
 
+/****************************************************/
+/* read syscall                                     */
+/****************************************************/
+
 int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	int32_t result;
@@ -259,6 +263,10 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	return result;
 }
+
+/****************************************************/
+/* write syscall                                    */
+/****************************************************/
 
 int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 
@@ -300,6 +308,10 @@ void file_objects_init(void) {
 	return;
 }
 
+/****************************************************/
+/* getdents syscall                                 */
+/****************************************************/
+
 int32_t getdents_syscall(uint32_t fd,
 			struct vmwos_dirent *dirp, uint32_t count) {
 
@@ -327,6 +339,10 @@ int32_t getdents_syscall(uint32_t fd,
 	return result;
 
 }
+
+/****************************************************/
+/* chdir syscall                                    */
+/****************************************************/
 
 /* Change current working directory */
 /* FIXME: should make path canonical somehow */
@@ -381,6 +397,9 @@ int32_t chdir_syscall(const char *path) {
 	return 0;
 }
 
+/****************************************************/
+/* getcwd syscall                                   */
+/****************************************************/
 
 /* Get name of current working directory */
 char *getcwd_syscall(char *buf, size_t size) {
@@ -415,6 +434,9 @@ int64_t llseek_generic(struct file_object *file,
 	return file->file_offset;
 }
 
+/****************************************************/
+/* llseek syscall                                   */
+/****************************************************/
 
 int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
 
@@ -459,6 +481,10 @@ struct file_object *file_special(int which) {
 	return file;
 
 }
+
+/****************************************************/
+/* ftruncate64 syscall                              */
+/****************************************************/
 
 int32_t ftruncate64_syscall(int32_t fd, uint64_t size) {
 

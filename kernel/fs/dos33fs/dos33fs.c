@@ -286,6 +286,11 @@ static int32_t dos33_get_filesize(struct inode_type *inode,
 
 	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+	/* handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+	}
 	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
 
@@ -356,6 +361,12 @@ static int32_t dos33_set_filesize(struct inode_type *inode,
 
 	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+	/* Handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+	}
+
 	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
 
@@ -663,6 +674,12 @@ int32_t dos33fs_read_file(
 
 	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	/* handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	}
+
 	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
@@ -892,6 +909,8 @@ int32_t dos33fs_getdents(struct inode_type *dir_inode,
 			if (current_block[cat_offset]==0) continue;
 			/* if ff then deleted */
 			if (current_block[cat_offset]==0xff) continue;
+			/* if fe then unlinked */
+			if (current_block[cat_offset]==0xfe) continue;
 
 			/* copy in filename */
 			memcpy(filename,
@@ -1008,6 +1027,12 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 
 	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	/* Handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	}
+
 	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
@@ -1277,6 +1302,12 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 
 	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	/* Handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	}
+
 	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
@@ -1459,6 +1490,120 @@ static int32_t dos33fs_truncate_inode(struct inode_type *inode, uint64_t size) {
 	return result;
 }
 
+static int32_t dos33fs_unlink_inode(struct inode_type *inode) {
+
+	int32_t result=0;
+
+	uint32_t block_location,cat_entry,old_track;
+
+	char current_block[DOS33_BLOCK_SIZE];
+
+//	if (debug) {
+		printk("VMW dos33: Attempting to unlink inode %x\n",inode->number);
+//	}
+
+	/* special case . , can't remove */
+	if ((inode->number&0xff)==0xff) {
+		return -EISDIR;
+	}
+
+	/* special case .. */
+	if ((inode->number&0xff)==0xfe) {
+		return -EISDIR;
+	}
+
+	block_location=inode_to_block(inode->number);
+	cat_entry=(inode->number&0xff);
+	if (cat_entry>=DOS33_CAT_MAX_ENTRIES) {
+		printk("Cat entry %d out of bounds\n",cat_entry);
+		return -ENOENT;
+	}
+
+	inode->sb->block->block_ops->read(inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	/* Remove from directory */
+
+	/* Note this is a VMWos hack because the inode and filename */
+	/* are one and the same, apple dos might not know what to do */
+	/* with such a file */
+
+	old_track=current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FIRST_T]=0xfe;
+
+	current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FIRST_T]=0xfe;
+
+	current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FILE_NAME+0x20]=old_track;
+
+	inode->sb->block->block_ops->write(inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	return result;
+}
+
+
+static void dos33fs_destroy_inode(struct inode_type *inode) {
+
+#if 0
+	uint32_t block_location,cat_entry,old_track;
+
+	char current_block[DOS33_BLOCK_SIZE];
+
+//	if (debug) {
+		printk("VMW dos33: Attempting to unlink inode %x\n",inode->number);
+//	}
+
+	/* special case . , can't remove */
+	if ((inode->number&0xff)==0xff) {
+		return -EISDIR;
+	}
+
+	/* special case .. */
+	if ((inode->number&0xff)==0xfe) {
+		return -EISDIR;
+	}
+
+	block_location=inode_to_block(inode->number);
+	cat_entry=(inode->number&0xff);
+	if (cat_entry>=DOS33_CAT_MAX_ENTRIES) {
+		printk("Cat entry %d out of bounds\n",cat_entry);
+		return -ENOENT;
+	}
+
+	inode->sb->block->block_ops->read(inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	/* Remove from directory */
+
+	/* Note this is a VMWos hack because the inode and filename */
+	/* are one and the same, apple dos might not know what to do */
+	/* with such a file */
+
+	old_track=current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FIRST_T]=0xfe;
+
+	current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FIRST_T]=0xfe;
+
+	current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FILE_NAME+0x20]=old_track;
+
+	inode->sb->block->block_ops->write(inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+#endif
+	return;
+}
+
+
+
 static void dos33fs_write_superblock(struct superblock_type *sb) {
 
 	uint32_t vtoc_location = ts(17,0);	/* Usually at 17:0 */
@@ -1476,6 +1621,8 @@ static struct superblock_operations dos33fs_sb_ops = {
 	.lookup_inode = dos33fs_lookup_inode,
 	.setup_fileops = dos33fs_setup_fileops,
 	.write_superblock = dos33fs_write_superblock,
+	.unlink_inode = dos33fs_unlink_inode,
+	.destroy_inode = dos33fs_destroy_inode,
 };
 
 

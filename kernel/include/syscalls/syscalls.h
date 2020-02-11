@@ -11,6 +11,7 @@
 #define SYSCALL_OPEN		5
 #define SYSCALL_CLOSE		6
 #define SYSCALL_WAITPID		7
+#define SYSCALL_UNLINK		10
 #define SYSCALL_EXECVE		11
 #define SYSCALL_CHDIR		12
 #define SYSCALL_TIME		13

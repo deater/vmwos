@@ -13,6 +13,7 @@ static const char error_ebadf[]=	"EBADF: Bad file descriptor";
 static const char error_enomem[]=	"ENOMEM: Not enougn memory";
 static const char error_enodev[]=	"ENODEV: No such device";
 static const char error_enotdir[]=	"ENOTDIR: Not a directory";
+static const char error_eisdir[]=	"EISDIR: Is a directory";
 static const char error_enfile[]=	"ENFILE: Not enough fds";
 static const char error_erofs[]=	"EROFS: Read only file system";
 static const char error_erange[]=	"ERANGE: Result out of range";
@@ -43,7 +44,7 @@ static const char *error_table[MAX_ERRNO]={
 	error_generic,	/* 18 */
 	error_enodev,	/* 19 ENODEV */
 	error_enotdir,	/* 20 ENOTDIR */
-	error_generic,	/* 21 */
+	error_eisdir,	/* 21 EISDIR */
 	error_generic,	/* 22 */
 	error_enfile,	/* 23 ENFILE */
 	error_generic,	/* 24 */

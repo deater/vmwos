@@ -195,7 +195,14 @@ int32_t inode_free(struct inode_type *inode) {
 		return -1;
 	}
 
-	if (inode->count) inode->count--;
+	if (inode->count) {
+		inode->count--;
+	}
+
+	if ((inode->count==0 ) && (inode->hard_links==0)) {
+		printk("VMW: attempting to destroy inode %d\n",inode->number);
+		inode->sb->sb_ops.destroy_inode(inode);
+	}
 
 	/* clear out the inode with invalid data */
 	if (inode->count==0 ) {
@@ -205,6 +212,10 @@ int32_t inode_free(struct inode_type *inode) {
 
 	return 0;
 }
+
+/****************************************************/
+/* stat syscall                                     */
+/****************************************************/
 
 int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf) {
 
@@ -238,6 +249,10 @@ int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf) {
 
 	return result;
 }
+
+/****************************************************/
+/* chmod syscall                                    */
+/****************************************************/
 
 int32_t chmod_syscall(const char *pathname, int32_t mode) {
 
@@ -289,6 +304,10 @@ int32_t truncate_inode(struct inode_type *inode, int64_t size) {
 	return result;
 }
 
+/****************************************************/
+/* truncate64 syscall                               */
+/****************************************************/
+
 int32_t truncate64_syscall(const char *pathname, uint64_t size) {
 
 	int32_t result;
@@ -318,3 +337,43 @@ int32_t truncate64_syscall(const char *pathname, uint64_t size) {
 	return result;
 }
 
+
+/****************************************************/
+/* unlink syscall                                   */
+/****************************************************/
+
+int32_t unlink_syscall(const char *pathname) {
+
+	int32_t result;
+	struct inode_type *inode;
+
+//	if (debug) {
+		printk("VMW unlink: attempting to unlink %s\n",pathname);
+//	}
+
+	result=inode_lookup_and_alloc(pathname,&inode);
+        if (result<0) {
+                return -ENOENT;
+        }
+
+	if (debug) {
+		printk("unlink: found inode %x\n",inode->number);
+	}
+
+	if (inode->mode&S_IFDIR) {
+		result=-EISDIR;
+		goto unlink_syscall_free_and_return;
+	}
+
+	result=inode->sb->sb_ops.unlink_inode(inode);
+	if (result>=0) {
+		inode->hard_links--;
+	}
+
+unlink_syscall_free_and_return:
+
+	inode_free(inode);
+
+	return result;
+
+}

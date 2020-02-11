@@ -57,3 +57,4 @@ const char *split_filename(const char *start_ptr, char *name, int len);
 int32_t truncate_inode(struct inode_type *inode, int64_t size);
 int32_t truncate64_syscall(const char *path, uint64_t size);
 
+int32_t unlink_syscall(const char *pathname);

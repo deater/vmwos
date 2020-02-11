@@ -608,7 +608,12 @@ void romfs_write_inode(struct inode_type *inode) {
 	return;
 }
 
-int32_t romfs_truncate_inode(struct inode_type *inode, uint64_t size) {
+static int32_t romfs_truncate_inode(struct inode_type *inode, uint64_t size) {
+
+	return -EROFS;
+}
+
+static int32_t romfs_unlink_inode(struct inode_type *inode) {
 
 	return -EROFS;
 }
@@ -619,6 +624,7 @@ static struct superblock_operations romfs_sb_ops = {
 	.statfs = romfs_statfs,
 	.lookup_inode = romfs_lookup_inode,
 	.setup_fileops = romfs_setup_fileops,
+	.unlink_inode = romfs_unlink_inode,
 };
 
 
