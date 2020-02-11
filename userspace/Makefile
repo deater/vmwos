@@ -7,13 +7,14 @@ GENROMFS = genromfs
 all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
-	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
+	md5sum memory_test nano printa printb pwd sysinfo \
+	tbo truncate uname \
 	chiptune chiptune6 write_test
 	cd demo && $(MAKE)
 
 image:	shell \
 	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
-	md5sum memory_test nano printa printb pwd sysinfo tbo uname \
+	md5sum memory_test nano printa printb pwd sysinfo tbo truncate uname \
 	chiptune chiptune6 write_test
 	mkdir -p image
 	mkdir -p image/bin
@@ -23,7 +24,8 @@ image:	shell \
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error chmod core_poke cp df \
 		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
-		sysinfo tbo uname write_test chiptune chiptune6 ./image/bin
+		sysinfo tbo truncate uname write_test chiptune \
+		chiptune6 ./image/bin
 	cp demo/demosplash2019 ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
@@ -108,6 +110,9 @@ sysinfo:	sysinfo.elf
 tbo:	tbo.elf
 	$(ELF2BFLT) tbo.elf tbo
 
+truncate:	truncate.elf
+	$(ELF2BFLT) truncate.elf truncate
+
 uname:	uname.elf
 	$(ELF2BFLT) uname.elf uname
 
@@ -186,6 +191,9 @@ sysinfo.elf:	sysinfo.o ./vlibc/vlibc.a
 tbo.elf:	tbo.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o tbo.elf tbo.o ./vlibc/vlibc.a
 
+truncate.elf:	truncate.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o truncate.elf truncate.o ./vlibc/vlibc.a
+
 uname.elf:	uname.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o uname.elf uname.o ./vlibc/vlibc.a
 
@@ -257,6 +265,9 @@ slideshow.o:	slideshow.c
 tbo.o:	tbo.c
 	$(CROSS)$(CC) $(CFLAGS) -Wno-misleading-indentation -c tbo.c
 
+truncate.o:	truncate.c
+	$(CROSS)$(CC) $(CFLAGS) -c truncate.c
+
 uname.o:	uname.c
 	$(CROSS)$(CC) $(CFLAGS) -c uname.c
 
@@ -282,7 +293,7 @@ clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error chiptune chiptune6 \
 		chmod core_poke cp df hexdump ll ls md5sum memory_test nano \
-		printa printb pwd shell slideshow sysinfo tbo uname \
+		printa printb pwd shell slideshow sysinfo tbo truncate uname \
 		write_test \
 		initrd.h initrd.romfs
 	cd vlibc && make clean

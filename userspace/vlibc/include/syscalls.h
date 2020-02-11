@@ -99,6 +99,7 @@ int32_t read(int fd, void *buf, size_t count);
 int32_t open(const char *filename, uint32_t flags, uint32_t mode);
 int32_t close(uint32_t fd);
 int32_t ftruncate(int32_t fd, int64_t length);
+int32_t truncate(const char *path, int64_t length);
 
 #define SEEK_SET	0	/* Seek from beginning of file	*/
 #define SEEK_CUR	1	/* Seek from current position	*/
