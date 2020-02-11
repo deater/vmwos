@@ -11,13 +11,15 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <getopt.h>
 #endif
 
 //static int debug=1;
 
 static void usage(void) {
 	printf("\nUsage: truncate [-s size] FILENAME\n\n");
-	return;
+	exit(1);
 }
 
 int main(int argc, char **argv) {
@@ -25,7 +27,7 @@ int main(int argc, char **argv) {
 	int c,size=0,result;
 
 	opterr=0;
-	while ((c=getopt(argc,argv,"hs"))!=-1) {
+	while ((c=getopt(argc,argv,"hs:"))!=-1) {
 		switch(c) {
 			case 's':
 				size=atoi(optarg);
