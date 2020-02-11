@@ -19,7 +19,7 @@
 
 #include "fs/dos33fs/dos33fs.h"
 
-static int debug=1;
+static int debug=0;
 
 static uint32_t ts(int32_t track, int32_t sector) {
 
@@ -964,9 +964,166 @@ static void dos33fs_write_inode(struct inode_type *inode) {
 	return;
 }
 
+	/* Find current desired end sector */
+	/* write zero to it past offset */
+	/* go to end of file, zeroing sectors and freeing */
+	/* be sure to update free map in superblock */
+
+static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
+
+
+	int32_t type,advance_ts;
+	int32_t which_sector,sector_offset;
+	uint32_t next_t,next_s,entry,block_location;
+	uint32_t data_t,data_s,data_location;
+	uint32_t zero_begin,zero_length;
+	struct superblock_type *sb;
+	uint32_t adjusted_offset;
+//	int32_t last_sector;
+//	int32_t current_sector,last_sector_offset;
+
+	char current_block[DOS33_BLOCK_SIZE];
+	char current_data[DOS33_BLOCK_SIZE];
+
+	sb=inode->sb;
+
+	printk("dos33fs: Attempting to shrink %x to size %d\n",
+			inode->number,size);
+
+	/* Load the catalog entry */
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	entry=(inode->number&0xff);
+
+	block_location=ts(next_t,next_s);
+	sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
+
+	/* For binary files, skip the ADDR/LEN header */
+	if (type==DOS33_FILE_TYPE_B) {
+		adjusted_offset=size+4;
+//		last_sector=(inode->size+4)/DOS33_BLOCK_SIZE;
+//		last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
+	} else {
+		adjusted_offset=size;
+//		last_sector=inode->size/DOS33_BLOCK_SIZE;
+//		last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
+	}
+
+	/* This should never happen */
+	if (size>inode->size) {
+		printk("ERROR: shrink size larger than file\n");
+		return -E2BIG;
+	}
+
+
+	/* calc offset in file */
+	which_sector=(adjusted_offset)/DOS33_BLOCK_SIZE;
+	sector_offset=(adjusted_offset)-(which_sector*DOS33_BLOCK_SIZE);
+
+	//current_sector=which_sector;
+
+	/* start with new ts list */
+	advance_ts=1;
+
+	while(which_sector>120) {
+		which_sector-=120;
+		advance_ts++;
+	}
+
+	while(1) {
+
+		while (advance_ts) {
+			/* setup new track/sector list page */
+			block_location=ts(next_t,next_s);
+			if (block_location==0) {
+				printk("Error! Off end!\n");
+				return -ENOENT;
+			}
+
+			/* set up next for next time on the list */
+			next_t=current_block[DOS33_TS_NEXT_T];
+			next_s=current_block[DOS33_TS_NEXT_S];
+
+			sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+			advance_ts--;
+		}
+
+		/* FIXME: handle moving to next T/S when hit end */
+
+		/* open first data list page */
+		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
+		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
+
+		if (debug) {
+			printk("Loading data from t:%d s:%d\n",data_t,data_s);
+		}
+
+		/* File hole */
+		if ((data_t==0) && (data_s==0)) {
+			memset(current_data,0,DOS33_BLOCK_SIZE);
+		}
+		else {
+			data_location=ts(data_t,data_s);
+			sb->block->block_ops->read(sb->block,
+				data_location,DOS33_BLOCK_SIZE,current_data);
+		}
+
+		/* make sure copy is in range */
+
+		/* start at sector_offset */
+		zero_begin=sector_offset;
+		zero_length=DOS33_BLOCK_SIZE-sector_offset;
+
+		memset(current_data+zero_begin,0,zero_length);
+
+		/* write back out to disk */
+		data_location=ts(data_t,data_s);
+		sb->block->block_ops->write(sb->block,
+				data_location,DOS33_BLOCK_SIZE,current_data);
+
+		break;
+#if 0
+		/* adjust sector we're reading from */
+		current_sector++;
+		which_sector++;
+		if (which_sector>=120) {
+			advance_ts++;
+			which_sector-=120;
+		}
+		sector_offset=0;
+#endif
+	}
+
+	return 0;
+
+}
+
 static int32_t dos33fs_truncate_inode(struct inode_type *inode, uint64_t size) {
 
-	return -ENOSYS;
+	int32_t result;
+
+	/* If same size, do nothing */
+	if (size==inode->size) return 0;
+
+	if (size < inode->size) {
+		/* shrinking */
+		result=dos33fs_shrink_file(inode,size);
+	}
+	else {
+		/* FIXME: growing */
+		result=-ENOSYS;
+	}
+
+	return result;
 }
 
 static struct superblock_operations dos33fs_sb_ops = {

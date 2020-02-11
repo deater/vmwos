@@ -44,7 +44,8 @@ int main(int argc, char **argv) {
 
 		result=truncate(argv[optind],size);
 		if (result<0) {
-			printf("Error truncating: %s\n",strerror(errno));
+			printf("Error truncating: %d %s\n",
+				errno,strerror(errno));
 		}
 	}
 	else {

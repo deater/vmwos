@@ -270,7 +270,17 @@ int32_t truncate_inode(struct inode_type *inode, int64_t size) {
 		printk("Truncating inode %x to %lld\n",inode->number,size);
 	}
 
+	/* FIXME: check permissions */
+
+	/* tell filesystem to truncate inode */
 	result=inode->sb->sb_ops.truncate_inode(inode,size);
+
+	if (result>=0) {
+		/* FIXME: Update the ctime/mtime */
+
+		/* FIXME: write inode back to disk */
+		inode->sb->sb_ops.write_inode(inode);
+	}
 
 	return result;
 }
@@ -280,12 +290,18 @@ int32_t truncate64_syscall(const char *pathname, uint64_t size) {
 	int32_t result;
 	struct inode_type *inode;
 
+	printk("truncate64: truncating %s to %lld\n",pathname,size);
+
 	result=inode_lookup_and_alloc(pathname,&inode);
         if (result<0) {
                 return -ENOENT;
         }
 
+	printk("truncate64: found inode %x\n",inode->number);
+
 	result=truncate_inode(inode,size);
+
+	printk("truncate64: result %d\n",result);
 
 	inode_free(inode);
 
