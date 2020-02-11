@@ -532,7 +532,7 @@ int32_t lseek64(int32_t fd, uint32_t offset_high,
 /* assuming we are using something similar to EABI here */
 int32_t truncate(const char *path, int64_t length) {
 
-	register long r7 __asm__("r7") = __NR_ftruncate64;
+	register long r7 __asm__("r7") = __NR_truncate64;
 	register long r0 __asm__("r0") = (long)path;
 	register long r1 __asm__("r1") = 0;
 	register long r2 __asm__("r2") = length&0xffffffff;

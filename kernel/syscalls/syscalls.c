@@ -216,11 +216,11 @@ uint32_t swi_handler_c(
 
 		case SYSCALL_TRUNCATE64:	/* 193 */
 			result=truncate64_syscall((char *)r0,
-							((int64_t)r2)<<32|r3);
+							((uint64_t)r3)<<32|r2);
 			break;
 
 		case SYSCALL_FTRUNCATE64:	/* 194 */
-			result=ftruncate64_syscall(r0,((int64_t)r2)<<32|r3);
+			result=ftruncate64_syscall(r0,((uint64_t)r3)<<32|r2);
 			break;
 
 		case SYSCALL_CLOCK_GETTIME:	/* 263 */
