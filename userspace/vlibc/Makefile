@@ -4,11 +4,13 @@ include ../Makefile_user.inc
 all:	vlibc.a
 
 vlibc.a:	start.o \
-		ctype.o error.o malloc.o printf.o random.o stdio.o string.o \
+		ctype.o error.o getopt.o malloc.o printf.o random.o \
+		stdio.o string.o \
 		system.o time.o tty.o \
 		idiv.o uldivmod.o memcpy.o vmwos.o syscalls.arm.o
 	$(CROSS)$(AR) crs vlibc.a start.o \
-		ctype.o error.o malloc.o printf.o random.o stdio.o string.o \
+		ctype.o error.o getopt.o malloc.o printf.o random.o \
+		stdio.o string.o \
 		system.o time.o tty.o \
 		idiv.o uldivmod.o memcpy.o vmwos.o syscalls.arm.o
 
@@ -20,6 +22,9 @@ ctype.o:	ctype.c
 
 div.o:	div.c
 	$(CROSS)$(CC) $(CFLAGS) -c div.c
+
+getopt.o:	getopt.c
+	$(CROSS)$(CC) $(CFLAGS) -c getopt.c
 
 idiv.o:	idiv.s
 	$(CROSS)$(AS) $(ASFLAGS) -o idiv.o -c idiv.s

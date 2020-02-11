@@ -28,6 +28,11 @@ const char *strerror(int errnum);
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */
 
+/* getopt.c */
+extern char *optarg;
+extern int32_t optind,opterr,optopt;
+int getopt(int argc, char **argv, const char *optstring);
+
 /* stdio.c */
 #define STDIN_FILENO	0
 #define STDOUT_FILENO	1
