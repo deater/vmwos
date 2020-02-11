@@ -7,15 +7,15 @@ GENROMFS = genromfs
 all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
-	md5sum memory_test nano printa printb pwd sysinfo \
+	md5sum memory_test nano printa printb pwd rm sysinfo \
 	tbo truncate uname \
 	chiptune chiptune6 write_test
 	cd demo && $(MAKE)
 
 image:	shell \
 	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
-	md5sum memory_test nano printa printb pwd sysinfo tbo truncate uname \
-	chiptune chiptune6 write_test
+	md5sum memory_test nano printa printb pwd rm sysinfo tbo \
+	truncate uname chiptune chiptune6 write_test
 	mkdir -p image
 	mkdir -p image/bin
 	mkdir -p image/home
@@ -24,7 +24,7 @@ image:	shell \
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error chmod core_poke cp df \
 		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
-		sysinfo tbo truncate uname write_test chiptune \
+		rm sysinfo tbo truncate uname write_test chiptune \
 		chiptune6 ./image/bin
 	cp demo/demosplash2019 ./image/bin
 	cp CATME ./image/home
@@ -97,6 +97,9 @@ printb:	printb.elf
 
 pwd:	pwd.elf
 	$(ELF2BFLT) pwd.elf pwd
+
+rm:	rm.elf
+	$(ELF2BFLT) rm.elf rm
 
 shell:	shell.elf
 	$(ELF2BFLT) shell.elf shell
@@ -182,6 +185,9 @@ printb.elf:	printb.o ./vlibc/vlibc.a
 pwd.elf:	pwd.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o pwd.elf pwd.o ./vlibc/vlibc.a
 
+rm.elf:	rm.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o rm.elf rm.o ./vlibc/vlibc.a
+
 slideshow.elf:	slideshow.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o slideshow.elf slideshow.o ./vlibc/vlibc.a
 
@@ -259,6 +265,9 @@ printb.o:	printb.c
 pwd.o:	pwd.c
 	$(CROSS)$(CC) $(CFLAGS) -c pwd.c
 
+rm.o:	rm.c
+	$(CROSS)$(CC) $(CFLAGS) -c rm.c
+
 slideshow.o:	slideshow.c
 	$(CROSS)$(CC) $(CFLAGS) -c slideshow.c
 
@@ -293,8 +302,8 @@ clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error chiptune chiptune6 \
 		chmod core_poke cp df hexdump ll ls md5sum memory_test nano \
-		printa printb pwd shell slideshow sysinfo tbo truncate uname \
-		write_test \
+		printa printb pwd rm shell slideshow sysinfo tbo \
+		truncate uname write_test \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
 	cd demo && make clean

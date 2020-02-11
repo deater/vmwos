@@ -15,6 +15,8 @@
 #define __NR_open		5
 #define __NR_close		6
 #define __NR_waitpid		7
+#define __NR_link		9
+#define __NR_unlink		10
 #define __NR_execve		11
 #define __NR_chdir		12
 #define __NR_time		13
@@ -153,6 +155,22 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
 	return r0;
 
 }
+
+/* 10 */
+int32_t unlink(const char *filename) {
+
+	register long r7 __asm__("r7") = __NR_unlink;
+	register long r0 __asm__("r0") = (long)filename;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0)
+		: "memory");
+
+	return update_errno(r0);
+}
+
 
 /* 11 */
 int32_t execve(const char *filename, char *const argv[],
