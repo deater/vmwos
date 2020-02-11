@@ -28,6 +28,21 @@ static uint32_t ts(int32_t track, int32_t sector) {
 	return ((track*sectors_per_track)+sector)*DOS33_BLOCK_SIZE;
 }
 
+static uint32_t get_t(int32_t value) {
+
+	value=value/DOS33_BLOCK_SIZE;
+
+	return value>>4;
+}
+
+static uint32_t get_s(int32_t value) {
+
+	value=value/DOS33_BLOCK_SIZE;
+
+	return value&0xf;
+}
+
+
 static uint32_t inode_to_block(uint32_t inode_num) {
 
 	uint32_t track, sector;
@@ -41,6 +56,124 @@ static uint32_t inode_to_block(uint32_t inode_num) {
 }
 
 
+
+static int ones_lookup[16]={
+	/* 0x0 = 0000 */ 0,
+	/* 0x1 = 0001 */ 1,
+	/* 0x2 = 0010 */ 1,
+	/* 0x3 = 0011 */ 2,
+	/* 0x4 = 0100 */ 1,
+	/* 0x5 = 0101 */ 2,
+	/* 0x6 = 0110 */ 2,
+	/* 0x7 = 0111 */ 3,
+	/* 0x8 = 1000 */ 1,
+	/* 0x9 = 1001 */ 2,
+	/* 0xA = 1010 */ 2,
+	/* 0xB = 1011 */ 3,
+	/* 0xC = 1100 */ 2,
+	/* 0xd = 1101 */ 3,
+	/* 0xe = 1110 */ 3,
+	/* 0xf = 1111 */ 4,
+};
+
+static void dos33_update_blocks_free(struct superblock_type *sb) {
+
+	char *vtoc;
+	unsigned char bitmap[4];
+	int i,sectors_free=0;
+	int tracks_per_disk,sectors_per_disk;
+
+	vtoc=sb->private;
+
+	tracks_per_disk=vtoc[DOS33_VTOC_NUM_TRACKS];
+	sectors_per_disk=vtoc[DOS33_VTOC_NUM_SECTORS];
+
+	for(i=0;i<tracks_per_disk;i++) {
+		bitmap[0]=vtoc[DOS33_VTOC_FREE_BITMAPS+(i*4)];
+		bitmap[1]=vtoc[DOS33_VTOC_FREE_BITMAPS+(i*4)+1];
+
+                sectors_free+=ones_lookup[bitmap[0]&0xf];
+                sectors_free+=ones_lookup[(bitmap[0]>>4)&0xf];
+                sectors_free+=ones_lookup[bitmap[1]&0xf];
+                sectors_free+=ones_lookup[(bitmap[1]>>4)&0xf];
+        }
+
+	sb->blocks=tracks_per_disk*sectors_per_disk;
+        sb->blocks_free=sectors_free;
+
+	printk("dos33: ubf: blocks_free=%d/%d\n",sb->blocks_free,sb->blocks);
+}
+
+static void dos33_mark_blocks_free(struct superblock_type *sb,
+				int track, int sector) {
+
+	unsigned char bitmap[4];
+	char *vtoc;
+
+	vtoc=sb->private;
+
+#if 0
+	int i;
+	for(i=0;i<256;i++) {
+		if (i%16==0) printk("\n");
+		printk("%02x ",vtoc[i]);
+	}
+	printk("\n");
+#endif
+
+	printk("dos33: mbf: marking t %d s%d as free\n",track,sector);
+
+	if (sector<8) {
+		bitmap[1]=vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)+1];
+		printk("bitmap[1] (%x) was %x\n",
+			DOS33_VTOC_FREE_BITMAPS+(track*4)+1,bitmap[1]);
+		bitmap[1]|=(1<<sector);
+		printk("bitmap[1] now %x\n",bitmap[1]);
+		vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)+1]=bitmap[1];
+	}
+	else if (sector<16) {
+		bitmap[0]=vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)];
+		printk("bitmap[0] (%x) was %x\n",
+			DOS33_VTOC_FREE_BITMAPS+(track*4),bitmap[0]);
+		bitmap[0]|=(1<<(sector-8));
+		printk("bitmap[0] now %x\n",bitmap[0]);
+		vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)]=bitmap[0];
+	}
+	else {
+		printk("dos33: mbf ERROR Sector %d out of range!\n",sector);
+		return;
+	}
+
+	dos33_update_blocks_free(sb);
+}
+
+#if 0
+static void dos33_mark_blocks_used(struct superblock_type *sb,
+						int track, int sector) {
+
+	unsigned char bitmap[4];
+	char *vtoc;
+
+	vtoc=sb->private;
+
+	if (sector<8) {
+		bitmap[1]=vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)+1];
+		bitmap[1]&=~(1<<sector);
+		vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)+1]=bitmap[1];
+	}
+	else if (sector<16) {
+		bitmap[0]=vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)];
+		bitmap[0]&=~(1<<(sector-8));
+		vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)]=bitmap[0];
+	}
+	else {
+		printk("dos33: mbf ERROR Sector %d out of range!\n",sector);
+		return;
+	}
+
+	dos33_update_blocks_free(sb);
+}
+#endif
 
 static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 					const char *searchname,
@@ -504,7 +637,6 @@ int32_t dos33fs_statfs(struct superblock_type *superblock,
 	return 0;
 }
 
-
 int32_t dos33fs_read_file(
 			struct inode_type *inode,
 			char *buf,uint32_t desired_count,
@@ -543,15 +675,6 @@ int32_t dos33fs_read_file(
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
-
-//	filesize_sectors=current_block[DOS33_CAT_OFFSET_FILE_LENGTH_L+
-//				DOS33_CAT_FIRST_ENTRY+
-//				(entry*DOS33_CAT_ENTRY_SIZE)]+
-//		(current_block[DOS33_CAT_OFFSET_FILE_LENGTH_H+
-//				DOS33_CAT_FIRST_ENTRY+
-//				(entry*DOS33_CAT_ENTRY_SIZE)]<<8);
-
-
 
 	/* For binary files, skip the ADDR/LEN header */
 	if (type==DOS33_FILE_TYPE_B) {
@@ -607,8 +730,6 @@ int32_t dos33fs_read_file(
 				block_location,DOS33_BLOCK_SIZE,current_block);
 			advance_ts--;
 		}
-
-		/* FIXME: handle moving to next T/S when hit end */
 
 		/* open first data list page */
 		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
@@ -1130,7 +1251,6 @@ static void dos33fs_write_inode(struct inode_type *inode) {
 
 static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 
-
 	int32_t type,advance_ts;
 	int32_t which_sector,sector_offset;
 	uint32_t next_t,next_s,entry,block_location;
@@ -1138,8 +1258,8 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	uint32_t zero_begin,zero_length;
 	struct superblock_type *sb;
 	uint32_t adjusted_offset;
-//	int32_t last_sector;
-//	int32_t current_sector,last_sector_offset;
+	int32_t last_sector;
+	int32_t current_sector;
 
 	char current_block[DOS33_BLOCK_SIZE];
 	char current_data[DOS33_BLOCK_SIZE];
@@ -1168,12 +1288,12 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	/* For binary files, skip the ADDR/LEN header */
 	if (type==DOS33_FILE_TYPE_B) {
 		adjusted_offset=size+4;
-//		last_sector=(inode->size+4)/DOS33_BLOCK_SIZE;
-//		last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
+		last_sector=(inode->size+4)/DOS33_BLOCK_SIZE;
+		//last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
 	} else {
 		adjusted_offset=size;
-//		last_sector=inode->size/DOS33_BLOCK_SIZE;
-//		last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
+		last_sector=inode->size/DOS33_BLOCK_SIZE;
+		//last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
 	}
 
 	/* This should never happen */
@@ -1182,12 +1302,11 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 		return -E2BIG;
 	}
 
-
 	/* calc offset in file */
 	which_sector=(adjusted_offset)/DOS33_BLOCK_SIZE;
 	sector_offset=(adjusted_offset)-(which_sector*DOS33_BLOCK_SIZE);
 
-	//current_sector=which_sector;
+	current_sector=which_sector;
 
 	/* start with new ts list */
 	advance_ts=1;
@@ -1216,9 +1335,7 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 			advance_ts--;
 		}
 
-		/* FIXME: handle moving to next T/S when hit end */
-
-		/* open first data list page */
+		/* open data block */
 		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
 		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
 
@@ -1228,29 +1345,55 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 
 		/* File hole */
 		if ((data_t==0) && (data_s==0)) {
-			memset(current_data,0,DOS33_BLOCK_SIZE);
+			/* do nothing */
 		}
 		else {
+			/* zero out data */
 			data_location=ts(data_t,data_s);
 			sb->block->block_ops->read(sb->block,
-				data_location,DOS33_BLOCK_SIZE,current_data);
+					data_location,DOS33_BLOCK_SIZE,
+					current_data);
+
+			/* start at sector_offset */
+			zero_begin=sector_offset;
+			zero_length=DOS33_BLOCK_SIZE-sector_offset;
+
+			printk("Zeroing %d bytes at %d at t/s %x\n",
+				zero_length,zero_begin,data_location);
+
+			memset(current_data+zero_begin,0,zero_length);
+
+			/* write back out to disk */
+			data_location=ts(data_t,data_s);
+			sb->block->block_ops->write(sb->block,
+					data_location,DOS33_BLOCK_SIZE,
+					current_data);
+
+			/* only erase sector if we're not using it */
+			if (sector_offset==0) {
+				printk("Freeing t/s %x entry %d\n",
+					block_location,which_sector);
+				/* delete sector from t/s list */
+				current_block[DOS33_TS_FIRST_TS_T+
+					(2*which_sector)]=0;
+				current_block[DOS33_TS_FIRST_TS_S+
+					(2*which_sector)]=0;
+
+				sb->block->block_ops->write(sb->block,
+					block_location,DOS33_BLOCK_SIZE,
+					current_block);
+
+				/* update superblock free list */
+				dos33_mark_blocks_free(sb,
+					get_t(data_location),
+					get_s(data_location));
+			}
 		}
 
-		/* make sure copy is in range */
+		if (current_sector==last_sector) {
+			break;
+		}
 
-		/* start at sector_offset */
-		zero_begin=sector_offset;
-		zero_length=DOS33_BLOCK_SIZE-sector_offset;
-
-		memset(current_data+zero_begin,0,zero_length);
-
-		/* write back out to disk */
-		data_location=ts(data_t,data_s);
-		sb->block->block_ops->write(sb->block,
-				data_location,DOS33_BLOCK_SIZE,current_data);
-
-		break;
-#if 0
 		/* adjust sector we're reading from */
 		current_sector++;
 		which_sector++;
@@ -1259,10 +1402,13 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 			which_sector-=120;
 		}
 		sector_offset=0;
-#endif
 	}
 
+	/* update size in inode */
 	inode->size=size;
+
+	/* update superblock to disk */
+	inode->sb->sb_ops.write_superblock(inode->sb);
 
 	printk("dos33fs: set size to %lld\n",size);
 
@@ -1292,59 +1438,26 @@ static int32_t dos33fs_truncate_inode(struct inode_type *inode, uint64_t size) {
 	return result;
 }
 
+static void dos33fs_write_superblock(struct superblock_type *sb) {
+
+	uint32_t vtoc_location = ts(17,0);	/* Usually at 17:0 */
+
+	sb->block->block_ops->write(sb->block,
+				vtoc_location,DOS33_VTOC_SIZE,sb->private);
+
+	return;
+}
+
 static struct superblock_operations dos33fs_sb_ops = {
 	.truncate_inode = dos33fs_truncate_inode,
 	.write_inode = dos33fs_write_inode,
 	.statfs = dos33fs_statfs,
 	.lookup_inode = dos33fs_lookup_inode,
 	.setup_fileops = dos33fs_setup_fileops,
+	.write_superblock = dos33fs_write_superblock,
 };
 
 
-
-static int ones_lookup[16]={
-	/* 0x0 = 0000 */ 0,
-	/* 0x1 = 0001 */ 1,
-	/* 0x2 = 0010 */ 1,
-	/* 0x3 = 0011 */ 2,
-	/* 0x4 = 0100 */ 1,
-	/* 0x5 = 0101 */ 2,
-	/* 0x6 = 0110 */ 2,
-	/* 0x7 = 0111 */ 3,
-	/* 0x8 = 1000 */ 1,
-	/* 0x9 = 1001 */ 2,
-	/* 0xA = 1010 */ 2,
-	/* 0xB = 1011 */ 3,
-	/* 0xC = 1100 */ 2,
-	/* 0xd = 1101 */ 3,
-	/* 0xe = 1110 */ 3,
-	/* 0xf = 1111 */ 4,
-};
-
-
-static void dos33_get_blocks_free(char *vtoc, int32_t *blocks,
-						int32_t *blocks_free) {
-
-	unsigned char bitmap[4];
-	int i,sectors_free=0;
-	int tracks_per_disk,sectors_per_disk;
-
-	tracks_per_disk=vtoc[DOS33_VTOC_NUM_TRACKS];
-	sectors_per_disk=vtoc[DOS33_VTOC_NUM_SECTORS];
-
-	for(i=0;i<tracks_per_disk;i++) {
-		bitmap[0]=vtoc[DOS33_VTOC_FREE_BITMAPS+(i*4)];
-		bitmap[1]=vtoc[DOS33_VTOC_FREE_BITMAPS+(i*4)+1];
-
-                sectors_free+=ones_lookup[bitmap[0]&0xf];
-                sectors_free+=ones_lookup[(bitmap[0]>>4)&0xf];
-                sectors_free+=ones_lookup[bitmap[1]&0xf];
-                sectors_free+=ones_lookup[(bitmap[1]>>4)&0xf];
-        }
-
-	*blocks=tracks_per_disk*sectors_per_disk;
-        *blocks_free=sectors_free;
-}
 
 
 /* Note, should allocate one of these for each mounted fs */
@@ -1357,7 +1470,6 @@ int32_t dos33fs_mount(struct superblock_type *sb,
 
 	uint32_t vtoc_location = ts(17,0);	/* Usually at 17:0 */
 	char *vtoc;
-	int32_t blocks, blocks_free;
 
 	/* Set up block device pointer */
 	sb->block=block;
@@ -1376,12 +1488,7 @@ int32_t dos33fs_mount(struct superblock_type *sb,
 	sb->block->block_ops->read(sb->block,
 				vtoc_location,DOS33_VTOC_SIZE,vtoc);
 
-
-	dos33_get_blocks_free(vtoc,&blocks,&blocks_free);
-
-	/* Set size */
-	sb->blocks=blocks;
-	sb->blocks_free=blocks_free;
+	/* Set block size */
 	sb->block_size=DOS33_BLOCK_SIZE;
 
 	/* Point to our superblock operations */
@@ -1391,6 +1498,9 @@ int32_t dos33fs_mount(struct superblock_type *sb,
 	/* we fake a "." directory entry */
 	sb->root_dir=vtoc[DOS33_VTOC_FIRST_CAT_TRACK]<<16 |
 			vtoc[DOS33_VTOC_FIRST_CAT_SECTOR]<<8 | 0xff;
+
+	/* update free blocks */
+	dos33_update_blocks_free(sb);
 
 	if (debug) {
 		printk("Mounted DOS33fs vol %d Tracks %d Sectors %d\n",
