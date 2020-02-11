@@ -46,6 +46,7 @@
 #define DOS33_TS_FIRST_TS_T		0x0C
 #define DOS33_TS_FIRST_TS_S		0x0D
 
+#define DOS33_MAX_TS_ENTRIES		122
 
 int32_t dos33fs_mount(struct superblock_type *superblock,
 		struct block_dev_type *block);

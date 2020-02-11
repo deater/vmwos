@@ -101,7 +101,10 @@ static void dos33_update_blocks_free(struct superblock_type *sb) {
 	sb->blocks=tracks_per_disk*sectors_per_disk;
         sb->blocks_free=sectors_free;
 
-	printk("dos33: ubf: blocks_free=%d/%d\n",sb->blocks_free,sb->blocks);
+	if (debug) {
+		printk("dos33: ubf: blocks_free=%d/%d\n",
+			sb->blocks_free,sb->blocks);
+	}
 }
 
 static void dos33_mark_blocks_free(struct superblock_type *sb,
@@ -112,31 +115,18 @@ static void dos33_mark_blocks_free(struct superblock_type *sb,
 
 	vtoc=sb->private;
 
-#if 0
-	int i;
-	for(i=0;i<256;i++) {
-		if (i%16==0) printk("\n");
-		printk("%02x ",vtoc[i]);
+	if (debug) {
+		printk("dos33: mbf: marking t %d s%d as free\n",track,sector);
 	}
-	printk("\n");
-#endif
-
-	printk("dos33: mbf: marking t %d s%d as free\n",track,sector);
 
 	if (sector<8) {
 		bitmap[1]=vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)+1];
-		printk("bitmap[1] (%x) was %x\n",
-			DOS33_VTOC_FREE_BITMAPS+(track*4)+1,bitmap[1]);
 		bitmap[1]|=(1<<sector);
-		printk("bitmap[1] now %x\n",bitmap[1]);
 		vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)+1]=bitmap[1];
 	}
 	else if (sector<16) {
 		bitmap[0]=vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)];
-		printk("bitmap[0] (%x) was %x\n",
-			DOS33_VTOC_FREE_BITMAPS+(track*4),bitmap[0]);
 		bitmap[0]|=(1<<(sector-8));
-		printk("bitmap[0] now %x\n",bitmap[0]);
 		vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)]=bitmap[0];
 	}
 	else {
@@ -351,7 +341,9 @@ static int32_t dos33_set_filesize(struct inode_type *inode,
 
 	int32_t next_t,next_s,which,location;
 
-	printk("dos33: attempting to set filesize to %d\n",size);
+	if (debug) {
+		printk("dos33: attempting to set filesize to %d\n",size);
+	}
 
 	next_t=(inode->number>>16)&0xff;
 	next_s=(inode->number>>8)&0xff;
@@ -707,8 +699,8 @@ int32_t dos33fs_read_file(
 	/* start with new ts list */
 	advance_ts=1;
 
-	while(which_sector>120) {
-		which_sector-=120;
+	while(which_sector>=DOS33_MAX_TS_ENTRIES) {
+		which_sector-=DOS33_MAX_TS_ENTRIES;
 		advance_ts++;
 	}
 
@@ -782,9 +774,9 @@ int32_t dos33fs_read_file(
 		/* adjust sector we're reading from */
 		current_sector++;
 		which_sector++;
-		if (which_sector>=120) {
+		if (which_sector>=DOS33_MAX_TS_ENTRIES) {
 			advance_ts++;
-			which_sector-=120;
+			which_sector-=DOS33_MAX_TS_ENTRIES;
 		}
 		sector_offset=0;
 	}
@@ -1041,8 +1033,8 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 	/* start with new ts list */
 	advance_ts=1;
 
-	while(which_sector>120) {
-		which_sector-=120;
+	while(which_sector>=DOS33_MAX_TS_ENTRIES) {
+		which_sector-=DOS33_MAX_TS_ENTRIES;
 		advance_ts++;
 	}
 
@@ -1124,9 +1116,9 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 		/* adjust sector we're reading from */
 		current_sector++;
 		which_sector++;
-		if (which_sector>=120) {
+		if (which_sector>=DOS33_MAX_TS_ENTRIES) {
 			advance_ts++;
-			which_sector-=120;
+			which_sector-=DOS33_MAX_TS_ENTRIES;
 		}
 		sector_offset=0;
 	}
@@ -1162,7 +1154,9 @@ static void dos33fs_write_inode(struct inode_type *inode) {
 	char current_block[DOS33_BLOCK_SIZE];
 	char temp_block[DOS33_BLOCK_SIZE];
 
-	printk("dos33: Attempting to write inode %x\n",inode->number);
+	if (debug) {
+		printk("dos33: Attempting to write inode %x\n",inode->number);
+	}
 
 	/* special case ., can't change */
 	if ((inode->number&0xff)==0xff) {
@@ -1260,14 +1254,17 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	uint32_t adjusted_offset;
 	int32_t last_sector;
 	int32_t current_sector;
+	int32_t delete_this_ts_list=0;
 
 	char current_block[DOS33_BLOCK_SIZE];
 	char current_data[DOS33_BLOCK_SIZE];
 
 	sb=inode->sb;
 
-	printk("dos33fs: Attempting to shrink %x to size %lld\n",
+	if (debug) {
+		printk("dos33fs: Attempting to shrink %x to size %lld\n",
 			inode->number,size);
+	}
 
 	/* Load the catalog entry */
 	next_t=(inode->number>>16)&0xff;
@@ -1311,14 +1308,21 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	/* start with new ts list */
 	advance_ts=1;
 
-	while(which_sector>120) {
-		which_sector-=120;
+	while(which_sector>=DOS33_MAX_TS_ENTRIES) {
+		which_sector-=DOS33_MAX_TS_ENTRIES;
 		advance_ts++;
 	}
 
 	while(1) {
 
 		while (advance_ts) {
+			/* see if should delete the previous one */
+			if (delete_this_ts_list) {
+				dos33_mark_blocks_free(sb,
+					get_t(block_location),
+					get_s(block_location));
+			}
+
 			/* setup new track/sector list page */
 			block_location=ts(next_t,next_s);
 			if (block_location==0) {
@@ -1339,10 +1343,6 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
 		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
 
-		if (debug) {
-			printk("Loading data from t:%d s:%d\n",data_t,data_s);
-		}
-
 		/* File hole */
 		if ((data_t==0) && (data_s==0)) {
 			/* do nothing */
@@ -1358,9 +1358,10 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 			zero_begin=sector_offset;
 			zero_length=DOS33_BLOCK_SIZE-sector_offset;
 
-			printk("Zeroing %d bytes at %d at t/s %x\n",
-				zero_length,zero_begin,data_location);
-
+			if (debug) {
+				printk("Zeroing %d bytes at %d at t/s %x\n",
+					zero_length,zero_begin,data_location);
+			}
 			memset(current_data+zero_begin,0,zero_length);
 
 			/* write back out to disk */
@@ -1371,8 +1372,10 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 
 			/* only erase sector if we're not using it */
 			if (sector_offset==0) {
-				printk("Freeing t/s %x entry %d\n",
-					block_location,which_sector);
+				if (debug) {
+					printk("Freeing t/s %x entry %d\n",
+						block_location,which_sector);
+				}
 				/* delete sector from t/s list */
 				current_block[DOS33_TS_FIRST_TS_T+
 					(2*which_sector)]=0;
@@ -1391,15 +1394,31 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 		}
 
 		if (current_sector==last_sector) {
+
+			if (delete_this_ts_list) {
+				dos33_mark_blocks_free(sb,
+					get_t(block_location),
+					get_s(block_location));
+			}
 			break;
 		}
 
 		/* adjust sector we're reading from */
 		current_sector++;
 		which_sector++;
-		if (which_sector>=120) {
+
+		/* if we hit the end of the TS list */
+		if (which_sector>=DOS33_MAX_TS_ENTRIES) {
 			advance_ts++;
-			which_sector-=120;
+			which_sector-=DOS33_MAX_TS_ENTRIES;
+			/* we'll want to delete all future ones */
+			delete_this_ts_list=1;
+			/* remove pointer to next t/s list in current */
+			current_block[DOS33_TS_NEXT_T]=0;
+			current_block[DOS33_TS_NEXT_S]=0;
+			sb->block->block_ops->write(sb->block,
+					block_location,DOS33_BLOCK_SIZE,
+					current_block);
 		}
 		sector_offset=0;
 	}
@@ -1410,7 +1429,9 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	/* update superblock to disk */
 	inode->sb->sb_ops.write_superblock(inode->sb);
 
-	printk("dos33fs: set size to %lld\n",size);
+	if (debug) {
+		printk("dos33fs: set size to %lld\n",size);
+	}
 
 	return 0;
 

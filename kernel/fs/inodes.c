@@ -266,9 +266,9 @@ int32_t truncate_inode(struct inode_type *inode, int64_t size) {
 
 	int32_t result;
 
-	//if (debug) {
+	if (debug) {
 		printk("Truncating inode %x to %lld\n",inode->number,size);
-	//}
+	}
 
 	/* FIXME: check permissions */
 
@@ -278,9 +278,11 @@ int32_t truncate_inode(struct inode_type *inode, int64_t size) {
 	if (result>=0) {
 		/* FIXME: Update the ctime/mtime */
 
-		/* FIXME: write inode back to disk */
-		printk("truncate: writing inode %x back to disk\n",
+		/* write inode back to disk */
+		if (debug) {
+			printk("truncate: writing inode %x back to disk\n",
 				inode->number);
+		}
 		inode->sb->sb_ops.write_inode(inode);
 	}
 
@@ -292,18 +294,24 @@ int32_t truncate64_syscall(const char *pathname, uint64_t size) {
 	int32_t result;
 	struct inode_type *inode;
 
-	printk("truncate64: truncating %s to %lld\n",pathname,size);
+	if (debug) {
+		printk("truncate64: truncating %s to %lld\n",pathname,size);
+	}
 
 	result=inode_lookup_and_alloc(pathname,&inode);
         if (result<0) {
                 return -ENOENT;
         }
 
-	printk("truncate64: found inode %x\n",inode->number);
+	if (debug) {
+		printk("truncate64: found inode %x\n",inode->number);
+	}
 
 	result=truncate_inode(inode,size);
 
-	printk("truncate64: result %d\n",result);
+	if (debug) {
+		printk("truncate64: result %d\n",result);
+	}
 
 	inode_free(inode);
 

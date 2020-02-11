@@ -465,7 +465,9 @@ int32_t ftruncate64_syscall(int32_t fd, uint64_t size) {
 	int32_t result;
 	struct file_object *file;
 
-	printk("ftruncate64: truncating fd %d to size %lld\n",fd,size);
+	if (debug) {
+		printk("ftruncate64: truncating fd %d to size %lld\n",fd,size);
+	}
 
 	result=map_fd_to_file(fd,&file);
 	if (result<0) {
@@ -479,7 +481,9 @@ int32_t ftruncate64_syscall(int32_t fd, uint64_t size) {
 
 	result=truncate_inode(file->inode,size);
 
-	printk("ftruncate64: result %d\n",result);
+	if (debug) {
+		printk("ftruncate64: result %d\n",result);
+	}
 
 	return result;
 }
