@@ -1061,6 +1061,7 @@ static void editor_save(void) {
 	int len;
 	char *buf;
 	int fd;
+	int reason=0,result=0;
 
 	if (config.filename==NULL) {
 		config.filename=editor_prompt("Save as: %s");
@@ -1075,8 +1076,12 @@ static void editor_save(void) {
 
 	fd=open(config.filename, O_RDWR | O_CREAT, 0644);
 	if (fd!=-1) {
-		if (ftruncate(fd,len)!=-1) {
+		reason=1;
+		result=ftruncate(fd,len);
+		if (result!=-1) {
+			reason=2;
 			if (write(fd,buf,len)==len) {
+				reason=3;
 				close(fd);
 				free(buf);
 				config.dirty=0;
@@ -1087,8 +1092,8 @@ static void editor_save(void) {
 		close(fd);
 	}
 	free(buf);
-	editor_set_status_message("Can't save! I/O error: %s (%d)",
-		strerror(errno),errno);
+	editor_set_status_message("Can't save! I/O error: %s (r=%d,re=%d,fd=%d)",
+		strerror(errno),reason,result,fd);
 }
 
 /* Search / Find */
