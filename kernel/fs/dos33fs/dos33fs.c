@@ -213,6 +213,77 @@ static int32_t dos33_get_filesize(struct inode_type *inode,
 }
 
 
+static int32_t dos33_set_filesize(struct inode_type *inode,
+		char *current_block, int32_t type, int32_t size) {
+
+	int32_t next_t,next_s,which,location;
+
+	printk("dos33: attempting to set filesize to %d\n",size);
+
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	which=inode->number&0xff;
+
+	/* Load the catalog sector */
+	location=ts(next_t,next_s);
+	inode->sb->block->block_ops->read(inode->sb->block,
+				location,DOS33_BLOCK_SIZE,current_block);
+
+	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
+			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
+			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
+
+	/* Load the first T/S sector */
+	location=ts(next_t,next_s);
+	inode->sb->block->block_ops->read(inode->sb->block,
+				location,DOS33_BLOCK_SIZE,current_block);
+
+	/* These files have the data in the file */
+	if ((type==DOS33_FILE_TYPE_B) ||
+		(type==DOS33_FILE_TYPE_I) || (type==DOS33_FILE_TYPE_A)) {
+
+
+		/* load first data block of file */
+		next_t=current_block[DOS33_TS_FIRST_TS_T];
+		next_s=current_block[DOS33_TS_FIRST_TS_S];
+
+		location=ts(next_t,next_s);
+		inode->sb->block->block_ops->read(inode->sb->block,
+				location,DOS33_BLOCK_SIZE,current_block);
+
+		/* BASIC programs, size first 2 little endian bytes */
+		if ((type==DOS33_FILE_TYPE_I) || (type==DOS33_FILE_TYPE_A)) {
+			current_block[0]=size&0xff;
+			current_block[1]=(size>>8)&0xff;
+		}
+		/* Binary first 4 bytes are ADDRESS then SIZE (little endian) */
+		/* 16-bits. */
+
+		if (type==DOS33_FILE_TYPE_B) {
+			current_block[2]=size&0xff;
+			current_block[3]=(size>>8)&0xff;
+		}
+
+
+		inode->sb->block->block_ops->write(inode->sb->block,
+				location,DOS33_BLOCK_SIZE,current_block);
+
+	}
+	else {
+		/* Type T (and I guess the rest) you only */
+		/* get a multiple of sector-size that you find */
+		/* by searching the T/S lists */
+
+		/* FIXME: do we care enough to implement this properly? */
+		/* I guess if we ever have any LOGO programs? */
+	}
+
+	return 0;
+}
+
+
+
 
 
 
@@ -238,7 +309,8 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 		}
 		inode->mode=0777;
 		inode->mode|=S_IFDIR;
-		return 0;
+		inode->size=0;
+		goto dos33_read_inode_done;
 	}
 
 	/* special case .. */
@@ -248,7 +320,8 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 		}
 		inode->mode=0777;
 		inode->mode|=S_IFDIR;
-		return 0;
+		inode->size=0;
+		goto dos33_read_inode_done;
 	}
 
 
@@ -313,19 +386,19 @@ int32_t dos33_read_inode(struct inode_type *inode) {
 
 
 
-	/* timestamp */
-	/* DOS3.3 was released in August of 1980 */
-	inode->atime=334939200;
-	inode->mtime=334939200;
-	inode->ctime=334939200;
-
-
 	/* metadata for filesize is stored in the file? */
 	/* not really optimal */
 
 	size=dos33_get_filesize(inode,current_block,type&0x7f);
 
 	inode->size=size;
+
+dos33_read_inode_done:
+	/* timestamp */
+	/* DOS3.3 was released in August of 1980 */
+	inode->atime=334939200;
+	inode->mtime=334939200;
+	inode->ctime=334939200;
 
 	/* zero out other stuff */
 	inode->uid=0;
@@ -960,7 +1033,93 @@ int32_t dos33fs_setup_fileops(struct file_object *file) {
 
 static void dos33fs_write_inode(struct inode_type *inode) {
 
-	/* FIXME */
+	int32_t blocksize=0;
+	int32_t type=0;
+
+	uint32_t block_location,cat_entry;
+
+	char current_block[DOS33_BLOCK_SIZE];
+	char temp_block[DOS33_BLOCK_SIZE];
+
+	printk("dos33: Attempting to write inode %x\n",inode->number);
+
+	/* special case ., can't change */
+	if ((inode->number&0xff)==0xff) {
+		if (debug) {
+			printk("dos33: ri: Special case . inode %x\n",inode->number);
+		}
+		return;
+	}
+
+	/* special case .., can't change */
+	if ((inode->number&0xff)==0xfe) {
+		if (debug) {
+			printk("dos33: ri: Special case .. inode %x\n",inode->number);
+		}
+		return;
+	}
+
+	block_location=inode_to_block(inode->number);
+	cat_entry=(inode->number&0xff);
+	if (cat_entry>=DOS33_CAT_MAX_ENTRIES) {
+		printk("Cat entry %d out of bounds\n",cat_entry);
+		return;
+	}
+
+	/* read current values */
+	inode->sb->block->block_ops->read(inode->sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
+
+	/***************/
+	/* Update type */
+	/***************/
+
+	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+				DOS33_CAT_FIRST_ENTRY+
+					(cat_entry*DOS33_CAT_ENTRY_SIZE)];
+
+	/* If writable, then not locked */
+	if (inode->mode & 0222) {
+		type&=~DOS33_FILE_TYPE_LOCKED;
+	} else {
+		type|=DOS33_FILE_TYPE_LOCKED;
+	}
+
+	current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+			DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]=type;
+
+
+	/* update blocksize */
+	/* are we setting this the same way DOS33 does */
+	/* as it includes all metadata blocks? */
+
+	blocksize=(inode->size%DOS33_BLOCK_SIZE)+1;
+	if (blocksize>12) blocksize++;	/* for additional T/S list */
+	blocksize++;		/* for cat entry */
+
+	current_block[DOS33_CAT_OFFSET_FILE_LENGTH_L+
+				DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]=
+					blocksize&0xff;
+
+	current_block[DOS33_CAT_OFFSET_FILE_LENGTH_H+
+				DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]=
+					blocksize>>8;
+
+	/* FIXME: some way to change file type to not be B? */
+
+	/* metadata for filesize is stored in the file? */
+	/* not really optimal */
+
+	/* use temp_block as we destroy the block we pass in */
+	dos33_set_filesize(inode,temp_block,type&0x7f,inode->size);
+
+	/* write it out */
+	inode->sb->block->block_ops->write(inode->sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
+
 	return;
 }
 
@@ -987,7 +1146,7 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 
 	sb=inode->sb;
 
-	printk("dos33fs: Attempting to shrink %x to size %d\n",
+	printk("dos33fs: Attempting to shrink %x to size %lld\n",
 			inode->number,size);
 
 	/* Load the catalog entry */
@@ -1103,6 +1262,10 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 #endif
 	}
 
+	inode->size=size;
+
+	printk("dos33fs: set size to %lld\n",size);
+
 	return 0;
 
 }
@@ -1119,6 +1282,9 @@ static int32_t dos33fs_truncate_inode(struct inode_type *inode, uint64_t size) {
 		result=dos33fs_shrink_file(inode,size);
 	}
 	else {
+		printk("dos33: error: does not support "
+			"truncate growing current=%lld new=%lld\n",
+			inode->size,size);
 		/* FIXME: growing */
 		result=-ENOSYS;
 	}

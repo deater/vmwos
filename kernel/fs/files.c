@@ -146,16 +146,20 @@ int32_t open_file_object(
 		printk("### Trying to open %s\n",pathname);
 	}
 
-	/* Want to create new file? */
-	if (flags&O_CREAT) {
-		/* FIXME */
-		return -ENOSYS;
-	}
-
 	/* Lookup existing inode */
 	result=inode_lookup_and_alloc(pathname,&inode);
 	if (result<0) {
-		return -ENOENT;
+
+		/* File doesn't exist */
+		/* Want to create new file? */
+		if (flags&O_CREAT) {
+			printk("open_syscall: can't CREAT yet\n");
+			/* FIXME */
+			return -ENOSYS;
+		}
+		else {
+			return -ENOENT;
+		}
 	}
 
 	if (debug) {
@@ -174,6 +178,11 @@ int32_t open_file_object(
 	/* Set up the file_ops */
 	inode->sb->sb_ops.setup_fileops(*file);
 
+	/* If O_TRUNC then truncate file */
+	if (flags&O_TRUNC) {
+		inode->sb->sb_ops.truncate_inode(inode,0);
+	}
+
 	/* If O_APPEND then set position to end of file */
 	if (flags&O_APPEND) {
 		(*file)->file_offset=inode->size;
@@ -184,24 +193,6 @@ int32_t open_file_object(
 	return 0;
 }
 
-
-
-#if 0
-int32_t open_file_object(
-	struct file_object **file,
-	const char *pathname, uint32_t flags, uint32_t mode) {
-
-	int32_t result;
-	result=open_file(pathname,flags,mode);
-	if (result<0) {
-		return result;
-	}
-
-	*file=&file_objects[result];
-
-	return 0;
-}
-#endif
 
 /****************************************************/
 /* open syscall                                     */

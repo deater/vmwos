@@ -266,9 +266,9 @@ int32_t truncate_inode(struct inode_type *inode, int64_t size) {
 
 	int32_t result;
 
-	if (debug) {
+	//if (debug) {
 		printk("Truncating inode %x to %lld\n",inode->number,size);
-	}
+	//}
 
 	/* FIXME: check permissions */
 
@@ -279,6 +279,8 @@ int32_t truncate_inode(struct inode_type *inode, int64_t size) {
 		/* FIXME: Update the ctime/mtime */
 
 		/* FIXME: write inode back to disk */
+		printk("truncate: writing inode %x back to disk\n",
+				inode->number);
 		inode->sb->sb_ops.write_inode(inode);
 	}
 
