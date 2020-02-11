@@ -544,7 +544,7 @@ int32_t truncate(const char *path, int64_t length) {
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2), "r"(r3)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 /* 194 */
@@ -565,7 +565,7 @@ int32_t ftruncate(int32_t fd, int64_t length) {
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2), "r"(r3)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 
