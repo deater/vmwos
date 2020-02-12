@@ -131,6 +131,52 @@ struct inode_type *file_get_inode(int32_t which) {
 	return file_objects[which].inode;
 }
 
+static int32_t create_file_object(const char *pathname,
+					struct inode_type **inode) {
+
+	const char *directory,*filename;
+	struct inode_type *dir_inode;
+	int32_t result;
+
+	/* FIXME: split these apart */
+
+	printk("VMW: create: trying to create file %s\n",pathname);
+
+	directory=pathname;
+	filename=pathname;
+
+	/* Open directory that we want */
+	result=inode_lookup_and_alloc(directory,&dir_inode);
+	if (result<0) {
+		return result;
+	}
+
+	*inode=inode_allocate();
+	if (*inode==NULL) {
+		printk("VMW: cfo trouble allocating inode\n");
+		return -ENOMEM;
+	}
+
+	result=dir_inode->sb->sb_ops.make_inode(dir_inode,inode);
+	if (result<0) {
+		return result;
+	}
+
+//	result=dir_inode->sb->sb_ops.read_inode(dir_inode,inode);
+//	if (result<0) {
+//		return result;
+//	}
+
+	result=dir_inode->sb->sb_ops.link_inode(*inode,filename);
+	if (result<0) {
+		return result;
+	}
+
+	inode_free(dir_inode);
+
+	return 0;
+}
+
 /****************************************************/
 /* open file object                                 */
 /****************************************************/
@@ -153,9 +199,10 @@ int32_t open_file_object(
 		/* File doesn't exist */
 		/* Want to create new file? */
 		if (flags&O_CREAT) {
-			printk("open_syscall: can't CREAT yet\n");
-			/* FIXME */
-			return -ENOSYS;
+			result=create_file_object(pathname,&inode);
+			if (result<0) {
+				return result;
+			}
 		}
 		else {
 			return -ENOENT;

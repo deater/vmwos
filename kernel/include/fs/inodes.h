@@ -49,6 +49,7 @@ struct vmwos_stat {
 int32_t stat_syscall(const char *pathname, struct vmwos_stat *buf);
 int32_t chmod_syscall(const char *pathname, int32_t mode);
 
+struct inode_type *inode_allocate(void);
 int32_t inode_lookup_and_alloc(const char *pathname, struct inode_type **inode);
 int32_t inode_free(struct inode_type *inode);
 

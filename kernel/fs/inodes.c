@@ -56,7 +56,7 @@ const char *split_filename(const char *start_ptr, char *name,
 	return ptr;
 }
 
-static struct inode_type *inode_allocate(void) {
+struct inode_type *inode_allocate(void) {
 
 	int i;
 

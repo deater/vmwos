@@ -432,7 +432,7 @@ static int32_t dos33_set_filesize(struct inode_type *inode,
 
 /* Read data from inode->number into inode */
 /* Data comes in partially filled, we just fill in rest */
-int32_t dos33_read_inode(struct inode_type *inode) {
+static int32_t dos33_read_inode(struct inode_type *inode) {
 
 	int32_t size=0;
 	int32_t type=0;
@@ -1677,6 +1677,131 @@ static int32_t dos33fs_destroy_inode(struct inode_type *inode) {
 }
 
 
+	/* Create directory entry */
+static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
+				struct inode_type **new_inode) {
+
+	char current_block[DOS33_BLOCK_SIZE];
+	uint32_t block_location,i;
+	uint32_t cat_offset=0;
+	uint32_t next_t,next_s;
+	int32_t found=0,inode_number=0,result;
+
+	if (debug) {
+		printk("dos33fs: making new inode in dir %x\n",
+			dir_inode->number);
+	}
+
+	next_t=(dir_inode->number>>16)&0xff;
+	next_s=(dir_inode->number>>8)&0xff;
+
+	while(1) {
+		/* start at starting dir */
+		block_location=ts(next_t,next_s);
+		dir_inode->sb->block->block_ops->read(dir_inode->sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
+
+		cat_offset=DOS33_CAT_FIRST_ENTRY;
+
+		for(i=0;i<DOS33_CAT_MAX_ENTRIES;i++) {
+
+			inode_number=(next_t<<16)|(next_s<<8)|i;
+
+			/* if zero then not allocated */
+			/* if ff then deleted */
+			/* if fe then unlinked */
+			/* To be nice we'd exhaust 0 entries before */
+			/* moving on to ff, but it's easier not to */
+
+			if ((current_block[cat_offset]==0) ||
+				(current_block[cat_offset]==0xff)) {
+
+				found=1;
+				break;
+			}
+
+			cat_offset+=DOS33_CAT_ENTRY_SIZE;
+		}
+
+		if (found) break;
+
+		/* see if there are more directory entries */
+		next_t=current_block[DOS33_CAT_NEXT_TRACK];
+		next_s=current_block[DOS33_CAT_NEXT_SECTOR];
+
+		if ((next_t==0) && (next_s==0)) {
+			printk("dos33_make_inode: no more room\n");
+			/* FIXME: allocate another sector */
+			return -E2BIG;
+		}
+
+	}
+
+	printk("VMW: dos33: make_inode found %x\n",inode_number);
+
+	(*new_inode)->number=inode_number;
+	(*new_inode)->sb=dir_inode->sb;
+
+	result=dos33_read_inode(*new_inode);
+
+	return result;
+
+}
+
+	/* Give inode a name */
+static int32_t dos33fs_link_inode(struct inode_type *inode,
+				const char *name) {
+
+	char catalog_block[DOS33_BLOCK_SIZE];
+	char dos33_filename[DOS33_MAX_FILENAME_SIZE+1];
+	int32_t cat_entry;
+	uint32_t block_location,i;
+	uint32_t next_t,next_s;
+
+//	if (debug) {
+		printk("VMW: dos33fs: giving inode %x name %s\n",
+			inode->number,name);
+//	}
+
+	/* error if filename too long */
+	if (strlen(name)>DOS33_MAX_FILENAME_SIZE) {
+		return -E2BIG;
+	}
+
+	strncpy(dos33_filename,name,strlen(name));
+	/* padded with ' ' */
+	for(i=strlen(name);i<DOS33_MAX_FILENAME_SIZE;i++) {
+		dos33_filename[i]=' ';
+	}
+	/* high bit set */
+	for(i=0;i<DOS33_MAX_FILENAME_SIZE;i++) {
+		dos33_filename[i]|=0x80;
+	}
+
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	cat_entry=(inode->number&0xff);
+
+	block_location=ts(next_t,next_s);
+	inode->sb->block->block_ops->read(inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,catalog_block);
+
+	for(i=0;i<DOS33_MAX_FILENAME_SIZE;i++) {
+		catalog_block[DOS33_CAT_FIRST_ENTRY+
+			(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FILE_NAME+i]=dos33_filename[i];
+	}
+
+	inode->sb->block->block_ops->write(inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,catalog_block);
+
+	return 0;
+
+}
+
+
+
+
 
 static void dos33fs_write_superblock(struct superblock_type *sb) {
 
@@ -1697,6 +1822,8 @@ static struct superblock_operations dos33fs_sb_ops = {
 	.write_superblock = dos33fs_write_superblock,
 	.unlink_inode = dos33fs_unlink_inode,
 	.destroy_inode = dos33fs_destroy_inode,
+	.make_inode = dos33fs_make_inode,
+	.link_inode = dos33fs_link_inode,
 };
 
 
