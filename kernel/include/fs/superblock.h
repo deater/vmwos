@@ -19,7 +19,7 @@ struct superblock_type;
 
 struct superblock_operations {
 //	struct inode *(*alloc_inode) (struct super_block *sb);
-	void (*destroy_inode) (struct inode_type *);
+	int32_t (*destroy_inode) (struct inode_type *);
 //	void (*read_inode) (struct inode *);
 //	void (*dirty_inode) (struct inode *);
 	int32_t (*unlink_inode) (struct inode_type *);

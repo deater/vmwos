@@ -130,7 +130,8 @@ static void dos33_mark_blocks_free(struct superblock_type *sb,
 		vtoc[DOS33_VTOC_FREE_BITMAPS+(track*4)]=bitmap[0];
 	}
 	else {
-		printk("dos33: mbf ERROR Sector %d out of range!\n",sector);
+		printk("dos33: mbf ERROR Sector 0x%x out of range! (t=%x)\n",
+			sector,track);
 		return;
 	}
 
@@ -213,9 +214,15 @@ static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 			inode=(next_t<<16)|(next_s<<8)|i;
 
 			/* if zero then not allocated */
-			if (current_block[cat_offset]==0) continue;
 			/* if ff then deleted */
-			if (current_block[cat_offset]==0xff) continue;
+			/* if fe then unlinked */
+			if ((current_block[cat_offset]==0) ||
+				(current_block[cat_offset]==0xfe) ||
+				(current_block[cat_offset]==0xff)) {
+
+				cat_offset+=DOS33_CAT_ENTRY_SIZE;
+				continue;
+			}
 
 			/* copy in filename */
 			memcpy(filename,
@@ -288,7 +295,7 @@ static int32_t dos33_get_filesize(struct inode_type *inode,
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
 	/* handle unlinked file */
 	if (next_t==0xfe) {
-		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
 	}
 	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
@@ -363,7 +370,7 @@ static int32_t dos33_set_filesize(struct inode_type *inode,
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
 	/* Handle unlinked file */
 	if (next_t==0xfe) {
-		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
 			DOS33_CAT_FIRST_ENTRY+(which*DOS33_CAT_ENTRY_SIZE)];
 	}
 
@@ -676,7 +683,7 @@ int32_t dos33fs_read_file(
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	/* handle unlinked file */
 	if (next_t==0xfe) {
-		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	}
 
@@ -906,11 +913,14 @@ int32_t dos33fs_getdents(struct inode_type *dir_inode,
 
 			/* if zero then not allocated */
 			/* note: this means track 0 can never be used for data */
-			if (current_block[cat_offset]==0) continue;
 			/* if ff then deleted */
-			if (current_block[cat_offset]==0xff) continue;
 			/* if fe then unlinked */
-			if (current_block[cat_offset]==0xfe) continue;
+			if ((current_block[cat_offset]==0) ||
+				(current_block[cat_offset]==0xff) ||
+				(current_block[cat_offset]==0xfe)) {
+				cat_offset+=DOS33_CAT_ENTRY_SIZE;
+				continue;
+			}
 
 			/* copy in filename */
 			memcpy(filename,
@@ -1029,7 +1039,7 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	/* Handle unlinked file */
 	if (next_t==0xfe) {
-		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	}
 
@@ -1304,7 +1314,7 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	/* Handle unlinked file */
 	if (next_t==0xfe) {
-		next_t=current_block[DOS33_CAT_OFFSET_FILE_NAME+0x20+
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
 			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
 	}
 
@@ -1498,9 +1508,9 @@ static int32_t dos33fs_unlink_inode(struct inode_type *inode) {
 
 	char current_block[DOS33_BLOCK_SIZE];
 
-//	if (debug) {
-		printk("VMW dos33: Attempting to unlink inode %x\n",inode->number);
-//	}
+	if (debug) {
+		printk("dos33: Attempting to unlink inode %x\n",inode->number);
+	}
 
 	/* special case . , can't remove */
 	if ((inode->number&0xff)==0xff) {
@@ -1530,7 +1540,7 @@ static int32_t dos33fs_unlink_inode(struct inode_type *inode) {
 
 	old_track=current_block[
 			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
-			DOS33_CAT_OFFSET_FIRST_T]=0xfe;
+			DOS33_CAT_OFFSET_FIRST_T];
 
 	current_block[
 			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
@@ -1538,7 +1548,7 @@ static int32_t dos33fs_unlink_inode(struct inode_type *inode) {
 
 	current_block[
 			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
-			DOS33_CAT_OFFSET_FILE_NAME+0x20]=old_track;
+			DOS33_CAT_OFFSET_END_FILE_NAME]=old_track;
 
 	inode->sb->block->block_ops->write(inode->sb->block,
 				block_location,DOS33_BLOCK_SIZE,current_block);
@@ -1546,19 +1556,49 @@ static int32_t dos33fs_unlink_inode(struct inode_type *inode) {
 	return result;
 }
 
-
-static void dos33fs_destroy_inode(struct inode_type *inode) {
-
 #if 0
+static void dos33fs_dump_sector(const char *sector) {
+	int i;
+
+	for(i=0;i<DOS33_BLOCK_SIZE;i++) {
+		if (i%16==0) printk("\n%02x: ",i);
+		printk("%02x ",sector[i]);
+	}
+	printk("\n");
+}
+#endif
+
+
+	/* First truncate to 0 */
+	/* Then remove T/S list */
+	/* Then mark diretctory first track as $FF (deleted) */
+
+	/* Note, DOS33 typically leaves contents of deleted files around */
+	/* and marks the catalog entry as DELETED so undelete is possible */
+	/* we aren't doing that here */
+
+static int32_t dos33fs_destroy_inode(struct inode_type *inode) {
+
+	int result;
+
 	uint32_t block_location,cat_entry,old_track;
+	uint32_t ts_track,ts_sector;//,data_track,data_sector;
 
 	char current_block[DOS33_BLOCK_SIZE];
 
-//	if (debug) {
-		printk("VMW dos33: Attempting to unlink inode %x\n",inode->number);
-//	}
+	if (debug) {
+		printk("dos33: Attempting to destroy inode %x\n",
+			inode->number);
+	}
 
-	/* special case . , can't remove */
+	/* Reduce to a zero-length file */
+	result=dos33fs_truncate_inode(inode, 0);
+	if (result<0) {
+		printk("dos33: ERROR destroying inode\n");
+		return result;
+	}
+
+	/* special case . , can't destroy */
 	if ((inode->number&0xff)==0xff) {
 		return -EISDIR;
 	}
@@ -1580,26 +1620,60 @@ static void dos33fs_destroy_inode(struct inode_type *inode) {
 
 	/* Remove from directory */
 
-	/* Note this is a VMWos hack because the inode and filename */
-	/* are one and the same, apple dos might not know what to do */
-	/* with such a file */
-
 	old_track=current_block[
 			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
-			DOS33_CAT_OFFSET_FIRST_T]=0xfe;
+			DOS33_CAT_OFFSET_FIRST_T];
 
+	if (old_track==0xfe) {
+		/* we've already unlinked this file so old_track is */
+		/* already in the proper place */
+		old_track=current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_END_FILE_NAME];
+
+	}
+	else {
+		current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_END_FILE_NAME]=old_track;
+	}
+
+	/* mark as deleted */
 	current_block[
 			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
-			DOS33_CAT_OFFSET_FIRST_T]=0xfe;
-
-	current_block[
-			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
-			DOS33_CAT_OFFSET_FILE_NAME+0x20]=old_track;
+			DOS33_CAT_OFFSET_FIRST_T]=0xff;
 
 	inode->sb->block->block_ops->write(inode->sb->block,
 				block_location,DOS33_BLOCK_SIZE,current_block);
+
+
+	/* get remaining track/sector list */
+	ts_track=old_track;
+	ts_sector=current_block[
+			DOS33_CAT_FIRST_ENTRY+(cat_entry*DOS33_CAT_ENTRY_SIZE)+
+			DOS33_CAT_OFFSET_FIRST_S];
+
+
+	/* delete remaining block */
+	/* Note: if we truncate to 0 we don't have to do this? */
+
+#if 0
+	inode->sb->block->block_ops->read(inode->sb->block,
+				ts(ts_track,ts_sector),DOS33_BLOCK_SIZE,
+				current_block);
+
+	data_track=current_block[DOS33_TS_FIRST_TS_T];
+	data_sector=current_block[DOS33_TS_FIRST_TS_S];
+	dos33_mark_blocks_free(inode->sb,data_track,data_sector);
 #endif
-	return;
+
+	/* delete t/s list and update superblock free list */
+	if (debug) {
+		printk("deleting last t/s list %x/%x\n",ts_track,ts_sector);
+	}
+	dos33_mark_blocks_free(inode->sb,ts_track,ts_sector);
+
+	return 0;
 }
 
 

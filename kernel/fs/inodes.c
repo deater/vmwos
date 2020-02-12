@@ -200,7 +200,10 @@ int32_t inode_free(struct inode_type *inode) {
 	}
 
 	if ((inode->count==0 ) && (inode->hard_links==0)) {
-		printk("VMW: attempting to destroy inode %d\n",inode->number);
+		if (debug) {
+			printk("attempting to destroy inode %x\n",
+				inode->number);
+		}
 		inode->sb->sb_ops.destroy_inode(inode);
 	}
 
