@@ -182,12 +182,22 @@ static void dos33_mark_blocks_used(struct superblock_type *sb,
 }
 
 
-#if 0
-static int32_t dos33_zero_out_sector(struct inode_type *inode) {
+
+static int32_t dos33_zero_out_sector(struct inode_type *inode,
+	uint32_t track, uint32_t sector) {
+
+	char data_sector[DOS33_BLOCK_SIZE];
+	int block_location;
+
+	block_location=ts(track,sector);
+	memset(data_sector,0,DOS33_BLOCK_SIZE);
+
+	inode->sb->block->block_ops->write(inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,data_sector);
 
 	return 0;
 }
-#endif
+
 
 static int32_t dos33_allocate_sector(struct inode_type *inode,
 					uint32_t *track, uint32_t *sector) {
@@ -1134,7 +1144,8 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 
 	sb=inode->sb;
 
-	if (debug) printk("dos33fs: Attempting to write %d bytes "
+	//if (debug) 
+	printk("dos33fs: Attempting to write %d bytes "
 			"to inode %x offset %lld\n",
 			desired_count,inode->number,*file_offset);
 
@@ -1866,6 +1877,8 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 		/* FIXME: should free the dir entry we made */
 		return result;
 	}
+	/* zero out the new ts list */
+	dos33_zero_out_sector(*new_inode,track,sector);
 
 	/* set t/s list */
 	current_block[DOS33_CAT_OFFSET_FIRST_T+
