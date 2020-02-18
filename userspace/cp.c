@@ -37,7 +37,7 @@ static int cp(int in_fd, int out_fd) {
 		}
 		result=write(out_fd,buffer,result);
 		if (result<=0) {
-			printf("cat: Unexpected write error %d\n",result);
+			printf("cp: Unexpected write error %d\n",result);
 			break;
 		}
 	}

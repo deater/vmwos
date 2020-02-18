@@ -19,7 +19,33 @@ static int debug=0;
 
 static struct inode_type inodes[NUM_INODES];
 
+
 /* Split a filename into the path part and the actual name part */
+/* Returns pointer to the last '/' in the file + 1 */
+/* Also the last '/' is turned to a 0 */
+const char *split_pathname(char *fullpath,int len) {
+
+	int ptr;
+
+	ptr=strlen(fullpath);
+
+	while(1) {
+		if (ptr==0) break;
+		if (fullpath[ptr]=='/') {
+			fullpath[ptr]=0;
+			return &fullpath[ptr+1];
+		}
+		ptr--;
+	}
+
+	return NULL;
+}
+
+
+
+/* start_ptr ??? */
+/* name should be an already allocated buffer */
+/* len is the length */
 const char *split_filename(const char *start_ptr, char *name,
 			int len) {
 
@@ -55,6 +81,7 @@ const char *split_filename(const char *start_ptr, char *name,
 
 	return ptr;
 }
+
 
 struct inode_type *inode_allocate(void) {
 
@@ -350,9 +377,9 @@ int32_t unlink_syscall(const char *pathname) {
 	int32_t result;
 	struct inode_type *inode;
 
-//	if (debug) {
-		printk("VMW unlink: attempting to unlink %s\n",pathname);
-//	}
+	if (debug) {
+		printk("unlink: attempting to unlink %s\n",pathname);
+	}
 
 	result=inode_lookup_and_alloc(pathname,&inode);
         if (result<0) {

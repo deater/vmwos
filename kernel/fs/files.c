@@ -134,16 +134,31 @@ struct inode_type *file_get_inode(int32_t which) {
 static int32_t create_file_object(const char *pathname,
 					struct inode_type **inode) {
 
-	const char *directory,*filename;
+	char full_path[MAX_FILENAME_SIZE];
+	const char *filename,*directory;
 	struct inode_type *dir_inode;
 	int32_t result;
 
+	/* expand path */
+	if (pathname[0]=='/') {
+		strncpy(full_path,pathname,MAX_PATH_LEN);
+	}
+	else {
+		/* prepend current working directory */
+		snprintf(full_path,MAX_PATH_LEN,"%s/%s",
+			current_proc[get_cpu()]->current_dir,
+			pathname);
+	}
+
+	printk("VMW: create: trying to create file %s (expanded to %s)\n",
+			pathname,full_path);
+
 	/* FIXME: split these apart */
+	filename=split_pathname(full_path,MAX_FILENAME_SIZE);
+	directory=full_path;
 
-	printk("VMW: create: trying to create file %s\n",pathname);
-
-	directory=pathname;
-	filename=pathname;
+	printk("VMW: create: trying to create file %s in directory %s\n",
+			filename,directory);
 
 	/* Open directory that we want */
 	result=inode_lookup_and_alloc(directory,&dir_inode);
@@ -157,8 +172,11 @@ static int32_t create_file_object(const char *pathname,
 		return -ENOMEM;
 	}
 
+	printk("VMW: making inode in dir %x\n",dir_inode->number);
 	result=dir_inode->sb->sb_ops.make_inode(dir_inode,inode);
 	if (result<0) {
+		printk("VMW: trouble making inode in dir %x\n",
+			dir_inode->number);
 		return result;
 	}
 
@@ -167,8 +185,11 @@ static int32_t create_file_object(const char *pathname,
 //		return result;
 //	}
 
+	printk("VMW: linking inode %x as %s\n",(*inode)->number,filename);
 	result=dir_inode->sb->sb_ops.link_inode(*inode,filename);
 	if (result<0) {
+		printk("VMW: trouble linking %s to inode %x\n",
+			filename,(*inode)->number);
 		return result;
 	}
 

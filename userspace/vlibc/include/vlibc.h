@@ -24,6 +24,7 @@ const char *strerror(int errnum);
 #define ENODEV	19	/* No such device..... */
 #define ENOTDIR	20	/* Not a directory.... */
 #define ENFILE	23	/* Not enough fds..... */
+#define ENOSPC	28	/* No space left...... */
 #define EROFS	30	/* Read only file sys. */
 #define ERANGE	34	/* Result out of range */
 #define ENOSYS	38	/* No such system call */

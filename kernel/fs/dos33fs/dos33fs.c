@@ -76,6 +76,22 @@ static int ones_lookup[16]={
 	/* 0xf = 1111 */ 4,
 };
 
+	/* should be replaced by "find leading 1" (ffs) instruction */
+	/* if available                                       */
+static int find_first_one(unsigned char byte) {
+
+	int i=0;
+
+	/* should be handled before calling */
+	if (byte==0) return -1;
+
+	while((byte& (0x1<<i))==0) {
+		i++;
+	}
+	return i;
+}
+
+
 static void dos33_update_blocks_free(struct superblock_type *sb) {
 
 	char *vtoc;
@@ -138,7 +154,7 @@ static void dos33_mark_blocks_free(struct superblock_type *sb,
 	dos33_update_blocks_free(sb);
 }
 
-#if 0
+
 static void dos33_mark_blocks_used(struct superblock_type *sb,
 						int track, int sector) {
 
@@ -164,7 +180,103 @@ static void dos33_mark_blocks_used(struct superblock_type *sb,
 
 	dos33_update_blocks_free(sb);
 }
+
+
+#if 0
+static int32_t dos33_zero_out_sector(struct inode_type *inode) {
+
+	return 0;
+}
 #endif
+
+static int32_t dos33_allocate_sector(struct inode_type *inode,
+					uint32_t *track, uint32_t *sector) {
+
+	int found_track=0,found_sector=0;
+	unsigned char bitmap[4];
+	int current_track,start_track,track_alloc_direction,byte;
+	char *vtoc;
+	int tracks_per_disk;
+
+	vtoc=inode->sb->private;
+
+
+	/* Original algorithm tried to keep allocated tracks together */
+	/* near the center of the disk, by tracking last track and */
+	/* direction.  This was for performance reasons. */
+	/* This is sort of low priority for us */
+
+	start_track=vtoc[DOS33_VTOC_LAST_TRACK_ALLOCATED];
+	track_alloc_direction=vtoc[DOS33_VTOC_ALLOC_DIRECTION];
+	tracks_per_disk=vtoc[DOS33_VTOC_NUM_TRACKS];
+
+	if (track_alloc_direction==0xff) track_alloc_direction=-1;
+
+	if ((track_alloc_direction!=1) && (track_alloc_direction!=-1)) {
+		printk("DOS33: ERROR!  Invalid track dir %i\n",
+			track_alloc_direction);
+	}
+
+
+	current_track=start_track;
+	found_track=-1;
+
+	while(1) {
+		/* Want to check byte 1 first, then byte 0 */
+		for(byte=1;byte>-1;byte--) {
+			bitmap[byte]=vtoc[DOS33_VTOC_FREE_BITMAPS+
+							(current_track*4)+byte];
+                        if (bitmap[byte]!=0x00) {
+                                found_sector=find_first_one(bitmap[byte]);
+                                found_sector+=(8*(1-byte));
+                                found_track=current_track;
+				break;
+                        }
+                }
+
+		/* if found, exit */
+		if (found_track!=-1) break;
+
+		/* Move to next track, handling overflows */
+		current_track+=track_alloc_direction;
+		if (current_track<0) {
+			current_track=DOS33_VTOC_TRACK;
+			track_alloc_direction=1;
+		}
+
+		if (current_track>=tracks_per_disk) {
+                        current_track=DOS33_VTOC_TRACK;
+                        track_alloc_direction=-1;
+                }
+
+		if (current_track==start_track) {
+			if (debug) {
+				printk("DOS33: out of room!\n");
+				return -ENOSPC;
+			}
+
+		}
+        }
+
+
+	/* clear bit indicating in use */
+	dos33_mark_blocks_used(inode->sb,found_track,found_sector);
+
+	/* store new track/direction info */
+	vtoc[DOS33_VTOC_LAST_TRACK_ALLOCATED]=found_track;
+	vtoc[DOS33_VTOC_ALLOC_DIRECTION]=track_alloc_direction;
+
+	/* Sync vtoc/superblock to disk */
+	inode->sb->sb_ops.write_superblock(inode->sb);
+
+	*track=found_track;
+	*sector=found_sector;
+
+        return 0;
+
+}
+
+
 
 static int32_t dos33fs_find_filename(struct inode_type *dir_inode,
 					const char *searchname,
@@ -1682,15 +1794,20 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 				struct inode_type **new_inode) {
 
 	char current_block[DOS33_BLOCK_SIZE];
-	uint32_t block_location,i;
+	uint32_t block_location,cat_entry;
 	uint32_t cat_offset=0;
-	uint32_t next_t,next_s;
+	uint32_t next_t,next_s,track,sector;
 	int32_t found=0,inode_number=0,result;
+	int32_t type;
 
-	if (debug) {
+	/* By default make binary file */
+	/* FIXME: when/where are permissions set? */
+	type=DOS33_FILE_TYPE_B;
+
+//	if (debug) {
 		printk("dos33fs: making new inode in dir %x\n",
 			dir_inode->number);
-	}
+//	}
 
 	next_t=(dir_inode->number>>16)&0xff;
 	next_s=(dir_inode->number>>8)&0xff;
@@ -1703,9 +1820,9 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 
 		cat_offset=DOS33_CAT_FIRST_ENTRY;
 
-		for(i=0;i<DOS33_CAT_MAX_ENTRIES;i++) {
+		for(cat_entry=0;cat_entry<DOS33_CAT_MAX_ENTRIES;cat_entry++) {
 
-			inode_number=(next_t<<16)|(next_s<<8)|i;
+			inode_number=(next_t<<16)|(next_s<<8)|cat_entry;
 
 			/* if zero then not allocated */
 			/* if ff then deleted */
@@ -1741,6 +1858,35 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 
 	(*new_inode)->number=inode_number;
 	(*new_inode)->sb=dir_inode->sb;
+
+	/* create initial T/S list */
+	result=dos33_allocate_sector(*new_inode,&track,&sector);
+	if (result<0) {
+		printk("VMW: error allocating sector\n");
+		/* FIXME: should free the dir entry we made */
+		return result;
+	}
+
+	/* set t/s list */
+	current_block[DOS33_CAT_OFFSET_FIRST_T+
+				DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]=track;
+	current_block[DOS33_CAT_OFFSET_FIRST_S+
+				DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]=sector;
+	current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+				DOS33_CAT_FIRST_ENTRY+
+				(cat_entry*DOS33_CAT_ENTRY_SIZE)]=type;
+
+	/* write out block */
+	dir_inode->sb->block->block_ops->write(dir_inode->sb->block,
+				block_location,DOS33_VTOC_SIZE,current_block);
+
+
+	/* set filesize to zero */
+	result=dos33_set_filesize(*new_inode,current_block,
+			type&0x7f, 0);
+
 
 	result=dos33_read_inode(*new_inode);
 
@@ -1794,6 +1940,8 @@ static int32_t dos33fs_link_inode(struct inode_type *inode,
 
 	inode->sb->block->block_ops->write(inode->sb->block,
 				block_location,DOS33_BLOCK_SIZE,catalog_block);
+
+	inode->hard_links++;
 
 	return 0;
 

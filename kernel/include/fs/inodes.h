@@ -54,6 +54,7 @@ int32_t inode_lookup_and_alloc(const char *pathname, struct inode_type **inode);
 int32_t inode_free(struct inode_type *inode);
 
 const char *split_filename(const char *start_ptr, char *name, int len);
+const char *split_pathname(char *fullpath,int len);
 
 int32_t truncate_inode(struct inode_type *inode, int64_t size);
 int32_t truncate64_syscall(const char *path, uint64_t size);
