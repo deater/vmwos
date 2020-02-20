@@ -2036,7 +2036,7 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 	/* create initial T/S list */
 	result=dos33_allocate_sector(*new_inode,&track,&sector);
 	if (result<0) {
-		printk("VMW: error allocating sector\n");
+		printk("dos33: error allocating sector for t/s list\n");
 		/* FIXME: should free the dir entry we made */
 		return result;
 	}
@@ -2054,12 +2054,37 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 				DOS33_CAT_FIRST_ENTRY+
 				(cat_entry*DOS33_CAT_ENTRY_SIZE)]=type;
 
-	/* write out block */
+	/* write out updated catalog entry */
 	dir_inode->sb->block->block_ops->write(dir_inode->sb->block,
-				block_location,DOS33_VTOC_SIZE,current_block);
+				block_location,DOS33_BLOCK_SIZE,current_block);
 
 
-	/* set filesize to zero */
+
+	/* create initial data block */
+	/* strictly shouldn't be necessary, but we store file size */
+	/* at start of data block */
+
+	result=dos33_allocate_sector(*new_inode,&track,&sector);
+	if (result<0) {
+		printk("dos33: error allocating sector for data\n");
+		/* FIXME: should free the dir entry we made */
+		return result;
+	}
+	/* zero out the new data block  */
+	dos33_zero_out_sector(*new_inode,track,sector);
+
+	/* put new data block in new  t/s list */
+	memset(current_block,0,DOS33_BLOCK_SIZE);
+	current_block[DOS33_TS_FIRST_TS_T]=track;
+	current_block[DOS33_TS_FIRST_TS_S]=sector;
+
+	/* write out new t/s list */
+	block_location=ts(track,sector);
+	dir_inode->sb->block->block_ops->write(dir_inode->sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+
+	/* set filesize to zero -- note destroys current_block contents */
 	result=dos33_set_filesize(*new_inode,current_block,
 			type&0x7f, 0);
 
