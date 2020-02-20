@@ -1125,183 +1125,6 @@ int32_t dos33fs_getdents(struct inode_type *dir_inode,
 }
 
 
-int32_t dos33fs_write_file(struct inode_type *inode,
-                        const char *buf,uint32_t desired_count,
-			uint64_t *file_offset) {
-
-
-	int32_t write_count=0,type,advance_ts;
-	int32_t which_sector,sector_offset;
-	uint32_t next_t,next_s,entry,block_location;
-	uint32_t data_t,data_s,data_location;
-	uint32_t copy_begin,copy_length;
-	struct superblock_type *sb;
-	uint32_t adjusted_offset;
-	int32_t current_sector,last_sector,last_sector_offset;
-
-	char current_block[DOS33_BLOCK_SIZE];
-	char current_data[DOS33_BLOCK_SIZE];
-
-	sb=inode->sb;
-
-	//if (debug) 
-	printk("dos33fs: Attempting to write %d bytes "
-			"to inode %x offset %lld\n",
-			desired_count,inode->number,*file_offset);
-
-	/* Load the catalog entry */
-	next_t=(inode->number>>16)&0xff;
-	next_s=(inode->number>>8)&0xff;
-	entry=(inode->number&0xff);
-
-	block_location=ts(next_t,next_s);
-	sb->block->block_ops->read(sb->block,
-				block_location,DOS33_BLOCK_SIZE,current_block);
-
-	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
-	/* Handle unlinked file */
-	if (next_t==0xfe) {
-		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
-	}
-
-	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
-	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
-
-	/* For binary files, skip the ADDR/LEN header */
-	if (type==DOS33_FILE_TYPE_B) {
-		adjusted_offset=*file_offset+4;
-		last_sector=(inode->size+4)/DOS33_BLOCK_SIZE;
-		last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
-	} else {
-		adjusted_offset=*file_offset;
-		last_sector=inode->size/DOS33_BLOCK_SIZE;
-		last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
-	}
-
-	/* calc offset in file */
-	which_sector=(adjusted_offset)/DOS33_BLOCK_SIZE;
-	sector_offset=(adjusted_offset)-(which_sector*DOS33_BLOCK_SIZE);
-
-	current_sector=which_sector;
-
-	/* start with new ts list */
-	advance_ts=1;
-
-	while(which_sector>=DOS33_MAX_TS_ENTRIES) {
-		which_sector-=DOS33_MAX_TS_ENTRIES;
-		advance_ts++;
-	}
-
-	while(1) {
-
-		while (advance_ts) {
-			/* setup new track/sector list page */
-			block_location=ts(next_t,next_s);
-			if (block_location==0) {
-				printk("Error! Off end!\n");
-				return -ENOENT;
-			}
-
-			/* set up next for next time on the list */
-			next_t=current_block[DOS33_TS_NEXT_T];
-			next_s=current_block[DOS33_TS_NEXT_S];
-
-			sb->block->block_ops->read(sb->block,
-				block_location,DOS33_BLOCK_SIZE,current_block);
-			advance_ts--;
-		}
-
-		/* FIXME: handle moving to next T/S when hit end */
-
-		/* open first data list page */
-		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
-		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
-
-		if (debug) {
-			printk("Loading data from t:%d s:%d\n",data_t,data_s);
-		}
-
-		/* File hole */
-		if ((data_t==0) && (data_s==0)) {
-			memset(current_data,0,DOS33_BLOCK_SIZE);
-		}
-		else {
-			data_location=ts(data_t,data_s);
-			sb->block->block_ops->read(sb->block,
-				data_location,DOS33_BLOCK_SIZE,current_data);
-		}
-
-		/* make sure copy is in range */
-
-		/* start at sector_offset */
-		copy_begin=sector_offset;
-		copy_length=DOS33_BLOCK_SIZE-sector_offset;
-
-		/* adjust down to account for requested size */
-		if (copy_length>desired_count) {
-			copy_length=desired_count;
-		}
-
-		/* adjust if we hit end of file */
-		if (current_sector==last_sector) {
-			if (copy_begin+copy_length>last_sector_offset) {
-				copy_length=last_sector_offset-sector_offset;
-				desired_count=copy_length;
-			}
-		}
-
-		memcpy(current_data+copy_begin,buf,copy_length);
-
-		/* write back out to disk */
-		data_location=ts(data_t,data_s);
-		sb->block->block_ops->write(sb->block,
-				data_location,DOS33_BLOCK_SIZE,current_data);
-
-		buf+=copy_length;
-
-		/* total bytes written increments by how many bytes copied */
-		write_count+=copy_length;
-
-		/* bytes left to write decremented by bytes we've copied */
-		desired_count-=copy_length;
-
-		if (desired_count==0) break;
-
-		/* adjust sector we're reading from */
-		current_sector++;
-		which_sector++;
-		if (which_sector>=DOS33_MAX_TS_ENTRIES) {
-			advance_ts++;
-			which_sector-=DOS33_MAX_TS_ENTRIES;
-		}
-		sector_offset=0;
-	}
-
-	if (write_count>0) {
-		*file_offset+=write_count;
-	}
-
-	return write_count;
-}
-
-static struct file_object_operations dos33fs_file_ops= {
-        .read   = dos33fs_read_file,
-        .write  = dos33fs_write_file,
-        .llseek = llseek_generic,
-	.getdents = dos33fs_getdents,
-};
-
-int32_t dos33fs_setup_fileops(struct file_object *file) {
-
-	file->file_ops=&dos33fs_file_ops;
-
-	return 0;
-}
-
 static void dos33fs_write_inode(struct inode_type *inode) {
 
 	int32_t blocksize=0;
@@ -1395,6 +1218,349 @@ static void dos33fs_write_inode(struct inode_type *inode) {
 
 	return;
 }
+
+
+/* grow file, with holes */
+static int32_t dos33fs_grow_file(struct inode_type *inode, uint64_t new_size) {
+
+	int32_t type,advance_ts;
+	uint32_t next_t,next_s,entry,block_location;
+	struct superblock_type *sb;
+	int32_t last_sector;
+	int32_t current_sector,ts_list_offset;
+	uint64_t current_size;
+	uint32_t track,sector;
+	int32_t result;
+
+	char current_block[DOS33_BLOCK_SIZE];
+
+	sb=inode->sb;
+	current_size=inode->size;
+
+//	if (debug) {
+		printk("dos33fs: Attempting to grow %x to size %lld\n",
+			inode->number,new_size);
+//	}
+
+	/* Load the catalog entry */
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	entry=(inode->number&0xff);
+
+	block_location=ts(next_t,next_s);
+	sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	/* Handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	}
+
+	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
+
+	/* For binary files, skip the ADDR/LEN header */
+	if (type==DOS33_FILE_TYPE_B) {
+		current_size+=4;
+		last_sector=(new_size+4)/DOS33_BLOCK_SIZE;
+		//last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
+	} else {
+		last_sector=new_size/DOS33_BLOCK_SIZE;
+		//last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
+	}
+
+	/* calc current offset in file */
+	current_sector=(current_size)/DOS33_BLOCK_SIZE;
+	ts_list_offset=current_sector;
+
+	/* Check if we haven't grown past file size, if so no need */
+	/* to allocate anything new */
+	if (current_sector==last_sector) {
+		goto grow_file_only_write;
+	}
+
+
+	/* start with new ts list */
+	advance_ts=1;
+
+	while(ts_list_offset>=DOS33_MAX_TS_ENTRIES) {
+		ts_list_offset-=DOS33_MAX_TS_ENTRIES;
+		advance_ts++;
+	}
+
+	/* move to right ts list in current file */
+
+	while (advance_ts) {
+		/* see if should delete the previous one */
+
+		/* setup new track/sector list page */
+		block_location=ts(next_t,next_s);
+		if (block_location==0) {
+			printk("Error! Off end!\n");
+			return -ENOENT;
+		}
+
+		/* set up next for next time on the list */
+		next_t=current_block[DOS33_TS_NEXT_T];
+		next_s=current_block[DOS33_TS_NEXT_S];
+
+		sb->block->block_ops->read(sb->block,
+			block_location,DOS33_BLOCK_SIZE,current_block);
+		advance_ts--;
+	}
+
+
+	/* now we have ts list for current block */
+	/* advance to the ts_list of the new block */
+	/* bringing in a new zeroed (full of holes) */
+	/* each time we go off the end */
+
+	while(current_sector<last_sector) {
+
+		/* adjust sector we're reading from */
+		current_sector++;
+		ts_list_offset++;
+
+		/* if we hit the end of the TS list */
+		if (ts_list_offset>=DOS33_MAX_TS_ENTRIES) {
+			ts_list_offset-=DOS33_MAX_TS_ENTRIES;
+
+			/* allocate new TS entry */
+			result=dos33_allocate_sector(inode,&track,&sector);
+			if (result<0) {
+				goto error_allocating;
+			}
+
+			/* zero it out */
+			dos33_zero_out_sector(inode,track,sector);
+
+			/* point to next t/s list */
+			current_block[DOS33_TS_NEXT_T]=track;
+			current_block[DOS33_TS_NEXT_S]=sector;
+
+			/* write out updated t/s list */
+			sb->block->block_ops->write(sb->block,
+					block_location,DOS33_BLOCK_SIZE,
+					current_block);
+
+			/* set up next for next time on the list */
+			next_t=track;
+			next_s=sector;
+			block_location=ts(next_t,next_s);
+			sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+		}
+	}
+
+grow_file_only_write:
+
+	/* update size in inode */
+	inode->size=new_size;
+
+	/* Update inode on disk */
+	dos33fs_write_inode(inode);
+
+	/* update superblock to disk */
+	inode->sb->sb_ops.write_superblock(inode->sb);
+
+	if (debug) {
+		printk("dos33fs: set size to %lld\n",new_size);
+	}
+
+	return 0;
+
+error_allocating:
+	/* FIXME? */
+	printk("dos33: error growing and we don't handle it well!\n");
+
+	return result;
+
+
+}
+
+int32_t dos33fs_write_file(struct inode_type *inode,
+                        const char *buf,uint32_t desired_count,
+			uint64_t *file_offset) {
+
+
+	int32_t write_count=0,type,advance_ts;
+	int32_t which_sector,sector_offset;
+	uint32_t next_t,next_s,entry,block_location;
+	uint32_t data_t,data_s,data_location;
+	uint32_t copy_begin,copy_length;
+	struct superblock_type *sb;
+	uint32_t adjusted_offset;
+	int32_t current_sector;
+	int32_t result;
+
+	char current_block[DOS33_BLOCK_SIZE];
+	char current_data[DOS33_BLOCK_SIZE];
+
+	sb=inode->sb;
+
+	//if (debug)
+	printk("dos33fs: Attempting to write %d bytes "
+			"to inode %x offset %lld\n",
+			desired_count,inode->number,*file_offset);
+
+	/* First grow file if not big enough */
+	if (*file_offset+desired_count > inode->size) {
+		printk("dos33fs: write: growing file to %lld bytes\n",
+			desired_count+*file_offset);
+
+		result=dos33fs_grow_file(inode,*file_offset+desired_count);
+		if (result<0) {
+			return result;
+		}
+	}
+
+	/* Load the catalog entry */
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	entry=(inode->number&0xff);
+
+	block_location=ts(next_t,next_s);
+	sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	/* Handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	}
+
+	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
+
+	/* For binary files, skip the ADDR/LEN header */
+	if (type==DOS33_FILE_TYPE_B) {
+		adjusted_offset=*file_offset+4;
+	} else {
+		adjusted_offset=*file_offset;
+	}
+
+	/* calc offset in file */
+	which_sector=(adjusted_offset)/DOS33_BLOCK_SIZE;
+	sector_offset=(adjusted_offset)-(which_sector*DOS33_BLOCK_SIZE);
+
+	current_sector=which_sector;
+
+	/* start with new ts list */
+	advance_ts=1;
+
+	while(which_sector>=DOS33_MAX_TS_ENTRIES) {
+		which_sector-=DOS33_MAX_TS_ENTRIES;
+		advance_ts++;
+	}
+
+	while(1) {
+
+		while (advance_ts) {
+			/* setup new track/sector list page */
+			block_location=ts(next_t,next_s);
+			if (block_location==0) {
+				printk("Error! Off end!\n");
+				return -ENOENT;
+			}
+
+			/* set up next for next time on the list */
+			next_t=current_block[DOS33_TS_NEXT_T];
+			next_s=current_block[DOS33_TS_NEXT_S];
+
+			sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+			advance_ts--;
+		}
+
+		/* open first data list page */
+		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
+		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
+
+//		if (debug) {
+			printk("dos33fs: write: "
+				"Loading existing data from t:%d s:%d\n",
+				data_t,data_s);
+//		}
+
+		/* File hole */
+		if ((data_t==0) && (data_s==0)) {
+			memset(current_data,0,DOS33_BLOCK_SIZE);
+		}
+		else {
+			data_location=ts(data_t,data_s);
+			sb->block->block_ops->read(sb->block,
+				data_location,DOS33_BLOCK_SIZE,current_data);
+		}
+
+		/* make sure copy is in range */
+
+		/* start at sector_offset */
+		copy_begin=sector_offset;
+		copy_length=DOS33_BLOCK_SIZE-sector_offset;
+
+		/* adjust down to account for requested size */
+		if (copy_length>desired_count) {
+			copy_length=desired_count;
+		}
+
+		memcpy(current_data+copy_begin,buf,copy_length);
+
+		/* write back out to disk */
+		data_location=ts(data_t,data_s);
+		sb->block->block_ops->write(sb->block,
+				data_location,DOS33_BLOCK_SIZE,current_data);
+
+		buf+=copy_length;
+
+		/* total bytes written increments by how many bytes copied */
+		write_count+=copy_length;
+
+		/* bytes left to write decremented by bytes we've copied */
+		desired_count-=copy_length;
+
+		if (desired_count==0) break;
+
+		/* adjust sector we're writing to */
+		current_sector++;
+		which_sector++;
+		if (which_sector>=DOS33_MAX_TS_ENTRIES) {
+			advance_ts++;
+			which_sector-=DOS33_MAX_TS_ENTRIES;
+		}
+		sector_offset=0;
+	}
+
+	if (write_count>0) {
+		*file_offset+=write_count;
+	}
+
+	return write_count;
+}
+
+static struct file_object_operations dos33fs_file_ops= {
+        .read   = dos33fs_read_file,
+        .write  = dos33fs_write_file,
+        .llseek = llseek_generic,
+	.getdents = dos33fs_getdents,
+};
+
+int32_t dos33fs_setup_fileops(struct file_object *file) {
+
+	file->file_ops=&dos33fs_file_ops;
+
+	return 0;
+}
+
 
 	/* Find current desired end sector */
 	/* write zero to it past offset */
@@ -1601,170 +1767,6 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	}
 
 	return 0;
-
-}
-
-/* grow file, with holes */
-static int32_t dos33fs_grow_file(struct inode_type *inode, uint64_t new_size) {
-
-	int32_t type,advance_ts;
-	uint32_t next_t,next_s,entry,block_location;
-	struct superblock_type *sb;
-	int32_t last_sector;
-	int32_t current_sector,ts_list_offset;
-	uint64_t current_size;
-	uint32_t track,sector;
-	int32_t result;
-
-	char current_block[DOS33_BLOCK_SIZE];
-
-	sb=inode->sb;
-	current_size=inode->size;
-
-//	if (debug) {
-		printk("dos33fs: Attempting to grow %x to size %lld\n",
-			inode->number,new_size);
-//	}
-
-	/* Load the catalog entry */
-	next_t=(inode->number>>16)&0xff;
-	next_s=(inode->number>>8)&0xff;
-	entry=(inode->number&0xff);
-
-	block_location=ts(next_t,next_s);
-	sb->block->block_ops->read(sb->block,
-				block_location,DOS33_BLOCK_SIZE,current_block);
-
-	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
-	/* Handle unlinked file */
-	if (next_t==0xfe) {
-		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
-	}
-
-	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
-	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
-			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
-
-	/* For binary files, skip the ADDR/LEN header */
-	if (type==DOS33_FILE_TYPE_B) {
-		current_size+=4;
-		last_sector=(new_size+4)/DOS33_BLOCK_SIZE;
-		//last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
-	} else {
-		last_sector=new_size/DOS33_BLOCK_SIZE;
-		//last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
-	}
-
-	/* calc current offset in file */
-	current_sector=(current_size)/DOS33_BLOCK_SIZE;
-	ts_list_offset=current_sector;
-
-	/* Check if we haven't grown past file size, if so no need */
-	/* to allocate anything new */
-	if (current_sector==last_sector) {
-		goto grow_file_only_write;
-	}
-
-
-	/* start with new ts list */
-	advance_ts=1;
-
-	while(ts_list_offset>=DOS33_MAX_TS_ENTRIES) {
-		ts_list_offset-=DOS33_MAX_TS_ENTRIES;
-		advance_ts++;
-	}
-
-	/* move to right ts list in current file */
-
-	while (advance_ts) {
-		/* see if should delete the previous one */
-
-		/* setup new track/sector list page */
-		block_location=ts(next_t,next_s);
-		if (block_location==0) {
-			printk("Error! Off end!\n");
-			return -ENOENT;
-		}
-
-		/* set up next for next time on the list */
-		next_t=current_block[DOS33_TS_NEXT_T];
-		next_s=current_block[DOS33_TS_NEXT_S];
-
-		sb->block->block_ops->read(sb->block,
-			block_location,DOS33_BLOCK_SIZE,current_block);
-		advance_ts--;
-	}
-
-
-	/* now we have ts list for current block */
-	/* advance to the ts_list of the new block */
-	/* bringing in a new zeroed (full of holes) */
-	/* each time we go off the end */
-
-	while(current_sector<last_sector) {
-
-		/* adjust sector we're reading from */
-		current_sector++;
-		ts_list_offset++;
-
-		/* if we hit the end of the TS list */
-		if (ts_list_offset>=DOS33_MAX_TS_ENTRIES) {
-			ts_list_offset-=DOS33_MAX_TS_ENTRIES;
-
-			/* allocate new TS entry */
-			result=dos33_allocate_sector(inode,&track,&sector);
-			if (result<0) {
-				goto error_allocating;
-			}
-
-			/* zero it out */
-			dos33_zero_out_sector(inode,track,sector);
-
-			/* point to next t/s list */
-			current_block[DOS33_TS_NEXT_T]=track;
-			current_block[DOS33_TS_NEXT_S]=sector;
-
-			/* write out updated t/s list */
-			sb->block->block_ops->write(sb->block,
-					block_location,DOS33_BLOCK_SIZE,
-					current_block);
-
-			/* set up next for next time on the list */
-			next_t=track;
-			next_s=sector;
-			block_location=ts(next_t,next_s);
-			sb->block->block_ops->read(sb->block,
-				block_location,DOS33_BLOCK_SIZE,current_block);
-
-		}
-	}
-
-grow_file_only_write:
-
-	/* update size in inode */
-	inode->size=new_size;
-
-	/* Update inode on disk */
-	dos33fs_write_inode(inode);
-
-	/* update superblock to disk */
-	inode->sb->sb_ops.write_superblock(inode->sb);
-
-	if (debug) {
-		printk("dos33fs: set size to %lld\n",new_size);
-	}
-
-	return 0;
-
-error_allocating:
-	/* FIXME? */
-	printk("dos33: error growing and we don't handle it well!\n");
-
-	return result;
-
 
 }
 
@@ -2043,6 +2045,9 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 	/* zero out the new ts list */
 	dos33_zero_out_sector(*new_inode,track,sector);
 
+	printk("dos33: make_inode: made new T/S list at t: %x s: %x\n",
+		track,sector);
+
 	/* set t/s list */
 	current_block[DOS33_CAT_OFFSET_FIRST_T+
 				DOS33_CAT_FIRST_ENTRY+
@@ -2058,6 +2063,8 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 	dir_inode->sb->block->block_ops->write(dir_inode->sb->block,
 				block_location,DOS33_BLOCK_SIZE,current_block);
 
+	/* set block_location to new t/s list */
+	block_location=ts(track,sector);
 
 
 	/* create initial data block */
@@ -2073,21 +2080,21 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 	/* zero out the new data block  */
 	dos33_zero_out_sector(*new_inode,track,sector);
 
+	printk("dos33: make_inode: made initial data block at t: %x s: %x\n",
+		track,sector);
+
 	/* put new data block in new  t/s list */
 	memset(current_block,0,DOS33_BLOCK_SIZE);
 	current_block[DOS33_TS_FIRST_TS_T]=track;
 	current_block[DOS33_TS_FIRST_TS_S]=sector;
 
 	/* write out new t/s list */
-	block_location=ts(track,sector);
 	dir_inode->sb->block->block_ops->write(dir_inode->sb->block,
 				block_location,DOS33_BLOCK_SIZE,current_block);
-
 
 	/* set filesize to zero -- note destroys current_block contents */
 	result=dos33_set_filesize(*new_inode,current_block,
 			type&0x7f, 0);
-
 
 	result=dos33_read_inode(*new_inode);
 
