@@ -618,13 +618,39 @@ static int32_t romfs_unlink_inode(struct inode_type *inode) {
 	return -EROFS;
 }
 
+static void romfs_write_superblock(struct superblock_type *sb) {
+
+	return;
+}
+
+static int32_t romfs_destroy_inode(struct inode_type *inode) {
+
+	return -EROFS;
+}
+
+static int32_t romfs_link_inode(struct inode_type *inode, const char *name) {
+
+	return -EROFS;
+}
+
+static int32_t romfs_make_inode(struct inode_type *dir_inode,
+				struct inode_type **new_inode) {
+
+	return -EROFS;
+}
+
 static struct superblock_operations romfs_sb_ops = {
-	.write_inode = romfs_write_inode,
 	.truncate_inode = romfs_truncate_inode,
+	.write_inode = romfs_write_inode,
 	.statfs = romfs_statfs,
 	.lookup_inode = romfs_lookup_inode,
 	.setup_fileops = romfs_setup_fileops,
+	.write_superblock = romfs_write_superblock,
 	.unlink_inode = romfs_unlink_inode,
+	.destroy_inode = romfs_destroy_inode,
+	.link_inode = romfs_link_inode,
+	.make_inode = romfs_make_inode,
+
 };
 
 
