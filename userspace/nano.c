@@ -628,6 +628,17 @@ static char *editor_rows_to_string(int *buflen) {
 	return buf;
 }
 
+static void editor_set_status_message(const char *fmt, ...) {
+
+	va_list ap;
+	va_start(ap,fmt);
+	vsnprintf(config.statusmsg, sizeof(config.statusmsg), fmt, ap);
+	va_end(ap);
+	config.statusmsg_time = time(NULL);
+}
+
+
+
 static void editor_open(char *filename) {
 
 	FILE *fff;
@@ -642,7 +653,10 @@ static void editor_open(char *filename) {
 
 	fff=fopen(filename,"r");
 	if (!fff) {
-		safe_exit(1,"Unable to open file");
+		editor_set_status_message("New File");
+		config.dirty=0;
+		return;
+//		safe_exit(1,"Unable to open file");
 	}
 
 	while(1) {
@@ -661,15 +675,6 @@ static void editor_open(char *filename) {
 	fclose(fff);
 
 	config.dirty=0;
-}
-
-static void editor_set_status_message(const char *fmt, ...) {
-
-	va_list ap;
-	va_start(ap,fmt);
-	vsnprintf(config.statusmsg, sizeof(config.statusmsg), fmt, ap);
-	va_end(ap);
-	config.statusmsg_time = time(NULL);
 }
 
 static int editor_read_key(void) {
