@@ -1590,6 +1590,9 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	/* update size in inode */
 	inode->size=size;
 
+	/* Update inode on disk */
+	dos33fs_write_inode(inode);
+
 	/* update superblock to disk */
 	inode->sb->sb_ops.write_superblock(inode->sb);
 
@@ -1598,6 +1601,170 @@ static int32_t dos33fs_shrink_file(struct inode_type *inode, uint64_t size) {
 	}
 
 	return 0;
+
+}
+
+/* grow file, with holes */
+static int32_t dos33fs_grow_file(struct inode_type *inode, uint64_t new_size) {
+
+	int32_t type,advance_ts;
+	uint32_t next_t,next_s,entry,block_location;
+	struct superblock_type *sb;
+	int32_t last_sector;
+	int32_t current_sector,ts_list_offset;
+	uint64_t current_size;
+	uint32_t track,sector;
+	int32_t result;
+
+	char current_block[DOS33_BLOCK_SIZE];
+
+	sb=inode->sb;
+	current_size=inode->size;
+
+//	if (debug) {
+		printk("dos33fs: Attempting to grow %x to size %lld\n",
+			inode->number,new_size);
+//	}
+
+	/* Load the catalog entry */
+	next_t=(inode->number>>16)&0xff;
+	next_s=(inode->number>>8)&0xff;
+	entry=(inode->number&0xff);
+
+	block_location=ts(next_t,next_s);
+	sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+	next_t=current_block[DOS33_CAT_OFFSET_FIRST_T+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	/* Handle unlinked file */
+	if (next_t==0xfe) {
+		next_t=current_block[DOS33_CAT_OFFSET_END_FILE_NAME+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	}
+
+	next_s=current_block[DOS33_CAT_OFFSET_FIRST_S+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE];
+	type=current_block[DOS33_CAT_OFFSET_FILE_TYPE+
+			DOS33_CAT_FIRST_ENTRY+entry*DOS33_CAT_ENTRY_SIZE]&0x7f;
+
+	/* For binary files, skip the ADDR/LEN header */
+	if (type==DOS33_FILE_TYPE_B) {
+		current_size+=4;
+		last_sector=(new_size+4)/DOS33_BLOCK_SIZE;
+		//last_sector_offset=(inode->size+4)-(last_sector*DOS33_BLOCK_SIZE);
+	} else {
+		last_sector=new_size/DOS33_BLOCK_SIZE;
+		//last_sector_offset=inode->size-(last_sector*DOS33_BLOCK_SIZE);
+	}
+
+	/* calc current offset in file */
+	current_sector=(current_size)/DOS33_BLOCK_SIZE;
+	ts_list_offset=current_sector;
+
+	/* Check if we haven't grown past file size, if so no need */
+	/* to allocate anything new */
+	if (current_sector==last_sector) {
+		goto grow_file_only_write;
+	}
+
+
+	/* start with new ts list */
+	advance_ts=1;
+
+	while(ts_list_offset>=DOS33_MAX_TS_ENTRIES) {
+		ts_list_offset-=DOS33_MAX_TS_ENTRIES;
+		advance_ts++;
+	}
+
+	/* move to right ts list in current file */
+
+	while (advance_ts) {
+		/* see if should delete the previous one */
+
+		/* setup new track/sector list page */
+		block_location=ts(next_t,next_s);
+		if (block_location==0) {
+			printk("Error! Off end!\n");
+			return -ENOENT;
+		}
+
+		/* set up next for next time on the list */
+		next_t=current_block[DOS33_TS_NEXT_T];
+		next_s=current_block[DOS33_TS_NEXT_S];
+
+		sb->block->block_ops->read(sb->block,
+			block_location,DOS33_BLOCK_SIZE,current_block);
+		advance_ts--;
+	}
+
+
+	/* now we have ts list for current block */
+	/* advance to the ts_list of the new block */
+	/* bringing in a new zeroed (full of holes) */
+	/* each time we go off the end */
+
+	while(current_sector<last_sector) {
+
+		/* adjust sector we're reading from */
+		current_sector++;
+		ts_list_offset++;
+
+		/* if we hit the end of the TS list */
+		if (ts_list_offset>=DOS33_MAX_TS_ENTRIES) {
+			ts_list_offset-=DOS33_MAX_TS_ENTRIES;
+
+			/* allocate new TS entry */
+			result=dos33_allocate_sector(inode,&track,&sector);
+			if (result<0) {
+				goto error_allocating;
+			}
+
+			/* zero it out */
+			dos33_zero_out_sector(inode,track,sector);
+
+			/* point to next t/s list */
+			current_block[DOS33_TS_NEXT_T]=track;
+			current_block[DOS33_TS_NEXT_S]=sector;
+
+			/* write out updated t/s list */
+			sb->block->block_ops->write(sb->block,
+					block_location,DOS33_BLOCK_SIZE,
+					current_block);
+
+			/* set up next for next time on the list */
+			next_t=track;
+			next_s=sector;
+			block_location=ts(next_t,next_s);
+			sb->block->block_ops->read(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+		}
+	}
+
+grow_file_only_write:
+
+	/* update size in inode */
+	inode->size=new_size;
+
+	/* Update inode on disk */
+	dos33fs_write_inode(inode);
+
+	/* update superblock to disk */
+	inode->sb->sb_ops.write_superblock(inode->sb);
+
+	if (debug) {
+		printk("dos33fs: set size to %lld\n",new_size);
+	}
+
+	return 0;
+
+error_allocating:
+	/* FIXME? */
+	printk("dos33: error growing and we don't handle it well!\n");
+
+	return result;
+
 
 }
 
@@ -1613,11 +1780,7 @@ static int32_t dos33fs_truncate_inode(struct inode_type *inode, uint64_t size) {
 		result=dos33fs_shrink_file(inode,size);
 	}
 	else {
-		printk("dos33: error: does not support "
-			"truncate growing current=%lld new=%lld\n",
-			inode->size,size);
-		/* FIXME: growing */
-		result=-ENOSYS;
+		result=dos33fs_grow_file(inode,size);
 	}
 
 	return result;
