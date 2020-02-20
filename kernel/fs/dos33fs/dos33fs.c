@@ -1494,6 +1494,18 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 
 		/* File hole */
 		if ((data_t==0) && (data_s==0)) {
+			/* need to allocate a block for it */
+			result=dos33_allocate_sector(inode,&data_t,&data_s);
+			if (result<0) {
+				return result;
+			}
+			/* update the T/S list */
+			current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)]=data_t;
+			current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)]=data_s;
+			sb->block->block_ops->write(sb->block,
+				block_location,DOS33_BLOCK_SIZE,current_block);
+
+			data_location=ts(data_t,data_s);
 			memset(current_data,0,DOS33_BLOCK_SIZE);
 		}
 		else {
