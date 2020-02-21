@@ -37,12 +37,12 @@ struct block_dev_type *block_dev_find(const char *name) {
 	return NULL;
 }
 
-struct block_dev_type *block_dev_lookup(uint32_t rdev) {
+struct block_dev_type *block_dev_lookup(uint32_t devnum) {
 
 	int i;
 
 	for(i=0;i<BLOCK_DEV_MAX;i++) {
-		if (block_devs[i].major==(rdev>>16)) {
+		if (block_devs[i].major==(devnum>>16)) {
 			return &block_devs[i];
 		}
 	}

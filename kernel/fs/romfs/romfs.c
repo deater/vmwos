@@ -221,12 +221,12 @@ retry_inode:
 		case 4: /* block device */
 			if (debug) printk("BLOCK DEVICE\n");
 			inode->mode|=S_IFBLK;
-			inode->rdev=spec_info;
+			inode->device=spec_info;
 			break;
 		case 5: /* char device */
 			if (debug) printk("CHAR DEVICE\n");
 			inode->mode|=S_IFCHR;
-			inode->rdev=spec_info;
+			inode->device=spec_info;
 			break;
 		case 6: /* socket */
 			if (debug) printk("SOCKET\n");

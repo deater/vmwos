@@ -20,6 +20,11 @@ static int debug=0;
 
 static struct file_object file_objects[MAX_OPEN_FILES];
 
+void files_increment_count(struct file_object *file) {
+	file->count++;
+	file->inode->count++;
+}
+
 int32_t file_object_free(struct file_object *file) {
 
 	/* FIXME: locking */
@@ -332,12 +337,12 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 	mode=(file->inode->mode & S_IFMT);
 
 	if (mode==S_IFBLK) {
-		block_dev=block_dev_lookup(file->inode->rdev);
+		block_dev=block_dev_lookup(file->inode->device);
 		result=block_dev->block_ops->read(block_dev,
 					file->file_offset,count,buf);
 	}
 	else if (mode==S_IFCHR ) {
-		char_dev=char_dev_lookup(file->inode->rdev);
+		char_dev=char_dev_lookup(file->inode->device);
 		result=char_dev->char_ops->read(char_dev,buf,count);
 	}
 	else if (mode==S_IFREG) {
@@ -395,13 +400,13 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	if (mode==S_IFBLK) {
 		//printk("Attempting to write a block device\n");
-		block_dev=block_dev_lookup(file->inode->rdev);
+		block_dev=block_dev_lookup(file->inode->device);
 		result=block_dev->block_ops->write(block_dev,
 					file->file_offset,count,buf);
 	}
 	else if (mode==S_IFCHR ) {
 		//printk("Attempting to write a char device\n");
-		char_dev=char_dev_lookup(file->inode->rdev);
+		char_dev=char_dev_lookup(file->inode->device);
 		result=char_dev->char_ops->write(char_dev,buf,count);
 	}
 	else if (mode==S_IFREG) {
@@ -588,7 +593,7 @@ struct file_object *file_special(int which) {
 	inode->hard_links=1;
 	inode->uid=0;
 	inode->gid=0;
-	inode->rdev=(CONSOLE_MAJOR<<16);
+	inode->device=(CONSOLE_MAJOR<<16);
 	inode->mode=S_IFCHR | 0666;
 
 	file=&file_objects[which];
@@ -687,7 +692,4 @@ int32_t fcntl_syscall(uint32_t fd, int32_t cmd, uint32_t third) {
 
 
 
-void files_increment_count(struct file_object *file) {
-	file->count++;
-	file->inode->count++;
-}
+

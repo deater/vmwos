@@ -37,12 +37,12 @@ struct char_dev_type *char_dev_find(const char *name) {
 	return NULL;
 }
 
-struct char_dev_type *char_dev_lookup(uint32_t rdev) {
+struct char_dev_type *char_dev_lookup(uint32_t devnum) {
 
 	int i;
 
 	for(i=0;i<CHAR_DEV_MAX;i++) {
-		if (char_devs[i].major==(rdev>>16)) {
+		if (char_devs[i].major==(devnum>>16)) {
 			return &char_devs[i];
 		}
 	}
