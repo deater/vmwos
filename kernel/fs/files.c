@@ -340,6 +340,7 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 		block_dev=block_dev_lookup(file->inode->device);
 		result=block_dev->block_ops->read(block_dev,
 					file->file_offset,count,buf);
+		if (result>=0) file->file_offset+=result;
 	}
 	else if (mode==S_IFCHR ) {
 		char_dev=char_dev_lookup(file->inode->device);
