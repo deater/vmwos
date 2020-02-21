@@ -42,7 +42,8 @@ struct char_dev_type *char_dev_lookup(uint32_t devnum) {
 	int i;
 
 	for(i=0;i<CHAR_DEV_MAX;i++) {
-		if (char_devs[i].major==(devnum>>16)) {
+		if ( (char_devs[i].major==(devnum>>16)) &&
+			(char_devs[i].minor==(devnum&0xffff)) ) {
 			return &char_devs[i];
 		}
 	}

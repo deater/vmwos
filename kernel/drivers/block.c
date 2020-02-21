@@ -42,7 +42,8 @@ struct block_dev_type *block_dev_lookup(uint32_t devnum) {
 	int i;
 
 	for(i=0;i<BLOCK_DEV_MAX;i++) {
-		if (block_devs[i].major==(devnum>>16)) {
+		if ( (block_devs[i].major==(devnum>>16)) &&
+			(block_devs[i].minor==(devnum&0xffff)) ) {
 			return &block_devs[i];
 		}
 	}
