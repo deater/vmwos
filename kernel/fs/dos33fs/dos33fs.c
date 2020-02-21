@@ -788,9 +788,11 @@ int32_t dos33fs_read_file(
 
 	sb=inode->sb;
 
-	if (debug) printk("dos33fs: Attempting to read %d bytes "
+	if (debug) {
+		printk("dos33fs: Attempting to read %d bytes "
 			"from inode %x offset %lld\n",
 			desired_count,inode->number,*file_offset);
+	}
 
 	/* Load the catalog entry */
 	next_t=(inode->number>>16)&0xff;
@@ -1237,10 +1239,10 @@ static int32_t dos33fs_grow_file(struct inode_type *inode, uint64_t new_size) {
 	sb=inode->sb;
 	current_size=inode->size;
 
-//	if (debug) {
+	if (debug) {
 		printk("dos33fs: Attempting to grow %x to size %lld\n",
 			inode->number,new_size);
-//	}
+	}
 
 	/* Load the catalog entry */
 	next_t=(inode->number>>16)&0xff;
@@ -1404,16 +1406,18 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 
 	sb=inode->sb;
 
-	//if (debug)
-	printk("dos33fs: Attempting to write %d bytes "
+	if (debug) {
+		printk("dos33fs: Attempting to write %d bytes "
 			"to inode %x offset %lld\n",
 			desired_count,inode->number,*file_offset);
+	}
 
 	/* First grow file if not big enough */
 	if (*file_offset+desired_count > inode->size) {
-		printk("dos33fs: write: growing file to %lld bytes\n",
-			desired_count+*file_offset);
-
+		if (debug) {
+			printk("dos33fs: write: growing file to %lld bytes\n",
+				desired_count+*file_offset);
+		}
 		result=dos33fs_grow_file(inode,*file_offset+desired_count);
 		if (result<0) {
 			return result;
@@ -1486,11 +1490,11 @@ int32_t dos33fs_write_file(struct inode_type *inode,
 		data_t=current_block[DOS33_TS_FIRST_TS_T+(2*which_sector)];
 		data_s=current_block[DOS33_TS_FIRST_TS_S+(2*which_sector)];
 
-//		if (debug) {
+		if (debug) {
 			printk("dos33fs: write: "
 				"Loading existing data from t:%d s:%d\n",
 				data_t,data_s);
-//		}
+		}
 
 		/* File hole */
 		if ((data_t==0) && (data_s==0)) {
@@ -1992,10 +1996,10 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 	/* FIXME: when/where are permissions set? */
 	type=DOS33_FILE_TYPE_B;
 
-//	if (debug) {
+	if (debug) {
 		printk("dos33fs: making new inode in dir %x\n",
 			dir_inode->number);
-//	}
+	}
 
 	next_t=(dir_inode->number>>16)&0xff;
 	next_s=(dir_inode->number>>8)&0xff;
@@ -2042,7 +2046,9 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 
 	}
 
-	printk("VMW: dos33: make_inode found %x\n",inode_number);
+	if (debug) {
+		printk("dos33: make_inode found %x\n",inode_number);
+	}
 
 	(*new_inode)->number=inode_number;
 	(*new_inode)->sb=dir_inode->sb;
@@ -2057,8 +2063,10 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 	/* zero out the new ts list */
 	dos33_zero_out_sector(*new_inode,track,sector);
 
-	printk("dos33: make_inode: made new T/S list at t: %x s: %x\n",
-		track,sector);
+	if (debug) {
+		printk("dos33: make_inode: made new T/S list at t: %x s: %x\n",
+			track,sector);
+	}
 
 	/* set t/s list */
 	current_block[DOS33_CAT_OFFSET_FIRST_T+
@@ -2092,8 +2100,10 @@ static int32_t dos33fs_make_inode(struct inode_type *dir_inode,
 	/* zero out the new data block  */
 	dos33_zero_out_sector(*new_inode,track,sector);
 
-	printk("dos33: make_inode: made initial data block at t: %x s: %x\n",
-		track,sector);
+	if (debug) {
+		printk("dos33: make_inode: made initial data block at "
+			"t: %x s: %x\n",track,sector);
+	}
 
 	/* put new data block in new  t/s list */
 	memset(current_block,0,DOS33_BLOCK_SIZE);
@@ -2124,10 +2134,10 @@ static int32_t dos33fs_link_inode(struct inode_type *inode,
 	uint32_t block_location,i;
 	uint32_t next_t,next_s;
 
-//	if (debug) {
-		printk("VMW: dos33fs: giving inode %x name %s\n",
+	if (debug) {
+		printk("dos33fs: giving inode %x name %s\n",
 			inode->number,name);
-//	}
+	}
 
 	/* error if filename too long */
 	if (strlen(name)>DOS33_MAX_FILENAME_SIZE) {
