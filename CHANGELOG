@@ -1,4 +1,12 @@
-0.20 -- ?? April 2018
+0.20 -- 21 February 2020
++ full VFS layer
++ writable filesystem
++ full char/block device support
++ text editor
++ demoscene demo
++ relocatable symbols in bFLT executables
+
+0.20-pre -- April 2018
 + multicore support
 
 0.19 -- 12 April 2018
