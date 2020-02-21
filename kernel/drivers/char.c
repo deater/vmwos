@@ -4,6 +4,8 @@
 #include "lib/printk.h"
 #include "lib/string.h"
 
+#include "fs/files.h"
+
 #include "drivers/drivers.h"
 #include "drivers/char.h"
 

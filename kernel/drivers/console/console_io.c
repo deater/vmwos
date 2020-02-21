@@ -6,6 +6,8 @@
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "drivers/audio/audio.h"
 
+#include "fs/files.h"
+
 #include "drivers/char.h"
 #include "drivers/console/console_io.h"
 
@@ -179,21 +181,25 @@ int console_read(void *buf, size_t count, int non_blocking) {
 }
 
 
-static int32_t console_read_dev(struct char_dev_type *dev,
+static int32_t console_read_dev(struct file_object *file,
 		char *buf, uint32_t count) {
 
-	return console_read(buf,count,0);
+	int nonblock=0;
+
+	if (file->flags & O_NONBLOCK) nonblock=1;
+
+	return console_read(buf,count,nonblock);
 
 }
 
-static int32_t console_write_dev(struct char_dev_type *dev,
+static int32_t console_write_dev(struct file_object *file,
 		char *buf, uint32_t count) {
 
 	return console_write(buf,count);
 
 }
 
-static int32_t console_ioctl(struct char_dev_type *dev,
+static int32_t console_ioctl(struct file_object *file,
 		uint32_t cmd, uint32_t three, uint32_t four) {
 
 	printk("console: unhandled ioctl %x: %x %x\n",

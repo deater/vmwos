@@ -6,13 +6,13 @@
 #include "lib/string.h"
 #include "lib/smp.h"
 
-#include "drivers/console/console_io.h"
-#include "drivers/char.h"
-#include "drivers/block.h"
-
 #include "fs/files.h"
 #include "fs/inodes.h"
 #include "fs/superblock.h"
+
+#include "drivers/console/console_io.h"
+#include "drivers/char.h"
+#include "drivers/block.h"
 
 #include "processes/process.h"
 
@@ -157,15 +157,19 @@ static int32_t create_file_object(const char *pathname,
 			pathname);
 	}
 
-	printk("VMW: create: trying to create file %s (expanded to %s)\n",
+	if (debug) {
+		printk("create: trying to create file %s (expanded to %s)\n",
 			pathname,full_path);
+	}
 
-	/* FIXME: split these apart */
+	/* split up the filename/pathname */
 	filename=split_pathname(full_path,MAX_FILENAME_SIZE);
 	directory=full_path;
 
-	printk("VMW: create: trying to create file %s in directory %s\n",
+	if (debug) {
+		printk("create: trying to create file %s in directory %s\n",
 			filename,directory);
+	}
 
 	/* Open directory that we want */
 	result=inode_lookup_and_alloc(directory,&dir_inode);
@@ -175,14 +179,17 @@ static int32_t create_file_object(const char *pathname,
 
 	*inode=inode_allocate();
 	if (*inode==NULL) {
-		printk("VMW: cfo trouble allocating inode\n");
+		printk("cfo trouble allocating inode\n");
 		return -ENOMEM;
 	}
 
-	printk("VMW: making inode in dir %x\n",dir_inode->number);
+	if (debug) {
+		printk("making inode in dir %x\n",dir_inode->number);
+	}
+
 	result=dir_inode->sb->sb_ops.make_inode(dir_inode,inode);
 	if (result<0) {
-		printk("VMW: trouble making inode in dir %x\n",
+		printk("trouble making inode in dir %x\n",
 			dir_inode->number);
 		return result;
 	}
@@ -192,10 +199,12 @@ static int32_t create_file_object(const char *pathname,
 //		return result;
 //	}
 
-	printk("VMW: linking inode %x as %s\n",(*inode)->number,filename);
+	if (debug) {
+		printk("linking inode %x as %s\n",(*inode)->number,filename);
+	}
 	result=dir_inode->sb->sb_ops.link_inode(*inode,filename);
 	if (result<0) {
-		printk("VMW: trouble linking %s to inode %x\n",
+		printk("trouble linking %s to inode %x\n",
 			filename,(*inode)->number);
 		return result;
 	}
@@ -344,7 +353,7 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 	}
 	else if (mode==S_IFCHR ) {
 		char_dev=char_dev_lookup(file->inode->device);
-		result=char_dev->char_ops->read(char_dev,buf,count);
+		result=char_dev->char_ops->read(file,buf,count);
 	}
 	else if (mode==S_IFREG) {
 
@@ -408,7 +417,7 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 	else if (mode==S_IFCHR ) {
 		//printk("Attempting to write a char device\n");
 		char_dev=char_dev_lookup(file->inode->device);
-		result=char_dev->char_ops->write(char_dev,buf,count);
+		result=char_dev->char_ops->write(file,buf,count);
 	}
 	else if (mode==S_IFREG) {
 		//printk("Attempting to write a normal file\n");
@@ -724,7 +733,7 @@ int32_t ioctl_syscall(uint32_t fd, int32_t cmd,
 	else if (mode==S_IFCHR ) {
 		//printk("Attempting to ioctl a char device\n");
 		char_dev=char_dev_lookup(file->inode->device);
-		result=char_dev->char_ops->ioctl(char_dev,cmd,third,fourth);
+		result=char_dev->char_ops->ioctl(file,cmd,third,fourth);
 	}
 	else {
 		return -ENOTTY;
@@ -732,8 +741,3 @@ int32_t ioctl_syscall(uint32_t fd, int32_t cmd,
 
 	return result;
 }
-
-
-
-
-
