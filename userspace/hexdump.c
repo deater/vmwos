@@ -17,7 +17,7 @@
 
 #define BUF_SIZE 16
 
-static int hexdump(int in_fd) {
+static int hexdump(int in_fd, int bytes) {
 
 	char buffer[BUF_SIZE];
 	int result,i;
@@ -59,27 +59,48 @@ static int hexdump(int in_fd) {
 		printf("|\n");
 
 		pos+=result;
+
+		if ((bytes>0) && (pos>=bytes)) break;
 	}
 
 	return 0;
 }
 
+static void usage(void) {
+	printf("\nUsage: hexdump [-n size] input\n\n");
+	exit(1);
+}
 
 int main(int argc, char **argv) {
 
 	int input_fd;
+	int c;
+	int bytes=-1;
 
-	if (argc<2) {
-		printf("Usage: hexdump input\n\n");
+	opterr=0;
+	while ((c=getopt(argc,argv,"hn:"))!=-1) {
+		switch(c) {
+			case 'n':
+				bytes=atoi(optarg);
+				break;
+			case 'h':
+                        default:
+				usage();
+				break;
+		}
+	}
+
+	if (optind>=argc) {
+		usage();
 		return -1;
 	}
 
-	input_fd=open(argv[1],O_RDONLY,0);
+	input_fd=open(argv[optind],O_RDONLY,0);
 	if (input_fd<0) {
-		printf("Error opening %s\n",argv[1]);
+		printf("Error opening %s\n",argv[optind]);
 		return -1;
 	}
-	hexdump(input_fd);
+	hexdump(input_fd,bytes);
 	close(input_fd);
 
 	return 0;
