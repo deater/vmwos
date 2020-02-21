@@ -144,24 +144,29 @@ static int print_permissions(int mode) {
 	return 0;
 }
 
-static void print_file_color(int mode, char *name) {
+static void print_file_color(int raw_mode, char *name) {
+
+	int mode;
+
+	mode=raw_mode&S_IFMT;
 
 	/* FIXME: check isatty() before printing color */
 
+
 	/* Dir */
-	if ((mode&S_IFMT)==S_IFDIR) {
+	if (mode==S_IFDIR) {
 		printf("%s%s%s",LS_DIR_COLOR,name,LS_NORMAL_COLOR);
 	}
 	/* Executable */
-	else if (mode & 0x1) {
+	else if (raw_mode & 0x1) {
 		printf("%s%s%s",LS_EXE_COLOR,name,LS_NORMAL_COLOR);
 	}
 	/* Device */
-	else if ((mode & S_IFMT)==S_IFBLK) {
+	else if ((mode==S_IFBLK) || (mode==S_IFCHR)) {
 		printf("%s%s%s",LS_DEV_COLOR,name,LS_NORMAL_COLOR);
 	}
 	/* Link */
-	else if ((mode & S_IFMT)==S_IFLNK) {
+	else if (mode==S_IFLNK) {
 		printf("%s%s%s",LS_LINK_COLOR,name,LS_NORMAL_COLOR);
 	}
 	else {
@@ -188,6 +193,7 @@ static void list_file_long(char *name, char *path, int maxsize) {
 	struct stat stat_buf;
 	int padding,i;
 	char full_path[MAX_PATH];
+	int mode;
 
 	if (path==NULL) {
 		snprintf(full_path,MAX_PATH,"%s",name);
@@ -197,16 +203,24 @@ static void list_file_long(char *name, char *path, int maxsize) {
 	}
 
 	stat(full_path,&stat_buf);
+	mode=stat_buf.st_mode&S_IFMT;
+
 	print_permissions(stat_buf.st_mode);
 	printf(" %2d %d %d ",
 		stat_buf.st_nlink,
 		stat_buf.st_uid,
 		stat_buf.st_gid);
 
-	padding=ilog10(maxsize)-ilog10(stat_buf.st_size);
-	for(i=0;i<padding;i++) printf(" ");
+	if ((mode==S_IFCHR) || (mode==S_IFBLK)) {
+		printf("%d, %d ",(stat_buf.st_dev)>>16,
+			(stat_buf.st_dev&0xffff));
+	}
+	else {
+		padding=ilog10(maxsize)-ilog10(stat_buf.st_size);
+		for(i=0;i<padding;i++) printf(" ");
 
-	printf("%lld ",stat_buf.st_size);
+		printf("%lld ",stat_buf.st_size);
+	}
 
 	print_date(stat_buf.st_mtime);
 
@@ -227,6 +241,8 @@ static int ls_long(char *path) {
 	struct vmwos_dirent *d;
 	struct stat stat_buf;
 	int max_len=0;
+	int mode;
+
 
 	result=stat(path,&stat_buf);
 	if (result<0) {
@@ -236,8 +252,10 @@ static int ls_long(char *path) {
 
 //	printf("Mode: %x\n",stat_buf.st_mode);
 
-	/* handle if it's not a directory */
-	if ( (stat_buf.st_mode&S_IFMT)!=S_IFDIR) {
+	mode=stat_buf.st_mode&S_IFMT;
+
+	if ( mode!=S_IFDIR) {
+		/* handle if it's a regular file */
 		list_file_long(path,NULL,stat_buf.st_size);
 		return 0;
 	}
@@ -245,7 +263,8 @@ static int ls_long(char *path) {
 	/* handle if it's a directory */
 	fd=open(path,O_RDONLY,0);
 	if (fd<0) {
-		printf("Error opening dir %s! %s\n",path,strerror(errno));
+		printf("Error opening dir %s! %s\n",
+						path,strerror(errno));
 	}
 
 	/* First, find maxsize */
@@ -260,27 +279,29 @@ static int ls_long(char *path) {
 		offset=0;
 		while(offset<nread) {
 			d=(struct vmwos_dirent *)(buf+offset);
-			snprintf(full_path,MAX_PATH,"%s/%s",path,d->d_name);
+			snprintf(full_path,MAX_PATH,"%s/%s",
+							path,d->d_name);
 			stat(full_path,&stat_buf);
-			if (stat_buf.st_size>max_len) max_len=stat_buf.st_size;
-
+			if (stat_buf.st_size>max_len) {
+				max_len=stat_buf.st_size;
+			}
 			offset+=d->d_reclen;
 		}
 	}
 
-//	FIXME: implement lseek
-//	lseek(fd,0,SEEK_SET);
+
+	//	FIXME: implement lseek
+	//	lseek(fd,0,SEEK_SET);
 
 	close(fd);
 	fd=open(path,O_RDONLY,0);
-
 
 	/* Then actually print */
 	while(1) {
 		nread = getdents (fd, (struct vmwos_dirent *)buf, BUF_SIZE);
 		if (nread<0) {
 			printf("Error getdents again fd=%d! %s\n",
-				fd,strerror(errno));
+					fd,strerror(errno));
 			break;
 		}
 		if (nread==0) break;
@@ -293,7 +314,6 @@ static int ls_long(char *path) {
 			offset+=d->d_reclen;
 		}
 	}
-
 
 	close(fd);
 
