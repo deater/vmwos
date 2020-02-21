@@ -25,6 +25,7 @@
 #define __NR_times		43
 #define __NR_brk		45
 #define __NR_ioctl		54
+#define __NR_fcntl		55
 #define __NR_reboot		88
 #define __NR_mmap		90
 #define __NR_munmap		91
@@ -106,7 +107,7 @@ int32_t write(int fd, const void *buf, uint32_t size) {
 }
 
 /* 5 */
-int32_t open(const char *filename, uint32_t flags, uint32_t mode) {
+int32_t open_direct(const char *filename, uint32_t flags, uint32_t mode) {
 
 	register long r7 __asm__("r7") = __NR_open;
 	register long r0 __asm__("r0") = (long)filename;
@@ -363,22 +364,6 @@ int32_t vfork(void) {
 
 }
 
-int32_t ioctl3(int fd, unsigned long request, unsigned long req2) {
-
-	register long r7 __asm__("r7") = __NR_ioctl;
-	register long r0 __asm__("r0") = fd;
-	register long r1 __asm__("r1") = request;
-	register long r2 __asm__("r2") = req2;
-
-	asm volatile(
-		"svc #0\n"
-		: "=r"(r0)
-		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
-		: "memory");
-
-	return r0;
-}
-
 int32_t ioctl4(int fd, unsigned long request, unsigned long req2, unsigned long req3) {
 
 	register long r7 __asm__("r7") = __NR_ioctl;
@@ -443,13 +428,6 @@ int32_t sys_reboot(void) {
 
 }
 
-int32_t fcntl(int fd, int cmd, ... /* arg */ ) {
-
-        /* FIXME */
-
-        return 0;
-}
-
 /* 45 */
 void *brk(void *address) {
 
@@ -466,6 +444,22 @@ void *brk(void *address) {
 
 }
 
+/* 55 */
+int32_t fcntl_direct(int32_t fd, int32_t cmd, int32_t paramater) {
+
+	register long r7 __asm__("r7") = __NR_fcntl;
+	register long r0 __asm__("r0") = (long)fd;
+	register long r1 __asm__("r1") = (long)cmd;
+	register long r2 __asm__("r2") = (long)paramater;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0) /* output */
+		: "r"(r7), "0"(r0), "r"(r1), "r"(r2) /* input */
+		: "memory");
+
+        return 0;
+}
 
 /* 90 */
 void *mmap(void *addr, size_t length, int prot, int flags,

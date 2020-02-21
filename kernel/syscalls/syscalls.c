@@ -157,10 +157,15 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_IOCTL:	/* 54 */
-			printk("UNIMPLEMENTED SYSCALL: IOCTL(%x,%x,%x)\n",
-				r0,r1,r2);
-			result=-1;
+			printk("UNIMPLEMENTED SYSCALL: IOCTL(%x,%x,%x,%x)\n",
+				r0,r1,r2,r3);
+			result=-ENOSYS;
 			break;
+
+		case SYSCALL_FCNTL:	/* 55 */
+			result=fcntl_syscall(r0,r1,r2);
+			break;
+
 
 		case SYSCALL_MMAP:	/* 90 */
 			result=-ENOSYS;
@@ -269,7 +274,7 @@ uint32_t swi_handler_c(
 			/* See https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=53862 */
 			bcm2835_write(PM_WDOG, PM_PASSWORD | 1);	/* timeout = 1/16th of a second? */
 			bcm2835_write(PM_RSTC, PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET);
-			result = -1;
+			result = 0;
 			break;
 
 

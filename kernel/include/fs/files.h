@@ -66,7 +66,6 @@ int32_t chdir_syscall(const char *pathname);
 char *getcwd_syscall(char *buf, size_t size);
 int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence);
 
-
 void file_objects_init(void);
 struct file_object *file_special(int which);
 
@@ -81,3 +80,10 @@ int64_t llseek_generic(struct file_object *file,
 
 int32_t ftruncate64_syscall(int32_t fd, uint64_t size);
 
+#define F_DUPFD		0	/* Duplicate fd    */
+#define F_GETFD		1	/* Get fd flags    */
+#define F_SETFD		2	/* Set fd flags    */
+#define F_GETFL		3	/* Get file status */
+#define F_SETFL		4	/* Set file status */
+
+int32_t fcntl_syscall(uint32_t fd, int32_t cmd, uint32_t third);

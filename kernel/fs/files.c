@@ -582,4 +582,41 @@ int32_t ftruncate64_syscall(int32_t fd, uint64_t size) {
 	return result;
 }
 
+/****************************************************/
+/* fcntl syscall                                    */
+/****************************************************/
+
+int32_t fcntl_syscall(uint32_t fd, int32_t cmd, uint32_t third) {
+
+	int32_t result;
+	struct file_object *file;
+
+	if (debug) {
+		printk("fcntl: on fd %d with %x %x\n",fd,cmd,third);
+	}
+
+	result=map_fd_to_file(fd,&file);
+	if (result<0) {
+		return result;
+	}
+
+	switch(cmd) {
+
+		case F_GETFL:
+			return file->flags;
+			break;
+		case F_SETFL:
+			file->flags=third;
+			result=0;
+			break;
+
+		default:
+			result=-ENOSYS;
+			break;
+	}
+
+	return result;
+}
+
+
 

@@ -216,3 +216,70 @@ int64_t lseek(int fd, int64_t offset, int whence) {
 	return real_result;
 
 }
+
+/* special case because of the var-args */
+int32_t fcntl(int32_t fd, int32_t cmd, ...) {
+
+	int32_t result,paramater=0;
+
+	va_list ap;
+
+	va_start(ap, cmd);
+
+	switch(cmd) {
+		case F_SETFL:
+			paramater=va_arg(ap, int32_t);
+			break;
+		case F_GETFL:
+		default:
+			paramater=0;
+	}
+
+	va_end(ap);
+
+	result=fcntl_direct(fd,cmd,paramater);
+
+	return result;
+}
+
+/* special case because of the var-args */
+int32_t open(const char *pathname, uint32_t flags, ... ) {
+
+	int32_t result,mode=0;
+
+	va_list ap;
+
+	va_start(ap, flags);
+
+	if (flags&O_CREAT) {
+		mode=va_arg(ap, int32_t);
+	}
+	else {
+		mode=0;
+	}
+
+	va_end(ap);
+
+	result=open_direct(pathname,flags,mode);
+
+	return result;
+}
+
+/* special case because of the var-args */
+int32_t ioctl(int32_t fd, uint32_t request, ... ) {
+
+	int32_t result,arg2=0,arg3=0;
+
+	va_list ap;
+
+	va_start(ap, request);
+
+	arg2=va_arg(ap, int32_t);
+	arg3=va_arg(ap, int32_t);
+	va_end(ap);
+
+	result=ioctl4(fd,request,arg2,arg3);
+
+	return result;
+}
+

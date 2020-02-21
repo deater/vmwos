@@ -16,14 +16,14 @@ void cfmakeraw(struct termios *termios_p) {
 
 int tcgetattr(int fd, struct termios *termios_p) {
 
-	return ioctl3(fd,TCGETS,(long)termios_p);
+	return ioctl(fd,TCGETS,(long)termios_p);
 
 }
 
 int tcsetattr(int fd, int optional_actions,
                      const struct termios *termios_p) {
 
-        return ioctl3(fd,TCSETS,(long)termios_p);
+        return ioctl(fd,TCSETS,(long)termios_p);
 }
 
 

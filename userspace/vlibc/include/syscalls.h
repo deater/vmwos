@@ -96,7 +96,8 @@ int32_t nanosleep(const struct timespec *req, struct timespec *rem);
 
 int32_t write(int fd, const void *buf, uint32_t count);
 int32_t read(int fd, void *buf, size_t count);
-int32_t open(const char *filename, uint32_t flags, uint32_t mode);
+int32_t open(const char *filename, uint32_t flags, ...);
+int32_t open_direct(const char *filename, uint32_t flags, uint32_t mode);
 int32_t close(uint32_t fd);
 int32_t ftruncate(int32_t fd, int64_t length);
 int32_t truncate(const char *path, int64_t length);
@@ -200,7 +201,8 @@ int tcsetattr(int fd, int optional_actions,
 #define	TCGETS		0x5401
 #define	TCSAFLUSH       2
 
-int32_t ioctl3(int d, unsigned long request, unsigned long req2);
+int32_t ioctl(int32_t d, uint32_t request, ...);
+//int32_t ioctl3(int d, unsigned long request, unsigned long req2);
 int32_t ioctl4(int d, unsigned long request, unsigned long req2, unsigned long req3);
 
 int32_t getpid(void);
@@ -228,7 +230,8 @@ int32_t sys_random(uint32_t *buffer);
 #define F_GETFL	3       /* Get file status */
 #define F_SETFL	4       /* Set file status */
 
-int32_t fcntl(int fd, int cmd, ... /* arg */ );
+int32_t fcntl(int32_t fd, int32_t cmd, ... /* arg */ );
+int32_t fcntl_direct(int32_t fd, int32_t cmd, int32_t paramater);
 
 
 #define CLOCK_REALTIME		0
