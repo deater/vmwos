@@ -5,6 +5,7 @@
 
 #include "drivers/drivers.h"
 
+#include "drivers/console/console_io.h"
 #include "drivers/framebuffer/framebuffer.h"
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "drivers/led/led.h"
@@ -24,6 +25,9 @@ void drivers_init_all(void) {
 	/**************************/
 	/* Device Drivers	  */
 	/**************************/
+
+	/* Set up console */
+	console_init();
 
 	/* Set up ACT LED */
 	led_init();

@@ -7,6 +7,8 @@
 #include "lib/smp.h"
 
 #include "drivers/console/console_io.h"
+#include "drivers/char.h"
+#include "drivers/block.h"
 
 #include "fs/files.h"
 #include "fs/inodes.h"
@@ -300,19 +302,22 @@ int32_t open_syscall(const char *pathname, uint32_t flags, uint32_t mode) {
 
 int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
-	int32_t result;
+	int32_t result,mode;
 	struct file_object *file;
-
-	/* Handle stdin: Hack for now */
-	if (fd==0) {
-		result=console_read(buf,count);
-		return result;
-	}
+	struct char_dev_type *char_dev;
+	struct block_dev_type *block_dev;
 
 	result=map_fd_to_file(fd,&file);
 	if (result<0) {
 		return result;
 	}
+
+	/* Handle stdin: Hack for now */
+//	if (fd==0) {
+//		result=console_read(buf,count,nonblock);
+//		return result;
+//	}
+
 
 	/* If trying to read a write-only file... */
 	if ((file->flags&O_RW_MASK) == O_WRONLY) {
@@ -324,10 +329,30 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 			count,fd,buf);
 	}
 
-	result=file->file_ops->read(
+	mode=(file->inode->mode & S_IFMT);
+
+	if (mode==S_IFBLK) {
+		block_dev=block_dev_lookup(file->inode->rdev);
+		result=block_dev->block_ops->read(block_dev,
+					file->file_offset,count,buf);
+	}
+	else if (mode==S_IFCHR ) {
+		char_dev=char_dev_lookup(file->inode->rdev);
+		result=char_dev->char_ops->read(char_dev,buf,count);
+	}
+	else if (mode==S_IFREG) {
+
+		result=file->file_ops->read(
 				file->inode,
 				buf,count,
 				&(file->file_offset));
+	} else if (mode==S_IFDIR) {
+		return -EISDIR;
+	}
+	else {
+		printk("read: unknown inode type\n");
+		return -EINVAL;
+	}
 
 	return result;
 }
@@ -338,14 +363,20 @@ int32_t read_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 
-	int32_t result;
+	int32_t result,mode;
 	struct file_object *file;
+	struct char_dev_type *char_dev;
+	struct block_dev_type *block_dev;
+
+	if (debug) {
+		printk("Attempting to write to fd %d\n",fd);
+	}
 
 	/* Hack */
-	if ((fd==1) || (fd==2)) {
-		result = console_write(buf, count);
-		return result;
-	}
+//	if ((fd==1) || (fd==2)) {
+//		result = console_write(buf, count);
+//		return result;
+//	}
 
 	result=map_fd_to_file(fd,&file);
 	if (result<0) {
@@ -354,14 +385,37 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 
 	/* Check permissions */
 
-	/* If trying to read a write-only file... */
+	/* If trying to write a read-only file... */
 	if ((file->flags&O_RW_MASK) == O_RDONLY) {
+		//printk("Attempting to write a read only file %d\n",fd);
 		return -EBADF;
 	}
 
-	result=file->file_ops->write(file->inode,
+	mode=(file->inode->mode & S_IFMT);
+
+	if (mode==S_IFBLK) {
+		//printk("Attempting to write a block device\n");
+		block_dev=block_dev_lookup(file->inode->rdev);
+		result=block_dev->block_ops->write(block_dev,
+					file->file_offset,count,buf);
+	}
+	else if (mode==S_IFCHR ) {
+		//printk("Attempting to write a char device\n");
+		char_dev=char_dev_lookup(file->inode->rdev);
+		result=char_dev->char_ops->write(char_dev,buf,count);
+	}
+	else if (mode==S_IFREG) {
+		//printk("Attempting to write a normal file\n");
+		result=file->file_ops->write(file->inode,
 					buf,count,
 					&file_objects[fd].file_offset);
+	} else if (mode==S_IFDIR) {
+		return -EISDIR;
+	}
+	else {
+		printk("write: unknown inode type\n");
+		return -EINVAL;
+	}
 
 	return result;
 }
@@ -525,9 +579,24 @@ int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
 struct file_object *file_special(int which) {
 
 	struct file_object *file;
+	struct inode_type *inode;
+
+	/* set up inode for it */
+	inode=inode_allocate();
+	inode->number=which;
+	inode->count=1;
+	inode->hard_links=1;
+	inode->uid=0;
+	inode->gid=0;
+	inode->rdev=(CONSOLE_MAJOR<<16);
+	inode->mode=S_IFCHR | 0666;
 
 	file=&file_objects[which];
 	file->count=1;
+
+	file->inode=inode;
+
+
 
 	/* stdin */
 	if (which==0) {
@@ -543,8 +612,6 @@ struct file_object *file_special(int which) {
 	if (which==2) {
 		file->flags=O_WRONLY;
 	}
-
-
 
 	return file;
 
@@ -620,3 +687,7 @@ int32_t fcntl_syscall(uint32_t fd, int32_t cmd, uint32_t third) {
 
 
 
+void files_increment_count(struct file_object *file) {
+	file->count++;
+	file->inode->count++;
+}

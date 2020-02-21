@@ -24,5 +24,6 @@ struct block_dev_type {
 struct block_dev_type *allocate_block_dev(void);
 
 struct block_dev_type *block_dev_find(const char *name);
+struct block_dev_type *block_dev_lookup(uint32_t rdev);
 
 

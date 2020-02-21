@@ -13,6 +13,7 @@
 #define EISDIR	21	/* Is a directory..... */
 #define EINVAL	22	/* Invalid argument... */
 #define ENFILE	23	/* Not enough fds..... */
+#define ENOTTY	25	/* Unhandled ioctl.... */
 #define ENOSPC	28	/* No space left...... */
 #define EROFS	30	/* Read-only file sys. */
 #define ERANGE	34	/* Result out of range */

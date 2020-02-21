@@ -87,3 +87,5 @@ int32_t ftruncate64_syscall(int32_t fd, uint64_t size);
 #define F_SETFL		4	/* Set file status */
 
 int32_t fcntl_syscall(uint32_t fd, int32_t cmd, uint32_t third);
+
+void files_increment_count(struct file_object *file);

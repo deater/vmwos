@@ -6,6 +6,11 @@
 #include "drivers/framebuffer/framebuffer_console.h"
 #include "drivers/audio/audio.h"
 
+#include "drivers/char.h"
+#include "drivers/console/console_io.h"
+
+#include "lib/printk.h"
+#include "lib/errors.h"
 #include "lib/locks.h"
 #include "lib/smp.h"
 
@@ -16,6 +21,9 @@
 #include "debug/panic.h"
 
 #define INPUT_BUFFER_SIZE	256
+
+static int32_t minors_allocated=0;
+static int32_t debug=0;
 
 static char input_buffer[INPUT_BUFFER_SIZE];
 static uint32_t input_buffer_head=0;
@@ -145,18 +153,21 @@ int console_write(const void *buf, size_t count) {
 }
 
 
-int console_read(void *buf, size_t count) {
+int console_read(void *buf, size_t count, int non_blocking) {
 
 	int i;
 	unsigned char *buffer=buf;
 
 	/* Read from input buffer */
 
+	if (!non_blocking) {
 
-	/* put to sleep if no data available */
-	/* FIXME: handle non-blocking case */
-	while (input_buffer_head==input_buffer_tail) {
-		wait_queue_add(&console_wait_queue,current_proc[get_cpu()]);
+		/* Blocking */
+		/* put to sleep if no data available */
+		while (input_buffer_head==input_buffer_tail) {
+			wait_queue_add(&console_wait_queue,
+						current_proc[get_cpu()]);
+		}
 	}
 
 	for(i=0;i<count;i++) {
@@ -164,5 +175,57 @@ int console_read(void *buf, size_t count) {
 	}
 
 	return i;
+
+}
+
+
+static int32_t console_read_dev(struct char_dev_type *dev,
+		char *buf, uint32_t count) {
+
+	return console_read(buf,count,0);
+
+}
+
+static int32_t console_write_dev(struct char_dev_type *dev,
+		char *buf, uint32_t count) {
+
+	return console_write(buf,count);
+
+}
+
+static int32_t console_ioctl(struct char_dev_type *dev,
+		uint32_t one, uint32_t two) {
+
+	return -ENOTTY;
+
+}
+
+struct char_operations console_char_ops = {
+	.read = console_read_dev,
+	.write = console_write_dev,
+	.ioctl = console_ioctl,
+};
+
+struct char_dev_type *console_init(void) {
+
+	struct char_dev_type *dev;
+
+	dev=allocate_char_dev();
+	if (dev==NULL) {
+		return NULL;
+	}
+
+	dev->major=CONSOLE_MAJOR;
+	dev->minor=minors_allocated;
+	snprintf(dev->name,CHAR_NAME_LENGTH,"console%d",dev->minor);
+	if (debug) printk("Allocated console %s\n",dev->name);
+
+	minors_allocated++;
+
+	dev->char_ops=&console_char_ops;
+
+	printk("Initialized console%d\n",dev->minor);
+
+        return dev;
 
 }

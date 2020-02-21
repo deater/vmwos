@@ -118,7 +118,6 @@ static struct inode_type *inode_find_existing(
 					printk("Found existing inode %x\n",
 						inode_number);
 				}
-				inodes[i].count++;
 				return &inodes[i];
 			}
 
@@ -204,6 +203,7 @@ int32_t inode_lookup_and_alloc(const char *pathname,
 		*inode=temp_inode;
 	}
 	else {
+		(*inode)->count++;
 		inode_free(temp_inode);
 	}
 	return result;

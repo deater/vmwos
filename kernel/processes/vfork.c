@@ -40,7 +40,9 @@ int32_t vfork(void) {
 	/* Increment the file use count for any open files */
 	for(i=0;i<MAX_FD_PER_PROC;i++) {
 		/* FIXME: Locking */
-		if (child->files[i]!=NULL) child->files[i]->count++;
+		if (child->files[i]!=NULL) {
+			files_increment_count(child->files[i]);
+		}
 	}
 
 	child->pid=child_pid;
