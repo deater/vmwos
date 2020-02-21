@@ -17,7 +17,7 @@
 
 #define BUF_SIZE 256
 
-static int debug=1;
+static int debug=0;
 
 static int cp(int in_fd, int out_fd) {
 
@@ -52,8 +52,7 @@ int main(int argc, char **argv) {
 	int output_fd;	/* stdout */
 
 	if (argc<3) {
-		printf("USAGE: cp src dest\n\n");
-
+		printf("\nUSAGE: cp src dest\n\n");
 	}
 	else {
 		input_fd=open(argv[1],O_RDONLY,0);
