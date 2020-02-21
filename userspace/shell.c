@@ -29,7 +29,7 @@ static int print_help(void) {
 	printf("\tgradient	- make background look cool\n");
 	printf("\thelp		- prints this help message\n");
 	printf("\trandom	- print random number\n");
-	printf("\treset		- reset the machine\n");
+	printf("\treboot	- reboot the machine\n");
 	printf("\tsleep	X	- sleep for X seconds\n");
 	printf("\ttemp		- print the temperature\n");
 	printf("\tuptime	- print seconds since boot\n");
@@ -169,8 +169,8 @@ static int parse_input(char *string) {
 		printf("Time running: %s\n",
 			time_pretty((buf.tms_utime)/64,timestring,256));
 	}
-	else if (!strncmp(string,"reset",5)) {
-		printf("Resetting...\n");
+	else if (!strncmp(string,"reboot",6)) {
+		printf("Rebooting...\n");
 		reboot();
 	}
 	else if (!strncmp(string,"sleep",5)) {
@@ -237,9 +237,9 @@ static int parse_input(char *string) {
 					if (background) {
 					}
 					else {
-						printf("Waiting for %d to finish\n",pid);
+						//printf("Waiting for %d to finish\n",pid);
 						waitpid(pid,&status,0);
-						printf("Child exited with %d\n",status);
+						//printf("Child exited with %d\n",status);
 					}
 				}
 			}
