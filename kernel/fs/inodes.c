@@ -300,7 +300,9 @@ int32_t chmod_syscall(const char *pathname, int32_t mode) {
 
 	/* FIXME: lots of checks */
 
-	/* FIXME: actually update to disk */
+	/* actually update to disk */
+	inode->mode=(inode->mode&0xfffffe00)|(mode&0x1ff);
+	inode->sb->sb_ops.write_inode(inode);
 
 	inode_free(inode);
 
