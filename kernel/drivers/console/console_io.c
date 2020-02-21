@@ -194,7 +194,10 @@ static int32_t console_write_dev(struct char_dev_type *dev,
 }
 
 static int32_t console_ioctl(struct char_dev_type *dev,
-		uint32_t one, uint32_t two) {
+		uint32_t cmd, uint32_t three, uint32_t four) {
+
+	printk("console: unhandled ioctl %x: %x %x\n",
+			cmd,three,four);
 
 	return -ENOTTY;
 

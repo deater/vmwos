@@ -6,7 +6,7 @@ struct block_dev_type;
 struct block_operations {
 	int32_t (*read) (struct block_dev_type *,uint32_t, uint32_t, char *);
 	int32_t (*write) (struct block_dev_type *,uint32_t, uint32_t, char *);
-	int32_t (*ioctl) (struct block_dev_type *,uint32_t, uint32_t);
+	int32_t (*ioctl) (struct block_dev_type *,uint32_t, uint32_t, uint32_t);
 //        int32_t (*open) (int32_t *, struct file_object *);
 };
 

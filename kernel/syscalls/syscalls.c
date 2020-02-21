@@ -157,15 +157,12 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_IOCTL:	/* 54 */
-			printk("UNIMPLEMENTED SYSCALL: IOCTL(%x,%x,%x,%x)\n",
-				r0,r1,r2,r3);
-			result=-ENOSYS;
+			result=ioctl_syscall(r0,r1,r2,r3);
 			break;
 
 		case SYSCALL_FCNTL:	/* 55 */
 			result=fcntl_syscall(r0,r1,r2);
 			break;
-
 
 		case SYSCALL_MMAP:	/* 90 */
 			result=-ENOSYS;

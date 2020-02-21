@@ -691,6 +691,49 @@ int32_t fcntl_syscall(uint32_t fd, int32_t cmd, uint32_t third) {
 	return result;
 }
 
+/****************************************************/
+/* ioctl syscall                                    */
+/****************************************************/
+
+int32_t ioctl_syscall(uint32_t fd, int32_t cmd,
+					uint32_t third, uint32_t fourth) {
+
+	int32_t result,mode;
+	struct file_object *file;
+	struct char_dev_type *char_dev;
+	struct block_dev_type *block_dev;
+
+	if (debug) {
+		printk("ioctl: on fd %d with %x %x %x\n",fd,cmd,third,fourth);
+	}
+
+	result=map_fd_to_file(fd,&file);
+	if (result<0) {
+		return result;
+	}
+
+
+	mode=(file->inode->mode & S_IFMT);
+
+	if (mode==S_IFBLK) {
+		//printk("Attempting to ioctl a block device\n");
+		block_dev=block_dev_lookup(file->inode->device);
+		result=block_dev->block_ops->ioctl(block_dev,cmd,third,fourth);
+
+	}
+	else if (mode==S_IFCHR ) {
+		//printk("Attempting to ioctl a char device\n");
+		char_dev=char_dev_lookup(file->inode->device);
+		result=char_dev->char_ops->ioctl(char_dev,cmd,third,fourth);
+	}
+	else {
+		return -ENOTTY;
+	}
+
+	return result;
+}
+
+
 
 
 

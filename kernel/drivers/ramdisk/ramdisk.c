@@ -49,9 +49,16 @@ int32_t ramdisk_write(struct block_dev_type *dev,
 
 }
 
+int32_t ramdisk_ioctl(struct block_dev_type *dev,
+			uint32_t cmd, uint32_t three, uint32_t four) {
+
+	return -ENOTTY;
+}
+
 static struct block_operations ramdisk_ops = {
 	.read = ramdisk_read,
 	.write = ramdisk_write,
+	.ioctl = ramdisk_ioctl,
 };
 
 struct block_dev_type *ramdisk_init(unsigned char *start, uint32_t length) {

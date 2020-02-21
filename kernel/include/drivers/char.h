@@ -6,7 +6,7 @@ struct char_dev_type;
 struct char_operations {
 	int32_t (*read) (struct char_dev_type *,char *, uint32_t);
 	int32_t (*write) (struct char_dev_type *,char *, uint32_t);
-	int32_t (*ioctl) (struct char_dev_type *,uint32_t, uint32_t);
+	int32_t (*ioctl) (struct char_dev_type *,uint32_t, uint32_t, uint32_t);
 //        int32_t (*open) (int32_t *, struct file_object *);
 };
 
