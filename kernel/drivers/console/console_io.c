@@ -11,6 +11,7 @@
 #include "drivers/char.h"
 #include "drivers/console/console_io.h"
 
+#include "lib/string.h"
 #include "lib/printk.h"
 #include "lib/errors.h"
 #include "lib/locks.h"
@@ -36,6 +37,12 @@ static uint32_t console_buffer_write_mutex = MUTEX_UNLOCKED;
 
 static uint32_t console_print_mutex = MUTEX_UNLOCKED;
 static uint32_t console_locking_enabled=0;
+
+
+static struct termios current_termio;
+static struct termios default_termio;
+
+
 
 void console_enable_locking(void) {
 	console_locking_enabled=1;
@@ -199,14 +206,67 @@ static int32_t console_write_dev(struct file_object *file,
 
 }
 
+static void console_termio_update(struct termios *term) {
+
+	int i;
+
+	if (default_termio.c_iflag != term->c_iflag) {
+		printk("term c_iflag new=%x default=%x\n",
+			term->c_iflag,default_termio.c_iflag);
+	}
+
+
+	if (default_termio.c_oflag != term->c_oflag) {
+		printk("term c_oflag new=%x default=%x\n",
+			term->c_oflag,default_termio.c_oflag);
+	}
+
+
+	if (default_termio.c_cflag != term->c_cflag) {
+		printk("term c_cflag new=%x default=%x\n",
+			term->c_cflag,default_termio.c_cflag);
+	}
+
+	if (default_termio.c_lflag != term->c_lflag) {
+		printk("term c_lflag new=%x default=%x\n",
+			term->c_lflag,default_termio.c_lflag);
+	}
+
+	for(i=0;i<NCCS;i++) {
+
+		if (default_termio.c_cc[i] != term->c_cc[i]) {
+			printk("term c_cc[%d] new=%x default=%x\n",i,
+				term->c_cc[i],default_termio.c_cc[i]);
+		}
+	}
+
+
+}
+
 static int32_t console_ioctl(struct file_object *file,
 		uint32_t cmd, uint32_t three, uint32_t four) {
 
-	printk("console: unhandled ioctl %x: %x %x\n",
-			cmd,three,four);
+	int32_t result=0;
 
-	return -ENOTTY;
-
+	switch(cmd) {
+		case TCGETS:
+			memcpy( (struct termios *)three,
+				&current_termio,
+				sizeof(struct termios));
+			break;
+		case TCSETS:
+			memcpy( &current_termio,
+				(struct termios *)three,
+				sizeof(struct termios));
+			console_termio_update(&current_termio);
+			break;
+		default:
+			printk("console: unhandled ioctl %x: %x %x\n",
+				cmd,three,four);
+			result=-ENOTTY;
+			break;
+	}
+	return result;
 }
 
 struct char_operations console_char_ops = {
@@ -232,6 +292,32 @@ struct char_dev_type *console_init(void) {
 	minors_allocated++;
 
 	dev->char_ops=&console_char_ops;
+
+	/* Set up initial termio settings */
+	default_termio.c_iflag= IUTF8 | IXON | ICRNL;	// 042400
+	default_termio.c_lflag=	IEXTEN |
+				ECHOCTL | ECHOKE | ECHOK | ECHOE | ECHO |
+				ICANON | ISIG;		// 0105073
+	default_termio.c_oflag = OPOST | ONLCR;		// 5
+	default_termio.c_cflag = B38400 | CS8 | CREAD;	// 0277
+	default_termio.c_cc[VINTR]	= 0x3;	/* ^C */
+	default_termio.c_cc[VQUIT]	= 0x1c;	/* ^\ */
+	default_termio.c_cc[VERASE]	= 0x7f;	/* del */
+	default_termio.c_cc[VKILL]	= 0x15; /* ^U */
+	default_termio.c_cc[VEOF]	= 0x04; /* ^D */
+	default_termio.c_cc[VTIME]	= 0x00;
+	default_termio.c_cc[VMIN]	= 0x01;
+	default_termio.c_cc[VSWTC]	= 0x00;
+	default_termio.c_cc[VSTART]	= 0x11;	/* ^Q */
+	default_termio.c_cc[VSTOP]	= 0x13; /* ^S */
+	default_termio.c_cc[VSUSP]	= 0x1a;	/* ^Z */
+	default_termio.c_cc[VEOL]	= 0x00;
+	default_termio.c_cc[VREPRINT]	= 0x12;	/* ^R */
+	default_termio.c_cc[VDISCARD]	= 0x0f; /* ^O */
+	default_termio.c_cc[VWERASE]	= 0x17;	/* ^W */
+	default_termio.c_cc[VLNEXT]	= 0x16; /* ^V */
+
+	memcpy(&current_termio,&default_termio,sizeof(struct termios));
 
 	printk("Initialized console%d\n",dev->minor);
 
