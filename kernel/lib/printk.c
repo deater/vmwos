@@ -1,8 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "drivers/console/console_io.h"
 
+#include "lib/dmesg.h"
+
+#include "drivers/console/console_io.h"
 #include "drivers/serial/serial.h"
 
 #define MAX_PRINT_SIZE 256
@@ -207,6 +209,8 @@ int printk(char *string,...) {
 	result=vsnprintf(buffer,MAX_PRINT_SIZE,string,argp);
 
 	va_end(argp);
+
+	dmesg_append(buffer,result);
 
 	console_write(buffer,result);
 

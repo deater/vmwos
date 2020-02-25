@@ -9,6 +9,38 @@
 static char dmesg_buffer[DMESG_SIZE];
 static int32_t dmesg_head=0,dmesg_tail=0;
 
+int32_t dmesg_append(char *buf, int32_t length) {
+
+	int32_t old_dmesg_tail;
+
+	old_dmesg_tail=dmesg_tail;
+
+	if (length>=DMESG_SIZE) return -1;
+
+	dmesg_tail+=length;
+
+	if (dmesg_tail>DMESG_SIZE) {
+		/* copy part 1 */
+		memcpy(&dmesg_buffer[old_dmesg_tail],buf,DMESG_SIZE-dmesg_tail);
+
+		/* copy part 2 */
+		memcpy(&dmesg_buffer[0],buf+(DMESG_SIZE-dmesg_tail),
+			length-(DMESG_SIZE-dmesg_tail));
+
+	}
+	else {
+		memcpy(&dmesg_buffer[old_dmesg_tail],buf,length);
+	}
+
+	/* adjust head if necessary */
+	if (dmesg_tail>dmesg_head) {
+		dmesg_head=dmesg_tail+1;
+		if (dmesg_head>DMESG_SIZE) dmesg_head-=DMESG_SIZE;
+	}
+
+	return 0;
+}
+
 int32_t dmesg_syscall(int32_t cmd, char *buf) {
 
 	int32_t result,length=0;
