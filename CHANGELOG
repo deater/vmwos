@@ -1,3 +1,7 @@
+0.21 -- ??
++ dmesg command
++ dup2() / file redirection
+
 0.20 -- 21 February 2020
 + full VFS layer
 + writable filesystem

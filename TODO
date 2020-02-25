@@ -2,7 +2,6 @@ Global TODO
 ~~~~~~~~~~~
 
 Short term TODO:
-	+ dup2() syscall / file re-direction
 	+ proper shutdown() / reboot() that unmounts filesystems
 	+ ^C kills a process
 	+ zmodem up/down
