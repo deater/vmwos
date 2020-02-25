@@ -9,10 +9,12 @@
 
 #include "lib/printk.h"
 #include "lib/mmio.h"
+#include "lib/smp.h"
 
 #include "time/time.h"
 #include "processes/scheduler.h"
 #include "processes/exit.h"
+#include "processes/process.h"
 
 #include "interrupts/interrupts.h"
 #include "interrupts/ipi.h"
@@ -76,10 +78,18 @@ static void user_reg_dump(void) {
                 : "sp", "memory" /* clobbers */
                         );
 
-	for(i=0;i<15;i++) {
-		printk("reg%d = %x ",i,regs[i]);
+	printk("Process: %d (text %p-%p, stack %p-%p)\n",
+		current_proc[get_cpu()]->pid,
+		current_proc[get_cpu()]->text,
+		current_proc[get_cpu()]->text+current_proc[get_cpu()]->textsize,
+		current_proc[get_cpu()]->stack+current_proc[get_cpu()]->stacksize);
+
+	for(i=0;i<8;i++) {
+		printk("r%02d: %08x\t",i,regs[i]);
+		if (i!=7) printk("r%02d: %08x",
+			i+8,regs[i+8]);
+		printk("\n");
 	}
-	printk("\n");
 }
 
 
@@ -249,6 +259,8 @@ void __attribute__((interrupt("ABORT"))) prefetch_abort_handler(void) {
 
 	if (fs==2) printk("\tDebug event\n");
 	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",ifar);
+
+	user_reg_dump();
 
 	exit(-1);
 

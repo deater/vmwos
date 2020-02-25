@@ -16,8 +16,8 @@ void dump_saved_user_state(struct process_control_block_type *proc) {
 	/* TODO: stack dump */
 
 	for(i=0;i<8;i++) {
-		printk("r%d: %x\t",i,proc->user_state.r[i]);
-		if (i!=7) printk("r%d: %x",
+		printk("r%02d: %08x\t",i,proc->user_state.r[i]);
+		if (i!=7) printk("r%02d: %08x",
 			i+8,proc->user_state.r[i+8]);
 		printk("\n");
 	}
@@ -34,8 +34,8 @@ void dump_saved_kernel_state(struct process_control_block_type *proc) {
 	/* TODO: stack dump */
 
 	for(i=0;i<8;i++) {
-		printk("r%d: %x\t",i,proc->kernel_state.r[i]);
-		if (i!=7) printk("r%d: %x",
+		printk("r%02d: %08x\t",i,proc->kernel_state.r[i]);
+		if (i!=7) printk("r%02d: %08x",
 			i+8,proc->kernel_state.r[i+8]);
 		printk("\n");
 	}
@@ -60,7 +60,7 @@ void dump_kernel_regs(void) {
 	register long r12 asm ("r12");
 	register long r13 asm ("r13");
 	register long r14 asm ("r14");
-	printk("Kernel register dump: PC=%x\n",r14);
+	printk("Kernel register dump: PC=%08x\n",r14);
 	printk("r0: %x r1: %x r2: %x r3: %x\n",r0,r1,r2,r3);
 	printk("r4: %x r5: %x r6: %x r7: %x\n",r4,r5,r6,r7);
 	printk("r8: %x r9: %x r10: %x r11: %x\n",r8,r9,r10,r11);
