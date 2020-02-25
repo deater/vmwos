@@ -11,7 +11,7 @@ static int32_t dmesg_head=0,dmesg_tail=0;
 
 int32_t dmesg_append(char *buf, int32_t length) {
 
-	int32_t old_dmesg_tail;
+	int32_t old_dmesg_tail,wrapped=0;
 
 	old_dmesg_tail=dmesg_tail;
 
@@ -21,19 +21,27 @@ int32_t dmesg_append(char *buf, int32_t length) {
 
 	if (dmesg_tail>DMESG_SIZE) {
 		/* copy part 1 */
-		memcpy(&dmesg_buffer[old_dmesg_tail],buf,DMESG_SIZE-dmesg_tail);
+		memcpy(&dmesg_buffer[old_dmesg_tail],buf,
+			DMESG_SIZE-old_dmesg_tail);
+		if (old_dmesg_tail<dmesg_head) wrapped=1;
+
+		dmesg_tail-=DMESG_SIZE;
 
 		/* copy part 2 */
-		memcpy(&dmesg_buffer[0],buf+(DMESG_SIZE-dmesg_tail),
-			length-(DMESG_SIZE-dmesg_tail));
+		memcpy(&dmesg_buffer[0],buf+(DMESG_SIZE-old_dmesg_tail),
+			dmesg_tail);
+		if (dmesg_tail>dmesg_head) wrapped=1;
+
 
 	}
 	else {
 		memcpy(&dmesg_buffer[old_dmesg_tail],buf,length);
+		if ((dmesg_head>old_dmesg_tail) &&
+			(dmesg_head<dmesg_tail)) wrapped=1;
 	}
 
 	/* adjust head if necessary */
-	if (dmesg_tail>dmesg_head) {
+	if (wrapped) {
 		dmesg_head=dmesg_tail+1;
 		if (dmesg_head>DMESG_SIZE) dmesg_head-=DMESG_SIZE;
 	}
