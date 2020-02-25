@@ -93,3 +93,5 @@ void files_increment_count(struct file_object *file);
 int32_t ioctl_syscall(uint32_t fd, int32_t cmd,
                                         uint32_t third, uint32_t fourth);
 
+
+int32_t dup2_syscall(uint32_t oldfd, int32_t newfd);

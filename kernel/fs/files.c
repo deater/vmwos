@@ -110,6 +110,10 @@ static int32_t map_fd_to_file(uint32_t fd, struct file_object **file) {
 
 }
 
+/****************************************************/
+/* close syscall                                    */
+/****************************************************/
+
 int32_t close_syscall(uint32_t fd) {
 
 	int32_t result;
@@ -123,7 +127,6 @@ int32_t close_syscall(uint32_t fd) {
 	result=file_object_free(file);
 
 	current_proc[get_cpu()]->files[fd]=NULL;
-
 
 	if (debug) {
 		printk("Closing fd %d, file %p\n",fd,file);
@@ -741,3 +744,45 @@ int32_t ioctl_syscall(uint32_t fd, int32_t cmd,
 
 	return result;
 }
+
+/****************************************************/
+/* dup2 syscall                                     */
+/****************************************************/
+
+int32_t dup2_syscall(uint32_t oldfd, int32_t newfd) {
+
+	int32_t result;
+	struct file_object *file_old,*file_new;
+
+	/* This is a tricky one */
+	/* If newfd is not being used by process, point it to oldfd */
+	/* If newfd is being used, close it, then point to oldfd */
+
+	if (debug) {
+		printk("dup2: old %d new %d\n",oldfd,newfd);
+	}
+
+	if (current_proc[get_cpu()]->files[newfd]==NULL) {
+
+	}
+	else {
+		/* close old file */
+		result=map_fd_to_file(newfd, &file_new);
+		if (result<0) {
+			return result;
+		}
+
+		result=file_object_free(file_new);
+	}
+
+	result=map_fd_to_file(oldfd,&file_old);
+	if (result<0) {
+		return result;
+	}
+
+	files_increment_count(file_old);
+	current_proc[get_cpu()]->files[newfd]=file_old;
+
+	return result;
+}
+

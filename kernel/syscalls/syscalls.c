@@ -165,6 +165,10 @@ uint32_t swi_handler_c(
 			result=fcntl_syscall(r0,r1,r2);
 			break;
 
+		case SYSCALL_DUP2:	/* 63 */
+			result=dup2_syscall(r0,r1);
+			break;
+
 		case SYSCALL_MMAP:	/* 90 */
 			result=-ENOSYS;
 			break;
