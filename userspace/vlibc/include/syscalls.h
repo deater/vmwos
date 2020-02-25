@@ -273,3 +273,5 @@ int32_t unlink(const char *filename);
 #define SYSLOG_ACTION_SIZE_BUFFER	10
 
 int32_t dmesg(int32_t cmd, char *buf);
+
+int32_t dup2(int32_t oldfd, int32_t newfd);

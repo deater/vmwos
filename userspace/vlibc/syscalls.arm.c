@@ -26,6 +26,7 @@
 #define __NR_brk		45
 #define __NR_ioctl		54
 #define __NR_fcntl		55
+#define __NR_dup2		63
 #define __NR_reboot		88
 #define __NR_mmap		90
 #define __NR_munmap		91
@@ -153,6 +154,7 @@ int32_t waitpid(int32_t pid, int32_t *wstatus, int32_t options) {
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
 		: "memory");
 
+	/* returns -1 on failure */
 	return r0;
 
 }
@@ -189,7 +191,7 @@ int32_t execve(const char *filename, char *const argv[],
 		: "r"(r7), "0"(r0), "r"(r1), "r"(r2)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 
 }
 
@@ -205,7 +207,7 @@ int32_t chdir(const char *path) {
 		: "r"(r7), "0"(r0)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 /* 15 */
@@ -221,7 +223,7 @@ int32_t chmod(const char *path, int32_t mode) {
 		: "r"(r7), "0"(r0), "r"(r1)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
 }
 
 /* 20 */
@@ -236,6 +238,7 @@ int32_t getpid(void) {
 		: "r"(r7) /* input */
 		: "memory");
 
+	/* Always successful */
 	return r0;
 
 }
@@ -252,7 +255,23 @@ int32_t times(struct tms *buf) {
 		: "r"(r7), "0"(r0)
 		: "memory");
 
-	return r0;
+	return update_errno(r0);
+}
+
+/* 63 */
+int32_t dup2(int32_t oldfd, int32_t newfd) {
+
+	register long r7 __asm__("r7") = __NR_dup2;
+	register long r0 __asm__("r0") = (long)oldfd;
+	register long r1 __asm__("r1") = (long)newfd;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return update_errno(r0);
 }
 
 /* 103 */
