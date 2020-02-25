@@ -1,6 +1,14 @@
 Global TODO
 ~~~~~~~~~~~
 
+Short term TODO:
+	+ dup2() syscall / file re-direction
+	+ proper shutdown() / reboot() that unmounts filesystems
+	+ ^C kills a process
+	+ zmodem up/down
+	+ CANONICAL input mode
+	+ proper locking in the filesystem code
+
 Known Kernel Bugs:
 	+ pi3: "temp" temperature stops working once virtual memory is enabled
 	+ device_tree code truncates the command line at 255 bytes
@@ -18,9 +26,6 @@ Known Kernel Bugs:
 	+ Compiling error with old gcc -- smp code setting the constant
 		for the stack values.  Split to two instructions rather
 		than relying on movt insns
-	+ file descriptors on fork -- should probably increment the
-		use count on all open files when we fork
-
 
 Old bugs (still there?)
 	+ pi1: segfault kill on inavlid memory access causes weird behavior
@@ -35,7 +40,6 @@ Kernel feature requests:
 
 	+ system calls
 		- mmap() syscall
-		- fcntl O_NONBLOCK support (for tbo)
 	+ filesystems
 		- fat filesystem driver
 		- ext2 filesystem driver
@@ -67,13 +71,14 @@ Userspace feature requests:
 	+ vlibc
 		- scanf()
 		- malloc()
-		- write() file support
 
 	+ printa / printb
 		- make printb a hard link to printb
 	+ shell
 		- command history
 		- tab completion
+		- file re-direction
+
 	+ New utilities/programs
 		- init (actual, rather than shell)
 		- assembler
