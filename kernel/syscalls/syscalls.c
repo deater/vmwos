@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "lib/dmesg.h"
 #include "lib/printk.h"
 #include "lib/errors.h"
 #include "lib/smp.h"
@@ -175,6 +176,10 @@ uint32_t swi_handler_c(
 		case SYSCALL_STATFS:	/* 99 */
 			result=statfs_syscall((const char *)r0,
 						(struct vmwos_statfs *)r1);
+			break;
+
+		case SYSCALL_DMESG:	/* 103 */
+			result=dmesg_syscall(r0,(char *)r1);
 			break;
 
 		case SYSCALL_STAT:	/* 106 */

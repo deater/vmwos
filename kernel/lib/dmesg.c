@@ -1,0 +1,45 @@
+#include <stdint.h>
+
+#include "lib/errors.h"
+#include "lib/dmesg.h"
+#include "lib/memcpy.h"
+
+#define DMESG_SIZE	4096
+
+static char dmesg_buffer[DMESG_SIZE];
+static int32_t dmesg_head=0,dmesg_tail=0;
+
+int32_t dmesg_syscall(int32_t cmd, char *buf) {
+
+	int32_t result,length=0;
+
+	switch(cmd) {
+		case SYSLOG_ACTION_READ_ALL:
+			if (dmesg_head>dmesg_tail) {
+				/* head to end */
+				memcpy(buf,&dmesg_buffer[dmesg_head],
+					DMESG_SIZE-dmesg_head);
+				length+=(DMESG_SIZE-dmesg_head);
+
+				/* wrap, copy tail */
+				memcpy(buf+length,&dmesg_buffer[0],
+					dmesg_tail);
+				length+=dmesg_tail;
+
+			}
+			else if (dmesg_head<dmesg_tail) {
+				memcpy(buf,&dmesg_buffer[dmesg_head],
+					dmesg_tail-dmesg_head);
+				length=(dmesg_tail-dmesg_head);
+			}
+			return length;
+
+		case SYSLOG_ACTION_SIZE_BUFFER:
+			return DMESG_SIZE;
+		default:
+			result=-EINVAL;
+			break;
+	}
+
+	return result;
+}
