@@ -11,6 +11,14 @@ void dump_saved_user_state(struct process_control_block_type *proc) {
 	int i;
 
 	printk("Process %d dump! %s\n",proc->pid,proc->name);
+	printk("text: %p+%x, stack: %p+%x\n",
+                proc->text,proc->textsize,
+                proc->stack,proc->stacksize);
+	printk("data: %p+%x, bss: %p+%x\n",
+                proc->data,proc->datasize,
+                proc->bss,proc->bsssize);
+
+
 	printk("pc: %x\tcpsr: %x\n",proc->user_state.pc,
 		proc->user_state.spsr);
 	/* TODO: stack dump */
