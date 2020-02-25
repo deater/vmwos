@@ -267,3 +267,9 @@ int statfs(const char *path, struct statfs *buf);
 int getcpu(uint32_t *cpu, uint32_t *node, void *tcache);
 
 int32_t unlink(const char *filename);
+
+
+#define SYSLOG_ACTION_READ_ALL		3
+#define SYSLOG_ACTION_SIZE_BUFFER	10
+
+int32_t dmesg(int32_t cmd, char *buf);

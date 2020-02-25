@@ -30,13 +30,13 @@
 #define __NR_mmap		90
 #define __NR_munmap		91
 #define __NR_statfs		99
+#define __NR_dmesg		103	/* Linux calls this syslog() */
 #define __NR_stat		106
 #define __NR_fstat		108
 #define __NR_sysinfo		116
 #define	__NR_uname		122
 #define __NR__llseek		140
 #define __NR_getdents		141
-#define __NR_nanosleep  	162
 #define __NR_nanosleep  	162
 #define __NR_getcwd		183
 #define __NR_vfork		190
@@ -224,23 +224,6 @@ int32_t chmod(const char *path, int32_t mode) {
 	return r0;
 }
 
-
-/* 183 */
-char *getcwd(char *buf, uint32_t size) {
-
-	register long r7 __asm__("r7") = __NR_getcwd;
-	register long r0 __asm__("r0") = (long)buf;
-	register long r1 __asm__("r1") = (long)size;
-
-	asm volatile(
-		"svc #0\n"
-		: "=r"(r0)
-		: "r"(r7), "0"(r0), "r"(r1)
-		: "memory");
-
-	return (char *)r0;
-}
-
 /* 20 */
 int32_t getpid(void) {
 
@@ -257,6 +240,7 @@ int32_t getpid(void) {
 
 }
 
+/* 43 */
 int32_t times(struct tms *buf) {
 
 	register long r7 __asm__("r7") = __NR_times;
@@ -271,6 +255,23 @@ int32_t times(struct tms *buf) {
 	return r0;
 }
 
+/* 103 */
+int32_t dmesg(int32_t cmd, char *buf) {
+
+	register long r7 __asm__("r7") = __NR_dmesg;
+	register long r0 __asm__("r0") = (long)cmd;
+	register long r1 __asm__("r1") = (long)buf;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return update_errno(r0);
+}
+
+/* 106 */
 int32_t stat(const char *pathname, struct stat *buf) {
 
 	register long r7 __asm__("r7") = __NR_stat;
@@ -286,6 +287,7 @@ int32_t stat(const char *pathname, struct stat *buf) {
 	return r0;
 }
 
+/* 116 */
 int32_t sysinfo(struct sysinfo *buf) {
 
 	register long r7 __asm__("r7") = __NR_sysinfo;
@@ -300,6 +302,7 @@ int32_t sysinfo(struct sysinfo *buf) {
 	return r0;
 }
 
+/* 122 */
 int32_t uname(struct utsname *buf) {
 
 	register long r7 __asm__("r7") = __NR_uname;
@@ -314,6 +317,7 @@ int32_t uname(struct utsname *buf) {
 	return r0;
 }
 
+/* 141 */
 int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 
 	register long r7 __asm__("r7") = __NR_getdents;
@@ -332,6 +336,7 @@ int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 
 }
 
+/* 162 */
 int32_t nanosleep(const struct timespec *req, struct timespec *rem) {
 
 	register long r7 __asm__("r7") = __NR_nanosleep;
@@ -349,6 +354,23 @@ int32_t nanosleep(const struct timespec *req, struct timespec *rem) {
 
 }
 
+/* 183 */
+char *getcwd(char *buf, uint32_t size) {
+
+	register long r7 __asm__("r7") = __NR_getcwd;
+	register long r0 __asm__("r0") = (long)buf;
+	register long r1 __asm__("r1") = (long)size;
+
+	asm volatile(
+		"svc #0\n"
+		: "=r"(r0)
+		: "r"(r7), "0"(r0), "r"(r1)
+		: "memory");
+
+	return (char *)r0;
+}
+
+/* 190 */
 int32_t vfork(void) {
 
 	register long r7 __asm__("r7") = __NR_vfork;
@@ -364,6 +386,7 @@ int32_t vfork(void) {
 
 }
 
+/* 54 */
 int32_t ioctl4(int fd, unsigned long request, unsigned long req2, unsigned long req3) {
 
 	register long r7 __asm__("r7") = __NR_ioctl;

@@ -6,14 +6,16 @@ GENROMFS = genromfs
 
 all:	$(ELF2BFLT) \
 	shell \
-	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
+	cat cat_count cause_error chmod core_poke cp df dmesg \
+	hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd rm sysinfo \
 	tbo truncate uname \
 	chiptune chiptune6 write_test
 	cd demo && $(MAKE)
 
 image:	shell \
-	cat cat_count cause_error chmod core_poke cp df hello hexdump ll ls \
+	cat cat_count cause_error chmod core_poke cp df dmesg \
+	hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd rm sysinfo tbo \
 	truncate uname chiptune chiptune6 write_test
 	mkdir -p image
@@ -22,7 +24,7 @@ image:	shell \
 	mkdir -p image/home/ansis
 	mkdir -p image/proc
 	mkdir -p image/etc
-	cp shell cat cat_count cause_error chmod core_poke cp df \
+	cp shell cat cat_count cause_error chmod core_poke cp df dmesg \
 		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
 		rm sysinfo tbo truncate uname write_test chiptune \
 		chiptune6 ./image/bin
@@ -67,6 +69,9 @@ cp:	cp.elf
 
 df:	df.elf
 	$(ELF2BFLT) df.elf df
+
+dmesg:	dmesg.elf
+	$(ELF2BFLT) dmesg.elf dmesg
 
 hello:	hello.elf
 	$(ELF2BFLT) hello.elf hello
@@ -155,6 +160,9 @@ cp.elf:	cp.o ./vlibc/vlibc.a
 df.elf:	df.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o df.elf df.o ./vlibc/vlibc.a
 
+dmesg.elf:	dmesg.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o dmesg.elf dmesg.o ./vlibc/vlibc.a
+
 hello.elf:	hello.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf hello.o ./vlibc/vlibc.a
 
@@ -241,6 +249,9 @@ core_poke.o:	core_poke.c
 df.o:	df.c
 	$(CROSS)$(CC) $(CFLAGS) -c df.c
 
+dmesg.o:	dmesg.c
+	$(CROSS)$(CC) $(CFLAGS) -c dmesg.c
+
 hello.o:	hello.c
 	$(CROSS)$(CC) $(CFLAGS) -c hello.c
 
@@ -301,7 +312,8 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error chiptune chiptune6 \
-		chmod core_poke cp df hexdump ll ls md5sum memory_test nano \
+		chmod core_poke cp df dmesg hexdump ll ls \
+		md5sum memory_test nano \
 		printa printb pwd rm shell slideshow sysinfo tbo \
 		truncate uname write_test \
 		initrd.h initrd.romfs
