@@ -122,7 +122,6 @@ static int create_argv(char *string, int32_t *background) {
 
 		/* If no more, then we are done */
 		if (next_arg==NULL) {
-			printf("VMW: done arg\n");
 			break;
 		}
 
