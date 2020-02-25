@@ -1,12 +1,15 @@
 #include <stddef.h>
 #include <stdint.h>
+
+#ifdef VMWOS
 #include "syscalls.h"
 #include "vlibc.h"
 #include "vmwos.h"
-
-//#include <stdio.h>
-//#include <string.h>
-//#include <termios.h>
+#else
+#include <stdio.h>
+#include <string.h>
+#include <termios.h>
+#endif
 
 //#define FIRST_RUN	1
 
@@ -21,7 +24,7 @@ static int print_help(void) {
 	printf("VMWos Shell Version %s\n\n",VERSION);
 	printf("\tblink on/off	- turns on/off heartbeat LED\n");
 	printf("\tcd		- change directory\n");
-	printf("\tcls		- clears the screen\n");
+	printf("\tclear		- clears the screen\n");
 	printf("\tcolor X	- set text to color #X\n");
 	printf("\techo X	- prints string X\n");
 	printf("\tfont X	- sets the font to font #X\n");
@@ -112,6 +115,10 @@ static int is_relative(char *string) {
 }
 
 
+static void clear_screen(void) {
+	printf("\n\r\033[2J");
+}
+
 static int parse_input(char *string) {
 
 	int result=0;
@@ -120,8 +127,8 @@ static int parse_input(char *string) {
 	if (!strncmp(string,"echo",4)) {
 		if (string[4]!=0) printf("%s\n",string+5);
 	}
-	else if (!strncmp(string,"cls",3)) {
-		printf("\n\r\033[2J");
+	else if (!strncmp(string,"clear",5)) {
+		clear_screen();
 	}
 	else if (!strncmp(string,"cd",2)) {
 		if (strlen(string)>3) {
@@ -131,7 +138,8 @@ static int parse_input(char *string) {
 			result=chdir("/home");
 		}
 		if (result<0) {
-			printf("Error changing directory %s\n",strerror(result));
+			printf("Error changing directory %s\n",
+							strerror(result));
 		}
 	}
 	else if (!strncmp(string,"font ",5)) {
@@ -263,7 +271,6 @@ int main(int argc, char **argv) {
 	struct termios oldt, newt;
 
 //	register long sp asm ("sp");
-
 //	printf("Our sp=%x\n",sp);
 
 	tcgetattr( 0, &oldt);
@@ -310,6 +317,10 @@ int main(int argc, char **argv) {
 				break;
 			}
 
+			/* ctrl-L (form feed) */
+			if (ch==12) {
+				clear_screen();
+			} else
 			/* Backspace */
 			if ((ch==0x7f) || (ch=='\b')) {
 
@@ -338,5 +349,3 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-
-
