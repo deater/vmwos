@@ -53,11 +53,16 @@ struct wait_queue_t console_wait_queue = {
 	NULL
 };
 
+
+
+
+
 /* Inject chars into the console buffer */
-/* Used by the uart and ps2 code */
-int console_insert_char(int ch) {
+static int console_actual_insert_char(int ch, int empty) {
 
 	uint32_t new_head;
+
+	if (empty) goto sleepers_awake;
 
 	/* TAKE LOCK */
 	/* Although this is only called from interrupt context */
@@ -67,11 +72,6 @@ int console_insert_char(int ch) {
 	/* the lock was held then we'd end up with deadlock.  hmmm */
 
 	mutex_lock(&console_buffer_write_mutex);
-
-	/* Ignore carriage return if so requested */
-	if ((current_termio.c_iflag & IGNCR) && (ch=='\r')) {
-		goto buffer_skip;
-	}
 
 	new_head=input_buffer_head+1;
 	if (new_head>=INPUT_BUFFER_SIZE) {
@@ -83,16 +83,138 @@ int console_insert_char(int ch) {
 		goto buffer_full;
 	}
 
-	/* Turn carriage return into newline */
-	if (current_termio.c_iflag & ICRNL) {
-		if (ch=='\r') ch='\n';
-	}
-
 	input_buffer[input_buffer_head]=ch;
 	input_buffer_head=new_head;
 
 	/* RELEASE LOCK */
 	mutex_unlock(&console_buffer_write_mutex);
+
+sleepers_awake:
+	/* Wake anyone waiting for I/O */
+	wait_queue_wake(&console_wait_queue);
+
+	return 0;
+
+buffer_full:
+
+	/* RELEASE LOCK */
+	mutex_unlock(&console_buffer_write_mutex);
+
+	return -1;
+}
+
+static int is_control_char(int ch) {
+
+	if (ch>=' ') return 0;
+	if (ch=='\n') return 0;
+	if (ch=='\t') return 0;
+	if ((ch==0x11) || (ch==0x13)) return 0; // ^Q / ^S
+
+	return 1;
+
+}
+
+#define CANON_BUFFER_SIZE	256
+static int canon_offset=0;
+static char canon_buffer[CANON_BUFFER_SIZE];
+
+
+static int console_canonical_read(int ch) {
+
+	int i;
+	int done=0;
+	char control_char[]="^A";
+
+//	printk("Starting canonical read\n");
+
+	/* Turn carriage return into newline */
+	if (current_termio.c_iflag & ICRNL) {
+		if (ch=='\r') ch='\n';
+	}
+
+	/* Ignore carriage return if so requested */
+	if ((current_termio.c_iflag & IGNCR) && (ch=='\r')) {
+		return 0;
+	}
+
+	/* EOF: FIXME check cc */
+	/* by default ^D */
+	if (ch==4) {
+		done=1;
+		goto canon_no_add;
+	}
+
+	/* default, add to buffer */
+	canon_buffer[canon_offset]=ch;
+
+	/* ECHO if requested */
+	if (current_termio.c_lflag & ECHO) {
+		if ((current_termio.c_lflag & ECHOCTL) &&
+						(is_control_char(ch))) {
+			control_char[1]=ch+'@';
+			console_write(control_char,2);
+		} else {
+			console_write(&canon_buffer[canon_offset],1);
+		}
+	}
+
+	canon_offset++;
+	if (canon_offset==CANON_BUFFER_SIZE) {
+		done=1;
+	}
+
+	/* Linefeed: FIXME check cc */
+	if (ch=='\n') {
+		done=1;
+	}
+
+canon_no_add:
+	if (done) {
+//		printk("Writing %d bytes: ",canon_offset);
+		for(i=0;i<canon_offset;i++) {
+			console_actual_insert_char(canon_buffer[i],0);
+//			printk("%x ",canon_buffer[i]);
+		}
+//		printk("\n");
+
+		/* hack */
+		/* force Wake anyone waiting for I/O even if empty */
+		/* otherwise ^D never processed */
+		if (canon_offset==0) {
+			console_actual_insert_char(0,1);
+		}
+
+		canon_offset=0;
+
+	}
+
+	return 0;
+}
+
+
+/* Inject chars into the console buffer */
+/* Used by the uart and ps2 code */
+int console_insert_char(int ch) {
+
+	int result;
+
+	/* If canonical mode, must do more complex stuff */
+	if (current_termio.c_lflag & ICANON) {
+		return console_canonical_read(ch);
+	}
+
+
+	/* Ignore carriage return if so requested */
+	if ((current_termio.c_iflag & IGNCR) && (ch=='\r')) {
+		return 0;
+	}
+
+	/* Turn carriage return into newline */
+	if (current_termio.c_iflag & ICRNL) {
+		if (ch=='\r') ch='\n';
+	}
+
+	result=console_actual_insert_char(ch,0);
 
 	/* Emergency debug if ^B */
 	if (ch==0x2) {
@@ -111,18 +233,8 @@ int console_insert_char(int ch) {
 		scheduling_enabled=!scheduling_enabled;
 	}
 
-	/* Wake anyone waiting for I/O */
-	wait_queue_wake(&console_wait_queue);
+	return result;
 
-	return 0;
-
-buffer_skip:
-buffer_full:
-
-	/* RELEASE LOCK */
-	mutex_unlock(&console_buffer_write_mutex);
-
-	return -1;
 }
 
 
@@ -134,7 +246,7 @@ static uint32_t console_get_char(void) {
 //	lock_mutex(&console_read_mutex);
 
 	if (input_buffer_head==input_buffer_tail) {
-		result=0;
+		result=-1;
 	}
 	else {
 		result=input_buffer[input_buffer_tail];
@@ -173,86 +285,14 @@ int console_write(const void *buf, size_t count) {
 
 }
 
-#define CANON_BUFFER_SIZE	256
 
-static char canon_buffer[CANON_BUFFER_SIZE];
 
-static int console_canonical_read(void *buf, size_t count) {
 
-	int ch;
-	int offset=0;
-	int done=0;
-
-	char *buffer=buf;
-
-//	printk("Starting canonical read\n");
-
-	canon_buffer[offset]=0;
-
-	while(1) {
-
-		/* Blocking */
-		/* put to sleep if no data available */
-		while (input_buffer_head==input_buffer_tail) {
-			wait_queue_add(&console_wait_queue,
-						current_proc[get_cpu()]);
-		}
-
-		while(1) {
-			ch=console_get_char();
-
-			if (ch==0) break;
-
-			/* EOF: FIXME check cc */
-			if (ch==4) {
-				done=1;
-				break;
-			}
-
-			/* default, add to buffer */
-			canon_buffer[offset]=ch;
-
-			/* ECHO if requested */
-			if (current_termio.c_lflag & ECHO) {
-				console_write(&canon_buffer[offset],1);
-			}
-
-			offset++;
-			if (offset==CANON_BUFFER_SIZE) {
-				done=1;
-				break;
-			}
-
-			/* Linefeed: FIXME check cc */
-			if (ch=='\n') {
-				done=1;
-				break;
-			}
-
-		}
-
-		if (done) break;
-	}
-
-	memcpy(buffer,canon_buffer,offset);
-
-//	{ int i;
-//	printk("Writing %d bytes: ",offset);
-//	for(i=0;i<offset;i++) printk("%x ",buffer[i]);
-//	printk("\n");
-//
-	return offset;
-}
 
 static int console_read(void *buf, size_t count, int non_blocking) {
 
-	int i;
+	int i,ch;
 	unsigned char *buffer=buf;
-
-	/* If canonical mode, must do more complex stuff */
-	if (current_termio.c_lflag & ICANON) {
-		return console_canonical_read(buf,count);
-	}
 
 	/* Read from input buffer */
 
@@ -260,15 +300,16 @@ static int console_read(void *buf, size_t count, int non_blocking) {
 
 		/* Blocking */
 		/* put to sleep if no data available */
-		while (input_buffer_head==input_buffer_tail) {
+		if (input_buffer_head==input_buffer_tail) {
 			wait_queue_add(&console_wait_queue,
 						current_proc[get_cpu()]);
 		}
 	}
 
 	for(i=0;i<count;i++) {
-		buffer[i]=console_get_char();
-		if (buffer[i]==0) break;
+		ch=console_get_char();
+		if (ch==-1) break;
+		buffer[i]=ch;
 	}
 
 	return i;
@@ -297,6 +338,8 @@ static int32_t console_write_dev(struct file_object *file,
 static void console_termio_update(struct termios *term) {
 
 	int i;
+
+	if (debug) {
 
 	if (default_termio.c_iflag != term->c_iflag) {
 		printk("term c_iflag new=%x default=%x\n",
@@ -327,7 +370,7 @@ static void console_termio_update(struct termios *term) {
 		}
 	}
 
-
+	}
 }
 
 static int32_t console_ioctl(struct file_object *file,
