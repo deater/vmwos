@@ -582,13 +582,30 @@ int64_t llseek_syscall(uint32_t fd, int64_t offset, int32_t whence) {
 
 	int64_t result;
 	struct file_object *file;
+	int32_t mode;
 
 	result=map_fd_to_file(fd, &file);
 	if (result<0) {
 		return result;
 	}
 
-	result=file->file_ops->llseek(file,offset,whence);
+	mode=(file->inode->mode & S_IFMT);
+
+	if (mode==S_IFBLK) {
+		result=llseek_generic(file,offset,whence);
+	}
+	else if (mode==S_IFCHR ) {
+		result=0;
+	}
+	else if (mode==S_IFREG) {
+		result=file->file_ops->llseek(file,offset,whence);
+	}
+	else if (mode==S_IFDIR) {
+		result=-EISDIR;
+	}
+	else {
+		result=-EINVAL;
+	}
 
 	return result;
 }
