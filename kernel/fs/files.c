@@ -268,6 +268,7 @@ int32_t open_file_object(
 	/* If O_TRUNC then truncate file */
 	if (flags&O_TRUNC) {
 		inode->sb->sb_ops.truncate_inode(inode,0);
+		(*file)->file_offset=0;
 	}
 
 	/* If O_APPEND then set position to end of file */
@@ -426,7 +427,7 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 		//printk("Attempting to write a normal file\n");
 		result=file->file_ops->write(file->inode,
 					buf,count,
-					&file_objects[fd].file_offset);
+					&(file->file_offset));
 	} else if (mode==S_IFDIR) {
 		return -EISDIR;
 	}
