@@ -53,7 +53,8 @@ struct wait_queue_t console_wait_queue = {
 	NULL
 };
 
-/* Used by ps2 keyboard */
+/* Inject chars into the console buffer */
+/* Used by the uart and ps2 code */
 int console_insert_char(int ch) {
 
 	uint32_t new_head;
@@ -67,6 +68,11 @@ int console_insert_char(int ch) {
 
 	mutex_lock(&console_buffer_write_mutex);
 
+	/* Ignore carriage return if so requested */
+	if ((current_termio.c_iflag & IGNCR) && (ch=='\r')) {
+		goto buffer_skip;
+	}
+
 	new_head=input_buffer_head+1;
 	if (new_head>=INPUT_BUFFER_SIZE) {
 		new_head=0;
@@ -75,6 +81,11 @@ int console_insert_char(int ch) {
 	/* Drop chars if buffer full */
 	if (new_head==input_buffer_tail) {
 		goto buffer_full;
+	}
+
+	/* Turn carriage return into newline */
+	if (current_termio.c_iflag & ICRNL) {
+		if (ch=='\r') ch='\n';
 	}
 
 	input_buffer[input_buffer_head]=ch;
@@ -105,6 +116,7 @@ int console_insert_char(int ch) {
 
 	return 0;
 
+buffer_skip:
 buffer_full:
 
 	/* RELEASE LOCK */
