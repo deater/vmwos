@@ -15,7 +15,7 @@
 
 #define BUF_SIZE 128
 
-static int debug=1;
+static int debug=0;
 
 static int cat(int in_fd, int out_fd) {
 
@@ -29,7 +29,7 @@ static int cat(int in_fd, int out_fd) {
 			if (debug) {
 				printf("\nFinish with result=%d\n",result);
 				pos=lseek(in_fd,0,SEEK_CUR);
-				printf("\nFinish file pos=%lld\n",pos);
+				printf("Finish file pos=%lld\n",pos);
 			}
 			break;
 		}
