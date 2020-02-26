@@ -137,12 +137,26 @@ static int console_canonical_read(int ch) {
 		return 0;
 	}
 
-	/* EOF: FIXME check cc */
+	/* EOF */
 	/* by default ^D */
-	if (ch==4) {
+	if (ch==current_termio.c_cc[VEOF]) {
 		done=1;
 		goto canon_no_add;
 	}
+
+	/* Delete */
+	/* by default ^H and 0x7f */
+	/* FIXME: does not handle multi-byte chars */
+	if ((ch==0x8) || (ch==current_termio.c_cc[VERASE])) {
+		if (canon_offset>0) {
+			canon_offset--;
+			if (current_termio.c_lflag & ECHO) {
+				console_write("\b \b",3);
+			}
+		}
+		goto canon_no_add;
+	}
+
 
 	/* default, add to buffer */
 	canon_buffer[canon_offset]=ch;
