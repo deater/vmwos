@@ -72,12 +72,14 @@ void create_idle_task(void) {
 
 	idle_process=process_create();
 	idle_process->text=(void *)&idle_task;
+	idle_process->textsize=4;
 	idle_process->user_state.pc=(long)&idle_task;
 	idle_process->running=1;
 	idle_process->user_time=0;
 	idle_process->start_time=ticks_since_boot();
 	idle_process->last_scheduled=idle_process->start_time;
 	idle_process->stack=memory_allocate(4096,MEMORY_USER);
+	idle_process->stacksize=4096;
 
 	/* Point to end, as stack grows down */
 	idle_process->user_state.r[13]=(long)(idle_process->stack)+4096;
