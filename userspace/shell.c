@@ -524,7 +524,6 @@ int main(int argc, char **argv) {
 
 			if ((ch=='\n') || (ch=='\r')) {
 				printf("\n");
-				input_string[input_pointer]=0;
 				result=parse_input(input_string);
 				memset(input_string,0,sizeof(input_string));
 				if (result==1) done=1;
@@ -547,12 +546,14 @@ int main(int argc, char **argv) {
 
 				if (input_pointer>0) {
 					input_pointer--;
+					input_string[input_pointer]=0;
 					printf("\b \b");
 				}
 			}
 			else {
 				input_string[input_pointer]=ch;
 				input_pointer++;
+				input_string[input_pointer]=0;
 				putchar(ch);
 			}
 		}
