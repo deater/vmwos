@@ -53,6 +53,7 @@ struct wait_queue_t console_wait_queue = {
 	NULL
 };
 
+/* Used by ps2 keyboard */
 int console_insert_char(int ch) {
 
 	uint32_t new_head;
@@ -139,8 +140,7 @@ static uint32_t console_get_char(void) {
 
 }
 
-
-
+/* Used by printk */
 int console_write(const void *buf, size_t count) {
 
 	int result_serial;
@@ -161,11 +161,86 @@ int console_write(const void *buf, size_t count) {
 
 }
 
+#define CANON_BUFFER_SIZE	256
 
-int console_read(void *buf, size_t count, int non_blocking) {
+static char canon_buffer[CANON_BUFFER_SIZE];
+
+static int console_canonical_read(void *buf, size_t count) {
+
+	int ch;
+	int offset=0;
+	int done=0;
+
+	char *buffer=buf;
+
+//	printk("Starting canonical read\n");
+
+	canon_buffer[offset]=0;
+
+	while(1) {
+
+		/* Blocking */
+		/* put to sleep if no data available */
+		while (input_buffer_head==input_buffer_tail) {
+			wait_queue_add(&console_wait_queue,
+						current_proc[get_cpu()]);
+		}
+
+		while(1) {
+			ch=console_get_char();
+
+			if (ch==0) break;
+
+			/* EOF: FIXME check cc */
+			if (ch==4) {
+				done=1;
+				break;
+			}
+
+			/* default, add to buffer */
+			canon_buffer[offset]=ch;
+
+			/* ECHO if requested */
+			if (current_termio.c_lflag & ECHO) {
+				console_write(&canon_buffer[offset],1);
+			}
+
+			offset++;
+			if (offset==CANON_BUFFER_SIZE) {
+				done=1;
+				break;
+			}
+
+			/* Linefeed: FIXME check cc */
+			if (ch=='\n') {
+				done=1;
+				break;
+			}
+
+		}
+
+		if (done) break;
+	}
+
+	memcpy(buffer,canon_buffer,offset);
+
+//	{ int i;
+//	printk("Writing %d bytes: ",offset);
+//	for(i=0;i<offset;i++) printk("%x ",buffer[i]);
+//	printk("\n");
+//
+	return offset;
+}
+
+static int console_read(void *buf, size_t count, int non_blocking) {
 
 	int i;
 	unsigned char *buffer=buf;
+
+	/* If canonical mode, must do more complex stuff */
+	if (current_termio.c_lflag & ICANON) {
+		return console_canonical_read(buf,count);
+	}
 
 	/* Read from input buffer */
 
@@ -181,6 +256,7 @@ int console_read(void *buf, size_t count, int non_blocking) {
 
 	for(i=0;i<count;i++) {
 		buffer[i]=console_get_char();
+		if (buffer[i]==0) break;
 	}
 
 	return i;
@@ -233,7 +309,6 @@ static void console_termio_update(struct termios *term) {
 	}
 
 	for(i=0;i<NCCS;i++) {
-
 		if (default_termio.c_cc[i] != term->c_cc[i]) {
 			printk("term c_cc[%d] new=%x default=%x\n",i,
 				term->c_cc[i],default_termio.c_cc[i]);
