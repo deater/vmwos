@@ -78,11 +78,12 @@ static void user_reg_dump(void) {
                 : "sp", "memory" /* clobbers */
                         );
 
-	printk("Process: %d (text %p-%p, stack %p-%p)\n",
+	printk("Process: %d (text %p+%x, stack %p+%x)\n",
 		current_proc[get_cpu()]->pid,
 		current_proc[get_cpu()]->text,
-		current_proc[get_cpu()]->text+current_proc[get_cpu()]->textsize,
-		current_proc[get_cpu()]->stack+current_proc[get_cpu()]->stacksize);
+		current_proc[get_cpu()]->textsize,
+		current_proc[get_cpu()]->stack,
+		current_proc[get_cpu()]->stacksize);
 
 	for(i=0;i<8;i++) {
 		printk("r%02d: %08x\t",i,regs[i]);
