@@ -29,6 +29,8 @@ static int argv_debug=0;
 
 #define VERSION "13.2"
 
+static struct termios oldt, newt;
+
 static int print_help(void) {
 
 	printf("VMWos Shell Version %s\n\n",VERSION);
@@ -454,7 +456,13 @@ static int parse_input(char *string) {
 		/* do nothing */
 	}
 	else {
+		/* set to default term settings */
+		tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
 		result=run_executable(string);
+
+		/* set back to our terminal settings */
+		tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 	}
 
 	return result;
@@ -479,7 +487,6 @@ int main(int argc, char **argv) {
 	int firstrun_done=0;
 #endif
 
-	struct termios oldt, newt;
 
 //	register long sp asm ("sp");
 //	printf("Our sp=%x\n",sp);
@@ -490,7 +497,7 @@ int main(int argc, char **argv) {
 	/* Turn off echo, turn off cannonical */
 	newt.c_lflag &= ~(ECHO | ICANON);
 
-	tcsetattr(0, TCSANOW, &newt);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
 	while (1) {
 
@@ -559,7 +566,8 @@ int main(int argc, char **argv) {
 
 		if (done) break;
 	}
-	tcsetattr( 0, TCSANOW, &oldt);
+
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
 	return 0;
 }
