@@ -1,3 +1,23 @@
+/* A Linux/SDL/C version of Hellmood's amazing 256B DOS Memories Demo */
+
+/* See http://www.sizecoding.org/wiki/Memories for a rundown on how it works */
+
+/* This is a conversion to C I did in an attempt to see how it works */
+/* and also to see if I could port any of this to the Apple II */
+
+/* x86 has amazing code density with powerful instructions */
+/*	stos, mul, div, FPU, lots of 1-byte instructions */
+/* and old x86 hardware made it really easy to program with limited code */
+/*     VGA/MCGA Mode13h (320x200 256 colors linear framebuffer)
+/*     soundblaster MIDI with only a few out instructions */
+
+/* Anyway this is a rough attempt to getting things going in C */
+/* The last effect (ocean) is doing lots of sketchy stuff and */
+/* depending a bit on undefined behavior so it's hit or miss */
+/* whether it will work for you */
+
+/* deater -- Vince Weaver -- vince@deater.net -- 23 April 2020 */
+
 #include <stdio.h>
 #include <unistd.h>
 
@@ -549,7 +569,7 @@ static void fx4(void) {
 	if (cf==0) al=0;
 	else al=0xff;
 
-/* FIXME: rainbow */
+/* NOTE: remove the line below and the background becomes a rainbow */
 	ax=al;
 			// jnz fx4q    ; leave black if not sierpinksi
 	if (zf==0) goto fx4q;
