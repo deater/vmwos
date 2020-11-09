@@ -11,7 +11,7 @@ all:	$(ELF2BFLT) \
 	md5sum memory_test nano printa printb pwd rm sysinfo \
 	tbo truncate uname \
 	chiptune chiptune6 write_test
-	cd demo && $(MAKE)
+	cd demo.demosplash2019 && $(MAKE)
 
 image:	shell \
 	cat cat_count cause_error chmod core_poke cp df dmesg \
@@ -28,7 +28,7 @@ image:	shell \
 		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
 		rm sysinfo tbo truncate uname write_test chiptune \
 		chiptune6 ./image/bin
-	cp demo/demosplash2019 ./image/bin
+	cp demo.demosplash2019/demosplash2019 ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
 	cp files/fstab ./image/etc
@@ -318,4 +318,4 @@ clean:
 		truncate uname write_test \
 		initrd.h initrd.romfs
 	cd vlibc && make clean
-	cd demo && make clean
+	cd demo.demosplash2019 && make clean
