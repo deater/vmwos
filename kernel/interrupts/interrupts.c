@@ -75,7 +75,7 @@ static void user_reg_dump(void) {
 		"ldr sp,%[saved_sp]\n"
                 : [saved_sp]"=m"(saved_sp)/* output */
                 :       [regs] "r"(regs) /* input */
-                : "sp", "memory" /* clobbers */
+                : "memory" /* clobbers */
                         );
 
 	printk("Process: %d (text %p+%x, stack %p+%x)\n",

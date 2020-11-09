@@ -80,7 +80,7 @@ void start_userspace(char *init_filename) {
 					/* with interrupts disabled */
                 : /* output */
                 : [stack] "r"(shell_stack) /* input */
-                : "sp", "memory");      /* clobbers */
+                : "memory");      /* clobbers */
 
 	enter_userspace();
 
