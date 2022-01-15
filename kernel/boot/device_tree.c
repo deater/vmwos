@@ -463,20 +463,14 @@ uint64_t devicetree_get_memory(void) {
 
 	i=result;
 
-	temp=big_to_little(tree[i]);
-//	printk("\tValue Length: %x\n",temp);
-	val_len=temp;
-	i++;
-
-	temp=big_to_little(tree[i]);
-	//if (fdt_verbose) printk("\tstring offset: %x\n",temp);
-	i++;
-
 	/* NOTE: should loop if val_len != 8 */
-
-	if (val_len!=8) {
-		printk("ERROR!  Unexpected number of memory entries\n");
-	}
+	do {
+		temp=big_to_little(tree[i]);
+		val_len=temp;
+		i++;
+	} while (val_len != 8);
+	
+	temp=big_to_little(tree[i]);
 
 	if (address_cells==1) {
 		memcpy(&temp,&tree[i],4);
