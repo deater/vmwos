@@ -28,7 +28,7 @@ image:	shell \
 		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
 		rm sysinfo tbo truncate uname write_test chiptune \
 		chiptune6 ./image/bin
-	cp demo.demosplash2019/demosplash2019 ./image/bin
+	#cp demo.demosplash2019/demosplash2019 ./image/bin
 	cp CATME ./image/home
 	cp files/cpuinfo ./image/proc
 	cp files/fstab ./image/etc
