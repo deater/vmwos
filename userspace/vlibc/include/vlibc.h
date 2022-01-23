@@ -49,7 +49,7 @@ struct file_struct {
 
 typedef struct file_struct FILE;
 
-FILE *stdin,*stdout,*stderr;
+extern FILE *stdin,*stdout,*stderr;
 
 int64_t lseek(int fd, int64_t offset, int whence);
 
