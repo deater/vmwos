@@ -8,7 +8,7 @@
 /* x86 has amazing code density with powerful instructions */
 /*	stos, mul, div, FPU, lots of 1-byte instructions */
 /* and old x86 hardware made it really easy to program with limited code */
-/*     VGA/MCGA Mode13h (320x200 256 colors linear framebuffer)
+/*     VGA/MCGA Mode13h (320x200 256 colors linear framebuffer) */
 /*     soundblaster MIDI with only a few out instructions */
 
 /* Anyway this is a rough attempt to getting things going in C */
