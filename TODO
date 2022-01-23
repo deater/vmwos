@@ -7,6 +7,7 @@ Short term TODO:
 	+ zmodem up/down
 	+ CANONICAL input mode
 	+ proper locking in the filesystem code
+	+ terminal size ioctl in nano
 
 Known Kernel Bugs:
 	+ pi3: "temp" temperature stops working once virtual memory is enabled
