@@ -463,15 +463,16 @@ uint64_t devicetree_get_memory(void) {
 
 	i=result;
 
-	/* NOTE: should loop if val_len != 8 */
+	/* Repeat until we get a val_len of 8 */
+	/* FIXME: what happens if there's a bug and we get stuck? */
 	do {
 		temp=big_to_little(tree[i]);
 		val_len=temp;
 		i++;
 	} while (val_len != 8);
-	
-	temp=big_to_little(tree[i]);
 
+	/* Get the start address of the memory */
+	temp=big_to_little(tree[i]);
 	if (address_cells==1) {
 		memcpy(&temp,&tree[i],4);
 		address=big_to_little(temp);
@@ -485,6 +486,7 @@ uint64_t devicetree_get_memory(void) {
 		printk("Error! Unknown addr cell size\n");
 	}
 
+	/* Get the size of the memory */
 	if (size_cells==1) {
 		memcpy(&temp,&tree[i],4);
 		length=big_to_little(temp);
