@@ -13,7 +13,7 @@
 #include "lib/string.h"
 #include "lib/memset.h"
 
-#include "memory/mmu-common.h"
+//#include "memory/mmu-common.h"
 
 
 #define VC_TAG_GET_TEMP		0x00030006
@@ -39,41 +39,33 @@ struct vc_msg {
 
 int thermal_read(void) {
 
-	struct vc_msg msg  __attribute__ ((aligned(16)));
+	volatile struct vc_msg msg  __attribute__ ((aligned(16)));
 
 	uint32_t temp=0,result,addr;
 
 	/* Clear the struct */
-	memset(&msg, 0, sizeof(msg));
+	memset((void *)&msg, 0, sizeof(msg));
 
 	/* We want to read temp. */
 	/* TODO: add MAX_TEMP support? */
+
 	msg.tag.tag_id = VC_TAG_GET_TEMP;
 	msg.msg_size = sizeof(msg);
 	msg.tag.buffer_size = 8;
+	msg.tag.id = 0;
 
 	/* send the message */
 	addr=(unsigned int)(&msg);
 
-	/* Flush dcache so value is in memory */
-	flush_dcache((uint32_t)&msg, (uint32_t)&msg+sizeof(msg));
-
-	result = mailbox_write(firmware_phys_to_bus_address(addr),
-				MAILBOX_CHAN_PROPERTY);
+	/* write to mailbox */
+	/* we flush dcache in the mailbox driver */
+	result = mailbox_write(addr,MAILBOX_CHAN_PROPERTY);
 
 	if (result<0) printk("THERM: Mailbox write problem\n");
 
 	result=mailbox_read(MAILBOX_CHAN_PROPERTY);
 
-	/* GPU wrote to physical memory, but it is probably cached */
-	printk("Flushing from %x to %x (%x to %x)\n",
-			(uint32_t)&msg,
-			(uint32_t)&msg+sizeof(msg),
-			((uint32_t)&msg)&0xfffffff0,
-			((uint32_t)&msg+sizeof(msg))&0xfffffff0);
-
-	/* Flush dcache so we read in the value from memory */
-	flush_dcache((uint32_t)&msg, (uint32_t)&msg+sizeof(msg));
+	/* We flush dcache in mailbox driver... */
 
 	/* check if it was all ok and return the rate in milli degrees C */
 	if (msg.request_code & 0x80000000) {

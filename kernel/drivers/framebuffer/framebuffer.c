@@ -86,9 +86,11 @@ char *framebuffer_init(int x, int y, int depth) {
 	addr=(uint32_t)&fb_info;
 
 	/* Flush dcache so value is in memory */
-	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
+	/* We do this in mailbox now */
+//	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
 
-	mbox_addr=firmware_phys_to_bus_address(addr);
+	mbox_addr=addr;
+//	mbox_addr=firmware_phys_to_bus_address(addr);
 	//printk("Writing to mailbox %x\n",mbox_addr);
 
 	result=mailbox_write(mbox_addr,
@@ -98,6 +100,9 @@ char *framebuffer_init(int x, int y, int depth) {
 		printk("Mailbox write failed\n");
 		return NULL;
 	}
+
+	/* Flush dcache so value is in memory */
+	//flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
 
 	result=mailbox_read(MAILBOX_CHAN_FRAMEBUFFER);
 	if (debug) {
@@ -111,7 +116,13 @@ char *framebuffer_init(int x, int y, int depth) {
 	}
 
 	/* Flush dcache again */
-	flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
+	//flush_dcache((uint32_t)&fb_info, (uint32_t)&fb_info+sizeof(fb_info));
+
+
+	/* To access the framebuffer area you need to use bus accesses */
+	/* see https://forums.raspberrypi.com/viewtopic.php?t=121993 */
+	/* This has to do with caching.  Pi2 and later L2 cache is an */
+	/* issue Firmware changes over the years have made this difficult */
 
 #ifdef ARMV7
 	if (fb_info.pointer) {
