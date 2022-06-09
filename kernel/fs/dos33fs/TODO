@@ -1,0 +1,5 @@
++ Properly set 
+	#define DOS33_TS_SECTOR_OFFSET_L        0x05
+	#define DOS33_TS_SECTOR_OFFSET_H        0x06
+ in T/S list.  Generally this should be 122*(which_ts_list)
+
