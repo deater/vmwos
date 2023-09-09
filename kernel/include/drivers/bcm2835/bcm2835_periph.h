@@ -1,8 +1,9 @@
 /* Values from the BCM2835-ARM-Peripherals.pdf manual */
 
-/* Note on Pi1 (systems with 512MB and less IO_BASE is 0x20000000 */
-/* Pi2 and pi3 (systems with 1GB) IO_BASE is 0x3F000000 */
-/* To confuse things, the GPU sees thing with IO_BAS 0x7e000000 */
+/* Note on Pi1 (systems with 512MB and less) IO_BASE is 0x20000000 */
+/* Pi2 and pi3 (systems with 1GB)            IO_BASE is 0x3F000000 */
+/* On Pi4                                    IO_BASE is 0xFE000000 */
+/* To confuse things, the GPU sees thing with IO_BASE 0x7e000000 */
 
 /* We adjust the IO_BASE elsewhere */
 #define	IO_BASE	0
