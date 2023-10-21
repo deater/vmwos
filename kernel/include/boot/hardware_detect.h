@@ -24,4 +24,4 @@ void hardware_get_memory(uint32_t *start, uint32_t *length);
 void hardware_setup_vars(void);
 
 extern uint32_t hardware_type;
-
+extern uint32_t io_base;

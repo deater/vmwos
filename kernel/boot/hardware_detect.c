@@ -10,6 +10,9 @@
 static int32_t device_tree_found=0;
 static int32_t atags_found=0;
 
+/* Location of BCM2835-style peripherals */
+uint32_t io_base;
+
 /* default, this is over-ridden later */
 //uint32_t hardware_type=RPI_MODEL_B;
 uint32_t hardware_type=RPI_MODEL_3B;
