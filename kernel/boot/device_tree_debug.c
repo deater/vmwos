@@ -41,11 +41,13 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "../include/boot/device_tree.h"
+
 #define printk printf
 
 #endif
 
-static int fdt_verbose=0;
+static int fdt_verbose=1;
 
 struct device_tree_type {
 	void *address;
@@ -142,58 +144,88 @@ static uint32_t dt_parse_prop(uint32_t *tree, int *i) {
 	uint32_t temp,length,j,k;
 	char string[5];
 	int printing,saved;
+	char *name;
+	int is_reg;
 
 	string[4]=0;
 
-	printk("\t");
+	printk("\tPROP = ");
 
 	temp=big_to_little(tree[*i]);
-	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
+	if (fdt_verbose) printk("\tValue Length: %x",temp);
 	length=temp;
 	(*i)++;
 
 	temp=big_to_little(tree[*i]);
 	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
-	dt_print_string(temp);
-	(*i)++;
 
 	printk("\t");
-	printing=1;
+	dt_print_string(temp);
 
+        name=(char *)(device_tree.address+device_tree.off_strs+temp);
+
+
+	(*i)++;
+
+	is_reg=0;
+	if (!strncmp(name,"reg",4)) {
+		is_reg=1;
+	}
+
+	// also if starts with #?
+
+
+	/* Print as string */
 	saved=*i;
+	if (!is_reg) {
+		printk("\t");
+		printing=1;
 
-	for(j=0;j<(length+3)/4;j++) {
+		for(j=0;j<(length+3)/4;j++) {
 
-		temp=tree[*i];
-		(*i)++;
-		memcpy(string,&temp,4);
+			temp=tree[*i];
+			(*i)++;
+			memcpy(string,&temp,4);
 
-		if (printing) {
-			for(k=0;k<4;k++) {
-				if (string[k]==0) {
-					printing=0;
-					break;
-				}
-				else {
-					printk("%c",string[k]);
+			if (printing) {
+				for(k=0;k<4;k++) {
+					if (string[k]==0) {
+						printing=0;
+						break;
+					}
+					else {
+						printk("%c",string[k]);
+					}
 				}
 			}
 		}
+		printk("\n\t");
 	}
-	printk("\n\t");
+
+
 
 	*i=saved;
+	{
+		/* Print as integer */
 
-	for(j=0;j<(length+3)/4;j++) {
+		printk("\t0x");
+		for(j=0;j<(length+3)/4;j++) {
 
-		temp=tree[*i];
-		(*i)++;
-		memcpy(string,&temp,4);
+			temp=tree[*i];
+			(*i)++;
+			memcpy(string,&temp,4);
 
-		for(k=0;k<4;k++) {
-			printk("%x",string[k]&0xff);
+			for(k=0;k<4;k++) {
+				printk("%02x",string[k]&0xff);
+			}
+			printk(" ");
 		}
+
 	}
+
+
+
+
 	printk("\n");
 
 

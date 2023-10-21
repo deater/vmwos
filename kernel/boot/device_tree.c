@@ -44,6 +44,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "../include/boot/device_tree.h"
+
 #define printk printf
 #define strlcpy strncpy
 
@@ -155,7 +157,7 @@ static uint32_t dt_parse_prop(uint32_t *tree, int *i,
 	if (fdt_verbose) printk("%s:",current_node_name);
 
 	temp=big_to_little(tree[*i]);
-//	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
+	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
 	length=temp;
 	(*i)++;
 
@@ -231,12 +233,12 @@ static uint32_t devicetree_prop_int(int start_i,uint32_t *value) {
 	i=start_i;
 
 	temp=big_to_little(tree[i]);
-//	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
+	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
 	length=temp;
 	i++;
 
 	temp=big_to_little(tree[i]);
-//	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
+	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
 	i++;
 
 	temp=big_to_little(tree[i]);
@@ -251,6 +253,48 @@ static uint32_t devicetree_prop_int(int start_i,uint32_t *value) {
 
 	return 0;
 }
+
+static uint32_t devicetree_prop_int64(int start_i, uint64_t *value) {
+
+	uint32_t *tree;
+
+	uint32_t temp,length,i;
+
+	uint64_t value1,value2;
+
+	if (!device_tree.valid) return -ENODEV;
+
+	tree=(uint32_t *)(device_tree.address+device_tree.off_struct);
+
+	i=start_i;
+
+	temp=big_to_little(tree[i]);
+	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
+	length=temp;
+	i++;
+
+	temp=big_to_little(tree[i]);
+	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
+	i++;
+
+	temp=big_to_little(tree[i]);
+	value1=temp;
+	i++;
+
+	temp=big_to_little(tree[i]);
+	value2=temp;
+
+
+	*value=(value1<<32)|value2;
+
+	if (length!=8) {
+		printk("Warning! Asking for int64 but length is %d\n",length);
+	}
+
+
+	return 0;
+}
+
 
 
 static uint32_t devicetree_prop_string(int start_i,char *string,int len) {
@@ -268,12 +312,12 @@ static uint32_t devicetree_prop_string(int start_i,char *string,int len) {
 	i=start_i;
 
 	temp=big_to_little(tree[i]);
-//	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
+	if (fdt_verbose) printk("\tValue Length: %x\n",temp);
 	length=temp;
 	i++;
 
 	temp=big_to_little(tree[i]);
-//	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
+	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
 	i++;
 
 	ptr=(char *)&tree[i];
@@ -441,11 +485,25 @@ uint32_t devicetree_find_int(char *node, char *prop, uint32_t *value) {
 	return 0;
 }
 
+uint32_t devicetree_find_int64(char *node, char *prop,uint64_t *value) {
 
-uint64_t devicetree_get_memory(void) {
+	uint32_t result;
 
-	uint32_t address_cells,size_cells,temp,val_len;
-	int32_t result;
+	result=devicetree_find_node_prop(node,prop);
+	if (result<0) {
+		return result;
+	}
+
+	devicetree_prop_int64(result,value);
+
+	return 0;
+}
+
+
+
+static uint64_t devicetree_get_memory_old(uint64_t *return_address) {
+
+	uint32_t address_cells,size_cells,result,temp,val_len;
 	uint32_t *tree;
 	uint64_t address,length,temp64;
 	int i;
@@ -456,29 +514,10 @@ uint64_t devicetree_get_memory(void) {
 	devicetree_find_int(NULL,"#size-cells",&size_cells);
 	printk("mem: found size cells: %d\n",size_cells);
 
-
-	/* Device tree supports two ways to find memory */
-	/* memory node */
-	/* memory@ node */
-	/* The pi firmware switched from one to another at some point? */
-	/* urgh */
-
-	/* Ideally we should search for any string starting with memory */
-	/* and do something sane based on that */
-
 	/* Point to memory:reg */
 	result=devicetree_find_node_prop("memory","reg");
-//	printk("RESULT OF SEARCH=%d\n",result);
 	if (result<0) {
-		/* memory node not found, try memory@ */
-		result=devicetree_find_node_prop("memory@0","reg");
-//		printk("RESULT OF 2nd SEARCH=%d\n",result);
-		if (result<0) {
-			printk("ERROR! Cannot find MEMORY node in device tree!!\n");
-			printk("Assuming we have at least 256MB but that's not ideal!!!\n");
-			return 256*1024*1024;
-		}
-
+		return result;
 	}
 
 	tree=(uint32_t *)(device_tree.address+device_tree.off_struct);
@@ -486,28 +525,22 @@ uint64_t devicetree_get_memory(void) {
 	i=result;
 
 	temp=big_to_little(tree[i]);
+//	printk("\tValue Length: %x\n",temp);
 	val_len=temp;
-	if (val_len!=8) {
-		printk("Memory detection: unexpected value %d\n",val_len);
-	}
-
 	i++;
 
 	temp=big_to_little(tree[i]);
 	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
 	i++;
 
-	/* Repeat until we get a val_len of 8 */
-	/* FIXME: what happens if there's a bug and we get stuck? */
-//	do {
-//		temp=big_to_little(tree[i]);
-//		val_len=temp;
-//		i++;
-//		printk("val_len=%x\n",val_len);
-//	} while (val_len != 8);
+	/* NOTE: should loop if val_len != 8 */
 
-	/* Get the start address of the memory */
-	temp=big_to_little(tree[i]);
+	if (val_len!=8) {
+		length=0;
+		address=0;
+		printk("Warning!  Old detect: Unexpected number of memory entries\n");
+	}
+
 	if (address_cells==1) {
 		memcpy(&temp,&tree[i],4);
 		address=big_to_little(temp);
@@ -520,9 +553,7 @@ uint64_t devicetree_get_memory(void) {
 		address=0;
 		printk("Error! Unknown addr cell size\n");
 	}
-//	printk("Address=%llx\n",address);
 
-	/* Get the size of the memory */
 	if (size_cells==1) {
 		memcpy(&temp,&tree[i],4);
 		length=big_to_little(temp);
@@ -536,16 +567,98 @@ uint64_t devicetree_get_memory(void) {
 		printk("Error! Unknown size cell size\n");
 	}
 
-//	printk("Length=%llx\n",length);
+	*return_address=address;
 
-//	if (length<1000) goto try_again;
+	return length;
 
-	printk("Memory found, %llx bytes at address %llx (%dMB)\n",
+}
+
+/* Sometime in the 2021 or so timeframe they changed the firmware */
+/* to report the memory differently */
+
+/* Now look for something like this:
+memory@0 {
+                device_type = "memory";
+                reg = <0x00 0x3b400000>;
+        };
+where the firmware patches the dtb at boot with the right value */
+
+
+static uint64_t devicetree_get_memory_new(uint64_t *return_address) {
+
+	uint32_t result,temp,val_len;
+	uint32_t *tree;
+	uint64_t address=0,length=0,*temp_ptr;
+	int i;
+
+	/* Point to memory@0 : reg */
+
+	result=devicetree_find_node_prop("memory@0","reg");
+	if (result<0) {
+		return result;
+	}
+
+	tree=(uint32_t *)(device_tree.address+device_tree.off_struct);
+
+	i=result;
+
+	temp=big_to_little(tree[i]);
+//	printk("\tValue Length: %x\n",temp);
+	val_len=temp;
+	i++;
+
+	temp=big_to_little(tree[i]);
+	if (fdt_verbose) printk("\tstring offset: %x\n",temp);
+	i++;
+
+	if (val_len==8) {
+		address=big_to_little(tree[i]);
+		i++;
+		length=big_to_little(tree[i]);
+	}
+	else if (val_len==12) {
+		address=big_to_little(tree[i]);
+		i++;
+		temp_ptr=(uint64_t *)&tree[i];
+		length=big_to_little64(*temp_ptr);
+
+	}
+	else {
+		address=0;
+		length=0;
+		printk("ERROR!  Unexpected memory@0 reg size %d\n",val_len);
+	}
+
+	*return_address=address;
+
+	return length;
+
+}
+
+
+
+uint64_t devicetree_get_memory(void) {
+
+	uint64_t length,address;
+
+	length=devicetree_get_memory_old(&address);
+
+	if (length<1024) {
+		length=devicetree_get_memory_new(&address);
+	}
+
+	if (length<1024) {
+		printk("ERROR!  detected memory too small, using 256MB instead\n");
+		length=256*1024*1024;
+	}
+
+	printk("Memory found, 0x%llx bytes at address 0x%llx (%dMB)\n",
 		length,address,length/1024/1024);
 
 	return length;
 
 }
+
 
 #ifdef STANDALONE_TEST
 
@@ -565,7 +678,13 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	fd=open("pi3.dt",O_RDONLY);
+	if (argc<2) {
+		fd=open("pi3.dt",O_RDONLY);
+	}
+	else {
+		fd=open(argv[1],O_RDONLY);
+	}
+
 	if (fd<0) {
 		fprintf(stderr,"ERROR opening pi3.dt\n");
 		return -1;

@@ -57,8 +57,17 @@ dt_standalone:	dt_standalone.o
 dt_standalone.o:	device_tree.c
 	gcc -Wall -O2 -DSTANDALONE_TEST=1 -o dt_standalone.o -c device_tree.c
 
+###
+
+device_tree_debug:	device_tree_debug.o
+	gcc -o device_tree_debug device_tree_debug.o
+
+device_tree_debug.o:	device_tree_debug.c
+	gcc -Wall -O2 -DSTANDALONE_TEST=1 -o device_tree_debug.o -c device_tree_debug.c
+
+
 
 ###
 
 clean:
-	rm -f *~ *.o *.a dt_standalone
+	rm -f *~ *.o *.a dt_standalone device_tree_debug
