@@ -589,7 +589,8 @@ static uint64_t devicetree_get_memory_new(uint64_t *return_address) {
 	uint32_t result,temp,val_len;
 	uint32_t *tree;
 	uint64_t address=0,length=0,*temp_ptr;
-	int i;
+	uint64_t address2=0,length2=0;
+	int i,j;
 
 	/* Point to memory@0 : reg */
 
@@ -617,16 +618,39 @@ static uint64_t devicetree_get_memory_new(uint64_t *return_address) {
 		length=big_to_little(tree[i]);
 	}
 	else if (val_len==12) {
-		address=big_to_little(tree[i]);
+		temp_ptr=(uint64_t *)&tree[i];
+		address=big_to_little64(*temp_ptr);
+		i++;
+		i++;
+		length=big_to_little64(tree[i]);
+	}
+	/* FIXME: Make this generic */
+	else if (val_len==24) {
+		temp_ptr=(uint64_t *)&tree[i];
+		address=big_to_little64(*temp_ptr);
+		i++;
+		i++;
+		length=big_to_little(tree[i]);
 		i++;
 		temp_ptr=(uint64_t *)&tree[i];
-		length=big_to_little64(*temp_ptr);
-
+		address2=big_to_little64(*temp_ptr);
+		i++;
+		i++;
+		length2=big_to_little(tree[i]);
+		printk("For now ignoring secondary memory range of 0x%llx at 0x%llx (%d MB)\n",
+			length2,address2,length2/1024/1024);
 	}
 	else {
+		printk("ERROR!  Unexpected memory@0 reg size %d\n",val_len);
+
+		for(j=0;j<(val_len/4);j++) {
+			address=big_to_little(tree[i]);
+			i++;
+			printk("\t0x%llx\n",address);
+		}
 		address=0;
 		length=0;
-		printk("ERROR!  Unexpected memory@0 reg size %d\n",val_len);
+
 	}
 
 	*return_address=address;
