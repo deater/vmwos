@@ -39,6 +39,10 @@ int led_init(void) {
 		led_gpio=18;
 		led_active_low=0;
 	}
+	else if ((hardware_get_type()==RPI_MODEL_4B)) {
+		led_gpio=42;
+		led_active_low=0;
+	}
 	else {
 		printk("Unknown hardware type, not enabling LED\n");
 		led_configured=0;
