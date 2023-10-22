@@ -18,9 +18,28 @@
 
 #include "interrupts/interrupts.h"
 #include "interrupts/ipi.h"
+#include "interrupts/gic-400.h"
+
+#include "boot/hardware_detect.h"
 
 
 #define MAX_IRQ	64
+
+int platform_irq_enable(void) {
+
+	/* Enable Pi4 gic400 Interrupt Controller */
+
+	if (hardware_type==RPI_MODEL_4B) {
+		printk("Enabling GIC-400 on Pi4B\n");
+		/* FIXME: set up some defines */
+		gic400_init((void *)0xFF840000UL);
+	}
+
+	return 0;
+
+}
+
+
 
 int irq_enable(int which_one) {
 
@@ -96,40 +115,80 @@ static void user_reg_dump(void) {
 
 void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 
-	uint32_t basic_pending,pending1,pending2;
-	uint32_t handled=0;
+	uint32_t basic_pending,pending0,pending1,pending2;
+	uint32_t handled=0,was_timer=0;
 
-	/**************************************/
-	/* First check basic_pending register */
-	/**************************************/
-	basic_pending=bcm2835_read(IRQ_BASIC_PENDING);
+	/* Ideall we'd have a proper irq registration  mechanism for this */
+	if (hardware_type==RPI_MODEL_4B) {
 
-	if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
-		handled++;
-		serial_interrupt_handler();
-	}
-	if (basic_pending & IRQ_BASIC_PENDING_TIMER) {
-		handled++;
-	}
+		/* Note, based on IRQ_PENDING2 you can tell */
+		/*      if there's an interrupt in PENDING0/PENDING1 */
+		pending0=bcm2835_read(IRQ0_PENDING0);
+		pending1=bcm2835_read(IRQ0_PENDING1);
+		pending2=bcm2835_read(IRQ0_PENDING2);
 
-	/*************************************/
-	/* Next check pending1 register      */
-	/*************************************/
-	pending1=bcm2835_read(IRQ_PENDING1);
-	if ((pending1) && (!handled)) {
-		printk("Unknown pending1 interrupt %x\n",pending1);
-	}
+		// Check if UART (irq57)
+		if (pending1 & IRQ_PENDING1_IRQ57) {
+			handled++;
+			serial_interrupt_handler();
+		}
 
-	/*************************************/
-	/* Next check pending2 register      */
-	/*************************************/
-	pending2=bcm2835_read(IRQ_PENDING2);
+		// check if it's a timer interrupt
+		if (pending2 & IRQ_PENDING2_TIMER_IRQ) {
+			handled++;
+			/* we handle this later */
+		}
 
-	if (pending2) {
 		// Check if GPIO23 (ps2 keyboard) (irq49)
-		if (pending2 & IRQ_PENDING2_IRQ49) {
+		if (pending2 & IRQ_PENDING1_IRQ49) {
 			handled++;
 			ps2_interrupt_handler();
+		}
+
+		if (!handled) {
+			printk("Unknown interrupt happened %x %x %x!\n",
+				pending0,pending1,pending2);
+			return;
+                }
+
+
+	}
+
+	else {
+
+		/**************************************/
+		/* First check basic_pending register */
+		/**************************************/
+		basic_pending=bcm2835_read(IRQ_BASIC_PENDING);
+
+		if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
+			handled++;
+			serial_interrupt_handler();
+		}
+		if (basic_pending & IRQ_BASIC_PENDING_TIMER) {
+			handled++;
+			was_timer++;
+		}
+
+		/*************************************/
+		/* Next check pending1 register      */
+		/*************************************/
+		pending1=bcm2835_read(IRQ_PENDING1);
+		if ((pending1) && (!handled)) {
+			printk("Unknown pending1 interrupt %x\n",pending1);
+		}
+
+		/*************************************/
+		/* Next check pending2 register      */
+		/*************************************/
+		pending2=bcm2835_read(IRQ_PENDING2);
+
+		if (pending2) {
+			// Check if GPIO23 (ps2 keyboard) (irq49)
+			if (pending2 & IRQ_PENDING2_IRQ49) {
+				handled++;
+				ps2_interrupt_handler();
+			}
 		}
 
 		if (!handled) {
@@ -163,6 +222,7 @@ Bits	Description
 */
 	uint32_t per_core[4],i;
 
+	/* FIXME: these changed locations on Pi4 */
 	per_core[0]=mmio_read(0x40000060);
 	per_core[1]=mmio_read(0x40000064);
 	per_core[2]=mmio_read(0x40000068);
@@ -176,9 +236,9 @@ Bits	Description
 		if (per_core[i]&0x100) {
 			if (!handled) {
 				printk("Unhandled GPU interrupt core %d "
-					"%x %x %x "
+					"%x %x "
 					"(possibly power sag)\n",
-					i,basic_pending,pending1,pending2);
+					i,pending1,pending2);
 			}
 			/* IPI interrupt */
 		} else if (per_core[i]&0x10) {
@@ -197,8 +257,13 @@ Bits	Description
 		printk("Unknown interrupt!\n");
 	}
 
+	/* FIXME: do this properly */
+	if (hardware_type == RPI_MODEL_4B) {
+		mmio_write(GICD_ICPENDR0,0xffffffffUL);        // clear pending
+	}
+
 	// check if it's a timer interrupt
-	if (basic_pending & IRQ_BASIC_PENDING_TIMER) {
+	if (was_timer) {
 //		printk("About to handle timer interrupt\n");
 		timer_interrupt_handler();
 //		printk("Returned from timer interrupt\n");

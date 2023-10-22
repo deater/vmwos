@@ -16,15 +16,46 @@
 			/*7e00b000 */
 #define IRQ_BASE	IO_BASE+0x00b000
 
+/******************/
+/* Pi1 - Pi3      */
+/******************/
 #define IRQ_BASIC_PENDING	(IRQ_BASE+0x200)
 
 #define IRQ_BASIC_PENDING_TIMER		(1<<0)
-#define IRQ_BASIC_PENDING_IRQ57		(1<<19)
+#define IRQ_BASIC_PENDING_IRQ57		(1<<19)		/* UART */
 
 #define IRQ_PENDING1		(IRQ_BASE+0x204)
 #define IRQ_PENDING2		(IRQ_BASE+0x208)
+#define IRQ_PENDING2_IRQ49		(1<<17)		/* GPIO0 */
 
-#define IRQ_PENDING2_IRQ49	0x20000
+
+/******************/
+/* Pi4            */
+/******************/
+/* see BCM2711 ARM Peripherals Doc, p 103 */
+
+/* Note you can have IRQ0 - IRQ3, for each CORE? */
+#define IRQ0_PENDING0		(IRQ_BASE+0x200)
+#define IRQ0_PENDING1		(IRQ_BASE+0x204)
+
+#define IRQ_PENDING1_IRQ49		(1<<17)		/* GPIO0 */
+#define IRQ_PENDING1_IRQ57              (1<<25)		/* UART */
+
+
+#define IRQ0_PENDING2		(IRQ_BASE+0x208)
+#define IRQ_PENDING2_IRQ		(1<<31)
+#define IRQ_PENDING2_INT63_32		(1<<25)
+#define IRQ_PENDING2_INT31_0		(1<<24)
+
+#define IRQ_PENDING2_BELL_IRQ1		(1<<3)
+#define IRQ_PENDING2_BELL_IRQ0		(1<<2)
+#define IRQ_PENDING2_MAILBOX_IRQ0	(1<<1)
+#define IRQ_PENDING2_TIMER_IRQ		(1<<0)
+
+
+/*********************/
+/* all?              */
+/*********************/
 
 #define IRQ_FIQ_CONTROL		(IRQ_BASE+0x20c)
 #define IRQ_ENABLE_IRQ1		(IRQ_BASE+0x210)

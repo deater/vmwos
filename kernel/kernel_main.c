@@ -24,6 +24,8 @@
 #include "processes/process.h"
 #include "processes/userspace.h"
 
+#include "interrupts/interrupts.h"
+
 #include "debug/panic.h"
 
 /* Initrd hack */
@@ -44,6 +46,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	/*******************/
 
 	hardware_detect((uint32_t *)r2);
+
+	/* Setup Model-specific Variables based on harware revision */
+	hardware_setup_vars();
 
 	/*****************************/
 	/* Initialize Serial Console */
@@ -83,13 +88,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 
 	/* Print command line */
 	hardware_print_commandline();
+	printk("\n");
 
 	/**************************/
 	/* Enable floating point  */
 	/**************************/
 	/* FIXME: where to put this? */
-	printk("Enabling FPU...\n");
 
+	printk("Enabling FPU... (NOTE..DISABLED FOR NOW)\n");
+
+#if 0
 #ifdef ARMV7
 	/* Pi3 (Cortex A53) FPU enable */
 	asm volatile(   "mrc p15, 0, r0, c1, c1, 2 @ Enable nonsecure to cp10/cp11\n"
@@ -111,6 +119,12 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
                 : : : "r0");
 
 #endif
+#endif
+	/******************************/
+	/* Enable Interrupt Hardware  */
+	/******************************/
+
+	platform_irq_enable();
 
 	/**************************/
 	/* Init Device Drivers	  */
@@ -152,9 +166,11 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t r2,
 	}
 
 	/* Create idle task */
+	printk("Starting idle task...\n");
 	create_idle_task();
 
 	/* Enter our "init" process */
+	printk("Starting userspace...\n");
 	start_userspace("/bin/shell");
 
 	/* we should never get here */

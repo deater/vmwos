@@ -44,3 +44,4 @@ static inline uint32_t disable_interrupts(void){
 
 int irq_enable(int which);
 int irq_disable(int which);
+int platform_irq_enable(void);
