@@ -9,7 +9,7 @@
 #include <sys/mman.h>
 #include <arpa/inet.h>
 
-static int debug=1;
+static int debug=0;
 
 #define SHT_NULL		0x0 	// Section header entry unused
 #define SHT_PROGBITS		0x1	// Program data
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 	uint32_t *relocations=NULL;
 	uint32_t temp_addr,temp_type;
 	uint32_t text_offset=0;//data_offset=0,bss_offset=0;
-	uint32_t entry=0,size,offset,address,text_address,output_addr;
+	uint32_t entry=0,size,offset,output_addr;
 	uint32_t uses_got=0;
 
 	if (argc<3) {
@@ -232,9 +232,6 @@ int main(int argc, char **argv) {
 			else if (!strncmp(name,".debug",6)) {
 			}
 			else if (!strncmp(name,".text",6)) {
-				memcpy(&temp,&shptr[0x0c],4);
-				text_address=temp;
-
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
 				text_offset=offset;
@@ -260,20 +257,11 @@ int main(int argc, char **argv) {
 				}
 			}
 			else if (!strncmp(name,".rodata",6)) {
-
-				memcpy(&temp,&shptr[0x0c],4);
-				address=temp;
-
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
 
 				memcpy(&temp,&shptr[0x14],4);
-				text_size=(offset-(address-entry))+temp;
-
-				if (offset<(address-entry)) {
-					fprintf(stderr,"Error: rodata start negtive! offset=%x address=%x entry=%x\n",offset,address,entry);
-					exit(-1);
-				}
+				text_size=(offset-entry)+temp;
 
 				if (debug) {
 					printf("\t.rodata at 0x%x size %d\n",offset,temp);
@@ -346,36 +334,14 @@ int main(int argc, char **argv) {
 				}
 
 			}
-
-/*
-	typedef struct {
-               uint32_t   sh_name;    0
-               uint32_t   sh_type;    4
-               uint32_t   sh_flags;   8
-               Elf32_Addr sh_addr;    12
-               Elf32_Off  sh_offset;  16 0x10
-               uint32_t   sh_size;       0x14
-               uint32_t   sh_link;
-               uint32_t   sh_info;
-               uint32_t   sh_addralign;
-               uint32_t   sh_entsize;
-           } Elf32_Shdr;
-*/
 			else if (!strncmp(name,".data",6)) {
-				memcpy(&temp,&shptr[0x0c],4);
-				address=temp;
-
 				memcpy(&temp,&shptr[0x10],4);
 				offset=temp;
 
 				memcpy(&temp,&shptr[0x14],4);
 				data_size+=temp;
 
-				data_start=offset-(address-entry);
-				if (offset<(address-entry)) {
-					fprintf(stderr,"Error: data start negtive! offset=%x address=%x entry=%x\n",offset,address,entry);
-					exit(-1);
-				}
+				data_start=offset-entry;
 				if (debug) {
 					printf("\t.data [0x%x] at 0x%x size %d (total %d)\n",
 						data_start,offset,temp,data_size);
@@ -401,10 +367,6 @@ int main(int argc, char **argv) {
 				memcpy(&temp,&shptr[0x0c],4);
 				offset=temp;
 				bss_start=offset-entry;
-				if (offset<entry) {
-					fprintf(stderr,"Error! bss offset less than entry!\n");
-					exit(1);
-				}
 
 				memcpy(&temp,&shptr[0x14],4);
 				bss_size=temp;
@@ -596,8 +558,8 @@ int main(int argc, char **argv) {
 				if (debug) printf("\tsize: %x\n",size);
 
 				if (debug) printf("Seeking to %x\n",
-					text_start+(offset-text_offset));
-				lseek(out,text_start+(offset-text_offset),SEEK_SET);
+					text_start+offset-entry);
+				lseek(out,text_start+offset-entry,SEEK_SET);
 				write(out,&addr[offset],size);
 			}
 			else if (!strncmp(name,".interp",7)) {
@@ -614,8 +576,8 @@ int main(int argc, char **argv) {
 				if (debug) printf("\tsize: %x\n",size);
 
 				if (debug) printf("Seeking to %x\n",
-					text_start+offset);
-				lseek(out,text_start+offset,SEEK_SET);
+					text_start+offset-entry);
+				lseek(out,text_start+offset-entry,SEEK_SET);
 				write(out,&addr[offset],size);
 			}
 			else if ((!strncmp(name,".data.rel.local",15)) ||
@@ -634,7 +596,7 @@ int main(int argc, char **argv) {
 				size=temp;
 				if (debug) printf("\tsize: %x\n",size);
 
-				output_addr=text_start+offset;
+				output_addr=text_start+offset-entry;
 
 				if (debug) printf("Seeking to %x\n",
 					output_addr);
