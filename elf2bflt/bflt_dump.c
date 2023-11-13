@@ -19,6 +19,25 @@
 #define BFLT_RELOC_COUNT        0x20
 #define BFLT_FLAGS              0x24
 
+
+static int hexdump(unsigned char *buffer, int offset, int size) {
+
+	int i;
+
+	for(i=0;i<size;i++) {
+		if (i%16==0) {
+			printf("0x%08x: ",offset+i);
+		}
+		printf ("%02X ",buffer[i]);
+		if (i%16==15) {
+			printf("\n");
+		}
+	}
+
+	return 0;
+
+}
+
 int main(int argc, char **argv) {
 
 	int fd;
@@ -47,11 +66,35 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+	uint32_t entry,data_start;
+	unsigned char *data;
+
+	entry=ntohl(buffer[BFLT_ENTRY/4]);
+	data_start=ntohl(buffer[BFLT_DATA_START/4]);
+
 	printf("\tVersion: 0x%x\n",ntohl(buffer[BFLT_VERSION_OFFSET/4]));
-	printf("\tEntry: 0x%x\n",ntohl(buffer[BFLT_ENTRY/4]));
-	printf("\tData Start: 0x%x\n",ntohl(buffer[BFLT_DATA_START/4]));
+	printf("\tEntry: 0x%x\n",entry);
+	printf("\tData Start: 0x%x\n",data_start);
 	printf("\tBSS Start: 0x%x\n",ntohl(buffer[BFLT_BSS_START/4]));
 	printf("\tBSS End: 0x%x\n",ntohl(buffer[BFLT_BSS_END/4]));
+
+	data=calloc(data_start-entry,sizeof(unsigned char));
+	if (data==NULL) {
+		fprintf(stderr,"Error allocating %d bytes\n",
+				data_start-entry);
+		exit(1);
+	}
+
+	lseek(fd,entry,SEEK_SET);
+	read(fd,data,data_start-entry);
+
+	printf("Text:\n");
+	hexdump(data,entry,data_start-entry);
+	printf("\n");
+	free(data);
+
+	printf("Data:\n");
+
 
 	close(fd);
 

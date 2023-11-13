@@ -243,8 +243,8 @@ int main(int argc, char **argv) {
 				text_size+=temp;
 
 				if (debug) {
-					printf("\t.text at 0x%x size %d\n",
-						offset,temp);
+					printf("\t.text at 0x%x size 0x%x (%d)\n",
+						offset,temp,temp);
 				}
 			}
 			else if (!strncmp(name,".text.startup",13)) {
@@ -268,7 +268,7 @@ int main(int argc, char **argv) {
 				offset=temp;
 
 				memcpy(&temp,&shptr[0x14],4);
-				text_size=(offset-(address-entry))+temp;
+				//text_size=(offset-(address-entry))+temp;
 
 				if (offset<(address-entry)) {
 					fprintf(stderr,"Error: rodata start negtive! offset=%x address=%x entry=%x\n",offset,address,entry);
@@ -486,6 +486,7 @@ int main(int argc, char **argv) {
 
 	if (debug) printf("** WRITING BFLT FILE **\n");
 
+	/* we skip the bflt header */
 	text_start=0x40;
 	if (data_start==0) {
 		data_start=text_start+text_size;
