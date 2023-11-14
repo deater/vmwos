@@ -16,7 +16,7 @@
 
 #include "fs/files.h"
 
-static int debug=0;
+static int debug=1;
 
 void enter_userspace(void) {
 
@@ -80,11 +80,13 @@ void start_userspace(char *init_filename) {
 					/* with interrupts disabled */
                 : /* output */
                 : [stack] "r"(shell_stack) /* input */
-                : "memory");      /* clobbers */
+                : "sp","memory");      /* clobbers */
 
 	enter_userspace();
 
 error_init:
+
+	printk("Error %d trying to exec init!\n",result);
 
 	/* We should not get here */
 

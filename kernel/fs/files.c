@@ -16,7 +16,7 @@
 
 #include "processes/process.h"
 
-static int debug=0;
+static int debug=1;
 
 static struct file_object file_objects[MAX_OPEN_FILES];
 
@@ -245,6 +245,11 @@ int32_t open_file_object(
 			}
 		}
 		else {
+
+			if (debug) {
+				printk("\tFile not found\n");
+			}
+
 			return -ENOENT;
 		}
 	}

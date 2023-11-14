@@ -19,8 +19,8 @@
 #include "processes/exit.h"
 #include "processes/bflt_loader.h"
 
-static int exec_debug=0;
-static int exec_summary_debug=0;
+static int exec_debug=1;
+static int exec_summary_debug=1;
 
 int32_t execve(const char *filename, char *const argv[], char *const envp[]) {
 
