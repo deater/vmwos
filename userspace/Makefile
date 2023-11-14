@@ -7,7 +7,7 @@ GENROMFS = genromfs
 all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error chmod core_poke cp df dmesg \
-	hello hexdump ll ls \
+	donut hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd rm sysinfo \
 	tbo truncate uname \
 	chiptune chiptune6 write_test
@@ -15,7 +15,7 @@ all:	$(ELF2BFLT) \
 
 image:	shell \
 	cat cat_count cause_error chmod core_poke cp df dmesg \
-	hello hexdump ll ls \
+	donut hello hexdump ll ls \
 	md5sum memory_test nano printa printb pwd rm sysinfo tbo \
 	truncate uname chiptune chiptune6 write_test
 	mkdir -p image
@@ -25,7 +25,7 @@ image:	shell \
 	mkdir -p image/proc
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error chmod core_poke cp df dmesg \
-		hello hexdump ll ls md5sum memory_test nano printa printb pwd \
+		donut hello hexdump ll ls md5sum memory_test nano printa printb pwd \
 		rm sysinfo tbo truncate uname write_test chiptune \
 		chiptune6 ./image/bin
 	#cp demo.demosplash2019/demosplash2019 ./image/bin
@@ -72,6 +72,9 @@ df:	df.elf
 
 dmesg:	dmesg.elf
 	$(ELF2BFLT) dmesg.elf dmesg
+
+donut:	donut.elf
+	$(ELF2BFLT) donut.elf donut
 
 hello:	hello.elf
 	$(ELF2BFLT) hello.elf hello
@@ -163,6 +166,9 @@ df.elf:	df.o ./vlibc/vlibc.a
 dmesg.elf:	dmesg.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o dmesg.elf dmesg.o ./vlibc/vlibc.a
 
+donut.elf:	donut.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o donut.elf donut.o ./vlibc/vlibc.a
+
 hello.elf:	hello.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hello.elf hello.o ./vlibc/vlibc.a
 
@@ -251,6 +257,9 @@ df.o:	df.c
 
 dmesg.o:	dmesg.c
 	$(CROSS)$(CC) $(CFLAGS) -c dmesg.c
+
+donut.o:	donut.c
+	$(CROSS)$(CC) $(CFLAGS) -c donut.c
 
 hello.o:	hello.c
 	$(CROSS)$(CC) $(CFLAGS) -c hello.c
