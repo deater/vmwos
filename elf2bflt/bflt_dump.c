@@ -66,16 +66,17 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	uint32_t entry,data_start;
+	uint32_t entry,data_start,bss_start;
 	unsigned char *data;
 
 	entry=ntohl(buffer[BFLT_ENTRY/4]);
 	data_start=ntohl(buffer[BFLT_DATA_START/4]);
+	bss_start=ntohl(buffer[BFLT_BSS_START/4]);
 
 	printf("\tVersion: 0x%x\n",ntohl(buffer[BFLT_VERSION_OFFSET/4]));
 	printf("\tEntry: 0x%x\n",entry);
 	printf("\tData Start: 0x%x\n",data_start);
-	printf("\tBSS Start: 0x%x\n",ntohl(buffer[BFLT_BSS_START/4]));
+	printf("\tBSS Start: 0x%x\n",bss_start);
 	printf("\tBSS End: 0x%x\n",ntohl(buffer[BFLT_BSS_END/4]));
 
 	data=calloc(data_start-entry,sizeof(unsigned char));
@@ -93,8 +94,21 @@ int main(int argc, char **argv) {
 	printf("\n");
 	free(data);
 
-	printf("Data:\n");
+	data=calloc(bss_start-data_start,sizeof(unsigned char));
+	if (data==NULL) {
+		fprintf(stderr,"Error allocating %d bytes\n",
+				bss_start-data_start);
+		exit(1);
+	}
 
+	lseek(fd,data_start,SEEK_SET);
+	read(fd,data,bss_start-data_start);
+
+	printf("Data:\n");
+	hexdump(data,data_start,bss_start-data_start);
+	printf("\n");
+
+	free(data);
 
 	close(fd);
 

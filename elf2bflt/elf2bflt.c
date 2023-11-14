@@ -84,6 +84,20 @@ static int is_relocated(uint32_t addr,uint32_t *relocations, int reloc_count) {
 	return 0;
 }
 
+static uint32_t get_uint32(char *ptr) {
+	uint32_t temp;
+
+	memcpy(&temp,ptr,4);
+	return temp;
+}
+
+static uint16_t get_uint16(char *ptr) {
+	uint16_t temp;
+
+	memcpy(&temp,ptr,2);
+	return temp;
+}
+
 
 int main(int argc, char **argv) {
 
@@ -96,14 +110,17 @@ int main(int argc, char **argv) {
 	uint32_t phoff,phnum;
 	uint32_t shnum,shoff,shsize,strindex;
 
-	uint32_t bss_size=0,data_size=0,text_size=0;
+	uint32_t bss_size=0;
 	uint32_t text_start=0,data_start=0,bss_start=0,bss_end=0,data_end=0;
 	uint32_t reloc_start=0,reloc_count=0,reloc_index=0;
 	uint32_t *relocations=NULL;
 	uint32_t temp_addr,temp_type;
-	uint32_t text_offset=0;//data_offset=0,bss_offset=0;
-	uint32_t entry=0,size,offset,address,text_address,output_addr;
+	uint32_t entry=0,size,offset,address,output_addr;
 	uint32_t uses_got=0;
+
+	uint32_t text_address=0,text_offset=0,text_size=0;
+	uint32_t text_startup_address,text_startup_offset,text_startup_size=0;
+	uint32_t data_address=0,data_offset,data_size=0;
 
 	/* check command line arguments */
 	if (argc<3) {
@@ -159,38 +176,20 @@ int main(int argc, char **argv) {
 		printf("Version again %d\n",temp);
 	}
 
-	memcpy(&temp,&addr[0x18],4);
-	entry=temp;
-	if (debug) printf("Entry %x\n",temp);
 
-	memcpy(&temp,&addr[0x1c],4);
-	phoff=temp;
-	if (debug) printf("Phoff %x\n",phoff);
+	uint32_t flags,type;
+	uint16_t ehsize,phentsize;
 
-	memcpy(&temp,&addr[0x20],4);
-	shoff=temp;
-	if (debug) printf("Shoff %x\n",temp);
+	entry=get_uint32(&addr[0x18]);	if (debug) printf("Entry %x\n",entry);
+	phoff=get_uint32(&addr[0x1c]);	if (debug) printf("Phoff %x\n",phoff);
+	shoff=get_uint32(&addr[0x20]);	if (debug) printf("Shoff %x\n",shoff);
+	flags=get_uint32(&addr[0x24]);	if (debug) printf("Flags %x\n",flags);
+	ehsize=get_uint16(&addr[0x28]);	if (debug) printf("ehsize %x\n",ehsize);
+	phentsize=get_uint16(&addr[0x2a]); if (debug) printf("phentsize %x\n",phentsize);
+	phnum=get_uint16(&addr[0x2c]);	if (debug) printf("phnum %x\n",phnum);
+	shsize=get_uint16(&addr[0x2e]);	if (debug) printf("shentsize %x\n",shsize);
+	shnum=get_uint16(&addr[0x30]);	if (debug) printf("shnum %x\n",shnum);
 
-	if (debug) {
-		memcpy(&temp,&addr[0x24],4);
-		printf("Flags %x\n",temp);
-		memcpy(&temp16,&addr[0x28],2);
-		printf("ehsize %x\n",temp16);
-		memcpy(&temp16,&addr[0x2a],2);
-		printf("phentsize %x\n",temp16);
-	}
-
-	memcpy(&temp16,&addr[0x2c],2);
-	phnum=temp16;
-	if (debug) printf("phnum %x\n",temp16);
-
-	memcpy(&temp16,&addr[0x2e],2);
-	shsize=temp16;
-	if (debug) printf("shentsize %x\n",temp16);
-
-	memcpy(&temp16,&addr[0x30],2);
-	shnum=temp16;
-	if (debug) printf("shnum %x\n",temp16);
 
 	memcpy(&temp16,&addr[0x32],2);
 	strindex=temp16;
@@ -219,14 +218,14 @@ int main(int argc, char **argv) {
 	for(i=0;i<shnum;i++) {
 		if (debug) printf("Section header %d\n",i);
 
-		memcpy(&temp,&shptr[0x4],4);
+		type=get_uint32(&shptr[0x4]);
 		if (debug) {
 			printf("\ttype: ");
-			print_type_name(temp);
+			print_type_name(type);
 			printf("\n");
 		}
 
-		if (temp==SHT_PROGBITS) {
+		if (type==SHT_PROGBITS) {
 
 			memcpy(&temp,&shptr[0x0],4);
 			name=string_pointer+temp;
@@ -238,31 +237,24 @@ int main(int argc, char **argv) {
 			else if (!strncmp(name,".debug",6)) {
 			}
 			else if (!strncmp(name,".text",6)) {
-				memcpy(&temp,&shptr[0x0c],4);
-				text_address=temp;
-
-				memcpy(&temp,&shptr[0x10],4);
-				offset=temp;
-				text_offset=offset;
-
-				memcpy(&temp,&shptr[0x14],4);
-				text_size+=temp;
-
+				text_address=get_uint32(&shptr[0x0c]);
+				text_offset=get_uint32(&shptr[0x10]);
+				text_size=get_uint32(&shptr[0x14]);
 				if (debug) {
-					printf("\t.text at 0x%x size 0x%x (%d)\n",
-						offset,temp,temp);
+					printf("\t.text (0x%x) at 0x%x size 0x%x (%d)\n",
+						text_address,text_offset,text_size,text_size);
 				}
 			}
 			else if (!strncmp(name,".text.startup",13)) {
-				memcpy(&temp,&shptr[0x10],4);
-				offset=temp;
-
-				memcpy(&temp,&shptr[0x14],4);
-				text_size+=temp;
-
+				text_startup_address=get_uint32(&shptr[0xc]);
+				text_startup_offset=get_uint32(&shptr[0x10]);
+				text_startup_size=get_uint32(&shptr[0x14]);
 				if (debug) {
-					printf("\t.text.startup at 0x%x size %d\n",
-						offset,temp);
+					printf("\t.text.startup (0x%x) at 0x%x size 0x%x (%d)\n",
+						text_startup_address,
+						text_startup_offset,
+						text_startup_size,
+						text_startup_size);
 				}
 			}
 			else if (!strncmp(name,".rodata",6)) {
@@ -368,23 +360,13 @@ int main(int argc, char **argv) {
            } Elf32_Shdr;
 */
 			else if (!strncmp(name,".data",6)) {
-				memcpy(&temp,&shptr[0x0c],4);
-				address=temp;
-
-				memcpy(&temp,&shptr[0x10],4);
-				offset=temp;
-
-				memcpy(&temp,&shptr[0x14],4);
-				data_size+=temp;
-
-				data_start=offset-(address-entry);
-				if (offset<(address-entry)) {
-					fprintf(stderr,"Error: data start negtive! offset=%x address=%x entry=%x\n",offset,address,entry);
-					exit(-1);
-				}
+				data_address=get_uint32(&shptr[0x0c]);
+				data_offset=get_uint32(&shptr[0x10]);
+				data_size=get_uint32(&shptr[0x14]);
 				if (debug) {
-					printf("\t.data [0x%x] at 0x%x size %d (total %d)\n",
-						data_start,offset,temp,data_size);
+					printf("\t.data [0x%x] at 0x%x size %x (%d)\n",
+						data_address,data_offset,
+						data_size,data_size);
 				}
 
 			}
@@ -396,7 +378,7 @@ int main(int argc, char **argv) {
 		}
 
 		/* Handle bss */
-		if (temp==SHT_NOBITS) {
+		if (type==SHT_NOBITS) {
 			if (debug) printf("Section header %d\n",i);
 
 			memcpy(&temp,&shptr[0x0],4);
@@ -495,10 +477,15 @@ int main(int argc, char **argv) {
 	/* we skip the bflt header */
 	text_start=0x40;
 
-	if (data_start==0) {
+	if (data_address==0) {
 		data_start=text_start+text_size;
+		if (debug) printf("Calculating data start=text_start+text_size=%x+%x\n",
+			text_start,text_size);
 	} else {
-		data_start+=text_start;
+		/* should this be offset instead? */
+		data_start=text_start+(data_address-text_address);
+		if (debug) printf("Calculating data start=text_start+(data_addr-text_addr)=%x-%x\n",
+			data_address,text_address);
 	}
 
 	data_end=data_start+data_size;
@@ -516,22 +503,23 @@ int main(int argc, char **argv) {
 		reloc_start=bss_start;
 	}
 
+	/*****************/
+	/* Set up header */
+	/*****************/
+
 	/* magic */
 	write(out,"bFLT",4);
 
 	/* version.  We're version 4 for now */
-	temp=htonl(4);
-	write(out,&temp,4);
+	temp=htonl(4);	write(out,&temp,4);
 
 	/* entry.  Entry after end of header */
 	if (debug) printf("BFLT: text_start %x\n",text_start);
-	temp=htonl(text_start);
-	write(out,&temp,4);
+	temp=htonl(text_start);	write(out,&temp,4);
 
 	/* data_start */
 	if (debug) printf("BFLT: data_start %x\n",data_start);
-	temp=htonl(data_start);
-	write(out,&temp,4);
+	temp=htonl(data_start);	write(out,&temp,4);
 
 	/* data_end */
 	if (debug) printf("BFLT: data_end %x (%x+%d)\n",data_end,
@@ -595,17 +583,18 @@ int main(int argc, char **argv) {
 				 (!strncmp(name,".rodata",6))) {
 				if (debug) printf("Writing text: %s!\n",name);
 
-				memcpy(&temp,&shptr[0x10],4);
-				offset=temp;
+				offset=get_uint32(&shptr[0x10]);
 				if (debug) printf("\toffset: %x\n",offset);
 
-				memcpy(&temp,&shptr[0x14],4);
-				size=temp;
+				size=get_uint32(&shptr[0x14]);
 				if (debug) printf("\tsize: %x\n",size);
 
-				if (debug) printf("Seeking to %x\n",
+				if (debug) printf("\tSeeking to %x\n",
 					text_start+(offset-text_offset));
-				lseek(out,text_start+(offset-text_offset),SEEK_SET);
+				lseek(out,text_start+(offset-text_offset),
+					SEEK_SET);
+				if (debug) printf("\tWriting %x bytes\n",
+					size);
 				write(out,&addr[offset],size);
 			}
 			else if (!strncmp(name,".interp",7)) {
@@ -613,17 +602,18 @@ int main(int argc, char **argv) {
 				/* /usr/lib/ld.so.1 */
 				if (debug) printf("Writing useless data: %s\n",name);
 
-				memcpy(&temp,&shptr[0x10],4);
-				offset=temp;
+				offset=get_uint32(&shptr[0x10]);
 				if (debug) printf("\toffset: %x\n",offset);
 
-				memcpy(&temp,&shptr[0x14],4);
-				size=temp;
+				size=get_uint32(&shptr[0x14]);
 				if (debug) printf("\tsize: %x\n",size);
 
 				if (debug) printf("Seeking to %x\n",
-					text_start+offset);
-				lseek(out,text_start+offset,SEEK_SET);
+					text_start+(offset-text_offset));
+				lseek(out,text_start+(offset-text_offset),
+					SEEK_SET);
+				if (debug) printf("Writing %x\n",
+					size);
 				write(out,&addr[offset],size);
 			}
 			else if ((!strncmp(name,".data.rel.local",15)) ||
@@ -634,19 +624,19 @@ int main(int argc, char **argv) {
 
 				if (debug) printf("Writing data: %s\n",name);
 
-				memcpy(&temp,&shptr[0x10],4);
-				offset=temp;
+				offset=get_uint32(&shptr[0x10]);
 				if (debug) printf("\toffset: %x\n",offset);
 
-				memcpy(&temp,&shptr[0x14],4);
-				size=temp;
+				size=get_uint32(&shptr[0x14]);
 				if (debug) printf("\tsize: %x\n",size);
 
-				output_addr=text_start+offset;
+				output_addr=text_start+(offset-text_offset);
 
-				if (debug) printf("Seeking to %x\n",
+				if (debug) printf("\tSeeking to %x\n",
 					output_addr);
 				lseek(out,output_addr,SEEK_SET);
+
+				if (debug) printf("\tWriting %x bytes\n",size);
 
 				output_addr=offset;
 				for(j=0;j<size;j+=4) {
@@ -676,6 +666,7 @@ int main(int argc, char **argv) {
 	/* FIXME: relocate GOT too */
 	/* but... the got entries seem to appear in rel.dyn??? */
 	if (reloc_count) {
+		if (debug) printf("Writing %d relocations at %x\n",reloc_count,reloc_start);
 		lseek(out,reloc_start,SEEK_SET);
 		for(j=0;j<reloc_count;j++) {
 			if (debug) printf("reloc %d: old %x new %x\n",
