@@ -16,7 +16,7 @@
 
 #include "processes/process.h"
 
-static int debug=1;
+static int debug=0;
 
 static struct file_object file_objects[MAX_OPEN_FILES];
 

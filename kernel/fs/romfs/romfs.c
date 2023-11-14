@@ -34,7 +34,7 @@
 
 #define ROMFS_MAX_FILENAME_SIZE	256
 
-static int debug=1;
+static int debug=0;
 
 /* offset where files start */
 static uint32_t file_headers_start=0;
