@@ -105,34 +105,40 @@ int main(int argc, char **argv) {
 	uint32_t entry=0,size,offset,address,text_address,output_addr;
 	uint32_t uses_got=0;
 
+	/* check command line arguments */
 	if (argc<3) {
 		print_usage(argv[0]);
 		return 5;
 	}
 
+	/* open input file */
 	fd=open(argv[1],O_RDONLY);
 	if (fd<0) {
 		printf("Error opening file %s\n",argv[1]);
 		return 6;
 	}
 
+	/* open output file */
 	out=open(argv[2],O_CREAT|O_TRUNC|O_WRONLY,0777);
 	if (out<0) {
 		printf("Error opening file %s\n",argv[2]);
 		return 7;
 	}
 
+	/* run fstat to get file size */
 	if (fstat(fd, &sb) < 0) {
 		printf("Error with fstat\n");
 		return 7;
 	}
 
+	/* mmap the file */
 	addr=mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED) {
 		printf("Error mmaping!\n");
 		return 8;
 	}
 
+	/* check that it's an elf file */
 	if ((addr[0]==0x7f) &&
 		(addr[1]=='E') && (addr[2]=='L') && (addr[3]=='F')) {
 		if (debug) printf("Found elf\n");
@@ -488,6 +494,7 @@ int main(int argc, char **argv) {
 
 	/* we skip the bflt header */
 	text_start=0x40;
+
 	if (data_start==0) {
 		data_start=text_start+text_size;
 	} else {
