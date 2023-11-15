@@ -9,7 +9,7 @@
 #include <sys/mman.h>
 #include <arpa/inet.h>
 
-static int debug=1;
+static int debug=0;
 
 #define SHT_NULL		0x0 	// Section header entry unused
 #define SHT_PROGBITS		0x1	// Program data
