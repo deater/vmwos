@@ -115,11 +115,12 @@ int main(int argc, char **argv) {
 	uint32_t reloc_start=0,reloc_count=0,reloc_index=0;
 	uint32_t *relocations=NULL;
 	uint32_t temp_addr,temp_type;
-	uint32_t entry=0,size,offset,address,output_addr;
+	uint32_t entry=0,size,offset,output_addr;
 	uint32_t uses_got=0;
 
 	uint32_t text_address=0,text_offset=0,text_size=0;
-	uint32_t text_startup_address,text_startup_offset,text_startup_size=0;
+	uint32_t text_startup_address=0,text_startup_offset=0,text_startup_size=0;
+	uint32_t rodata_address=0,rodata_offset=0,rodata_size=0;
 	uint32_t data_address=0,data_offset,data_size=0;
 
 	/* check command line arguments */
@@ -258,23 +259,13 @@ int main(int argc, char **argv) {
 				}
 			}
 			else if (!strncmp(name,".rodata",6)) {
-
-				memcpy(&temp,&shptr[0x0c],4);
-				address=temp;
-
-				memcpy(&temp,&shptr[0x10],4);
-				offset=temp;
-
-				memcpy(&temp,&shptr[0x14],4);
-				//text_size=(offset-(address-entry))+temp;
-
-				if (offset<(address-entry)) {
-					fprintf(stderr,"Error: rodata start negtive! offset=%x address=%x entry=%x\n",offset,address,entry);
-					exit(-1);
-				}
+				rodata_address=get_uint32(&shptr[0x0c]);
+				rodata_offset=get_uint32(&shptr[0x10]);
+				rodata_size=get_uint32(&shptr[0x14]);
 
 				if (debug) {
-					printf("\t.rodata at 0x%x size %d\n",offset,temp);
+					printf("\t.rodata at 0x%x size %d\n",
+						rodata_address,rodata_size);
 				}
 			}
 			else if (!strncmp(name,".interp",7)) {
@@ -477,10 +468,23 @@ int main(int argc, char **argv) {
 	/* we skip the bflt header */
 	text_start=0x40;
 
+	uint32_t text_segment_end=0;
+
+	if (text_start+text_size>text_segment_end) {
+		text_segment_end=(text_start+text_size);
+	}
+	if ((text_startup_offset-text_offset)+text_startup_size>text_segment_end) {
+		text_segment_end=(text_startup_offset-text_offset)+text_startup_size;
+	}
+	if ((rodata_offset-text_offset)+rodata_size>text_segment_end) {
+		text_segment_end=(rodata_offset-text_offset)+rodata_size;
+	}
+
+
 	if (data_address==0) {
-		data_start=text_start+text_size;
-		if (debug) printf("Calculating data start=text_start+text_size=%x+%x\n",
-			text_start,text_size);
+		data_start=text_start+text_segment_end;
+		if (debug) printf("Calculating data start=text_start+text_segment_end=%x+%x\n",
+			text_start,text_segment_end);
 	} else {
 		/* should this be offset instead? */
 		data_start=text_start+(data_address-text_address);

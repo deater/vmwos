@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
 	lseek(fd,entry,SEEK_SET);
 	read(fd,data,data_start-entry);
 
-	printf("Text:\n");
+	printf("Text: (0x%x bytes)\n",data_start-entry);
 	hexdump(data,entry,data_start-entry);
 	printf("\n");
 	free(data);
