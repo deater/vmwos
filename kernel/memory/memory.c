@@ -258,7 +258,8 @@ void memory_hierarchy_init(unsigned long memory_kernel) {
 	/* Setup Memory Hierarchy */
 	if ((hardware_get_type()==RPI_MODEL_2B) ||
 		(hardware_get_type()==RPI_MODEL_3B) ||
-		(hardware_get_type()==RPI_MODEL_3BPLUS)) {
+		(hardware_get_type()==RPI_MODEL_3BPLUS) ||
+		(hardware_get_type()==RPI_MODEL_4B)) {
 
 		/* Enable MMU plus caches */
 		printk("Enabling MMU with 1:1 Virt/Phys page mapping\n");

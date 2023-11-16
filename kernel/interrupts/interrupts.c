@@ -135,6 +135,7 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 
 		// check if it's a timer interrupt
 		if (pending2 & IRQ_PENDING2_TIMER_IRQ) {
+			was_timer++;
 			handled++;
 			/* we handle this later */
 		}
@@ -148,6 +149,7 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 		if (!handled) {
 			printk("Unknown interrupt happened %x %x %x!\n",
 				pending0,pending1,pending2);
+			mmio_write(GICD_ICPENDR0,0xffffffffUL);        // clear pending
 			return;
                 }
 
