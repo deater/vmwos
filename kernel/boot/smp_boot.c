@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "boot/smp_boot.h"
+#include "boot/hardware_detect.h"
 
 #include "lib/printk.h"
 #include "lib/mmio.h"
@@ -62,9 +63,16 @@ void smp_boot(void) {
 	/* core 2: 0x400000AC */
 	/* core 3: 0x400000BC */
 
+	/* on pi4 these are at 0xff80 0000 instead */
 
 	for(i=1;i<NUM_CORES;i++) {
-		mailbox_addr=0x4000008c+(i*0x10);
+
+		if (hardware_type==RPI_MODEL_4B) {
+			mailbox_addr=0xff80008c+(i*0x10);
+		}
+		else {
+			mailbox_addr=0x4000008c+(i*0x10);
+		}
 		printk("\tWriting %x to mailbox %x\n",
 			start_core_addr,mailbox_addr);
 		mmio_write(mailbox_addr,start_core_addr);

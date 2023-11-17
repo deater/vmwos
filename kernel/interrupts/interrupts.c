@@ -224,11 +224,20 @@ Bits	Description
 */
 	uint32_t per_core[4],i;
 
-	/* FIXME: these changed locations on Pi4 */
-	per_core[0]=mmio_read(0x40000060);
-	per_core[1]=mmio_read(0x40000064);
-	per_core[2]=mmio_read(0x40000068);
-	per_core[3]=mmio_read(0x4000006c);
+	/* FIXME: verify this is the right thing to do on Pi4 */
+
+	if (hardware_type==RPI_MODEL_4B) {
+		per_core[0]=mmio_read(0xff800060);
+		per_core[1]=mmio_read(0xff800064);
+		per_core[2]=mmio_read(0xff800068);
+		per_core[3]=mmio_read(0xff80006c);
+	}
+	else {
+		per_core[0]=mmio_read(0x40000060);
+		per_core[1]=mmio_read(0x40000064);
+		per_core[2]=mmio_read(0x40000068);
+		per_core[3]=mmio_read(0x4000006c);
+	}
 
 	for(i=0;i<4;i++) {
 		if (per_core[i]==0) continue;
