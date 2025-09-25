@@ -54,6 +54,7 @@ Kernel feature requests:
 		- 1-wire driver
 		- USB ( https://github.com/rsta2/uspi )
 		- sound
+		- RNG: the pi4 has different driver
 	+ keyboard driver
 		- Properly generate ANSI escape chars for arrows, etc
 		- Use FIQ interrupt?
