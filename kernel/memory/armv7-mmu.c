@@ -198,6 +198,7 @@ This is: not-secure, shareable, domain 0, and the rest as described.
 //92c10 = 1001 0010 1100 0001 0000
 //#define SECTION_2GB	0x92c10		// root-only, non-cached
 #define SECTION_2GB	0x90416		// root-only, non-cached
+//#define SECTION_2GB	0x90c16		// root-only, non-cached
 #define SECTION_PERIPH	0x90416		// root-only, non-cached
 #define SECTION_DEFAULT	0x90c16		// any-access, non-cached
 
