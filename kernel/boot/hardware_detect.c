@@ -228,6 +228,7 @@ void hardware_setup_vars(void) {
 			break;
 		case RPI_MODEL_BPLUS:
 			io_base=0x20000000;
+			act_led_gpio=47;
 			break;
 		case RPI_MODEL_2B:
 			io_base=0x3f000000;
