@@ -103,6 +103,9 @@ void schedule(void) {
 				(long)current_proc[0],
 				proc->pid,(long)proc);
 		process_switch(current_proc[0],proc);
+
+		/* Note process switch does in fact continue on to here */
+
 	}
 	else {
 		if (schedule_debug) {
@@ -114,7 +117,6 @@ void schedule(void) {
 	/* clrex instruction here */
 	/* to avoid false positives in the mutex handling? */
 	/* if there's any aliasing between new and old process? */
-
 }
 
 int32_t sched_yield(void) {
