@@ -457,7 +457,7 @@
 
 
 /************************************************/
-/* DMA (see BCM2835 Peripherals Chapter 4	*/
+/* DMA (see BCM2835 Peripherals Chapter 4)	*/
 /*   DMA Controller				*/
 /************************************************/
 
@@ -537,3 +537,49 @@
 #define DMA_EN12	0x1000
 #define DMA_EN13	0x2000
 #define DMA_EN14	0x4000
+
+
+
+/************************************************/
+/* i2c (see BCM2835 Peripherals Chapter 3)	*/
+/*   "BSC" i2c Controller			*/
+/************************************************/
+
+#define I2C0_BASE	(IO_BASE+0x205000)
+#define I2C1_BASE	(IO_BASE+0x804000)
+#define I2C2_BASE	(IO_BASE+0x805000)
+
+#define I2C0_CONTROL	(I2C0_BASE+0x0)		/* Control */
+
+#define I2C_CONTROL_I2CEN	(1<<15)		/* i2c Enable */
+#define I2C_CONTROL_CLEAR_FIFO	(3<<4)		/* i2c clear FIFO */
+#define I2C_CONTROL_START_TRANSFER	(1<<7)	/* i2c ST (start transfer) */
+
+#define I2C0_STATUS	(I2C0_BASE+0x4)		/* Status */
+
+#define I2C_STATUS_DONE		(1<<1)		/* i2c Enable */
+
+#define I2C0_DLEN	(I2C0_BASE+0x8)		/* Data Length */
+#define I2C0_ADDRESS	(I2C0_BASE+0xC)		/* Slave Address */
+#define I2C0_FIFO	(I2C0_BASE+0x10)	/* data FIFO */
+#define I2C0_DIV	(I2C0_BASE+0x14)	/* clock divider */
+#define I2C0_DEL	(I2C0_BASE+0x18)	/* data delay */
+#define I2C0_CLKT	(I2C0_BASE+0x1c)	/* clock stretch */
+
+#define I2C1_CONTROL	(I2C1_BASE+0x0)		/* Control */
+#define I2C1_STATUS	(I2C1_BASE+0x4)		/* Status */
+#define I2C1_DLEN	(I2C1_BASE+0x8)		/* Data Length */
+#define I2C1_ADDRESS	(I2C1_BASE+0xC)		/* Slave Address */
+#define I2C1_FIFO	(I2C1_BASE+0x10)	/* data FIFO */
+#define I2C1_DIV	(I2C1_BASE+0x14)	/* clock divider */
+#define I2C1_DEL	(I2C1_BASE+0x18)	/* data delay */
+#define I2C1_CLKT	(I2C1_BASE+0x1c)	/* clock stretch */
+
+#define I2C2_CONTROL	(I2C2_BASE+0x0)		/* Control */
+#define I2C2_STATUS	(I2C2_BASE+0x4)		/* Status */
+#define I2C2_DLEN	(I2C2_BASE+0x8)		/* Data Length */
+#define I2C2_ADDRESS	(I2C2_BASE+0xC)		/* Slave Address */
+#define I2C2_FIFO	(I2C2_BASE+0x10)	/* data FIFO */
+#define I2C2_DIV	(I2C2_BASE+0x14)	/* clock divider */
+#define I2C2_DEL	(I2C2_BASE+0x18)	/* data delay */
+#define I2C2_CLKT	(I2C2_BASE+0x1c)	/* clock stretch */

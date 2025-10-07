@@ -1,8 +1,8 @@
-/* This is code to drive the BCM2835 PL011 UART				*/
-/* As decribed in Chapter 13 of the BCM2835 ARM Peripherals Manual	*/
+/* This is code to drive the BCM2835 "BSC" i2c driver			*/
+/* As decribed in Chapter 3 of the BCM2835 ARM Peripherals Manual	*/
 
-/* The code assumes you have a serial connector with TX/RX connected	*/
-/* To GPIO pins 14 and 15						*/
+/* We assume we're using the i2c1 bus on GPIO2/3 pins 3/5 */
+/* Which have built-in pull up resistors on Pis */
 
 #include <stddef.h>
 #include <stdint.h>
@@ -11,8 +11,8 @@
 #include "drivers/console/console_io.h"
 #include "drivers/bcm2835/bcm2835_io.h"
 #include "drivers/bcm2835/bcm2835_periph.h"
-#include "drivers/serial/serial.h"
-#include "drivers/serial/pl011_uart.h"
+#include "drivers/i2c/i2c.h"
+#include "drivers/i2c/bcm2835_i2c.h"
 
 #include "lib/delay.h"
 #include "lib/printk.h"
@@ -20,261 +20,137 @@
 
 #include "interrupts/interrupts.h"
 
-static int pl011_uart_initialized=0;
+static int bcm2835_i2c_initialized=0;
 
-//static uint32_t pl011_lock=0;
-static int enable_locking=0;
 
-void pl011_uart_enable_locking(void) {
-	enable_locking=1;
+uint32_t bcm2835_i2c_write(unsigned char *buffer, uint32_t length) {
+	/* FIFO only 16 bytes */
+
+	int i;
+	uint32_t control;
+
+	if (length>15) {
+		printk("i2c write too big %d\n",length);
+	}
+
+	/* transfer length */
+	bcm2835_write(I2C1_DLEN, length);
+
+	/* reset the FIFO */
+	control=bcm2835_read(I2C1_CONTROL);
+	control|=I2C_CONTROL_CLEAR_FIFO;
+	bcm2835_write(I2C1_CONTROL,control);
+
+	for(i=0;i<length;i++) {
+		bcm2835_write(I2C1_FIFO,buffer[i]);
+	}
+
+	/* set done flag in status field */
+	bcm2835_write(I2C1_STATUS,I2C_STATUS_DONE);
+
+	/* write start */
+	control=bcm2835_read(I2C1_CONTROL);
+	control|=I2C_CONTROL_START_TRANSFER;
+	bcm2835_write(I2C1_CONTROL,control);
+
+	/* wait for finish */
+	while (bcm2835_read(I2C1_STATUS&I2C_STATUS_DONE) != 1) {
+
+	}
+
+	return 0;
 }
 
-uint32_t pl011_uart_init(struct serial_type *serial) {
 
-	/* Make this configurable? */
-	serial->baud=115200;
-	serial->bits=8;
-	serial->stop=1;
-	serial->parity=SERIAL_PARITY_NONE;
+uint32_t bcm2835_set_address(uint32_t address) {
+	/* set address */
+	bcm2835_write(I2C1_ADDRESS, address);
+	return 0;
+}
+
+uint32_t bcm2835_i2c_init(struct i2c_type *i2c) {
+
+	/* Set up config */
 
 	/* Set up function pointers */
-	serial->uart_enable_interrupts=pl011_uart_enable_interrupts;
-	serial->uart_enable_locking=pl011_uart_enable_locking;
-	serial->uart_putc=pl011_uart_putc;
-	serial->uart_getc=pl011_uart_getc;
-	serial->uart_getc_noblock=pl011_uart_getc_noblock;
-	serial->uart_interrupt_handler=pl011_uart_interrupt_handler;
+//	serial->uart_interrupt_handler=pl011_uart_interrupt_handler;
 
-	/* Disable UART */
-	bcm2835_write(UART0_CR, 0x0);
+	/* Disable i2c */
+	/* Turns off i2c and resets a few things */
+	bcm2835_write(I2C1_CONTROL, 0x0);
 
-	/* Setup GPIO pins 14 and 15 */
-	gpio_request(14,"uart_tx");
-	gpio_request(15,"uart_rx");
+	/* Setup GPIO 2/3 pins 3/5 */
+	gpio_request(2,"i2c1_sda");
+	gpio_request(3,"i2c1_scl");
 
-	/* Set GPIO14 and GPIO15 to be pl011 TX, so ALT0        */
-	gpio_function_select(14,GPIO_GPFSEL_ALT0);
-	gpio_function_select(15,GPIO_GPFSEL_ALT0);
+	/* Set GPIO2 and GPIO3 to be i2c1 SDA/SCL, Alt Function 0 */
+	gpio_function_select(2,GPIO_GPFSEL_ALT0);
+	gpio_function_select(3,GPIO_GPFSEL_ALT0);
 
-	/* Disable the pull up/down on pins 14 and 15 */
-	/* See the Peripheral Manual for more info */
+	/* Disable the pull up/down on GPIO 2/3 */
+	/* See the Peripheral Manual p101 for more info */
 	/* Configure to disable pull up/down and delay for 150 cycles */
 	bcm2835_write(GPIO_GPPUD, GPIO_GPPUD_DISABLE);
 	delay(150);
 
-	/* Pass the disable clock to GPIO pins 14 and 15 and delay*/
-	bcm2835_write(GPIO_GPPUDCLK0, (1 << 14) | (1 << 15));
+	/* Pass the disable clock to GPIO 2/3 and delay*/
+	bcm2835_write(GPIO_GPPUDCLK0, (1 << 2) | (1 << 3));
 	delay(150);
 
-	/* Write 0 to GPPUDCLK0 to make it take effect */
-	bcm2835_write(GPIO_GPPUDCLK0, 0x0);
-
-	/* Clear pending interrupts. */
-	bcm2835_write(UART0_ICR, 0x7FF);
-
-	/* Set integer & fractional part of baud rate. */
-	/* Divider = UART_CLOCK/(16 * Baud)            */
-	/* Fraction part register = (Fractional part * 64) + 0.5 */
-	/* UART_CLOCK = 3000000; Baud = 115200.        */
-
-	/* Divider = 3000000 / (16 * 115200) = 1.627   */
-	/* Integer part = 1 */
-	/* Fractional part register = (.627 * 64) + 0.5 = 40.6 = 40 */
-//	bcm2835_write(UART0_IBRD, 1);
-//	bcm2835_write(UART0_FBRD, 40);
-
-	/* On Pi3 (and all other Pis with recent firmware) */
-	/* UART clock is now 48MHz */
-
-	bcm2835_write(UART0_IBRD, 26);
-	bcm2835_write(UART0_FBRD, 3);
-
-
-
-	/* Enable FIFO */
-	/* Set 8N1 (8 bits of data, no parity, 1 stop bit */
-	bcm2835_write(UART0_LCRH, UART0_LCRH_FEN | UART0_LCRH_WLEN_8BIT);
-
-	/* Mask all interrupts. */
-	/* URGH to mask them "off" write a 0, not a 1 :( */
-	bcm2835_write(UART0_IMSC, 0);
-
-	/* Enable UART0, receive, and transmit */
-	bcm2835_write(UART0_CR, UART0_CR_UARTEN |
-				UART0_CR_TXE |
-				UART0_CR_RXE);
-// Memory barrier?
-//{
-//uint32_t dest = 0;
-//__asm__ __volatile__("mcr p15,0,%0,c7,c10,5" :"=&r"(dest) : : "memory");
-//}
-
-	pl011_uart_initialized=1;
-
-	return 0;
-}
-
-void pl011_uart_enable_interrupts(void) {
-	uint32_t old;
-
-	/* clear pending interrupts */
-	bcm2835_write(UART0_ICR, 0x7FF);
-
-	/* Set RX fifo length to 1 */
-	old=bcm2835_read(UART0_IFLS);
-	old&=~(0x7<<3);		/* set to 1/8 RX FIFO */
-	bcm2835_write(UART0_IFLS,old);
-
-	/* Enable receive interrupts */
-	old=bcm2835_read(UART0_IMSC);
-	printk("uart: previous IMSC: %x\n",old);
-	old|=UART0_IMSC_RTIM;
-	printk("uart: new IMSC: %x\n",old);
-	bcm2835_write(UART0_IMSC,old);
-	irq_enable(57);
-}
-
-void pl011_uart_putc(unsigned char byte) {
-
-	/* Check Flags Register */
-	/* And wait until FIFO not full */
-	while ( bcm2835_read(UART0_FR) & UART0_FR_TXFF ) {
-	}
-
-	/* Write our data byte out to the data register */
-	bcm2835_write(UART0_DR, byte);
-
-}
-
-int32_t pl011_uart_getc(void) {
-
-	/* Check Flags Register */
-	/* Wait until Receive FIFO is not empty */
-	while ( bcm2835_read(UART0_FR) & UART0_FR_RXFE ) {
-	}
-
-	/* Read and return the received data */
-	/* Note we are ignoring the top 4 error bits */
-
-	return bcm2835_read(UART0_DR);
-}
-
-int32_t pl011_uart_getc_noblock(void) {
-
-	/* Check Flags Register */
-
-	/* Return -1 if Receive FIFO is empty */
-	if ( bcm2835_read(UART0_FR) & UART0_FR_RXFE ) {
-		return -1;
-	}
-
-	/* Read and return the received data */
-	/* Note we are ignoring the top 4 error bits */
-
-	return (bcm2835_read(UART0_DR))&0xff;
-}
-
-int32_t pl011_uart_interrupt_handler(void) {
-
-	uint32_t ascii;
-
-	/* read byte */
-	while(1) {
-		ascii=pl011_uart_getc_noblock();
-		if (ascii==-1) break;
-
-		/* Send to console */
-		console_insert_char(ascii);
-	}
-
-	/* Clear receive interrupt */
-
-	bcm2835_write(UART0_ICR,UART0_ICR_RTIC);
-
-	return 0;
-}
-
-void pl011_uart_putc_extra(unsigned char byte,unsigned int extra) {
-
-	/* Check Flags Register */
-	/* And wait until FIFO not full */
-	while ( bcm2835_read(UART0_FR) & UART0_FR_TXFF ) {
-	}
-
-	/* Write our data byte out to the data register */
-	bcm2835_write(UART0_DR, byte+extra-extra);
-}
-
-#if 0
-
-int32_t pl011_write(const char* buffer, size_t size) {
-
-	size_t i;
-
-//	if (!pl011_uart_initialized) return 0;
-
-	for ( i = 0; i < size; i++ ) {
-		/* Terminal emulators expect \r\n     */
-		/* But we save space by only using \n */
-//		if (buffer[i]=='\n') pl011_uart_putc('\r');
-
-		pl011_uart_putc(buffer[i]);
-	}
-	return i;
-}
-
-uint32_t old_pl011_uart_init(void) {
-
-	/* Disable UART */
-	bcm2835_write(UART0_CR, 0x0);
-
-	/* Setup GPIO pins 14 and 15 */
-	gpio_request(14,"uart_tx");
-	gpio_request(15,"uart_rx");
-
-	/* Disable the pull up/down on pins 14 and 15 */
-	/* See the Peripheral Manual for more info */
-	/* Configure to disable pull up/down and delay for 150 cycles */
+	/* write 0 to GPPUD?  Already 0 because of disable */
 	bcm2835_write(GPIO_GPPUD, GPIO_GPPUD_DISABLE);
-	delay(150);
-
-	/* Pass the disable clock to GPIO pins 14 and 15 and delay*/
-	bcm2835_write(GPIO_GPPUDCLK0, (1 << 14) | (1 << 15));
-	delay(150);
 
 	/* Write 0 to GPPUDCLK0 to make it take effect */
 	bcm2835_write(GPIO_GPPUDCLK0, 0x0);
 
-	/* Clear pending interrupts. */
-	bcm2835_write(UART0_ICR, 0x7FF);
+	/* Set speed */
+	/* Default to 100kbit/s? */
 
-	/* Set integer & fractional part of baud rate. */
-	/* Divider = UART_CLOCK/(16 * Baud)            */
-	/* Fraction part register = (Fractional part * 64) + 0.5 */
-	/* UART_CLOCK = 3000000; Baud = 115200.        */
+//	bcm2835_write(UART0_IBRD, 26);
+//	bcm2835_write(UART0_FBRD, 3);
 
-	/* Divider = 3000000 / (16 * 115200) = 1.627   */
-	/* Integer part = 1 */
-	/* Fractional part register = (.627 * 64) + 0.5 = 40.6 = 40 */
-	bcm2835_write(UART0_IBRD, 1);
-	bcm2835_write(UART0_FBRD, 40);
 
-	/* Enable FIFO */
-	/* Set 8N1 (8 bits of data, no parity, 1 stop bit */
-	bcm2835_write(UART0_LCRH, UART0_LCRH_FEN | UART0_LCRH_WLEN_8BIT);
+	/* Enable i2c */
+	bcm2835_write(I2C1_CONTROL, I2C_CONTROL_I2CEN);
 
-	/* Mask all interrupts. */
-	/* URGH to mask them "off" write a 0, not a 1 :( */
-	bcm2835_write(UART0_IMSC, 0);
+	unsigned char buffer[17];
 
-	/* Enable UART0, receive, and transmit */
-	bcm2835_write(UART0_CR, UART0_CR_UARTEN |
-				UART0_CR_TXE |
-				UART0_CR_RXE);
+	/* Debug */
 
-	pl011_uart_initialized=1;
+	bcm2835_set_address(0xE1);
+
+	#define HT16K33_REGISTER_ADDRESS_POINTER        0x00
+#define HT16K33_REGISTER_SYSTEM_SETUP           0x20
+#define HT16K33_REGISTER_KEY_DATA_POINTER       0x40
+#define HT16K33_REGISTER_INT_ADDRESS_POINTER    0x60
+#define HT16K33_REGISTER_DISPLAY_SETUP          0x80
+#define HT16K33_REGISTER_ROW_INT_SET            0xA0
+#define HT16K33_REGISTER_TEST_MODE              0xD0
+#define HT16K33_REGISTER_DIMMING                0xE0
+
+/* Blink rate */
+#define HT16K33_BLINKRATE_OFF                   0x00
+
+	buffer[0]= HT16K33_REGISTER_DISPLAY_SETUP | HT16K33_BLINKRATE_OFF | 0x1;
+	bcm2835_i2c_write(buffer,1);
+
+	buffer[0]= HT16K33_REGISTER_DIMMING | 15;
+	bcm2835_i2c_write(buffer,1);
+
+	buffer[0]=0x00;
+	buffer[1]=0xff;
+	buffer[2]=0xff;
+	buffer[3]=0xff;
+	buffer[4]=0xff;
+	buffer[5]=0xff;
+	buffer[6]=0xff;
+	buffer[7]=0xff;
+	bcm2835_i2c_write(buffer,8);
+
+
+	bcm2835_i2c_initialized=1;
 
 	return 0;
 }
 
-#endif
+

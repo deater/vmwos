@@ -15,6 +15,7 @@
 #include "drivers/random/bcm2835_rng.h"
 #include "drivers/thermal/thermal.h"
 #include "drivers/pmu/arm-pmu.h"
+#include "drivers/i2c/i2c.h"
 
 
 void drivers_init_all(void) {
@@ -66,5 +67,8 @@ void drivers_init_all(void) {
 
 	/* Start HW Perf Counters */
 	pmu_init();
+
+	/* Enable i2c */
+	i2c_init(0);
 
 }
