@@ -119,7 +119,9 @@ int vsnprintf(char *buffer, uint32_t size, const char *string, va_list ap) {
 				}
 			}
 			/* Hex */
-			else if ((*string=='x') || (*string=='p')) {
+			else if ((*string=='x') || (*string=='X') ||
+					(*string=='p')) {
+				/* FIXME: handle X case (uppercase hex) */
 				string++;
 				x=va_arg(ap, unsigned long);
 				int_pointer=9;
