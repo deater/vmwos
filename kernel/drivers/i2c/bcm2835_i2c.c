@@ -29,6 +29,8 @@ uint32_t bcm2835_i2c_write(unsigned char *buffer, uint32_t length) {
 	int i;
 	uint32_t control;
 
+	printk("Writing %d bytes to i2c (%02X)\n",length,buffer[0]);
+
 	if (length>15) {
 		printk("i2c write too big %d\n",length);
 	}
@@ -64,6 +66,7 @@ uint32_t bcm2835_i2c_write(unsigned char *buffer, uint32_t length) {
 
 uint32_t bcm2835_set_address(uint32_t address) {
 	/* set address */
+	printk("Setting i2c to address %02X\n",address);
 	bcm2835_write(I2C1_ADDRESS, address);
 	return 0;
 }
