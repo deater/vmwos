@@ -10,6 +10,7 @@
 #define __NR_malloc		8201
 #define __NR_core_poke		8202
 #define __NR_play_sound		8203
+#define __NR_i2c_test		8204
 
 int vmwos_blink(int value);
 int vmwos_tb1(void);

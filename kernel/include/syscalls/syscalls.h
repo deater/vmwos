@@ -53,3 +53,4 @@
 #define SYSCALL_MALLOC		8201	/* hack */
 #define SYSCALL_CORE_POKE	8202
 #define SYSCALL_PLAY_SOUND	8203	/* hack */
+#define SYSCALL_I2C_TEST	8204
