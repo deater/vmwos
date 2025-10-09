@@ -109,20 +109,27 @@ uint32_t bcm2835_i2c_init(struct i2c_type *i2c) {
 	/* Set speed */
 	/* Default to 100kbit/s? */
 
-//	bcm2835_write(UART0_IBRD, 26);
-//	bcm2835_write(UART0_FBRD, 3);
-
-
 	/* Enable i2c */
 	bcm2835_write(I2C1_CONTROL, I2C_CONTROL_I2CEN);
+
+	bcm2835_i2c_initialized=1;
+
+	return 0;
+}
+
+
+uint32_t bcm2835_i2c_debug(void) {
 
 	unsigned char buffer[17];
 
 	/* Debug */
 
+	/* 1110 0001 */
+	/* 1100 0101 */
+
 	bcm2835_set_address(0xE1);
 
-	#define HT16K33_REGISTER_ADDRESS_POINTER        0x00
+#define HT16K33_REGISTER_ADDRESS_POINTER        0x00
 #define HT16K33_REGISTER_SYSTEM_SETUP           0x20
 #define HT16K33_REGISTER_KEY_DATA_POINTER       0x40
 #define HT16K33_REGISTER_INT_ADDRESS_POINTER    0x60
@@ -134,8 +141,12 @@ uint32_t bcm2835_i2c_init(struct i2c_type *i2c) {
 /* Blink rate */
 #define HT16K33_BLINKRATE_OFF                   0x00
 
+	/* 0x21 */
+
 	buffer[0]= HT16K33_REGISTER_DISPLAY_SETUP | HT16K33_BLINKRATE_OFF | 0x1;
 	bcm2835_i2c_write(buffer,1);
+
+	/* 0xEF */
 
 	buffer[0]= HT16K33_REGISTER_DIMMING | 15;
 	bcm2835_i2c_write(buffer,1);
@@ -149,9 +160,6 @@ uint32_t bcm2835_i2c_init(struct i2c_type *i2c) {
 	buffer[6]=0xff;
 	buffer[7]=0xff;
 	bcm2835_i2c_write(buffer,8);
-
-
-	bcm2835_i2c_initialized=1;
 
 	return 0;
 }

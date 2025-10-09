@@ -7,7 +7,7 @@ GENROMFS = genromfs
 all:	$(ELF2BFLT) \
 	shell \
 	cat cat_count cause_error chmod core_poke cp df dmesg \
-	donut hello hexdump ll ls \
+	donut hello hexdump i2c_test ll ls \
 	md5sum memory_test nano printa printb pwd rm sysinfo \
 	tbo truncate uname \
 	chiptune chiptune6 write_test
@@ -15,7 +15,7 @@ all:	$(ELF2BFLT) \
 
 image:	shell \
 	cat cat_count cause_error chmod core_poke cp df dmesg \
-	donut hello hexdump ll ls \
+	donut hello hexdump i2c_test ll ls \
 	md5sum memory_test nano printa printb pwd rm sysinfo tbo \
 	truncate uname chiptune chiptune6 write_test
 	mkdir -p image
@@ -25,7 +25,7 @@ image:	shell \
 	mkdir -p image/proc
 	mkdir -p image/etc
 	cp shell cat cat_count cause_error chmod core_poke cp df dmesg \
-		donut hello hexdump ll ls md5sum memory_test nano printa printb pwd \
+		donut hello hexdump i2c_test ll ls md5sum memory_test nano printa printb pwd \
 		rm sysinfo tbo truncate uname write_test chiptune \
 		chiptune6 ./image/bin
 	#cp demo.demosplash2019/demosplash2019 ./image/bin
@@ -81,6 +81,9 @@ hello:	hello.elf
 
 hexdump:	hexdump.elf
 	$(ELF2BFLT) hexdump.elf hexdump
+
+i2c_test:	i2c_test.elf
+	$(ELF2BFLT) i2c_test.elf i2c_test
 
 ls:	ls.elf
 	$(ELF2BFLT) ls.elf ls
@@ -175,6 +178,9 @@ hello.elf:	hello.o ./vlibc/vlibc.a
 hexdump.elf:	hexdump.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o hexdump.elf hexdump.o ./vlibc/vlibc.a
 
+i2c_test.elf:	i2c_test.o ./vlibc/vlibc.a
+	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o i2c_test.elf i2c_test.o ./vlibc/vlibc.a
+
 ls.elf:	ls.o ./vlibc/vlibc.a
 	$(CROSS)$(CC) $(CFLAGS) $(LFLAGS) -o ls.elf ls.o ./vlibc/vlibc.a
 
@@ -267,6 +273,9 @@ hello.o:	hello.c
 hexdump.o:	hexdump.c
 	$(CROSS)$(CC) $(CFLAGS) -c hexdump.c
 
+i2c_test.o:	i2c_test.c
+	$(CROSS)$(CC) $(CFLAGS) -c i2c_test.c
+
 md5sum.o:	md5sum.c
 	$(CROSS)$(CC) $(CFLAGS) -c md5sum.c
 
@@ -321,7 +330,7 @@ ll.o:	ll.arm.eabi.s logo.lzss_new
 clean:
 	rm -f *~ *.o *.elf \
 		hello cat cat_count cause_error chiptune chiptune6 \
-		chmod core_poke cp df dmesg hexdump ll ls \
+		chmod core_poke cp df dmesg donut hexdump i2c_test ll ls \
 		md5sum memory_test nano \
 		printa printb pwd rm shell slideshow sysinfo tbo \
 		truncate uname write_test \

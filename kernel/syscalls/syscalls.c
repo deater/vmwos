@@ -304,6 +304,13 @@ uint32_t swi_handler_c(
 			result=send_ipi(r0);
 			break;
 
+extern uint32_t bcm2835_i2c_debug(void);
+
+
+		case SYSCALL_I2C_TEST:
+			result=bcm2835_i2c_debug();
+			break;
+
 		default:
 			printk("Unknown syscall %d\n",r7);
 			break;
