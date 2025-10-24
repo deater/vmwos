@@ -17,6 +17,7 @@ drivers-arm1176.a:	drivers.arm1176.o \
 		firmware/firmware.arm1176.a \
 		framebuffer/framebuffer.arm1176.a \
 		gpio/gpio.arm1176.a \
+		i2c/i2c.arm1176.a \
 		keyboard/keyboard.arm1176.a \
 		led/led.arm1176.a \
 		pmu/pmu.arm1176.a \
@@ -36,6 +37,7 @@ drivers-arm1176.a:	drivers.arm1176.o \
 		firmware/firmware.arm1176.a \
 		framebuffer/framebuffer.arm1176.a \
 		gpio/gpio.arm1176.a \
+		i2c/i2c.arm1176.a \
 		keyboard/keyboard.arm1176.a \
 		led/led.arm1176.a \
 		pmu/pmu.arm1176.a \
@@ -75,6 +77,9 @@ framebuffer/framebuffer.arm1176.a:	force_look
 gpio/gpio.arm1176.a:	force_look
 	cd gpio && make
 
+i2c/i2c.arm1176.a:	force_look
+	cd i2c && make
+
 keyboard/keyboard.arm1176.a:	force_look
 	cd keyboard && make
 
@@ -110,6 +115,7 @@ drivers-armv7.a:	\
 		firmware/firmware.armv7.a \
 		framebuffer/framebuffer.armv7.a \
 		gpio/gpio.armv7.a \
+		i2c/i2c.armv7.a \
 		keyboard/keyboard.armv7.a \
 		led/led.armv7.a \
 		pmu/pmu.armv7.a \
@@ -129,6 +135,7 @@ drivers-armv7.a:	\
 		firmware/firmware.armv7.a \
 		framebuffer/framebuffer.armv7.a \
 		gpio/gpio.armv7.a \
+		i2c/i2c.armv7.a \
 		keyboard/keyboard.armv7.a \
 		led/led.armv7.a \
 		pmu/pmu.armv7.a \
@@ -168,6 +175,9 @@ framebuffer/framebuffer.armv7.a:	force_look
 gpio/gpio.armv7.a:	force_look
 	cd gpio && make
 
+i2c/i2c.armv7.a:	force_look
+	cd i2c && make
+
 keyboard/keyboard.armv7.a:	force_look
 	cd keyboard && make
 
@@ -203,6 +213,7 @@ clean:
 	cd firmware && make clean
 	cd framebuffer && make clean
 	cd gpio && make clean
+	cd i2c && make clean
 	cd keyboard && make clean
 	cd led && make clean
 	cd pmu && make clean

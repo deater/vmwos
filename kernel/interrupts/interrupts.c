@@ -162,22 +162,30 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 		/* First check basic_pending register */
 		/**************************************/
 		basic_pending=bcm2835_read(IRQ_BASIC_PENDING);
-
-		if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
-			handled++;
-			serial_interrupt_handler();
-		}
-		if (basic_pending & IRQ_BASIC_PENDING_TIMER) {
-			handled++;
-			was_timer++;
+		if (basic_pending) {
+			if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
+				handled++;
+				serial_interrupt_handler();
+			}
+			if (basic_pending & IRQ_BASIC_PENDING_TIMER) {
+				handled++;
+				was_timer++;
+			}
+			if (!handled) {
+				printk("Unknown basic_pending interrupt %x\n",
+					basic_pending);
+			}
 		}
 
 		/*************************************/
 		/* Next check pending1 register      */
 		/*************************************/
 		pending1=bcm2835_read(IRQ_PENDING1);
-		if ((pending1) && (!handled)) {
-			printk("Unknown pending1 interrupt %x\n",pending1);
+		if (pending1) {
+			if (!handled) {
+				printk("Unknown pending1 interrupt %x\n",
+					pending1);
+			}
 		}
 
 		/*************************************/
@@ -191,10 +199,10 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 				handled++;
 				ps2_interrupt_handler();
 			}
-		}
+			if (!handled) {
+				printk("Unknown pending2 interrupt %x\n",pending2);
+			}
 
-		if (!handled) {
-			printk("Unknown pending2 interrupt %x\n",pending2);
 		}
 	}
 

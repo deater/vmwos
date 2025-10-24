@@ -26,19 +26,25 @@ static inline void set_CPSR_c(uint32_t new_cpsr) {
 
 /* enable interrupts  */
 /* Enable interrupts by clearing the "Mask Interrupts" flag */
-static inline void enable_interrupts(void){
-	uint32_t temp;
-	temp = get_CPSR();
-	set_CPSR_c(temp & ~0x80);
+static inline void enable_interrupts(void) {
+//	uint32_t temp;
+//	temp = get_CPSR();
+//	set_CPSR_c(temp & ~0x80);
+
+	/* This is supported ARMv6 and newer */
+	asm volatile ("cpsie i"::);
 }
 
 /* Disable interrupts */
 /* Disable by setting the "Mask Interrupts" flag */
-static inline uint32_t disable_interrupts(void){
-	uint32_t temp;
-	temp = get_CPSR();
-	set_CPSR_c(temp | 0x80);
-	return temp;
+static inline void disable_interrupts(void) {
+	//uint32_t temp;
+	//temp = get_CPSR();
+	//set_CPSR_c(temp | 0x80);
+	//return temp;
+
+	/* This is supported ARMv6 and newer */
+	asm volatile ("cpsid i"::);
 }
 
 
