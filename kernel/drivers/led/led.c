@@ -16,7 +16,7 @@ static uint32_t led_active_low=1;
 static uint32_t led_configured=0;
 
 /* Enable GPIO for the ACT LED */
-int led_init(void) {
+int act_led_init(void) {
 
 	led_configured=1;
 
@@ -58,7 +58,7 @@ int led_init(void) {
 
 }
 
-int led_on(void) {
+int act_led_on(void) {
 
 	if (!led_configured) return 0;
 
@@ -72,7 +72,7 @@ int led_on(void) {
 	return 0;
 }
 
-int led_off(void) {
+int act_led_off(void) {
 
 	if (!led_configured) return 0;
 

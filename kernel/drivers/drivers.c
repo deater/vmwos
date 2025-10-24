@@ -30,7 +30,7 @@ void drivers_init_all(void) {
 	console_init();
 
 	/* Set up ACT LED */
-	led_init();
+	act_led_init();
 
 	/* Set up timer */
 	timer_init();

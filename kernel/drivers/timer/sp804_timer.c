@@ -91,10 +91,10 @@ void timer_interrupt_handler(void) {
 		lit++;
 		/* Blink the LED at 1HZ */
 		if (lit==TIMER_HZ/2) {
-			led_off();
+			act_led_off();
 		}
 		if (lit==TIMER_HZ) {
-			led_on();
+			act_led_on();
 			lit=0;
 		}
 	}
