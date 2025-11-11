@@ -558,6 +558,14 @@
 #define I2C0_STATUS	(I2C0_BASE+0x4)		/* Status */
 
 #define I2C_STATUS_DONE		(1<<1)		/* i2c Enable */
+#define I2C_STATUS_TXW		(1<<2)		/* i2c FIFO needs writing */
+#define I2C_STATUS_RXR		(1<<3)		/* i2c FIFO needs reading */
+#define I2C_STATUS_TXD		(1<<4)		/* i2c FIFO can accept data */
+#define I2C_STATUS_RXD		(1<<5)		/* i2c FIFO contains data */
+#define I2C_STATUS_TXE		(1<<6)		/* i2c FIFO empty */
+#define I2C_STATUS_RXF		(1<<7)		/* i2c FIFO full */
+#define I2C_STATUS_ERR		(1<<8)		/* i2c Error  */
+#define I2C_STATUS_CLKT		(1<<9)		/* i2c Clock Stretch Timeout */
 
 #define I2C0_DLEN	(I2C0_BASE+0x8)		/* Data Length */
 #define I2C0_ADDRESS	(I2C0_BASE+0xC)		/* Slave Address */

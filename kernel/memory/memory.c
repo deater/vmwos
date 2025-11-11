@@ -85,6 +85,7 @@ static int memory_init(unsigned long memory_total,
 		memory_kernel/1024,
 		(MAX_MEMORY/CHUNK_SIZE/32)/1024);
 
+	/* assume memory_total is multiple of chunk size */
 	max_chunk=(memory_total/CHUNK_SIZE);
 
 	/* Clear it out, probably not necessary */
@@ -93,7 +94,7 @@ static int memory_init(unsigned long memory_total,
 	}
 
 	/* Mark OS area as used */
-	for(i=0;i<(memory_kernel/CHUNK_SIZE);i++) {
+	for(i=0;i<(memory_kernel/CHUNK_SIZE)+1;i++) {
 		memory_mark_used(i);
 	}
 
