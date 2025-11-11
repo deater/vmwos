@@ -4,6 +4,9 @@
 /* We assume we're using the i2c1 bus on GPIO2/3 pins 3/5 */
 /* Which have built-in pull up resistors on Pis */
 
+/* After my initial attempt didn't work, fixed the code */
+/* based on Willow Cunningham's ECE531 Final Project */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -20,54 +23,77 @@
 
 #include "interrupts/interrupts.h"
 
+#define CORE_CLOCK_SPEED	150000000	/* 150MHz says the manual */
+#define IC2_SPEED_100K_DIVIDER	1500		/* 100kHz */
+#define I2C_SPEED_10K_DIVIDER	15000		/* 10kHz */
+
 static int bcm2835_i2c_initialized=0;
 
 
-uint32_t bcm2835_i2c_write(unsigned char *buffer, uint32_t length) {
+uint32_t bcm2835_i2c_write(uint32_t address,
+			unsigned char *buffer, uint32_t length) {
 	/* FIFO only 16 bytes */
 
 	int i;
-	uint32_t control;
+	uint32_t control,status;
 
-	printk("Writing %d bytes to i2c (%02X)\n",length,buffer[0]);
+	printk("Device %02x: Writing %d bytes to i2c (%02x)\n",
+			address,length,buffer[0]);
 
-	if (length>15) {
+	/* max size is 16 bits */
+	if (length>65535) {
 		printk("i2c write too big %d\n",length);
 	}
 
-	/* transfer length */
-	bcm2835_write(I2C1_DLEN, length);
+	/* Set address */
+	bcm2835_write(I2C1_ADDRESS, address);
 
 	/* reset the FIFO */
 	control=bcm2835_read(I2C1_CONTROL);
 	control|=I2C_CONTROL_CLEAR_FIFO;
 	bcm2835_write(I2C1_CONTROL,control);
 
+	/* reset the status register fields */
+	bcm2835_write(I2C1_STATUS,
+		I2C_STATUS_DONE | I2C_STATUS_CLKT | I2C_STATUS_ERR);
+
+	printk("Before write status = %x\n",bcm2835_read(I2C1_STATUS));
+
+	/* set transfer length */
+	bcm2835_write(I2C1_DLEN, length);
+
+	/* start a write (do not set READ bit) */
+	bcm2835_write(I2C1_CONTROL,
+		I2C_CONTROL_I2CEN | I2C_CONTROL_START_TRANSFER);
+
 	for(i=0;i<length;i++) {
+		/* wait for there to be space in FIFO */
+		while((bcm2835_read(I2C1_STATUS)&I2C_STATUS_TXD)==0) {
+			asm("");	/* avoid optimizing away */
+		}
 		bcm2835_write(I2C1_FIFO,buffer[i]);
 	}
 
 	/* set done flag in status field */
-	bcm2835_write(I2C1_STATUS,I2C_STATUS_DONE);
+//	bcm2835_write(I2C1_STATUS,I2C_STATUS_DONE);
 
 	/* write start */
-	control=bcm2835_read(I2C1_CONTROL);
-	control|=I2C_CONTROL_START_TRANSFER;
-	bcm2835_write(I2C1_CONTROL,control);
+//	control=bcm2835_read(I2C1_CONTROL);
+//	control|=I2C_CONTROL_START_TRANSFER;
+//	bcm2835_write(I2C1_CONTROL,control);
 
 	/* wait for finish */
 	while (bcm2835_read(I2C1_STATUS&I2C_STATUS_DONE) != 1) {
-
+		asm("");	/* avoid optimizing away */
 	}
 
-	return 0;
-}
+	status=bcm2835_read(I2C1_STATUS);
+	printk("After write status = %x\n",status);
+	if (status) {
+		if (status&I2C_STATUS_ERR) printk("i2c: error slave did not ACK\n");
+		if (status&I2C_STATUS_CLKT) printk("i2c: error clock stretch\n");
+	}
 
-
-uint32_t bcm2835_set_address(uint32_t address) {
-	/* set address */
-	printk("Setting i2c to address %02X\n",address);
-	bcm2835_write(I2C1_ADDRESS, address);
 	return 0;
 }
 
@@ -108,6 +134,7 @@ uint32_t bcm2835_i2c_init(struct i2c_type *i2c) {
 
 	/* Set speed */
 	/* Default to 100kbit/s? */
+	bcm2835_write(I2C1_DIV, IC2_SPEED_100K_DIVIDER);
 
 	/* Enable i2c */
 	bcm2835_write(I2C1_CONTROL, I2C_CONTROL_I2CEN);
@@ -122,12 +149,14 @@ uint32_t bcm2835_i2c_debug(void) {
 
 	unsigned char buffer[17];
 
+	uint32_t address;
+
+	address=0x70;
+
 	/* Debug */
 
 	/* 1110 0001 */
 	/* 1100 0101 */
-
-	bcm2835_set_address(0xE1);
 
 #define HT16K33_REGISTER_ADDRESS_POINTER        0x00
 #define HT16K33_REGISTER_SYSTEM_SETUP           0x20
@@ -144,12 +173,12 @@ uint32_t bcm2835_i2c_debug(void) {
 	/* 0x21 */
 
 	buffer[0]= HT16K33_REGISTER_DISPLAY_SETUP | HT16K33_BLINKRATE_OFF | 0x1;
-	bcm2835_i2c_write(buffer,1);
+	bcm2835_i2c_write(address,buffer,1);
 
 	/* 0xEF */
 
 	buffer[0]= HT16K33_REGISTER_DIMMING | 15;
-	bcm2835_i2c_write(buffer,1);
+	bcm2835_i2c_write(address,buffer,1);
 
 	buffer[0]=0x00;
 	buffer[1]=0xff;
@@ -159,7 +188,7 @@ uint32_t bcm2835_i2c_debug(void) {
 	buffer[5]=0xff;
 	buffer[6]=0xff;
 	buffer[7]=0xff;
-	bcm2835_i2c_write(buffer,8);
+	bcm2835_i2c_write(address,buffer,8);
 
 	return 0;
 }

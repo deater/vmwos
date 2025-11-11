@@ -552,11 +552,17 @@
 #define I2C0_CONTROL	(I2C0_BASE+0x0)		/* Control */
 
 #define I2C_CONTROL_I2CEN	(1<<15)		/* i2c Enable */
-#define I2C_CONTROL_CLEAR_FIFO	(3<<4)		/* i2c clear FIFO */
+#define I2C_CONTROL_INTR	(1<<10)		/* i2c interrupt on RX */
+#define I2C_CONTROL_INTT	(1<<9)		/* i2c interrupt on TX */
+#define I2C_CONTROL_INTD	(1<<8)		/* i2c interrupt on done */
 #define I2C_CONTROL_START_TRANSFER	(1<<7)	/* i2c ST (start transfer) */
+#define I2C_CONTROL_CLEAR_FIFO	(3<<4)		/* i2c clear FIFO */
+#define I2C_CONTROL_READ	(1<<0)		/* i2c read packet */
+
 
 #define I2C0_STATUS	(I2C0_BASE+0x4)		/* Status */
 
+#define I2C_STATUS_TA		(1<<0)		/* i2c Transfer Active */
 #define I2C_STATUS_DONE		(1<<1)		/* i2c Enable */
 #define I2C_STATUS_TXW		(1<<2)		/* i2c FIFO needs writing */
 #define I2C_STATUS_RXR		(1<<3)		/* i2c FIFO needs reading */
