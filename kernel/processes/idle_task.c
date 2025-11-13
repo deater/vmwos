@@ -47,7 +47,8 @@ static void idle_task(void) {
 
 static void enter_kernelspace(void) {
 
-        /* enter userspace */
+        /* idle task is a kernel thread */
+	/* have it run in kernel mode */
 
         long shell_address=current_proc[0]->user_state.pc;
         long cp_address=(long)&(current_proc[0]);

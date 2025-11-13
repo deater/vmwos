@@ -6,7 +6,7 @@
 interrupt_handler:
 	sub	lr, lr, #4		@ point LR to actual return address
 
-	ldr	sp,=current_proc
+	ldr	sp,=current_proc	@ use the process's kernel stack
 	ldr	sp,[sp]
 
 	stmia	sp,{r0-lr}^		@ save all registers and return addr

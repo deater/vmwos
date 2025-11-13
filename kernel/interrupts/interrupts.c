@@ -305,21 +305,28 @@ void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
 	register long lr asm ("lr");
 	uint32_t *code;
 
-	code=(uint32_t *)(lr-8);
+	/* In theory we want LR-8 here, but */
+	/* note: gcc subtracts 4 from LR at entry */
+	code=(uint32_t *)(lr-4);
 
-	printk("MEMORY ABORT at PC=%x (%x)\n",lr-8,*code);
+	printk("MEMORY ABORT at PC=%x (%x)\n",lr-4,*code);
 
 	/* Read DFSR reg (see B4.1.52) */
+	/* Also 3.2.17 in ARM1176 manual */
 	asm volatile("mrc p15, 0, %0, c5, c0, 0" : "=r" (dfsr) : : "cc");
 
 	/* Read DFAR reg (see B4.1.52) */
+	/* Data Fault Address Register */
 	asm volatile("mrc p15, 0, %0, c6, c0, 0" : "=r" (dfar) : : "cc");
 
 	fs=dfsr&0xf;
 
 	if (fs==1) printk("\tAlignment fault\n");
 	if (fs==2) printk("\tDebug event\n");
-	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",dfar);
+	if ((fs&0xd)==0xd) {
+		printk("\tPermission fault %s %x\n",
+			(dfsr&(1<<11))?"writing":"reading",dfar);
+	}
 
 	user_reg_dump();
 
