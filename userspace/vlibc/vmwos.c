@@ -119,12 +119,11 @@ void *vmwos_malloc(uint32_t size) {
 
 	register long r7 __asm__("r7") = __NR_malloc;
 	register long r0 __asm__("r0") = size;
-	register long r1 __asm__("r1") = 1; // memory user
 
 	asm volatile(
 		"svc #0\n"
 		: "=r"(r0)
-		: "r"(r7), "0"(r0), "r"(r1)
+		: "r"(r7), "0"(r0)
 		: "memory");
 
 	return (void *)r0;

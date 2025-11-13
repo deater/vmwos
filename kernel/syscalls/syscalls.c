@@ -293,7 +293,7 @@ uint32_t swi_handler_c(
 			break;
 
 		case SYSCALL_MALLOC:
-			result=(uint32_t)memory_allocate(r0,r1);
+			result=(uint32_t)memory_allocate(r0,MEMORY_USER);
 			break;
 
 		case SYSCALL_PLAY_SOUND:
