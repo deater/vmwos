@@ -10,10 +10,9 @@
 #include "lib/locks.h"
 #include "lib/errors.h"
 
-#define MAX_MEMORY	(1024*1024*1024)		// 1GB
-#define RESERVED_KERNEL	(16*1024*1024)			// 16MB
-
-#define CHUNK_SIZE	4096
+#define MAX_MEMORY	(1024*1024*1024)		/* 1GB  */
+#define RESERVED_KERNEL	(16*1024*1024)			/* 16MB */
+#define CHUNK_SIZE	4096				/* 4k */
 
 static int memory_debug=0;
 
@@ -63,7 +62,7 @@ static int memory_test_used(int chunk) {
 }
 
 /* Initialize memory */
-static int memory_init(unsigned long memory_total,
+static int32_t memory_init(unsigned long memory_total,
 				unsigned long memory_kernel) {
 
 	int i;
@@ -86,39 +85,56 @@ static int memory_init(unsigned long memory_total,
 		(MAX_MEMORY/CHUNK_SIZE/32)/1024);
 
 	/* assume memory_total is multiple of chunk size */
+	if ((memory_total%CHUNK_SIZE)!=0) {
+		printk("error: memory total not a multiple of chunk size!\n");
+		return -ENOMEM;
+	}
+
 	max_chunk=(memory_total/CHUNK_SIZE);
 
-	/* Clear it out, probably not necessary */
+	/* Clear out memory_map , probably not necessary */
 	for(i=0;i<max_chunk/32;i++) {
 		memory_map[i]=0;
 	}
 
+	/* assume memory_kernel is a multiple of chunk size */
+	if ((memory_kernel%CHUNK_SIZE)!=0) {
+		printk("error: memory kernel not a multiple of chunk size!\n");
+		return -ENOMEM;
+	}
+
 	/* Mark OS area as used */
-	for(i=0;i<(memory_kernel/CHUNK_SIZE)+1;i++) {
+	for(i=0;i<(memory_kernel/CHUNK_SIZE);i++) {
 		memory_mark_used(i);
 	}
 
 	return 0;
 }
 
-/* Find a free chunk of memory */
+/* Find a free chunk of memory in a region */
 /* FIXME: this might have bounds errors */
-static int find_free(int num_chunks, int start, int end) {
+/*	VMW: 11/25 details past me? what did you mean? */
+static int32_t find_free(uint32_t num_chunks, uint32_t start, uint32_t end) {
 
 	int i,j;
 
+	/* FIXME: could be to (end-num_chunks) */
+
 	for(i=start;i<end;i++) {
+		/* Find a free chunk */
 		if (!memory_test_used(i)) {
+			/* see if enough contiguous chunks */
 			for(j=0;j<num_chunks;j++) {
 				if (memory_test_used(i+j)) break;
 			}
+			/* found big enough region.  Is it in range? */
 			if ((j==num_chunks) && (i+j<end)) {
 				return i;
 			}
 		}
 	}
 
-	return -1;
+	return -ENOMEM;
 }
 
 /* Report amount of memory free */
@@ -136,17 +152,22 @@ int32_t memory_total_free(void) {
 
 /* allocate an area of memory */
 /* rounds up to nearest chunk size */
+
+/* type selects if it is user or kernel memory to allocate */
+
 void *memory_allocate(uint32_t size, uint32_t type) {
 
-	int first_chunk;
-	int num_chunks;
-	int i;
-	int start,end;
+	uint32_t first_chunk;
+	uint32_t num_chunks;
+	uint32_t i;
+	uint32_t start,end;
 
 	if (memory_debug) {
 		printk("Allocating memory of size %d bytes\n",size);
 	}
 
+	/* always allocate at least 1 byte? */
+	/* should this be an error? */
 	if (size==0) size=1;
 
 	num_chunks = ((size-1)/CHUNK_SIZE)+1;
@@ -154,6 +175,10 @@ void *memory_allocate(uint32_t size, uint32_t type) {
 	if (memory_debug) {
 		printk("\tRounding up to %d %d chunks\n",num_chunks,CHUNK_SIZE);
 	}
+
+	/* find from proper area */
+	/* kernel memory can't be used by userspace processes */
+	/* when 1:1 virtual memory protection is enabled */
 
 	if (type==MEMORY_KERNEL) {
 		start=0;
