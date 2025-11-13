@@ -84,7 +84,7 @@ void setup_pagetable(uint32_t mem_start, uint32_t mem_end, uint32_t kernel_end) 
 					| CACHE_WRITEBACK;
 	}
 
-	/* Enanble cachable and readable by all for rest */
+	/* Enable cachable and readable by all for rest */
 	for (i = kernel_end >> 20; i < mem_end >> 20; i++) {
 		page_table[i] = i << 20 | (3 << 10) | CACHE_WRITEBACK;
 	}
