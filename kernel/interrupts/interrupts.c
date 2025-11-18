@@ -81,21 +81,9 @@ int irq_disable(int which_one) {
 
 
 
-static void user_reg_dump(void) {
+static void user_reg_dump(uint32_t *regs) {
 
-	unsigned long regs[15];
-	unsigned long saved_sp;
 	int i;
-
-	asm volatile(
-		"str sp,%[saved_sp]\n"
-                "mov sp,%[regs]\n"
-                "stmia sp, {r0 - lr}^\n"        /* the ^ means load user regs */
-		"ldr sp,%[saved_sp]\n"
-                : [saved_sp]"=m"(saved_sp)/* output */
-                :       [regs] "r"(regs) /* input */
-                : "memory" /* clobbers */
-                        );
 
 	printk("Process: %d (text %p+%x, stack %p+%x)\n",
 		current_proc[get_cpu()]->pid,
@@ -105,20 +93,17 @@ static void user_reg_dump(void) {
 		current_proc[get_cpu()]->stacksize);
 
 	for(i=0;i<8;i++) {
-		printk("r%02d: %08x\t",i,regs[i]);
-		if (i!=7) printk("r%02d: %08x",
-			i+8,regs[i+8]);
+		printk("r%02d: %08x\tr%02d: %08x",i,regs[i],i+8,regs[i+8]);
 		printk("\n");
 	}
 }
-
 
 void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 
 	uint32_t basic_pending,pending0,pending1,pending2;
 	uint32_t handled=0,was_timer=0;
 
-	/* Ideall we'd have a proper irq registration  mechanism for this */
+	/* Ideally we'd have a proper irq registration  mechanism for this */
 	if (hardware_type==RPI_MODEL_4B) {
 
 		/* Note, based on IRQ_PENDING2 you can tell */
@@ -149,7 +134,8 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 		if (!handled) {
 			printk("Unknown interrupt happened %x %x %x!\n",
 				pending0,pending1,pending2);
-			mmio_write(GICD_ICPENDR0,0xffffffffUL);        // clear pending
+			/* clear pending */
+			mmio_write(GICD_ICPENDR0,0xffffffffUL);
 			return;
                 }
 
@@ -161,8 +147,11 @@ void interrupt_handler_c(uint32_t r0, uint32_t r1) {
 		/**************************************/
 		/* First check basic_pending register */
 		/**************************************/
+
 		basic_pending=bcm2835_read(IRQ_BASIC_PENDING);
+
 		if (basic_pending) {
+			/* check serial port */
 			if (basic_pending & IRQ_BASIC_PENDING_IRQ57) {
 				handled++;
 				serial_interrupt_handler();
@@ -281,7 +270,7 @@ Bits	Description
 		mmio_write(GICD_ICPENDR0,0xffffffffUL);        // clear pending
 	}
 
-	// check if it's a timer interrupt
+	/* check if it was a timer interrupt */
 	if (was_timer) {
 //		printk("About to handle timer interrupt\n");
 		timer_interrupt_handler();
@@ -300,13 +289,18 @@ void __attribute__((interrupt("FIQ"))) fiq_handler(void) {
 }
 
 /* 1415 */
-void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
+//void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
+
+void data_abort_handler_c(uint32_t *register_array) {
+
 	uint32_t dfsr,dfar,fs;
-	register long lr asm ("lr");
+//	register long lr asm ("lr");
+	uint32_t lr;
 	uint32_t *code;
 
 	/* In theory we want LR-8 here, but */
-	/* note: gcc subtracts 4 from LR at entry */
+	/* entry code already subtracted 4 */
+	lr=register_array[15];
 	code=(uint32_t *)(lr-4);
 
 	printk("MEMORY ABORT at PC=%x (%x)\n",lr-4,*code);
@@ -328,7 +322,7 @@ void __attribute__((interrupt("ABORT"))) data_abort_handler(void) {
 			(dfsr&(1<<11))?"writing":"reading",dfar);
 	}
 
-	user_reg_dump();
+	user_reg_dump(register_array);
 
 	exit(-1);
 
@@ -352,7 +346,7 @@ void __attribute__((interrupt("ABORT"))) prefetch_abort_handler(void) {
 	if (fs==2) printk("\tDebug event\n");
 	if ((fs&0xd)==0xd) printk("\tPermission fault accessing %x\n",ifar);
 
-	user_reg_dump();
+//	user_reg_dump();
 
 	exit(-1);
 

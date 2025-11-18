@@ -6,7 +6,7 @@
 interrupt_handler:
 	sub	lr, lr, #4		@ point LR to actual return address
 
-	ldr	sp,=current_proc	@ use the process's kernel stack
+	ldr	sp,=current_proc
 	ldr	sp,[sp]
 
 	stmia	sp,{r0-lr}^		@ save all registers and return addr
@@ -16,8 +16,6 @@ interrupt_handler:
 
 	mrs	r0, SPSR		@ load SPSR
 	str	r0,[sp,#64]		@ store on stack
-
-	mov	r1,lr
 
 	add	sp,sp,#8192
 
@@ -37,3 +35,43 @@ exit_interrupt:
 	ldmia	sp,{r0-lr}^
 	movs	pc,lr			@ return, updating the
 					@ CPSR at the same time
+
+
+
+.global data_abort_handler
+
+data_abort_handler:
+	sub	lr, lr, #4		@ point LR to actual return address
+
+	ldr	sp,=current_proc
+	ldr	sp,[sp]
+
+	stmia	sp,{r0-lr}^		@ save all registers and return addr
+					@ this is 56 bytes in size
+
+	str	lr,[sp,#60]		@ store saved pc on stack
+
+	mrs	r0, SPSR		@ load SPSR
+	str	r0,[sp,#64]		@ store on stack
+
+	mov	r0,sp			@ pass to C function
+
+	add	sp,sp,#8192
+
+	@ Call into the C routine
+	bl	data_abort_handler_c
+
+	@ Return from the C routine
+
+exit_data_abort:
+	sub	sp,sp,#8192
+
+	ldr	r0,[sp,#64]
+	msr	SPSR_cxsf,r0
+
+	ldr	lr,[sp,#60]
+
+	ldmia	sp,{r0-lr}^
+	movs	pc,lr			@ return, updating the
+					@ CPSR at the same time
+
