@@ -1,5 +1,7 @@
 @ Locks
 
+@ URGH!  Note on ARM1176 ldrex/strex won't work unless virtual memory enabled
+
 @ Based on exaples from the "ARM Synchronization Primitives Developmen Article"
 
 .equ	MUTEX_UNLOCKED,0
