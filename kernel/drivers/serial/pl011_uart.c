@@ -128,7 +128,12 @@ void pl011_uart_enable_interrupts(void) {
 	/* Enable receive interrupts */
 	old=bcm2835_read(UART0_IMSC);
 	printk("uart: previous IMSC: %x\n",old);
-	old|=UART0_IMSC_RTIM;
+
+	/* Had reports RTIM not enough, so add RXIM */
+	/* BCM2835 manual unclear here (in fact it has typo) */
+	/* Runs slowly if it's RXIM only */
+
+	old|=UART0_IMSC_RXIM | UART0_IMSC_RTIM;
 	printk("uart: new IMSC: %x\n",old);
 	bcm2835_write(UART0_IMSC,old);
 	irq_enable(57);
