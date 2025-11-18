@@ -425,6 +425,7 @@ struct char_dev_type *console_init(void) {
 
 	dev=allocate_char_dev();
 	if (dev==NULL) {
+		printk("console: unable to allocate char_dev\n");
 		return NULL;
 	}
 

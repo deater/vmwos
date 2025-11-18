@@ -17,6 +17,8 @@
 #include "processes/process.h"
 
 static int debug=0;
+static int write_debug=0;
+static int ioctl_debug=0;
 
 static struct file_object file_objects[MAX_OPEN_FILES];
 
@@ -418,18 +420,18 @@ int32_t write_syscall(uint32_t fd, void *buf, uint32_t count) {
 	mode=(file->inode->mode & S_IFMT);
 
 	if (mode==S_IFBLK) {
-		//printk("Attempting to write a block device\n");
+		if (write_debug) printk("Attempting to write a block device\n");
 		block_dev=block_dev_lookup(file->inode->device);
 		result=block_dev->block_ops->write(block_dev,
 					file->file_offset,count,buf);
 	}
 	else if (mode==S_IFCHR ) {
-		//printk("Attempting to write a char device\n");
+		if (write_debug) printk("Attempting to write a char device\n");
 		char_dev=char_dev_lookup(file->inode->device);
 		result=char_dev->char_ops->write(file,buf,count);
 	}
 	else if (mode==S_IFREG) {
-		//printk("Attempting to write a normal file\n");
+		if (write_debug) printk("Attempting to write a normal file\n");
 		result=file->file_ops->write(file->inode,
 					buf,count,
 					&(file->file_offset));
@@ -751,19 +753,28 @@ int32_t ioctl_syscall(uint32_t fd, int32_t cmd,
 	mode=(file->inode->mode & S_IFMT);
 
 	if (mode==S_IFBLK) {
-		//printk("Attempting to ioctl a block device\n");
+		if (ioctl_debug) printk("Attempting to ioctl a block device\n");
 		block_dev=block_dev_lookup(file->inode->device);
 		result=block_dev->block_ops->ioctl(block_dev,cmd,third,fourth);
 
 	}
 	else if (mode==S_IFCHR ) {
-		//printk("Attempting to ioctl a char device\n");
+		if (ioctl_debug) {
+			printk("Attempting to ioctl a char device\n");
+			printk("Attempting to ioctl %p\n",file->inode->device);
+		}
 		char_dev=char_dev_lookup(file->inode->device);
+		if (char_dev==NULL) {
+			printk("ioctl: invalid char device\n");
+			return -ENOTTY;
+		}
 		result=char_dev->char_ops->ioctl(file,cmd,third,fourth);
 	}
 	else {
 		return -ENOTTY;
 	}
+
+	if (debug) printk("ioctl was successful\n");
 
 	return result;
 }
