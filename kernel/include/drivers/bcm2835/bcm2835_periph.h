@@ -549,6 +549,8 @@
 #define I2C1_BASE	(IO_BASE+0x804000)
 #define I2C2_BASE	(IO_BASE+0x805000)
 
+/* I2C0 Registers */
+
 #define I2C0_CONTROL	(I2C0_BASE+0x0)		/* Control */
 
 #define I2C_CONTROL_I2CEN	(1<<15)		/* i2c Enable */
@@ -580,6 +582,8 @@
 #define I2C0_DEL	(I2C0_BASE+0x18)	/* data delay */
 #define I2C0_CLKT	(I2C0_BASE+0x1c)	/* clock stretch */
 
+/* I2C1 Registers */
+
 #define I2C1_CONTROL	(I2C1_BASE+0x0)		/* Control */
 #define I2C1_STATUS	(I2C1_BASE+0x4)		/* Status */
 #define I2C1_DLEN	(I2C1_BASE+0x8)		/* Data Length */
@@ -588,6 +592,8 @@
 #define I2C1_DIV	(I2C1_BASE+0x14)	/* clock divider */
 #define I2C1_DEL	(I2C1_BASE+0x18)	/* data delay */
 #define I2C1_CLKT	(I2C1_BASE+0x1c)	/* clock stretch */
+
+/* I2C2 Registers */
 
 #define I2C2_CONTROL	(I2C2_BASE+0x0)		/* Control */
 #define I2C2_STATUS	(I2C2_BASE+0x4)		/* Status */

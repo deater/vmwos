@@ -8,11 +8,13 @@ all:	lib-arm1176.a lib-armv7.a
 ### ARM1176
 
 lib-arm1176.a:	div.arm1176.o locks.arm1176.o \
-		memcpy.arm1176.o memset.arm1176.o printk.arm1176.o \
+		memcpy.arm1176.o memset.arm1176.o \
+		memory_barriers.arm1176.o printk.arm1176.o \
 		dmesg.arm1176.o \
 		smp.arm1176.o string.arm1176.o
 	$(CROSS)$(AR) crs lib-arm1176.a div.arm1176.o locks.arm1176.o \
-		memcpy.arm1176.o memset.arm1176.o printk.arm1176.o \
+		memcpy.arm1176.o memset.arm1176.o \
+		memory_barriers.arm1176.o printk.arm1176.o \
 		dmesg.arm1176.o \
 		smp.arm1176.o string.arm1176.o
 
@@ -25,9 +27,11 @@ div.arm1176.o:	div.arm1176.c
 memcpy.arm1176.o:	memcpy.s
 	$(CROSS)$(AS) $(ASFLAGS) -o memcpy.arm1176.o -c memcpy.s
 
-
 memset.arm1176.o:	memset.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o memset.arm1176.o -c memset.c
+
+memory_barriers.arm1176.o:	memory_barriers.c
+	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o memory_barriers.arm1176.o -c memory_barriers.c
 
 dmesg.arm1176.o:	dmesg.c
 	$(CROSS)$(CC) $(CFLAGS_ARM1176) $(INCLUDE) -o dmesg.arm1176.o -c dmesg.c
@@ -47,10 +51,14 @@ locks.arm1176.o:        locks.arm1176.s
 
 ### ARMV7
 
-lib-armv7.a:	locks.armv7.o memcpy.armv7.o memset.armv7.o \
+lib-armv7.a:	locks.armv7.o \
+		memcpy.armv7.o memset.armv7.o \
+		memory_barriers.armv7.o \
 		dmesg.armv7.o printk.armv7.o smp.armv7.o string.armv7.o
 	$(CROSS)$(AR) crs lib-armv7.a \
-		locks.armv7.o memcpy.armv7.o memset.armv7.o \
+		locks.armv7.o \
+		memcpy.armv7.o memset.armv7.o \
+		memory_barriers.armv7.o \
 		dmesg.armv7.o printk.armv7.o smp.armv7.o string.armv7.o
 
 locks.armv7.o:	locks.armv7.s
@@ -64,6 +72,9 @@ memcpy.armv7.o:	memcpy.s
 
 memset.armv7.o:	memset.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o memset.armv7.o -c memset.c
+
+memory_barriers.armv7.o:	memory_barriers.c
+	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o memory_barriers.armv7.o -c memory_barriers.c
 
 dmesg.armv7.o:	dmesg.c
 	$(CROSS)$(CC) $(CFLAGS_ARMV7) $(INCLUDE) -o dmesg.armv7.o -c dmesg.c
