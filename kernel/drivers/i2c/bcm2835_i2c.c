@@ -7,8 +7,6 @@
 /* After my initial attempt didn't work, modified the code */
 /* based on Willow Cunningham's ECE531 Final Project */
 
-/* The code still didn't work */
-
 #include <stddef.h>
 #include <stdint.h>
 
@@ -25,9 +23,14 @@
 
 #include "interrupts/interrupts.h"
 
+/* note, using a divider of 150000 seems to give a SCLK of ~12.5kHz */
+/* measured with an oscilloscope */
+
 #define CORE_CLOCK_SPEED	150000000	/* 150MHz says the manual */
 #define IC2_SPEED_100K_DIVIDER	1500		/* 100kHz */
 #define I2C_SPEED_10K_DIVIDER	15000		/* 10kHz */
+
+
 
 static int bcm2835_i2c_initialized=0;
 
@@ -163,8 +166,9 @@ uint32_t bcm2835_i2c_init(struct i2c_type *i2c) {
 	bcm2835_write(GPIO_GPPUDCLK0, 0x0);
 
 	/* Set speed */
-	/* Default to 100kbit/s? */
+	/* Default to 10kbit/s? */
 	/* willow sets this to 1,500,000,000/10,000 = 150,000 */
+	/* which on a Pi-1B gives ~12kHz SCLK measured with an oscilloscope */
 
 	bcm2835_write(I2C1_DIV, 150000); //IC2_SPEED_100K_DIVIDER);
 
