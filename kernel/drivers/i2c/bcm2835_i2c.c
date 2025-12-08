@@ -210,11 +210,13 @@ uint32_t bcm2835_i2c_debug(void) {
 
 
 	 /* Turn on oscillator */
+
+	/* 0x21 */
 	buffer[0]= HT16K33_REGISTER_SYSTEM_SETUP | 0x1;
 	bcm2835_i2c_write(address,buffer,1);
 
-	/* 0x21 */
 
+	/* 0x81 */
 	buffer[0]= HT16K33_REGISTER_DISPLAY_SETUP | HT16K33_BLINKRATE_OFF | 0x1;
 	bcm2835_i2c_write(address,buffer,1);
 
