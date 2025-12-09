@@ -8,6 +8,7 @@
 
 static const char error_none[]=		"No error";
 static const char error_enoent[]=	"ENOENT: File not found";
+static const char error_eio[]=		"EIO: I/O Error";
 static const char error_e2big[]=	"E2BIG: Too big";
 static const char error_ebadf[]=	"EBADF: Bad file descriptor";
 static const char error_enomem[]=	"ENOMEM: Not enougn memory";
@@ -30,7 +31,7 @@ static const char *error_table[MAX_ERRNO]={
 	error_enoent,	/* 2 ENOENT */
 	error_generic,	/* 3 */
 	error_generic,	/* 4 */
-	error_generic,	/* 5 */
+	error_eio,	/* 5 EIO */
 	error_generic,	/* 6 */
 	error_e2big,	/* 7 E2BIG */
 	error_generic,	/* 8 */

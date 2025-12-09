@@ -7,6 +7,8 @@
 /* After my initial attempt didn't work, modified the code */
 /* based on Willow Cunningham's ECE531 Final Project */
 
+/* also used the libbcm2835 by Mike McCauley can be a good reference */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -18,10 +20,13 @@
 #include "drivers/i2c/bcm2835_i2c.h"
 
 #include "lib/delay.h"
+#include "lib/errors.h"
 #include "lib/printk.h"
 #include "lib/locks.h"
 
 #include "interrupts/interrupts.h"
+
+static int i2c_debug=1;
 
 /* note, using a divider of 150000 seems to give a SCLK of ~12.5kHz */
 /* measured with an oscilloscope */
@@ -35,7 +40,9 @@
 static int bcm2835_i2c_initialized=0;
 
 void dump_status(uint32_t status) {
+
 	printk("Status register: %02X\n",status);
+
 	if (status&I2C_STATUS_TA) printk("\tTransfer Active\n");
 	if (status&I2C_STATUS_DONE) printk("\tTransfer Done\n");
 	if (status&I2C_STATUS_TXW) printk("\tFIFO needs writing\n");
@@ -48,7 +55,7 @@ void dump_status(uint32_t status) {
 	if (status&I2C_STATUS_CLKT) printk("\tClock stretch timeout\n");
 }
 
-uint32_t bcm2835_i2c_write(uint32_t address,
+int32_t bcm2835_i2c_write(uint32_t address,
 			unsigned char *buffer, uint32_t length) {
 
 	bcm2835_peripheral_entry();
@@ -58,12 +65,15 @@ uint32_t bcm2835_i2c_write(uint32_t address,
 	int i;
 	uint32_t control,status;
 
-	printk("Device %02x: Writing %d bytes to i2c (%02x)\n",
+	if (i2c_debug) {
+		printk("Device %02x: Writing %d bytes to i2c (%02x)\n",
 			address,length,buffer[0]);
+	}
 
 	/* max size is 16 bits */
 	if (length>65535) {
 		printk("i2c write too big %d\n",length);
+		return -E2BIG;
 	}
 
 	/* Set address */
@@ -125,6 +135,103 @@ uint32_t bcm2835_i2c_write(uint32_t address,
 
 	return 0;
 }
+
+
+
+/* note this doesn't handle repeated-start */
+int32_t bcm2835_i2c_read(uint32_t address,
+			unsigned char *buffer, uint32_t length) {
+
+	bcm2835_peripheral_entry();
+
+	uint32_t i;
+	uint32_t control,status;
+	uint32_t remaining;
+	int32_t result=0;
+
+	if (i2c_debug) {
+		printk("Device %02x: Reading %d bytes from i2c\n",
+			address,length);
+	}
+
+	/* max size is 16 bits */
+	if (length>65535) {
+		printk("i2c read too big %d\n",length);
+		return -E2BIG;
+	}
+
+	remaining=length;
+
+	/* Set address */
+	bcm2835_write(I2C1_ADDRESS, address);
+
+	/* reset the FIFO */
+	control=bcm2835_read(I2C1_CONTROL);
+	control|=I2C_CONTROL_CLEAR_FIFO;
+	bcm2835_write(I2C1_CONTROL,control);
+
+	/* reset the status register fields */
+	bcm2835_write(I2C1_STATUS,
+		I2C_STATUS_DONE | I2C_STATUS_CLKT | I2C_STATUS_ERR);
+
+	/* set transfer length */
+	bcm2835_write(I2C1_DLEN, length);
+
+	/* start a read */
+	bcm2835_write(I2C1_CONTROL,
+		I2C_CONTROL_I2CEN | I2C_CONTROL_START_TRANSFER |
+		I2C_CONTROL_READ);
+
+	/* do read transaction */
+	i=0;
+	while (1) {
+		if (bcm2835_read(I2C1_STATUS) & I2C_STATUS_DONE) break;
+
+		while (remaining &&
+			(bcm2835_read(I2C1_STATUS) & I2C_STATUS_RXD)) {
+
+			buffer[i] = bcm2835_read(I2C1_FIFO);
+			i++;
+			remaining--;
+		}
+	}
+
+	/* get any stray data from FIFO */
+	while (remaining &&
+		(bcm2835_read(I2C1_STATUS) & I2C_STATUS_RXD)) {
+
+		buffer[i] = bcm2835_read(I2C1_FIFO);
+		i++;
+		remaining--;
+	}
+
+
+	result=i;
+
+	status=bcm2835_read(I2C1_STATUS);
+	printk("After write status\n");
+	dump_status(status);
+	if (status) {
+		if (status&I2C_STATUS_ERR) {
+			printk("i2c: error slave did not ACK\n");
+			result=-EIO;
+		}
+		if (status&I2C_STATUS_CLKT) {
+			printk("i2c: error clock stretch\n");
+			result=-EIO;
+		}
+	}
+
+	/* reset done flag */
+	status=bcm2835_read(I2C1_STATUS);
+	status|=I2C_STATUS_DONE;
+	bcm2835_write(I2C1_STATUS,status);
+
+	bcm2835_peripheral_exit();
+
+	return result;
+}
+
 
 uint32_t bcm2835_i2c_init(struct i2c_type *i2c) {
 
@@ -188,6 +295,7 @@ uint32_t bcm2835_i2c_debug(void) {
 	unsigned char buffer[17];
 
 	uint32_t address;
+	int32_t result,i;
 
 	address=0x70;
 
@@ -235,6 +343,20 @@ uint32_t bcm2835_i2c_debug(void) {
 	buffer[13]=0xff; buffer[14]=0xff;
 	buffer[15]=0xff; buffer[16]=0xff;
 	bcm2835_i2c_write(address,buffer,17);
+
+	/* reset address */
+	buffer[0]=0x00;
+	bcm2835_i2c_write(address,buffer,1);
+
+	/* clear out for test */
+	for(i=0;i<17;i++) buffer[i]=0xa5;
+
+	result=bcm2835_i2c_read(address,buffer,16);
+
+	printk("i2c read test %d:\n",result);
+	for(i=0;i<16;i++) printk("%02x ",buffer[i]);
+	printk("\n");
+
 
 	return 0;
 }

@@ -28,7 +28,7 @@ uint32_t i2c_init(uint32_t type) {
 
 
 /* write a series of bytes to the i2c port */
-uint32_t i2c_write(const char* buffer, size_t size) {
+int32_t i2c_write(const char* buffer, size_t size) {
 
 	size_t i;
 
