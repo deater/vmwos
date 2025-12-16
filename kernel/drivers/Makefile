@@ -23,6 +23,7 @@ drivers-arm1176.a:	drivers.arm1176.o \
 		pmu/pmu.arm1176.a \
 		random/random.arm1176.a \
 		serial/serial.arm1176.a \
+		spi/spi.arm1176.a \
 		thermal/thermal.arm1176.a \
 		timer/timer.arm1176.a
 
@@ -43,6 +44,7 @@ drivers-arm1176.a:	drivers.arm1176.o \
 		pmu/pmu.arm1176.a \
 		random/random.arm1176.a \
 		serial/serial.arm1176.a \
+		spi/spi.arm1176.a \
 		thermal/thermal.arm1176.a \
 		timer/timer.arm1176.a
 
@@ -95,6 +97,9 @@ random/random.arm1176.a:	force_look
 serial/serial.arm1176.a:	force_look
 	cd serial && make
 
+spi/spi.arm1176.a:	force_look
+	cd spi && make
+
 thermal/thermal.arm1176.a:	force_look
 	cd thermal && make
 
@@ -121,6 +126,7 @@ drivers-armv7.a:	\
 		pmu/pmu.armv7.a \
 		random/random.armv7.a \
 		serial/serial.armv7.a \
+		spi/spi.armv7.a \
 		thermal/thermal.armv7.a \
 		timer/timer.armv7.a
 
@@ -141,6 +147,7 @@ drivers-armv7.a:	\
 		pmu/pmu.armv7.a \
 		random/random.armv7.a \
 		serial/serial.armv7.a \
+		spi/spi.armv7.a \
 		thermal/thermal.armv7.a \
 		timer/timer.armv7.a
 
@@ -193,6 +200,9 @@ random/random.armv7.a:	force_look
 serial/serial.armv7.a:	force_look
 	cd serial && make
 
+spi/spi.armv7.a:	force_look
+	cd spi && make
+
 thermal/thermal.armv7.a:	force_look
 	cd thermal && make
 
@@ -220,5 +230,6 @@ clean:
 	cd ramdisk && make clean
 	cd random && make clean
 	cd serial && make clean
+	cd spi && make clean
 	cd thermal && make clean
 	cd timer && make clean
