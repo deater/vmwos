@@ -10,6 +10,8 @@
 /* We assume we're using the spi0 bus				*/
 /*    on GPIO 7/8/9/10/11 (pins 26/14/21/19/23)			*/
 
+/* Transfer is MSB first */
+
 /* also the libbcm2835 by Mike McCauley can be a good reference */
 
 #include <stddef.h>
@@ -32,6 +34,100 @@ static int spi_debug=1;
 
 static int bcm2835_spi_initialized=0;
 
+
+/* default is 0 (which means 65536) */
+/* Must be power of 2, others rounded down */
+/* The MAX is the APB clock (???MHz) */
+
+void bcm2835_spi_set_clock_divider(uint16_t divider) {
+
+	bcm2835_write(SPI0_CLK, divider);
+}
+
+void bcm2835_spi_set_speed_hz(uint32_t speed_hz) {
+
+	uint16_t divider = (uint16_t) ((uint32_t) 250000000 / speed_hz);
+	divider &= 0xfffe;
+
+	if (spi_debug) {
+		printk("Setting SPI to %d kHz (divider=%x)\n",
+			speed_hz/1000,divider);
+	}
+	bcm2835_spi_set_clock_divider(divider);
+}
+
+/* Currently always send MSB first */
+int32_t bcm2835_spi_transaction(uint32_t device,
+			unsigned char *write_buffer,
+			unsigned char *read_buffer,
+			uint32_t length) {
+
+	/* This is a polled transfer described in chapter 10.6.1 */
+	/* 1. Set CS, CPOL, CPHA as required and set TA = 1 */
+	/* 2. Poll TXD writing bytes to SPI_FIFO, */
+	/*	RXD reading bytes from SPI_FIFO until all data written. */
+	/* 3. Poll DONE until it goes to 1 */
+	/* 4. Set TA = 0 */
+
+	int32_t result=0,tx_count=0,rx_count=0;
+	uint32_t control_status=0;
+	int32_t chip_select=0;	/* FIXME: get from device info */
+
+	bcm2835_peripheral_entry();
+
+	if (spi_debug) {
+		printk("SPI: Reading/writing %d bytes from device %d\n",
+			length,chip_select);
+	}
+
+	/* Clear both the TX and RX FIFOs */
+	control_status=bcm2835_read(SPI0_CS);
+	control_status|=SPI0_CS_CLEAR_BOTH;
+	bcm2835_write(SPI0_CS,control_status);
+
+	/* Set TA = 1 */
+	control_status=bcm2835_read(SPI0_CS);
+	control_status|=SPI0_CS_TA;
+	bcm2835_write(SPI0_CS,control_status);
+
+	/* Read and Write Values */
+
+	while((tx_count < length) || (rx_count < length)) {
+		/* If TX FIFO not full add some more bytes */
+		while( ( (bcm2835_read(SPI0_CS) & SPI0_CS_TXD))
+			&& (tx_count < length ) ) {
+
+			/* FIXME: handle proper byte ordering */
+			bcm2835_write(SPI0_FIFO, write_buffer[tx_count]);
+			tx_count++;
+		}
+
+		/* If RX FIFO not empty get the next bytes */
+
+		while( ( (bcm2835_read(SPI0_CS) & SPI0_CS_RXD))
+			&& (rx_count < length ) ) {
+
+			/* FIXME: handle proper byte ordering */
+			read_buffer[rx_count]=bcm2835_read(SPI0_FIFO);
+			rx_count++;
+		}
+	}
+
+	/* Wait for DONE */
+	while (!(bcm2835_read(SPI0_CS) & SPI0_CS_DONE)) {
+	}
+
+	/* Set TA = 0 */
+	control_status=bcm2835_read(SPI0_CS);
+	control_status&=~SPI0_CS_TA;
+	bcm2835_write(SPI0_CS,control_status);
+
+	bcm2835_peripheral_exit();
+
+	return result;
+}
+
+
 int32_t bcm2835_spi_write(uint32_t device,
 			unsigned char *buffer, uint32_t length) {
 
@@ -39,9 +135,10 @@ int32_t bcm2835_spi_write(uint32_t device,
 
 	/* FIFO only 16 bytes */
 
+#if 0
 	int i;
 	uint32_t control,status;
-#if 0
+
 	if (i2c_debug) {
 		printk("Device %02x: Writing %d bytes to i2c (%02x)\n",
 			address,length,buffer[0]);
@@ -210,6 +307,46 @@ int32_t bcm2835_spi_read(uint32_t device,
 }
 
 
+uint32_t bcm2835_spi_test(void) {
+
+	bcm2835_spi_set_speed_hz(100000);		/* 100kHz */
+
+	/* test on MCP3008 hooked to GND, 3.3V, TMP36 sensor */
+	uint8_t data_out[3];
+	uint8_t data_in[3];
+
+	data_out[0]=1;
+	data_out[1]=(0<<4)|0x80;
+	data_out[2]=0;
+
+	printk("Testing channel %x\n",data_out[1]);
+
+	bcm2835_spi_transaction(0,data_out,data_in,3);
+	printk("Result=%x %x %x\n",data_in[0],data_in[1],data_in[2]);
+
+	data_out[0]=1;
+	data_out[1]=(1<<4)|0x80;
+	data_out[2]=0;
+
+	printk("Testing channel %x\n",data_out[1]);
+
+	bcm2835_spi_transaction(0,data_out,data_in,3);
+	printk("Result=%x %x %x\n",data_in[0],data_in[1],data_in[2]);
+
+	data_out[0]=1;
+	data_out[1]=(2<<4)|0x80;
+	data_out[2]=0;
+
+	printk("Testing channel %x\n",data_out[1]);
+
+	bcm2835_spi_transaction(0,data_out,data_in,3);
+	printk("Result=%x %x %x\n",data_in[0],data_in[1],data_in[2]);
+
+
+	return 0;
+}
+
+
 uint32_t bcm2835_spi_init(struct spi_type *spi) {
 
 	bcm2835_peripheral_entry();
@@ -247,13 +384,11 @@ uint32_t bcm2835_spi_init(struct spi_type *spi) {
 
 	bcm2835_peripheral_exit();
 
-	return 0;
-}
-
-
-uint32_t bcm2835_spi_debug(void) {
+	bcm2835_spi_test();
 
 	return 0;
 }
+
+
 
 

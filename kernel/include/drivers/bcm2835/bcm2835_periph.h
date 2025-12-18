@@ -617,34 +617,34 @@
 
 /* SPI0 Registers */
 
-#define SPI0_CS		(SPI0_BASE+0x00)
+#define SPI0_CS		(SPI0_BASE+0x00)	/* control and status register */
 
-#define SPIO0_CS_LEN_LONG	(1<<25)	/* Enable long data word in LoSSI mode */
-#define SPIO0_CS_DMA_LEN	(1<<24)	/* Enable DMA in LoSSI mode */
+#define SPI0_CS_LEN_LONG	(1<<25)	/* Enable long data word in LoSSI mode */
+#define SPI0_CS_DMA_LEN		(1<<24)	/* Enable DMA in LoSSI mode */
 
-#define SPIO0_CS_CSPOL2		(1<<22)	/* Chip Select 2 poloarity */
-#define SPIO0_CS_CSPOL1		(1<<21)	/* Chip Select 1 poloarity */
-#define SPIO0_CS_CSPOL0		(1<<20)	/* Chip Select 0 poloarity */
+#define SPI0_CS_CSPOL2		(1<<22)	/* Chip Select 2 poloarity */
+#define SPI0_CS_CSPOL1		(1<<21)	/* Chip Select 1 poloarity */
+#define SPI0_CS_CSPOL0		(1<<20)	/* Chip Select 0 poloarity */
 
-#define SPIO0_CS_RXF		(1<<20)	/* RX FIFO is full */
-#define SPIO0_CS_RXR		(1<<19)	/* RX FIFO needs reading */
+#define SPI0_CS_RXF		(1<<20)	/* RX FIFO is full */
+#define SPI0_CS_RXR		(1<<19)	/* RX FIFO needs reading */
 
-#define SPIO0_CS_TXD		(1<<18)	/* TX FIFO can accept data */
-#define SPIO0_CS_RXD		(1<<17)	/* RX FIFO has data */
+#define SPI0_CS_TXD		(1<<18)	/* TX FIFO can accept data */
+#define SPI0_CS_RXD		(1<<17)	/* RX FIFO has data */
 
-#define SPIO0_CS_DONE		(1<<16)	/* transfer done */
-#define SPIO0_CS_LEN		(1<<13)	/* LoSSI enable */
-#define SPIO0_CS_REN		(1<<12)	/* read enable*/
-#define SPIO0_CS_ADCS		(1<<11)	/* auto deassert chip select */
-#define SPIO0_CS_INTR		(1<<10)	/* interrupt on RXR */
-#define SPIO0_CS_INTD		(1<<9)	/* interrupt on done */
+#define SPI0_CS_DONE		(1<<16)	/* transfer done */
+#define SPI0_CS_LEN		(1<<13)	/* LoSSI enable */
+#define SPI0_CS_REN		(1<<12)	/* read enable*/
+#define SPI0_CS_ADCS		(1<<11)	/* auto deassert chip select */
+#define SPI0_CS_INTR		(1<<10)	/* interrupt on RXR */
+#define SPI0_CS_INTD		(1<<9)	/* interrupt on done */
 
-#define SPIO0_CS_DMAEN		(1<<8)	/* DMA enable */
+#define SPI0_CS_DMAEN		(1<<8)	/* DMA enable */
 
-#define SPIO0_CS_TA		(1<<7)	/* transfer active */
+#define SPI0_CS_TA		(1<<7)	/* transfer active */
 
-#define SPIO0_CS_CSPOL_0	(0<<6)	/* chip selects active low */
-#define SPIO0_CS_CSPOL_1	(1<<6)	/* chip selects active high */
+#define SPI0_CS_CSPOL_0	(0<<6)	/* chip selects active low */
+#define SPI0_CS_CSPOL_1	(1<<6)	/* chip selects active high */
 
 #define SPI0_CS_CLEAR_TX	(1<<4)	/* clear TX FIFO */
 #define SPI0_CS_CLEAR_RX	(2<<4)	/* clear RX FIFO */
@@ -661,11 +661,11 @@
 #define SPIO_CS_CS0		(0<<0)	/* chip select 0 */
 
 
-#define SPI0_FIFO	(SPI0_BASE+0x04)
-#define SPI0_CLK	(SPI0_BASE+0x08)
-#define SPI0_DLEN	(SPI0_BASE+0x0C)
-#define SPI0_LTOH	(SPI0_BASE+0x10)
-#define SPI0_DC		(SPI0_BASE+0x14)
+#define SPI0_FIFO	(SPI0_BASE+0x04)	/* TX and RX FIFOs */
+#define SPI0_CLK	(SPI0_BASE+0x08)	/* Master clock divider */
+#define SPI0_DLEN	(SPI0_BASE+0x0C)	/* Master data length */
+#define SPI0_LTOH	(SPI0_BASE+0x10)	/* LoSSI mode TOH */
+#define SPI0_DC		(SPI0_BASE+0x14)	/* DMA Controls */
 
 
 
