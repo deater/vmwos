@@ -1,7 +1,14 @@
-/* This is code to drive the BCM2835 spi	 driver			*/
-/* As decribed in Chapter ? of the BCM2835 ARM Peripherals Manual	*/
+/* This is code to drive the BCM2835 SPI hardware		   */
+/* As decribed in Chapter 10 of the BCM2835 ARM Peripherals Manual */
 
-/* We assume we're using the spi bus on GPIO? pins ? */
+/* For now we just support "standard" mode.  The hardware also	*/
+/* supports "bi-directional" (use one wire for MOSI/MISO) and	*/
+/* LoSSI  as well						*/
+
+/* Note there are two "mini" SPI busses described in Chapter 2	*/
+
+/* We assume we're using the spi0 bus				*/
+/*    on GPIO 7/8/9/10/11 (pins 26/14/21/19/23)			*/
 
 /* also the libbcm2835 by Mike McCauley can be a good reference */
 
@@ -207,55 +214,38 @@ uint32_t bcm2835_spi_init(struct spi_type *spi) {
 
 	bcm2835_peripheral_entry();
 
-#if 0
 	/* Set up config */
 
 
 	/* Set up function pointers */
 //	serial->uart_interrupt_handler=pl011_uart_interrupt_handler;
 
-	/* Disable i2c */
-	/* Turns off i2c and resets a few things */
-	bcm2835_write(I2C1_CONTROL, 0x0);
+	/* Disable SPI? */
+	/* needed? */
 
-	/* Setup GPIO 2/3 (pins 3/5) */
-	gpio_request(2,"i2c1_sda");
-	gpio_request(3,"i2c1_scl");
+	/* Setup GPIO 10/9/11/8/7 (pins 19/21/23/24/26) */
+	gpio_request(10,"spi_mosi");
+	gpio_request( 9,"spi_miso");
+	gpio_request(11,"spi_clk");
+	gpio_request( 8,"spi_ce0");
+	gpio_request( 7,"spi_ce1");
 
-	/* Set GPIO2 and GPIO3 to be i2c1 SDA/SCL, Alt Function 0 */
-	gpio_function_select(2,GPIO_GPFSEL_ALT0);
-	gpio_function_select(3,GPIO_GPFSEL_ALT0);
+	/* Set SPI GPIOs to be Alt Function 0 */
+	gpio_function_select(10,GPIO_GPFSEL_ALT0);
+	gpio_function_select( 9,GPIO_GPFSEL_ALT0);
+	gpio_function_select(11,GPIO_GPFSEL_ALT0);
+	gpio_function_select( 8,GPIO_GPFSEL_ALT0);
+	gpio_function_select( 7,GPIO_GPFSEL_ALT0);
 
-	/* Disable the pull up/down on GPIO 2/3 */
-	/* See the Peripheral Manual p101 for more info */
-	/* Configure to disable pull up/down and delay for 150 cycles */
-	bcm2835_write(GPIO_GPPUD, GPIO_GPPUD_DISABLE);
-	delay(150);
+	/* set SPI defaults */
+	bcm2835_write(SPI0_CS, 0);
 
-	/* Pass the disable clock to GPIO 2/3 and delay*/
-	bcm2835_write(GPIO_GPPUDCLK0, (1 << 2) | (1 << 3));
-	delay(150);
+	/* clear SPI FIFOs */
+	bcm2835_write(SPI0_CS, SPI0_CS_CLEAR_BOTH);
 
-	/* write 0 to GPPUD?  Already 0 because of disable */
-	bcm2835_write(GPIO_GPPUD, GPIO_GPPUD_DISABLE);
-
-	/* Write 0 to GPPUDCLK0 to make it take effect */
-	bcm2835_write(GPIO_GPPUDCLK0, 0x0);
-
-	/* Set speed */
-	/* Default to 10kbit/s? */
-	/* willow sets this to 1,500,000,000/10,000 = 150,000 */
-	/* which on a Pi-1B gives ~12kHz SCLK measured with an oscilloscope */
-
-	bcm2835_write(I2C1_DIV, 150000); //IC2_SPEED_100K_DIVIDER);
-
-	/* Enable i2c */
-//	bcm2835_write(I2C1_CONTROL, I2C_CONTROL_I2CEN);
-
-	bcm2835_i2c_initialized=1;
+	bcm2835_spi_initialized=1;
 
 	bcm2835_peripheral_exit();
-#endif
 
 	return 0;
 }

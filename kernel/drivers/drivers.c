@@ -16,6 +16,7 @@
 #include "drivers/thermal/thermal.h"
 #include "drivers/pmu/arm-pmu.h"
 #include "drivers/i2c/i2c.h"
+#include "drivers/spi/spi.h"
 
 
 void drivers_init_all(void) {
@@ -70,5 +71,8 @@ void drivers_init_all(void) {
 
 	/* Enable i2c */
 	i2c_init(0);
+
+	/* Enable SPI */
+	spi_init(0);
 
 }
